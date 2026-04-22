@@ -36,7 +36,7 @@ export function useUpdateTask() {
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
       const { data, error } = await supabase
         .from('tasks')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()

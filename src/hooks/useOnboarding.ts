@@ -177,7 +177,7 @@ export function useUpsertBriefing() {
       const { error } = await supabase
         .from('client_briefing')
         .upsert(
-          { client_id: clientId, data, updated_at: new Date().toISOString() },
+          { client_id: clientId, data: data as unknown as import('@/integrations/supabase/types').Json, updated_at: new Date().toISOString() },
           { onConflict: 'client_id' }
         )
       if (error) throw error

@@ -49,7 +49,7 @@ export function useUpdateSupportContact() {
     }) => {
       const { data, error } = await supabase
         .from('client_support_contacts')
-        .update(fields)
+        .update(fields as any)
         .eq('id', id)
         .select()
         .single()

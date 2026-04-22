@@ -115,10 +115,9 @@ function TaskCard({
   const priCfg = PRIORITY_CFG[task.priority]
 
   return (
-    <motion.div
-      layout
+    <div
       draggable
-      onDragStart={e => { e.dataTransfer.setData('taskId', task.id); onDragStart(task.id) }}
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => { e.dataTransfer.setData('taskId', task.id); onDragStart(task.id) }}
       onDragEnd={onDragEnd}
       className={`
         bg-white rounded-xl border select-none cursor-grab active:cursor-grabbing
@@ -208,7 +207,7 @@ function TaskCard({
           />
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

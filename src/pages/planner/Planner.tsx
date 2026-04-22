@@ -800,6 +800,12 @@ export function Planner() {
           scheduled_date: form.scheduled_date,
           content_id: null,
           asset_id: linkedAsset?.id ?? null,
+          approval_status: null,
+          client_feedback: null,
+          reviewed_at: null,
+          reviewed_by: null,
+          attachments: [],
+          links: [],
         })
         // Vincular mídia do arsenal como anexo
         if (linkedAsset?.media_url) {

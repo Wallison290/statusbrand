@@ -21,6 +21,12 @@ const emptyForm = {
   observations: '', status: 'ativo' as Client['status'],
   entry_date: new Date().toISOString().split('T')[0],
   logo_url: null as string | null,
+  responsible_user_id: null as string | null,
+  valor_mensal: null as number | null,
+  dia_vencimento: null as number | null,
+  financial_status: null as Client['financial_status'],
+  last_payment_date: null as string | null,
+  manual_status_override: null as boolean | null,
 }
 
 export function ClientForm() {
@@ -202,8 +208,8 @@ export function ClientForm() {
                 type="number"
                 step="0.01"
                 min="0"
-                value={(form as any).valor_mensal ?? ''}
-                onChange={e => set('valor_mensal', e.target.value ? e.target.value : null)}
+                value={form.valor_mensal ?? ''}
+                onChange={e => setForm(p => ({ ...p, valor_mensal: e.target.value ? Number(e.target.value) : null }))}
                 placeholder="Ex: 1500.00"
               />
               <Input
@@ -211,8 +217,8 @@ export function ClientForm() {
                 type="number"
                 min="1"
                 max="31"
-                value={(form as any).dia_vencimento ?? ''}
-                onChange={e => set('dia_vencimento', e.target.value ? e.target.value : null)}
+                value={form.dia_vencimento ?? ''}
+                onChange={e => setForm(p => ({ ...p, dia_vencimento: e.target.value ? Number(e.target.value) : null }))}
                 placeholder="Ex: 10"
               />
             </CardContent>

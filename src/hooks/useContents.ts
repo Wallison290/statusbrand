@@ -52,7 +52,7 @@ export function useUpdateContent() {
     mutationFn: async ({ id, ...updates }: Partial<Content> & { id: string }) => {
       const { data, error } = await supabase
         .from('contents')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()

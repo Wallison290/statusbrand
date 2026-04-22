@@ -16,7 +16,7 @@ export function ClientList() {
   const deleteClient = useDeleteClient()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'paused'>('all')
+  const [filter, setFilter] = useState<'all' | 'ativo' | 'encerrado' | 'pausado'>('all')
 
   const filtered = (clients || []).filter(c => {
     const matchSearch = c.company_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,7 +55,7 @@ export function ClientList() {
             className="max-w-sm"
           />
           <div className="flex gap-2">
-            {(['all', 'active', 'inactive', 'paused'] as const).map(f => (
+            {(['all', 'ativo', 'pausado', 'encerrado'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -65,7 +65,7 @@ export function ClientList() {
                     : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/8'
                 }`}
               >
-                {f === 'all' ? 'Todos' : f === 'active' ? 'Ativos' : f === 'inactive' ? 'Inativos' : 'Pausados'}
+                {f === 'all' ? 'Todos' : f === 'ativo' ? 'Ativos' : f === 'pausado' ? 'Pausados' : 'Encerrados'}
               </button>
             ))}
           </div>

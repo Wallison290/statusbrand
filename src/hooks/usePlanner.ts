@@ -22,7 +22,7 @@ export function useCreatePlannerItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (item: Omit<PlannerItem, 'id' | 'created_at' | 'updated_at' | 'client'>) => {
-      const { data, error } = await supabase.from('planner').insert(item).select().single()
+      const { data, error } = await supabase.from('planner').insert(item as any).select().single()
       if (error) throw error
       return data as PlannerItem
     },
@@ -36,7 +36,7 @@ export function useUpdatePlannerItem() {
     mutationFn: async ({ id, ...updates }: Partial<PlannerItem> & { id: string }) => {
       const { data, error } = await supabase
         .from('planner')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()

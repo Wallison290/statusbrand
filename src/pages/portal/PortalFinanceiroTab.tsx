@@ -61,8 +61,7 @@ const statusConfig: Record<FinancialStatus, {
 const contactTypeLabel: Partial<Record<ContactType, string>> = {
   whatsapp: 'WhatsApp',
   email: 'E-mail',
-  phone: 'Telefone',
-  instagram: 'Instagram',
+  telefone: 'Telefone',
 }
 
 function buildContactHref(type: ContactType, value: string, directLink: string | null): string {
@@ -74,7 +73,7 @@ function buildContactHref(type: ContactType, value: string, directLink: string |
     return `https://wa.me/${phone}?text=${msg}`
   }
   if (type === 'email') return `mailto:${value}`
-  if (type === 'phone') return `tel:${value}`
+  if (type === 'telefone') return `tel:${value}`
   return value
 }
 
@@ -110,7 +109,7 @@ export function PortalFinanceiroTab() {
   const cfg = statusConfig[status]
 
   // Best contact for financial matters: prefer whatsapp, then email, then first available
-  const preferOrder: ContactType[] = ['whatsapp', 'email', 'phone', 'instagram', 'facebook', 'tiktok', 'website', 'other']
+  const preferOrder: ContactType[] = ['whatsapp', 'email', 'telefone', 'outro']
   const financialContact = contacts
     .slice()
     .sort((a, b) => preferOrder.indexOf(a.contact_type) - preferOrder.indexOf(b.contact_type))[0] ?? null

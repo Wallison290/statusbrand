@@ -43,7 +43,7 @@ export function useUpdateReport() {
     mutationFn: async ({ id, ...updates }: Partial<ClientReport> & { id: string }) => {
       const { data, error } = await supabase
         .from('client_reports')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()

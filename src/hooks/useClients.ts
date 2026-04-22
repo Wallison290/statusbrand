@@ -50,7 +50,7 @@ export function useUpdateClient() {
     mutationFn: async ({ id, ...updates }: Partial<Client> & { id: string }) => {
       const { data, error } = await supabase
         .from('clients')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()
@@ -122,7 +122,7 @@ export function useUpsertBrandDNA() {
     mutationFn: async (dna: { client_id: string; [key: string]: unknown }) => {
       const { data, error } = await supabase
         .from('brand_dna')
-        .upsert({ ...dna, updated_at: new Date().toISOString() }, { onConflict: 'client_id' })
+        .upsert({ ...dna, updated_at: new Date().toISOString() } as any, { onConflict: 'client_id' })
         .select()
         .single()
       if (error) throw error

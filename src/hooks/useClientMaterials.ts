@@ -49,7 +49,7 @@ export function useUpdateMaterial() {
     }) => {
       const { data, error } = await supabase
         .from('client_materials')
-        .update({ ...fields, updated_at: new Date().toISOString() })
+        .update({ ...fields, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select()
         .single()

@@ -57,7 +57,7 @@ export function useUpdateContentAsset() {
     mutationFn: async ({ id, ...updates }: Partial<ContentAsset> & { id: string }) => {
       const { data, error } = await supabase
         .from('content_assets')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq('id', id)
         .select('*, client:clients(id,company_name)')
         .single()
