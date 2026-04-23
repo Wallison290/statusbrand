@@ -166,7 +166,7 @@ export function ContentGenerator() {
     <div>
       <Header title="Gerador de Conteúdo" subtitle="Powered by OpenAI GPT-4o" />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
           {/* Form */}
           <div className="xl:col-span-2 space-y-4">

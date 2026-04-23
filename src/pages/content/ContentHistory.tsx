@@ -40,7 +40,7 @@ export function ContentHistory() {
   return (
     <div>
       <Header title="Histórico de Conteúdos" subtitle={`${contents?.length || 0} conteúdos salvos`} />
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <Input
@@ -187,7 +187,7 @@ export function ContentDetail() {
           </div>
         }
       />
-      <div className="p-6 max-w-3xl">
+      <div className="p-4 md:p-6 max-w-3xl">
         <div className="flex items-center gap-3 mb-6">
           <Badge status={content.status} />
           <span className="text-xs text-gray-500">{contentTypeLabels[content.content_type]}</span>

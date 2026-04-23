@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -6,7 +7,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
-import { useState } from 'react'
 
 const navItems = [
   { href: '/',          icon: LayoutDashboard, label: 'Dashboard'       },
@@ -24,7 +24,6 @@ const navItems = [
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-      {/* Square logo mark */}
       <div className="flex-shrink-0 w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center">
         <span className="text-white font-bold text-[11px] tracking-tight select-none">SB</span>
       </div>
@@ -49,10 +48,19 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-export function Sidebar() {
+interface SidebarProps {
+  onMobileClose?: () => void
+}
+
+export function Sidebar({ onMobileClose }: SidebarProps) {
   const location  = useLocation()
   const { signOut, profile } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    onMobileClose?.()
+  }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.aside
@@ -124,10 +132,10 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Collapse toggle */}
+      {/* Collapse toggle — hidden on mobile since sidebar is overlay */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors shadow-sm"
+        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full border border-[#e8e8e8] bg-white hidden md:flex items-center justify-center text-[#a0a0a0] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors shadow-sm"
       >
         {collapsed
           ? <ChevronRight className="w-3 h-3" />

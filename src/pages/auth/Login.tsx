@@ -89,7 +89,7 @@ export function Login() {
         <div className="relative z-10">
           <p className="text-[42px] font-bold text-white leading-[1.15] mb-4"
             style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            Gerencie sua agência com clareza.
+            Gerencie seu negócio com clareza.
           </p>
           <p className="text-[15px] text-white/50 leading-relaxed max-w-xs">
             Clientes, planejamento, conteúdo e financeiro — tudo em um só lugar.
@@ -130,7 +130,7 @@ export function Login() {
               <Input
                 label="Email"
                 type="email"
-                placeholder="voce@agencia.com"
+                placeholder="voce@statusbrand.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 icon={<Mail className="w-4 h-4" />}

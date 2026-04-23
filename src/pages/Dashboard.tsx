@@ -29,9 +29,9 @@ const StatCard = ({ label, value, href }: {
   <Card>
     <CardContent className="p-4">
       <p className="text-[11px] text-zinc-500 font-normal">{label}</p>
-      <p className="text-2xl font-medium text-zinc-100 mt-1 tabular-nums">{value}</p>
+      <p className="text-2xl font-medium text-[#0f0f0f] mt-1 tabular-nums">{value}</p>
       {href && (
-        <Link to={href} className="flex items-center gap-1 text-[11px] text-zinc-600 hover:text-zinc-400 mt-2 transition-colors">
+        <Link to={href} className="flex items-center gap-1 text-[11px] text-[#737373] hover:text-[#0f0f0f] mt-2 transition-colors">
           Ver detalhes <ArrowRight className="w-3 h-3" />
         </Link>
       )}
@@ -126,7 +126,7 @@ export function Dashboard() {
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard label="Total Clientes" value={stats.total_clients} href="/clients" />
@@ -161,10 +161,10 @@ export function Dashboard() {
                 { label: 'Planejar post', href: '/planner', icon: Clock },
               ].map(a => (
                 <Link key={a.href} to={a.href}>
-                  <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-white/[0.04] transition-colors group">
-                    <a.icon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-400" />
-                    <span className="text-[13px] text-zinc-400 group-hover:text-zinc-200">{a.label}</span>
-                    <ArrowRight className="w-3 h-3 text-zinc-700 ml-auto group-hover:text-zinc-500" />
+                  <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-[#f0f0f0] transition-colors group">
+                    <a.icon className="w-3.5 h-3.5 text-[#a0a0a0] group-hover:text-[#737373]" />
+                    <span className="text-[13px] text-[#737373] group-hover:text-[#0f0f0f]">{a.label}</span>
+                    <ArrowRight className="w-3 h-3 text-[#c0c0c0] ml-auto group-hover:text-[#a0a0a0]" />
                   </div>
                 </Link>
               ))}
@@ -192,9 +192,9 @@ export function Dashboard() {
             ) : (
               <div className="space-y-2">
                 {recentContents.map(c => (
-                  <div key={c.id} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/[0.03] transition-colors">
+                  <div key={c.id} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#f7f7f7] transition-colors">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-normal text-zinc-200 truncate">{c.term}</p>
+                      <p className="text-[13px] font-normal text-[#0f0f0f] truncate">{c.term}</p>
                       <p className="text-[11px] text-zinc-600">{(c.client as any)?.company_name || 'Sem cliente'} · {formatRelative(c.created_at)}</p>
                     </div>
                     <Badge status={c.status} />

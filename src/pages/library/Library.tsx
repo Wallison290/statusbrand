@@ -1074,7 +1074,7 @@ export function Library() {
         }
       />
 
-      <div className="p-6 space-y-5">
+      <div className="p-4 md:p-6 space-y-5">
         {/* Tab switcher */}
         <div className="flex gap-1 bg-[#f0f0f0] rounded-xl p-1 w-fit">
           {([

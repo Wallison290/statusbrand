@@ -742,7 +742,7 @@ export function Tasks() {
         }
       />
 
-      <div className="p-6 flex-1 overflow-hidden flex flex-col min-h-0">
+      <div className="p-4 md:p-6 flex-1 overflow-hidden flex flex-col min-h-0">
         {/* ── Week navigation ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-3 mb-5 flex-shrink-0">
           <button

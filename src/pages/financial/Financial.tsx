@@ -70,10 +70,10 @@ const filterLabels: Record<FilterKey, string> = {
 }
 
 const statusStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:          { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve: { bg: 'bg-amber-500/10 border-amber-500/20',    text: 'text-amber-400',   dot: 'bg-amber-400',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:       { bg: 'bg-red-500/10 border-red-500/20',         text: 'text-red-400',     dot: 'bg-red-400',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:      { bg: 'bg-zinc-500/10 border-zinc-500/20',       text: 'text-zinc-400',    dot: 'bg-zinc-500',    icon: <Ban className="w-3 h-3" /> },
+  ativo:          { bg: 'bg-emerald-50 border-emerald-200',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-red-50 border-red-200',          text: 'text-red-700',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-zinc-100 border-zinc-300',       text: 'text-zinc-600',    dot: 'bg-zinc-400',    icon: <Ban className="w-3 h-3" /> },
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -102,8 +102,8 @@ function KpiCard({
         <p className="text-[10px] text-zinc-500 uppercase tracking-wide">{label}</p>
       </div>
       <div>
-        <p className="text-[22px] font-bold text-white leading-tight">{value}</p>
-        {sub && <p className="text-[11px] text-zinc-600 mt-0.5">{sub}</p>}
+        <p className="text-[22px] font-bold text-[#0f0f0f] leading-tight">{value}</p>
+        {sub && <p className="text-[11px] text-[#737373] mt-0.5">{sub}</p>}
       </div>
     </motion.div>
   )
@@ -129,8 +129,8 @@ function AlertCard({
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-amber-300">Receita prevista menor que o MRR</p>
-          <p className="text-[11px] text-amber-500/70 mt-0.5">
+          <p className="text-[12px] font-semibold text-amber-800">Receita prevista menor que o MRR</p>
+          <p className="text-[11px] text-amber-700 mt-0.5">
             Impacto de {affectedCount} cliente{affectedCount !== 1 ? 's' : ''} em atraso
           </p>
         </div>
@@ -138,20 +138,20 @@ function AlertCard({
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
           <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">Previsto</p>
-          <p className="text-[13px] font-semibold text-zinc-300">{fmtBRL(previsto)}</p>
+          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(previsto)}</p>
         </div>
         <div>
           <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">MRR</p>
-          <p className="text-[13px] font-semibold text-zinc-300">{fmtBRL(mrr)}</p>
+          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(mrr)}</p>
         </div>
         <div>
           <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">Diferença</p>
-          <p className="text-[13px] font-semibold text-red-400">-{fmtBRL(diff)}</p>
+          <p className="text-[13px] font-semibold text-red-600">-{fmtBRL(diff)}</p>
         </div>
       </div>
       <button
         onClick={onViewAffected}
-        className="w-full h-7 rounded-lg border border-amber-500/20 bg-amber-500/[0.07] text-[11px] text-amber-400 hover:bg-amber-500/[0.12] transition-colors"
+        className="w-full h-7 rounded-lg border border-amber-300 bg-amber-50 text-[11px] text-amber-800 hover:bg-amber-100 transition-colors"
       >
         Ver clientes afetados
       </button>
@@ -201,21 +201,21 @@ function StatusDropdown({ client }: { client: Client }) {
       <button
         onClick={() => setOpen(o => !o)}
         disabled={saving}
-        className="h-7 px-2.5 flex items-center gap-1 rounded-lg text-[11px] text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08] transition-all"
+        className="h-7 px-2.5 flex items-center gap-1 rounded-lg text-[11px] text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
       >
         <ChevronDown className="w-3 h-3" /> Status
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-white/[0.08] bg-[#111113] shadow-xl overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-[#e8e8e8] bg-white shadow-lg overflow-hidden">
             {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
               const st = statusStyles[s]
               return (
                 <button
                   key={s}
                   onClick={() => handleSelect(s)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-white/[0.05] ${st.text}`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#f0f0f0] ${st.text}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
                   {financialStatusLabel(s)}
@@ -368,21 +368,21 @@ function PaymentHistoryModal({
           {payments.map(p => (
             <div
               key={p.id}
-              className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]"
+              className="flex items-center gap-3 p-3 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7]"
             >
               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'pago' ? 'bg-emerald-400' : 'bg-red-400'}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-zinc-200">{p.reference_month}</p>
-                {p.notes && <p className="text-[10px] text-zinc-600 truncate mt-0.5">{p.notes}</p>}
+                <p className="text-[12px] font-medium text-[#0f0f0f]">{p.reference_month}</p>
+                {p.notes && <p className="text-[10px] text-[#737373] truncate mt-0.5">{p.notes}</p>}
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-[13px] font-semibold text-zinc-200">{fmtBRLDecimal(p.amount)}</p>
+                <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRLDecimal(p.amount)}</p>
                 <p className="text-[10px] text-zinc-600 mt-0.5">{fmtDate(p.payment_date)}</p>
               </div>
               <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
                 p.status === 'pago'
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  : 'bg-red-50 border-red-200 text-red-700'
               }`}>
                 {p.status === 'pago' ? 'Pago' : 'Atrasado'}
               </span>
@@ -414,15 +414,15 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
     <motion.div
       initial={{ opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.035] hover:border-white/[0.09] transition-all group"
+      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-[#e8e8e8] bg-white hover:bg-[#f7f7f7] hover:border-[#d0d0d0] transition-all group"
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
         {client.logo_url ? (
           <img src={client.logo_url} alt={client.company_name}
-            className="w-8 h-8 rounded-lg object-cover border border-white/[0.08]" />
+            className="w-8 h-8 rounded-lg object-cover border border-[#e8e8e8]" />
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[12px] font-medium text-zinc-400">
+          <div className="w-8 h-8 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center text-[12px] font-medium text-[#737373]">
             {client.company_name[0].toUpperCase()}
           </div>
         )}
@@ -431,21 +431,21 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
       {/* Name — clickable */}
       <div className="flex-1 min-w-0">
         <Link to={`/clients/${client.id}`} className="group/name">
-          <p className="text-[13px] font-medium text-zinc-200 truncate group-hover/name:text-white transition-colors">
+          <p className="text-[13px] font-medium text-[#0f0f0f] truncate group-hover/name:text-[#0f0f0f] transition-colors">
             {client.company_name}
           </p>
         </Link>
         {aux && (
           <p className={`text-[10px] mt-0.5 ${
-            status === 'atrasado' ? 'text-red-400' :
-            status === 'vence_em_breve' ? 'text-amber-400' : 'text-zinc-600'
+            status === 'atrasado' ? 'text-red-600' :
+            status === 'vence_em_breve' ? 'text-amber-600' : 'text-[#737373]'
           }`}>{aux}</p>
         )}
       </div>
 
       {/* Valor mensal */}
       <div className="hidden sm:block w-28 text-right flex-shrink-0">
-        <p className="text-[13px] font-semibold text-zinc-200">
+        <p className="text-[13px] font-semibold text-[#0f0f0f]">
           {client.valor_mensal != null ? fmtBRLDecimal(client.valor_mensal) : '—'}
         </p>
         {client.dia_vencimento != null && (
@@ -472,7 +472,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
           <button
             onClick={() => onOpenPayment(client)}
             title="Registrar pagamento"
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 transition-all"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-emerald-700 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all"
           >
             <CheckCircle2 className="w-3 h-3" /> Pago
           </button>
@@ -485,7 +485,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
             target="_blank"
             rel="noopener noreferrer"
             title="Cobrar via WhatsApp"
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-400 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 transition-all"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200 transition-all"
           >
             <MessageCircle className="w-3 h-3" /> Cobrar
           </a>
@@ -495,7 +495,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
         <button
           onClick={() => onOpenHistory(client)}
           title="Histórico de pagamentos"
-          className="h-7 w-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
         >
           <History className="w-3 h-3" />
         </button>
@@ -507,7 +507,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
         <Link
           to={`/clients/${client.id}`}
           title="Abrir perfil"
-          className="h-7 w-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
         >
           <ExternalLink className="w-3 h-3" />
         </Link>
@@ -605,7 +605,7 @@ export function Financial() {
     <div>
       <Header title="Financeiro" subtitle="Visão consolidada da receita dos clientes" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -632,7 +632,7 @@ export function Financial() {
             sub={kpis.soonCount > 0
               ? `${kpis.soonCount} cliente${kpis.soonCount !== 1 ? 's' : ''} vence${kpis.soonCount !== 1 ? 'm' : ''} em até 5 dias`
               : 'nenhum vencimento próximo'}
-            accent={kpis.soonCount > 0 ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-white/[0.06] bg-white/[0.02]'}
+            accent={kpis.soonCount > 0 ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-[#e8e8e8] bg-white'}
             delay={0.08}
             onClick={kpis.soonCount > 0 ? () => setFilter('vence_em_breve') : undefined}
           />
@@ -641,7 +641,7 @@ export function Financial() {
             label="Em atraso"
             value={kpis.overdueCount > 0 ? fmtBRL(kpis.overdueRevenue) : '—'}
             sub={`${kpis.overdueCount} cliente${kpis.overdueCount !== 1 ? 's' : ''} em atraso`}
-            accent={kpis.overdueRevenue > 0 ? 'border-red-500/20 bg-red-500/[0.04]' : 'border-white/[0.06] bg-white/[0.02]'}
+            accent={kpis.overdueRevenue > 0 ? 'border-red-500/20 bg-red-500/[0.04]' : 'border-[#e8e8e8] bg-white'}
             delay={0.12}
             onClick={kpis.overdueCount > 0 ? () => setFilter('atrasado') : undefined}
           />
@@ -676,14 +676,14 @@ export function Financial() {
                 onClick={() => setFilter(key)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border ${
                   filter === key
-                    ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] border-transparent'
+                    ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
+                    : 'text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border-transparent'
                 }`}
               >
                 {filterLabels[key]}
                 {counts[key] > 0 && (
                   <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${
-                    filter === key ? 'bg-white/[0.12] text-zinc-300' : 'bg-white/[0.06] text-zinc-600'
+                    filter === key ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#737373]'
                   }`}>
                     {counts[key]}
                   </span>
@@ -699,7 +699,7 @@ export function Financial() {
               placeholder="Buscar cliente..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-8 pl-8 pr-3 rounded-lg border border-white/[0.08] bg-white/[0.03] text-[12px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.16] transition-colors"
+              className="w-full h-8 pl-8 pr-3 rounded-lg border border-[#e8e8e8] bg-white text-[12px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#a0a0a0] transition-colors"
             />
           </div>
         </div>
@@ -724,10 +724,10 @@ export function Financial() {
 
           {!isLoading && financialClients.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mb-4">
-                <DollarSign className="w-5 h-5 text-zinc-600" />
+              <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center mb-4">
+                <DollarSign className="w-5 h-5 text-[#a0a0a0]" />
               </div>
-              <p className="text-[14px] font-medium text-zinc-400">Nenhum cliente com dados financeiros</p>
+              <p className="text-[14px] font-medium text-[#737373]">Nenhum cliente com dados financeiros</p>
               <p className="text-[12px] text-zinc-600 mt-1 max-w-xs">
                 Cadastre o valor mensal e o dia de vencimento no perfil de cada cliente.
               </p>

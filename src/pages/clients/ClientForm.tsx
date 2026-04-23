@@ -103,7 +103,7 @@ export function ClientForm() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
           {/* Basic info */}
           <Card>

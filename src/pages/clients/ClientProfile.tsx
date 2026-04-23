@@ -536,7 +536,7 @@ export function ClientProfile() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {/* Profile header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
