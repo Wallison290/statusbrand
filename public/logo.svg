@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 260" width="500" height="260">
+  <!-- "Status" — large serif -->
+  <text
+    x="250"
+    y="130"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="100"
+    font-weight="700"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    letter-spacing="-2"
+  >Status</text>
+
+  <!-- "BRAND" — lighter, wider tracking -->
+  <text
+    x="188"
+    y="196"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="38"
+    font-weight="300"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    letter-spacing="10"
+  >BRAND</text>
+
+  <!-- Dot separator -->
+  <circle cx="315" cy="196" r="4" fill="#888888" />
+
+  <!-- "co" -->
+  <text
+    x="345"
+    y="196"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="38"
+    font-weight="300"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    letter-spacing="2"
+  >co</text>
+</svg>

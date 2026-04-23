@@ -67,42 +67,23 @@ export function Login() {
     <div className="min-h-screen flex">
 
       {/* Left panel — brand identity */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[#0f0f0f] flex-col justify-between p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[45%] bg-[#0f0f0f] flex-col items-center justify-center p-12 relative overflow-hidden">
         {/* Subtle texture */}
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '28px 28px' }} />
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md border border-white/20 flex items-center justify-center">
-              <span className="text-white font-bold text-[11px] select-none">SB</span>
-            </div>
-            <span className="text-white font-semibold text-[14px] tracking-tight"
-              style={{ fontFamily: "'Georgia', serif" }}>
-              StatusBrand
-            </span>
-          </div>
-        </div>
-
-        {/* Center text */}
-        <div className="relative z-10">
-          <p className="text-[42px] font-bold text-white leading-[1.15] mb-4"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            Gerencie seu negócio com clareza.
-          </p>
-          <p className="text-[15px] text-white/50 leading-relaxed max-w-xs">
-            Clientes, planejamento, conteúdo e financeiro — tudo em um só lugar.
-          </p>
-        </div>
-
-        {/* Bottom pills */}
-        <div className="relative z-10 flex flex-wrap gap-2">
-          {['Gestão de clientes', 'Planejamento de conteúdo', 'Financeiro', 'Portal do cliente'].map(f => (
-            <span key={f} className="text-[11px] text-white/40 border border-white/10 rounded-full px-3 py-1">
-              {f}
-            </span>
-          ))}
+        {/* Company logo */}
+        <div className="relative z-10 flex items-center justify-center w-full">
+          <img
+            src="/logo.png"
+            alt="StatusBrand"
+            className="w-full max-w-[320px] object-contain select-none"
+            draggable={false}
+            onError={e => {
+              const img = e.currentTarget
+              if (!img.src.endsWith('/logo.svg')) img.src = '/logo.svg'
+            }}
+          />
         </div>
       </div>
 
