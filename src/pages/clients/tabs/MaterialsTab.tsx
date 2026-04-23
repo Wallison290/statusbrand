@@ -65,7 +65,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
   const [uploading, setUploading]       = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const blank = { title: '', description: '', type: 'documento' as MaterialType, link_url: '' }
+  const blank = { title: '', description: '', type: 'documento' as MaterialType, link_url: '', folder_name: '' }
   const [form, setForm] = useState(blank)
 
   const isLink = form.type === 'link'
@@ -85,6 +85,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
       description: mat.description || '',
       type:        mat.type,
       link_url:    mat.link_url || '',
+      folder_name: mat.folder_name || '',
     })
     setSelectedFile(null)
     setModalOpen(true)
@@ -114,6 +115,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         file_url:    isLink ? null : file_url,
         link_url:    isLink ? (form.link_url.trim() || null) : null,
         file_size:   isLink ? null : file_size,
+        ...(form.folder_name?.trim() ? { folder_name: form.folder_name.trim() } : { folder_name: null }),
       }
 
       if (editing) {
@@ -277,6 +279,13 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
               onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
               placeholder="Breve descrição para o cliente..."
               rows={2}
+            />
+
+            <Input
+              label="Pasta (opcional)"
+              value={form.folder_name}
+              onChange={e => setForm(p => ({ ...p, folder_name: e.target.value }))}
+              placeholder="Ex: Campanha Abril, Stories..."
             />
 
             {/* Link ou arquivo */}

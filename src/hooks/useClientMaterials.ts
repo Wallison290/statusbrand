@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
-import type { ClientMaterial } from '@/types'
+import type { ClientMaterial, ClientMaterialWithClient } from '@/types'
 
 export function useClientMaterials(clientId: string) {
   return useQuery({
@@ -18,13 +18,31 @@ export function useClientMaterials(clientId: string) {
   })
 }
 
+// Todos os materiais (opcionalmente filtrados por cliente) — para a aba Biblioteca
+export function useAllClientMaterials(clientId?: string) {
+  return useQuery({
+    queryKey: ['client-materials-all', clientId ?? 'all'],
+    queryFn: async () => {
+      let query = supabase
+        .from('client_materials')
+        .select('*, client:clients(id, company_name)')
+        .order('folder_name', { ascending: true, nullsFirst: true })
+        .order('created_at', { ascending: false })
+      if (clientId) query = (query as any).eq('client_id', clientId)
+      const { data, error } = await query
+      if (error) throw error
+      return data as ClientMaterialWithClient[]
+    },
+  })
+}
+
 export function useAddMaterial() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (mat: Omit<ClientMaterial, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('client_materials')
-        .insert(mat)
+        .insert(mat as any)
         .select()
         .single()
       if (error) throw error
@@ -32,6 +50,7 @@ export function useAddMaterial() {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['client-materials', data.client_id] })
+      qc.invalidateQueries({ queryKey: ['client-materials-all'] })
     },
   })
 }
@@ -58,6 +77,7 @@ export function useUpdateMaterial() {
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ['client-materials', vars.clientId] })
+      qc.invalidateQueries({ queryKey: ['client-materials-all'] })
     },
   })
 }
@@ -84,6 +104,7 @@ export function useDeleteMaterial() {
     },
     onSuccess: (clientId) => {
       qc.invalidateQueries({ queryKey: ['client-materials', clientId] })
+      qc.invalidateQueries({ queryKey: ['client-materials-all'] })
     },
   })
 }

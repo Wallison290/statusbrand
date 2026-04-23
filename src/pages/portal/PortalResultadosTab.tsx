@@ -51,8 +51,8 @@ function MetricCard({ icon, label, value, sub, accent }: {
     <div className={`rounded-2xl border p-4 flex flex-col gap-2.5 ${accent}`}>
       <div className="opacity-60">{icon}</div>
       <div>
-        <p className="text-[11px] text-gray-500">{label}</p>
-        <p className="text-[20px] font-bold text-white leading-tight mt-0.5">{value}</p>
+        <p className="text-[11px] text-[#737373]">{label}</p>
+        <p className="text-[20px] font-bold text-[#0f0f0f] leading-tight mt-0.5">{value}</p>
         {sub && <p className="text-[10px] text-gray-600 mt-0.5">{sub}</p>}
       </div>
     </div>
@@ -69,9 +69,9 @@ function AttachmentItem({ att }: { att: ReportAttachment }) {
     <>
       <div
         onClick={() => isImg && setImgOpen(true)}
-        className={`group flex items-center gap-3 p-3 rounded-xl border border-white/[0.07] bg-white/[0.02] transition-all ${isImg ? 'cursor-pointer hover:bg-white/[0.05] hover:border-white/[0.12]' : ''}`}
+        className={`group flex items-center gap-3 p-3 rounded-xl border border-[#e8e8e8] bg-white transition-all ${isImg ? 'cursor-pointer hover:bg-[#f5f5f5] hover:border-[#d0d0d0]' : ''}`}
       >
-        <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-10 h-10 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0 overflow-hidden">
           {isImg && att.file_url
             ? <img src={att.file_url} alt={att.title} className="w-full h-full object-cover" />
             : att.type === 'pdf' ? <FileText className="w-4 h-4 text-red-400" />
@@ -79,7 +79,7 @@ function AttachmentItem({ att }: { att: ReportAttachment }) {
             : <File className="w-4 h-4 text-gray-500" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium text-zinc-200 truncate">{att.title}</p>
+          <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{att.title}</p>
           {att.description && <p className="text-[10px] text-gray-500 truncate mt-0.5">{att.description}</p>}
           <p className="text-[10px] text-gray-600 mt-0.5 uppercase tracking-wide">
             {att.type === 'imagem' ? 'Imagem' : att.type === 'pdf' ? 'PDF' : 'Link'}
@@ -88,13 +88,13 @@ function AttachmentItem({ att }: { att: ReportAttachment }) {
         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           {att.type === 'link' && att.link_url && (
             <a href={att.link_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-[#0f0f0f] hover:bg-[#f0f0f0] transition-colors">
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
           {att.file_url && att.type !== 'link' && (
             <a href={att.file_url} download target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-[#0f0f0f] hover:bg-[#f0f0f0] transition-colors">
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
@@ -145,10 +145,10 @@ function ReportView({ report }: { report: ClientReport }) {
       </div>
 
       {/* Social metrics */}
-      <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.05] flex items-center gap-2">
+      <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#e8e8e8] flex items-center gap-2">
           <TrendingUp className="w-3.5 h-3.5 text-gray-500" />
-          <p className="text-[13px] font-semibold text-white">Redes sociais</p>
+          <p className="text-[13px] font-semibold text-[#0f0f0f]">Redes sociais</p>
         </div>
         <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-5">
           {([
@@ -161,7 +161,7 @@ function ReportView({ report }: { report: ClientReport }) {
           ] as [string, string][]).map(([label, value]) => (
             <div key={label}>
               <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-1">{label}</p>
-              <p className="text-[15px] font-semibold text-zinc-200">{value}</p>
+              <p className="text-[15px] font-semibold text-[#0f0f0f]">{value}</p>
             </div>
           ))}
         </div>
@@ -169,10 +169,10 @@ function ReportView({ report }: { report: ClientReport }) {
 
       {/* Paid traffic — only if has data */}
       {hasPaid(report) && (
-        <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.05] flex items-center gap-2">
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#e8e8e8] flex items-center gap-2">
             <DollarSign className="w-3.5 h-3.5 text-gray-500" />
-            <p className="text-[13px] font-semibold text-white">Tráfego pago</p>
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Tráfego pago</p>
           </div>
           <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-5">
             {([
@@ -184,7 +184,7 @@ function ReportView({ report }: { report: ClientReport }) {
             ] as [string, string][]).map(([label, value]) => (
               <div key={label}>
                 <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-1">{label}</p>
-                <p className="text-[15px] font-semibold text-zinc-200">{value}</p>
+                <p className="text-[15px] font-semibold text-[#0f0f0f]">{value}</p>
               </div>
             ))}
           </div>
@@ -196,20 +196,20 @@ function ReportView({ report }: { report: ClientReport }) {
         <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.04] overflow-hidden">
           <div className="px-5 py-4 border-b border-indigo-500/[0.12] flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-            <p className="text-[13px] font-semibold text-white">Análise do mês</p>
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Análise do mês</p>
           </div>
           <div className="p-5">
-            <p className="text-[13px] text-gray-300 leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
+            <p className="text-[13px] text-[#737373] leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
           </div>
         </section>
       )}
 
       {/* Attachments */}
       {atts.length > 0 && (
-        <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-white/[0.05]">
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-[#e8e8e8]">
             <ImageIcon className="w-3.5 h-3.5 text-gray-500" />
-            <p className="text-[13px] font-semibold text-white">Anexos</p>
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Anexos</p>
             <span className="text-[11px] text-gray-600">{atts.length}</span>
           </div>
           <div className="p-5 space-y-2">
@@ -241,10 +241,10 @@ export function PortalResultadosTab() {
   if (typedReports.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center mb-4">
           <BarChart3 className="w-5 h-5 text-gray-600" />
         </div>
-        <p className="text-[14px] font-medium text-gray-400">Nenhum relatório disponível</p>
+        <p className="text-[14px] font-medium text-[#737373]">Nenhum relatório disponível</p>
         <p className="text-[12px] text-gray-600 mt-1 max-w-xs">
           Quando a agência publicar os resultados do mês, eles aparecerão aqui.
         </p>
@@ -263,8 +263,8 @@ export function PortalResultadosTab() {
             onClick={() => setSelectedId(r.id)}
             className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-[12px] font-medium transition-all ${
               r.id === (selected?.id)
-                ? 'bg-white/[0.08] text-white border border-white/[0.12]'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.04] border border-transparent'
+                ? 'bg-[#0f0f0f] text-white border border-[#0f0f0f]'
+                : 'text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent'
             }`}
           >
             {monthLabel(r.month, r.year)}
@@ -275,7 +275,7 @@ export function PortalResultadosTab() {
       {selected && (
         <>
           <div className="mb-2">
-            <h3 className="text-[15px] font-semibold text-white">{monthLabel(selected.month, selected.year)}</h3>
+            <h3 className="text-[15px] font-semibold text-[#0f0f0f]">{monthLabel(selected.month, selected.year)}</h3>
             <p className="text-[11px] text-gray-600 mt-0.5">Relatório de performance</p>
           </div>
           <ReportView key={selected.id} report={selected} />

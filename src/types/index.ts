@@ -311,8 +311,13 @@ export interface ClientMaterial {
   file_url: string | null
   link_url: string | null
   file_size: number | null
+  folder_name: string | null   // organização em pastas (requer migration)
   created_at: string
   updated_at: string
+}
+
+export type ClientMaterialWithClient = ClientMaterial & {
+  client?: { id: string; company_name: string }
 }
 
 export interface ClientSupportContact {

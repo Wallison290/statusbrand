@@ -14,7 +14,7 @@ export function PortalLayout({ children, clientName }: PortalLayoutProps) {
   const initial   = (rawName || profile?.email || 'C')[0].toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[#0c0e14] flex flex-col">
+    <div className="min-h-screen bg-[#f7f7f7] flex flex-col">
       {/* Top bar */}
       <header className="h-14 border-b border-[#e8e8e8] bg-white/95 backdrop-blur-sm flex items-center px-6 flex-shrink-0 sticky top-0 z-30">
         {/* Brand */}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Paperclip, Link2,
@@ -40,8 +40,8 @@ const statusColors: Record<PlannerStatus, string> = {
   aprovado: 'bg-green-500', publicado: 'bg-emerald-500',
 }
 const statusTextColors: Record<PlannerStatus, string> = {
-  ideia: 'text-purple-400', producao: 'text-blue-400', revisao: 'text-yellow-400',
-  aprovado: 'text-green-400', publicado: 'text-emerald-400',
+  ideia: 'text-purple-600', producao: 'text-blue-600', revisao: 'text-yellow-600',
+  aprovado: 'text-green-600', publicado: 'text-emerald-600',
 }
 const statusLabels: Record<PlannerStatus, string> = {
   ideia: 'Ideia', producao: 'Produção', revisao: 'Revisão',
@@ -365,7 +365,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
     <div>
       {/* Nav */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-white capitalize">
+        <h3 className="text-base font-semibold text-[#0f0f0f] capitalize">
           {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
         </h3>
         <div className="flex gap-2">
@@ -400,20 +400,20 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                   onMouseLeave={() => setHover(null)}
                   className={`
                     min-h-[90px] p-1.5 rounded-lg border transition-all
-                    ${inMonth ? 'border-white/8' : 'border-transparent opacity-30 cursor-default'}
-                    ${inMonth && di.length > 0 ? 'hover:border-white/25 hover:bg-white/3 cursor-pointer' : ''}
+                    ${inMonth ? 'border-[#e8e8e8]' : 'border-transparent opacity-30 cursor-default'}
+                    ${inMonth && di.length > 0 ? 'hover:border-[#d0d0d0] hover:bg-[#f5f5f5] cursor-pointer' : ''}
                     ${today ? 'border-blue-500/40 bg-blue-500/5' : ''}
                   `}
                 >
                   <div className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full
-                    ${today ? 'bg-blue-600 text-white' : inMonth ? 'text-gray-300' : 'text-gray-600'}`}>
+                    ${today ? 'bg-blue-600 text-white' : inMonth ? 'text-[#737373]' : 'text-gray-400'}`}>
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-0.5">
                     {di.slice(0, 3).map(item => (
                       <div key={item.id} className="flex items-center gap-1 truncate">
                         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                        <span className="text-gray-400 truncate text-[10px] flex-1">{item.title}</span>
+                        <span className="text-[#737373] truncate text-[10px] flex-1">{item.title}</span>
                         {item.attachments && item.attachments.length > 0 && (
                           <Paperclip className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" />
                         )}
@@ -431,7 +431,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
       {/* Legend */}
       <div className="flex gap-3 mt-4 flex-wrap">
         {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([s, c]) => (
-          <div key={s} className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div key={s} className="flex items-center gap-1.5 text-xs text-[#737373]">
             <div className={`w-2 h-2 rounded-full ${c}`} />
             {statusLabels[s]}
           </div>
@@ -534,11 +534,11 @@ function humanizeActivity(status: ApprovalStatus, _item: PlannerItem): string {
 type CardColor = 'amber' | 'green' | 'blue' | 'purple' | 'default'
 
 const cardColorMap: Record<CardColor, { icon: string; label: string; value: string; ring: string; dot: string }> = {
-  amber:   { icon: 'text-amber-400',  label: 'text-amber-300/80',  value: 'text-amber-200',  ring: 'border-amber-500/20  bg-amber-500/[0.06]',  dot: 'bg-amber-400' },
-  green:   { icon: 'text-green-400',  label: 'text-green-300/80',  value: 'text-green-200',  ring: 'border-green-500/20  bg-green-500/[0.06]',  dot: 'bg-green-400' },
-  blue:    { icon: 'text-blue-400',   label: 'text-blue-300/80',   value: 'text-blue-200',   ring: 'border-blue-500/20   bg-blue-500/[0.06]',   dot: 'bg-blue-400' },
-  purple:  { icon: 'text-purple-400', label: 'text-purple-300/80', value: 'text-purple-200', ring: 'border-purple-500/20 bg-purple-500/[0.06]', dot: 'bg-purple-400' },
-  default: { icon: 'text-gray-500',   label: 'text-gray-500',      value: 'text-gray-300',   ring: 'border-white/[0.08]  bg-white/[0.02]',      dot: 'bg-gray-600' },
+  amber:   { icon: 'text-amber-600',  label: 'text-amber-700',  value: 'text-amber-800',  ring: 'border-amber-200  bg-amber-50',   dot: 'bg-amber-400' },
+  green:   { icon: 'text-green-600',  label: 'text-green-700',  value: 'text-green-800',  ring: 'border-green-200  bg-green-50',   dot: 'bg-green-500' },
+  blue:    { icon: 'text-blue-600',   label: 'text-blue-700',   value: 'text-blue-800',   ring: 'border-blue-200   bg-blue-50',    dot: 'bg-blue-500' },
+  purple:  { icon: 'text-purple-600', label: 'text-purple-700', value: 'text-purple-800', ring: 'border-purple-200 bg-purple-50',  dot: 'bg-purple-500' },
+  default: { icon: 'text-gray-500',   label: 'text-[#737373]',  value: 'text-[#0f0f0f]',  ring: 'border-[#e8e8e8]  bg-white',     dot: 'bg-gray-400' },
 }
 
 function StatusCard({
@@ -577,11 +577,11 @@ function AgencyWorkItem({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] flex items-center justify-center flex-shrink-0">
+      <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-medium text-zinc-200 truncate">{label}</p>
+        <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{label}</p>
         <p className="text-[10px] text-gray-500 mt-0.5">{detail}</p>
       </div>
       <div className="w-1.5 h-1.5 rounded-full bg-green-400/60 flex-shrink-0" />
@@ -654,8 +654,8 @@ function ClientDashboardTab({
         transition={{ duration: 0.22 }}
         className={`rounded-2xl p-6 border ${
           pendingItems.length > 0
-            ? 'border-amber-500/20 bg-gradient-to-br from-amber-500/8 via-amber-500/3 to-transparent'
-            : 'border-white/[0.07] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent'
+            ? 'border-amber-200 bg-gradient-to-br from-amber-50 via-amber-50/40 to-transparent'
+            : 'border-[#e8e8e8] bg-gradient-to-br from-[#f7f7f7] via-white to-transparent'
         }`}
       >
         <div className="flex items-start justify-between gap-4">
@@ -663,7 +663,7 @@ function ClientDashboardTab({
             <p className="text-[10px] text-gray-600 uppercase tracking-[0.12em] mb-2">
               Olá, {firstName}
             </p>
-            <h2 className="text-[18px] sm:text-[20px] font-semibold text-white leading-snug">
+            <h2 className="text-[18px] sm:text-[20px] font-semibold text-[#0f0f0f] leading-snug">
               {headline}
             </h2>
             <p className="text-[13px] text-gray-500 mt-1.5 leading-relaxed">{subline}</p>
@@ -746,7 +746,7 @@ function ClientDashboardTab({
             >
               <div className="flex items-center gap-2.5 px-5 py-4 border-b border-amber-500/[0.12]">
                 <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
-                <p className="text-[13px] font-semibold text-white">
+                <p className="text-[13px] font-semibold text-[#0f0f0f]">
                   {pendingItems.length === 1
                     ? '1 conteúdo precisa da sua aprovação'
                     : `${pendingItems.length} conteúdos precisam da sua aprovação`}
@@ -762,14 +762,14 @@ function ClientDashboardTab({
                       className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-amber-500/[0.06] transition-colors text-left group"
                     >
                       {thumb ? (
-                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/[0.10] flex-shrink-0" />
+                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-[#e8e8e8] flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
                           <div className={`w-2 h-2 rounded-full ${statusColors[item.status as PlannerStatus]}`} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-white truncate">{item.title}</p>
+                        <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{item.title}</p>
                         <p className="text-[11px] text-gray-500 mt-0.5">
                           {format(parseISO(item.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
                           <span className="mx-1.5 text-gray-700">·</span>
@@ -791,15 +791,15 @@ function ClientDashboardTab({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.14 }}
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden"
+            className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden"
           >
-            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/[0.05]">
+            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-[#e8e8e8]">
               <div className="flex gap-0.5 items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse [animation-delay:150ms]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse [animation-delay:300ms]" />
               </div>
-              <p className="text-[13px] font-semibold text-white">Em andamento</p>
+              <p className="text-[13px] font-semibold text-[#0f0f0f]">Em andamento</p>
             </div>
             <div className="p-5 space-y-3.5">
               {plannerItems.length === 0 ? (
@@ -845,11 +845,11 @@ function ClientDashboardTab({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.18 }}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden"
+              className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden"
             >
-              <div className="flex items-center gap-2 px-5 py-4 border-b border-white/[0.05]">
+              <div className="flex items-center gap-2 px-5 py-4 border-b border-[#e8e8e8]">
                 <Bell className="w-3.5 h-3.5 text-gray-500" />
-                <p className="text-[13px] font-semibold text-white">Atividade recente</p>
+                <p className="text-[13px] font-semibold text-[#0f0f0f]">Atividade recente</p>
               </div>
               <div className="px-5 py-4 space-y-4">
                 {recentActivity.map(item => {
@@ -857,14 +857,14 @@ function ClientDashboardTab({
                   return (
                     <div key={item.id} className="flex items-start gap-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5
-                        ${status === 'aprovado' ? 'bg-green-500/12' : status === 'reprovado' ? 'bg-red-500/12' : 'bg-orange-500/12'}`}
+                        ${status === 'aprovado' ? 'bg-green-50' : status === 'reprovado' ? 'bg-red-50' : 'bg-orange-50'}`}
                       >
                         <span className={`${approvalText[status]} [&>svg]:w-3 [&>svg]:h-3`}>
                           {approvalIcons[status]}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] text-gray-300 leading-relaxed">
+                        <p className="text-[12px] text-[#737373] leading-relaxed">
                           {humanizeActivity(status, item)}
                         </p>
                         <p className="text-[11px] text-gray-600 truncate mt-0.5">{item.title}</p>
@@ -888,10 +888,10 @@ function ClientDashboardTab({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.11 }}
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden"
+            className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.05]">
-              <p className="text-[12px] font-semibold text-white">Próximos conteúdos</p>
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#e8e8e8]">
+              <p className="text-[12px] font-semibold text-[#0f0f0f]">Próximos conteúdos</p>
               <button
                 onClick={() => onNavigate('planejamento')}
                 className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
@@ -907,7 +907,7 @@ function ClientDashboardTab({
                 <p className="text-[11px] text-gray-700 mt-0.5">A agência está preparando o calendário.</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.04]">
+              <div className="divide-y divide-[#e8e8e8]">
                 {upcomingItems.map(item => {
                   const thumb = item.attachments?.find(a => a.file_type.startsWith('image/'))
                   const isPending = item.approval_status === 'pendente_aprovacao'
@@ -915,25 +915,25 @@ function ClientDashboardTab({
                     <button
                       key={item.id}
                       onClick={() => { setSelectedItem(item); setItemOpen(true) }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors text-left group"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#f5f5f5] transition-colors text-left group"
                     >
                       <div className="w-9 flex-shrink-0 text-center">
                         <p className="text-[9px] text-gray-600 uppercase leading-tight">
                           {format(parseISO(item.scheduled_date), 'MMM', { locale: ptBR })}
                         </p>
-                        <p className="text-[16px] font-bold text-zinc-200 tabular-nums leading-tight">
+                        <p className="text-[16px] font-bold text-[#0f0f0f] tabular-nums leading-tight">
                           {format(parseISO(item.scheduled_date), 'd')}
                         </p>
                       </div>
                       {thumb ? (
-                        <img src={thumb.file_url} alt="" className="w-8 h-8 rounded-md object-cover border border-white/8 flex-shrink-0" />
+                        <img src={thumb.file_url} alt="" className="w-8 h-8 rounded-md object-cover border border-[#e8e8e8] flex-shrink-0" />
                       ) : (
-                        <div className="w-8 h-8 rounded-md bg-white/[0.04] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-md bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
                           <div className={`w-1.5 h-1.5 rounded-full ${statusColors[item.status as PlannerStatus]}`} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-zinc-300 truncate">{item.title}</p>
+                        <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{item.title}</p>
                         <p className={`text-[10px] mt-0.5 ${statusTextColors[item.status as PlannerStatus]}`}>
                           {contentTypeLabels[item.content_type as ContentType]}
                         </p>
@@ -941,7 +941,7 @@ function ClientDashboardTab({
                       {isPending && (
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 animate-pulse" />
                       )}
-                      <ChevronRight className="w-3 h-3 text-gray-700 group-hover:text-gray-400 transition-colors flex-shrink-0" />
+                      <ChevronRight className="w-3 h-3 text-[#a0a0a0] group-hover:text-[#737373] transition-colors flex-shrink-0" />
                     </button>
                   )
                 })}
@@ -954,25 +954,25 @@ function ClientDashboardTab({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.16 }}
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden"
+            className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden"
           >
-            <div className="flex items-center gap-2 px-4 py-3.5 border-b border-white/[0.05]">
+            <div className="flex items-center gap-2 px-4 py-3.5 border-b border-[#e8e8e8]">
               <Calendar className="w-3.5 h-3.5 text-gray-500" />
-              <p className="text-[12px] font-semibold text-white">Próxima reunião</p>
+              <p className="text-[12px] font-semibold text-[#0f0f0f]">Próxima reunião</p>
             </div>
             <div className="p-5 flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center">
                 <Calendar className="w-4 h-4 text-gray-600" />
               </div>
               <div>
-                <p className="text-[12px] font-medium text-gray-300">Quer alinhar estratégias?</p>
+                <p className="text-[12px] font-medium text-[#737373]">Quer alinhar estratégias?</p>
                 <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
                   Agende uma conversa com a agência.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('suporte')}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/[0.10] bg-white/[0.03] text-[11px] text-gray-300 font-medium hover:bg-white/[0.07] hover:border-white/[0.18] transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8e8e8] bg-[#f7f7f7] text-[11px] text-[#737373] font-medium hover:bg-[#f0f0f0] hover:border-[#d0d0d0] transition-all"
               >
                 <MessageCircle className="w-3.5 h-3.5" /> Solicitar reunião
               </button>
@@ -984,19 +984,19 @@ function ClientDashboardTab({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.2 }}
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+            className="rounded-2xl border border-[#e8e8e8] bg-white p-4"
           >
             <div className="flex items-center gap-3 mb-3.5">
               {client.logo_url ? (
                 <img src={client.logo_url} alt={client.company_name}
-                  className="w-8 h-8 rounded-lg object-cover border border-white/[0.10] flex-shrink-0" />
+                  className="w-8 h-8 rounded-lg object-cover border border-[#e8e8e8] flex-shrink-0" />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.10] flex items-center justify-center text-xs font-bold text-zinc-300 flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center text-xs font-bold text-[#0f0f0f] flex-shrink-0">
                   {client.company_name[0].toUpperCase()}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-[12px] font-semibold text-zinc-200 truncate">{client.company_name}</p>
+                <p className="text-[12px] font-semibold text-[#0f0f0f] truncate">{client.company_name}</p>
                 <p className="text-[10px] text-gray-500 truncate">{client.niche}</p>
               </div>
             </div>
@@ -1213,12 +1213,116 @@ function MaterialDetailModal({
   )
 }
 
+// ── Material row (shared between flat + grouped views) ──────────────────────
+
+type MatHoverSetter = (s: MatHoverState | null) => void
+
+function MatRow({
+  mat,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  mat: ClientMaterial
+  onClick: (m: ClientMaterial) => void
+  onMouseEnter: (e: React.MouseEvent<HTMLDivElement>, m: ClientMaterial) => void
+  onMouseLeave: MatHoverSetter
+}) {
+  const isImg  = matIsImage(mat)
+  const isLink = mat.type === 'link' && !!mat.link_url
+
+  // Links get a special card — no hover card, click opens URL directly
+  if (isLink) {
+    return (
+      <div className="flex items-start gap-3 p-4 bg-white border border-[#e8e8e8] rounded-xl hover:border-sky-200 hover:shadow-sm transition-all group">
+        {/* Icon */}
+        <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Link2 className="w-4.5 h-4.5 text-sky-500" />
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-[#0f0f0f] text-sm truncate">{mat.title}</p>
+          {mat.description && (
+            <p className="text-[12px] text-[#737373] mt-0.5 leading-snug line-clamp-2">{mat.description}</p>
+          )}
+          <p className="text-[10px] text-[#a0a0a0] mt-1 truncate">{mat.link_url}</p>
+        </div>
+
+        {/* CTA */}
+        <a
+          href={mat.link_url!}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg bg-sky-500 text-white text-[12px] font-medium hover:bg-sky-600 transition-colors whitespace-nowrap"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> Abrir
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      onClick={() => onClick(mat)}
+      onMouseEnter={e => onMouseEnter(e, mat)}
+      onMouseLeave={() => onMouseLeave(null)}
+      className="flex items-center gap-3 p-3.5 bg-white border border-[#e8e8e8] rounded-xl hover:bg-[#f5f5f5] hover:border-[#d0d0d0] transition-colors group cursor-pointer"
+    >
+      {/* Thumbnail */}
+      {isImg && mat.file_url ? (
+        <img
+          src={mat.file_url}
+          alt={mat.title}
+          className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-[#e8e8e8]"
+        />
+      ) : (
+        <div className="w-12 h-12 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
+          <PortalMaterialIcon type={mat.type} />
+        </div>
+      )}
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-[#0f0f0f] text-sm truncate">{mat.title}</p>
+        {mat.description && (
+          <p className="text-xs text-[#737373] truncate mt-0.5">{mat.description}</p>
+        )}
+        <p className="text-[10px] text-[#a0a0a0] mt-0.5">
+          {MATERIAL_TYPE_LABELS[mat.type]}
+          {' · '}{formatDate(mat.created_at)}
+        </p>
+      </div>
+
+      {/* Hint */}
+      <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-[11px] text-[#737373]">Visualizar</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#a0a0a0]" />
+      </div>
+    </div>
+  )
+}
+
 // ── Tab principal ───────────────────────────────────────────────────────────
 
+type MatTypeFilter = 'todos' | MaterialType
+
+const MAT_TAB_LABELS: { value: MatTypeFilter; label: string }[] = [
+  { value: 'todos',     label: 'Todos'     },
+  { value: 'imagem',    label: 'Imagens'   },
+  { value: 'video',     label: 'Vídeos'    },
+  { value: 'pdf',       label: 'PDFs'      },
+  { value: 'link',      label: 'Links'     },
+  { value: 'documento', label: 'Documentos'},
+  { value: 'outro',     label: 'Outros'    },
+]
+
 function PortalMateriaisTab({ materials }: { materials: ClientMaterial[] }) {
-  const [hover, setHover]       = useState<MatHoverState | null>(null)
-  const [selected, setSelected] = useState<ClientMaterial | null>(null)
+  const [hover, setHover]         = useState<MatHoverState | null>(null)
+  const [selected, setSelected]   = useState<ClientMaterial | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [typeFilter, setTypeFilter] = useState<MatTypeFilter>('todos')
 
   const handleClick = (mat: ClientMaterial) => {
     setSelected(mat)
@@ -1236,67 +1340,114 @@ function PortalMateriaisTab({ materials }: { materials: ClientMaterial[] }) {
     setHover({ mat, top, left })
   }
 
+  // Types that actually exist in the data
+  const availableTypes = useMemo(() => {
+    const present = new Set(materials.map(m => m.type))
+    return MAT_TAB_LABELS.filter(t => t.value === 'todos' || present.has(t.value as MaterialType))
+  }, [materials])
+
+  // Materials filtered by type
+  const filtered = useMemo(() =>
+    typeFilter === 'todos' ? materials : materials.filter(m => m.type === typeFilter),
+    [materials, typeFilter]
+  )
+
+  // Group by folder_name
+  const { folders, byFolder, noFolder } = useMemo(() => {
+    const foldersSet = new Set<string>()
+    const byFolder: Record<string, ClientMaterial[]> = {}
+    const noFolder: ClientMaterial[] = []
+    filtered.forEach(m => {
+      if (m.folder_name) {
+        foldersSet.add(m.folder_name)
+        if (!byFolder[m.folder_name]) byFolder[m.folder_name] = []
+        byFolder[m.folder_name].push(m)
+      } else {
+        noFolder.push(m)
+      }
+    })
+    return { folders: [...foldersSet], byFolder, noFolder }
+  }, [filtered])
+
+  const hasFolders = folders.length > 0
+
   if (materials.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mb-4">
-          <FolderOpen className="w-5 h-5 text-gray-600" />
+        <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center mb-4">
+          <FolderOpen className="w-5 h-5 text-[#a0a0a0]" />
         </div>
-        <p className="text-[14px] font-medium text-gray-400">Nenhum material disponível</p>
-        <p className="text-[12px] text-gray-600 mt-1 max-w-xs">
+        <p className="text-[14px] font-medium text-[#737373]">Nenhum material disponível</p>
+        <p className="text-[12px] text-[#a0a0a0] mt-1 max-w-xs">
           Quando a agência adicionar materiais, eles aparecerão aqui.
         </p>
       </div>
     )
   }
 
+  const rowProps = { onClick: handleClick, onMouseEnter: handleMouseEnter, onMouseLeave: setHover }
+
   return (
-    <div>
-      <div className="space-y-2">
-        {materials.map(mat => {
-          const isImg = matIsImage(mat)
-          return (
-            <div
-              key={mat.id}
-              onClick={() => handleClick(mat)}
-              onMouseEnter={e => handleMouseEnter(e, mat)}
-              onMouseLeave={() => setHover(null)}
-              className="flex items-center gap-3 p-3.5 bg-white/3 border border-white/8 rounded-xl hover:bg-white/5 hover:border-white/15 transition-colors group cursor-pointer"
-            >
-              {/* Thumbnail */}
-              {isImg && mat.file_url ? (
-                <img
-                  src={mat.file_url}
-                  alt={mat.title}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-white/8"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0">
-                  <PortalMaterialIcon type={mat.type} />
-                </div>
-              )}
+    <div className="space-y-4">
+      {/* Type filter tabs — only shown when multiple types exist */}
+      {availableTypes.length > 2 && (
+        <div className="flex gap-1.5 flex-wrap">
+          {availableTypes.map(({ value, label }) => {
+            const count = value === 'todos' ? materials.length : materials.filter(m => m.type === value).length
+            return (
+              <button
+                key={value}
+                onClick={() => setTypeFilter(value)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
+                  typeFilter === value
+                    ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
+                    : 'bg-white text-[#737373] border-[#e0e0e0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
+                }`}
+              >
+                {label} <span className={`ml-1 text-[10px] ${typeFilter === value ? 'text-white/70' : 'text-[#b0b0b0]'}`}>({count})</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-white text-sm truncate">{mat.title}</p>
-                {mat.description && (
-                  <p className="text-xs text-gray-500 truncate mt-0.5">{mat.description}</p>
-                )}
-                <p className="text-[10px] text-gray-600 mt-0.5">
-                  {MATERIAL_TYPE_LABELS[mat.type]}
-                  {' · '}{formatDate(mat.created_at)}
-                </p>
+      {/* Material list — grouped by folder or flat */}
+      {filtered.length === 0 ? (
+        <div className="py-10 text-center">
+          <p className="text-[13px] text-[#a0a0a0]">Nenhum material nessa categoria.</p>
+        </div>
+      ) : hasFolders ? (
+        <div className="space-y-6">
+          {/* Folders */}
+          {folders.map(folder => (
+            <div key={folder}>
+              <div className="flex items-center gap-2 mb-2.5">
+                <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                <p className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider">{folder}</p>
+                <span className="text-[10px] text-[#b0b0b0]">({byFolder[folder].length})</span>
               </div>
-
-              {/* Hint */}
-              <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] text-blue-400">Visualizar</span>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+              <div className="space-y-2 pl-0.5">
+                {byFolder[folder].map(mat => <MatRow key={mat.id} mat={mat} {...rowProps} />)}
               </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+          {/* Items without folder */}
+          {noFolder.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2.5">
+                <p className="text-[11px] font-semibold text-[#b0b0b0] uppercase tracking-wider">Outros</p>
+              </div>
+              <div className="space-y-2">
+                {noFolder.map(mat => <MatRow key={mat.id} mat={mat} {...rowProps} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map(mat => <MatRow key={mat.id} mat={mat} {...rowProps} />)}
+        </div>
+      )}
 
       <AnimatePresence>
         {hover && <MaterialHoverCard state={hover} />}
@@ -1342,10 +1493,10 @@ function PortalSuporteTab({ contacts }: { contacts: ClientSupportContact[] }) {
   if (contacts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-12 h-12 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center mb-4">
           <LifeBuoy className="w-5 h-5 text-gray-600" />
         </div>
-        <p className="text-[14px] font-medium text-gray-400">Nenhum contato de suporte</p>
+        <p className="text-[14px] font-medium text-[#737373]">Nenhum contato de suporte</p>
         <p className="text-[12px] text-gray-600 mt-1 max-w-xs">
           Em breve você verá os canais de atendimento da sua agência aqui.
         </p>
@@ -1367,19 +1518,19 @@ function PortalSuporteTab({ contacts }: { contacts: ClientSupportContact[] }) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 bg-white/3 border border-white/8 rounded-xl hover:bg-white/5 hover:border-white/15 transition-colors group"
+              className="flex items-center gap-3 p-4 bg-white border border-[#e8e8e8] rounded-xl hover:bg-[#f5f5f5] hover:border-[#d0d0d0] transition-colors group"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
                 <PortalContactIcon type={c.contact_type} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white text-sm truncate">{c.name}</p>
+                <p className="font-medium text-[#0f0f0f] text-sm truncate">{c.name}</p>
                 {c.role && <p className="text-xs text-gray-500 truncate">{c.role}</p>}
                 <p className="text-[11px] text-gray-600 mt-0.5 truncate">
                   {CONTACT_TYPE_LABELS[c.contact_type]} · {c.contact_value}
                 </p>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-300 transition-colors flex-shrink-0" />
+              <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#737373] transition-colors flex-shrink-0" />
             </a>
           )
         })}
@@ -1421,8 +1572,8 @@ export function PortalDashboard() {
         <div className="flex items-center justify-center h-full py-32">
           <div className="text-center">
             <Building2 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400 font-medium">Conta não vinculada</p>
-            <p className="text-gray-600 text-sm mt-1">Entre em contato com sua agência.</p>
+            <p className="text-[#737373] font-medium">Conta não vinculada</p>
+            <p className="text-gray-500 text-sm mt-1">Entre em contato com sua agência.</p>
           </div>
         </div>
       </PortalLayout>
@@ -1447,40 +1598,40 @@ export function PortalDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-4 mb-8 p-5 rounded-2xl border border-white/8 bg-white/3"
+          className="flex items-start gap-4 mb-8 p-5 rounded-2xl border border-[#e8e8e8] bg-white"
         >
           {client.logo_url ? (
             <img src={client.logo_url} alt={client.company_name}
-              className="w-16 h-16 rounded-2xl object-cover border border-white/10 flex-shrink-0" />
+              className="w-16 h-16 rounded-2xl object-cover border border-[#e8e8e8] flex-shrink-0" />
           ) : (
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-2xl font-bold text-white flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center text-2xl font-bold text-[#0f0f0f] flex-shrink-0">
               {client.company_name[0].toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-white">{client.company_name}</h1>
+              <h1 className="text-xl font-bold text-[#0f0f0f]">{client.company_name}</h1>
               <Badge status={client.status} />
             </div>
-            <p className="text-gray-400 text-sm mt-0.5">{client.responsible_name} · {client.niche}</p>
+            <p className="text-[#737373] text-sm mt-0.5">{client.responsible_name} · {client.niche}</p>
             <div className="flex flex-wrap gap-3 mt-2">
               {client.instagram && (
-                <span className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="flex items-center gap-1 text-xs text-[#737373]">
                   <Instagram className="w-3 h-3" /> @{client.instagram.replace('@', '')}
                 </span>
               )}
               {client.email && (
-                <span className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="flex items-center gap-1 text-xs text-[#737373]">
                   <Mail className="w-3 h-3" /> {client.email}
                 </span>
               )}
               {client.whatsapp && (
-                <span className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="flex items-center gap-1 text-xs text-[#737373]">
                   <Phone className="w-3 h-3" /> {client.whatsapp}
                 </span>
               )}
               {client.website && (
-                <span className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="flex items-center gap-1 text-xs text-[#737373]">
                   <Globe className="w-3 h-3" /> {client.website}
                 </span>
               )}
@@ -1488,7 +1639,7 @@ export function PortalDashboard() {
           </div>
           <div className="text-right text-xs text-gray-500 flex-shrink-0">
             <p>Cliente desde</p>
-            <p className="font-medium text-gray-400">{formatDate(client.entry_date)}</p>
+            <p className="font-medium text-[#737373]">{formatDate(client.entry_date)}</p>
           </div>
         </motion.div>
 
@@ -1537,10 +1688,10 @@ export function PortalDashboard() {
           <TabsContent value="conteudos">
             <div className="space-y-3">
               {(contents || []).map(c => (
-                <Card key={c.id} className="hover:border-white/15 transition-colors">
+                <Card key={c.id} className="hover:border-[#d0d0d0] transition-colors">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{c.title || c.term}</p>
+                      <p className="font-medium text-[#0f0f0f] text-sm truncate">{c.title || c.term}</p>
                       {c.subtitle && <p className="text-xs text-gray-500 truncate mt-0.5">{c.subtitle}</p>}
                       <p className="text-xs text-gray-600 mt-1">{formatRelative(c.created_at)}</p>
                     </div>
@@ -1569,7 +1720,7 @@ export function PortalDashboard() {
                     <CardTitle className="text-xs text-gray-500 uppercase tracking-wide">{label}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm text-gray-300">{value}</p>
+                    <p className="text-sm text-[#737373]">{value}</p>
                   </CardContent>
                 </Card>
               ))}
