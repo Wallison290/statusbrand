@@ -51,16 +51,16 @@ const statusLabels: Record<PlannerStatus, string> = {
 // ─── Approval config ─────────────────────────────────────────────────────────
 
 const approvalBg: Record<ApprovalStatus, string> = {
-  pendente_aprovacao: 'bg-yellow-500/10 border-yellow-500/20',
-  aprovado: 'bg-green-500/10 border-green-500/20',
-  ajuste_solicitado: 'bg-orange-500/10 border-orange-500/20',
-  reprovado: 'bg-red-500/10 border-red-500/20',
+  pendente_aprovacao: 'bg-yellow-50 border-yellow-200',
+  aprovado: 'bg-green-50 border-green-200',
+  ajuste_solicitado: 'bg-orange-50 border-orange-200',
+  reprovado: 'bg-red-50 border-red-200',
 }
 const approvalText: Record<ApprovalStatus, string> = {
-  pendente_aprovacao: 'text-yellow-400',
-  aprovado: 'text-green-400',
-  ajuste_solicitado: 'text-orange-400',
-  reprovado: 'text-red-400',
+  pendente_aprovacao: 'text-yellow-600',
+  aprovado: 'text-green-600',
+  ajuste_solicitado: 'text-orange-600',
+  reprovado: 'text-red-600',
 }
 const approvalLabels: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação',
@@ -193,9 +193,9 @@ function ItemDetailView({
 
         <div className="space-y-4 mt-1">
           {item.notes && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{item.notes}</p>
+            <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
+              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Notas</p>
+              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{item.notes}</p>
             </div>
           )}
 
@@ -205,13 +205,13 @@ function ItemDetailView({
               <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {images.map(img => (
                   <a key={img.id} href={img.file_url} target="_blank" rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors">
+                    className="block overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
                     <img src={img.file_url} alt={img.file_name} className="w-full object-cover"
                       style={{ maxHeight: images.length === 1 ? 260 : 150 }} />
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/3">
-                      <ImageIcon className="w-3 h-3 text-blue-400" />
-                      <span className="text-[10px] text-gray-400 truncate flex-1">{img.file_name}</span>
-                      <ExternalLink className="w-3 h-3 text-gray-600" />
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-[#f5f5f5]">
+                      <ImageIcon className="w-3 h-3 text-blue-500" />
+                      <span className="text-[10px] text-[#737373] truncate flex-1">{img.file_name}</span>
+                      <ExternalLink className="w-3 h-3 text-[#a0a0a0]" />
                     </div>
                   </a>
                 ))}
@@ -225,11 +225,11 @@ function ItemDetailView({
               <div className="space-y-1.5">
                 {otherAttachments.map((att: PlannerAttachment) => (
                   <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors">
+                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors">
                     <FileTypeIcon type={att.file_type} size="md" />
-                    <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
-                    {att.file_size && <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                    <span className="text-xs text-[#0f0f0f] truncate flex-1">{att.file_name}</span>
+                    {att.file_size && <span className="text-[10px] text-[#a0a0a0] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                    <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
                   </a>
                 ))}
               </div>
@@ -242,10 +242,10 @@ function ItemDetailView({
               <div className="space-y-1.5">
                 {item.links.map(link => (
                   <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors">
-                    <Link2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                    <span className="text-xs text-blue-300 truncate flex-1">{link.label || link.url}</span>
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
+                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors">
+                    <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                    <span className="text-xs text-blue-600 truncate flex-1">{link.label || link.url}</span>
+                    <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
                   </a>
                 ))}
               </div>
@@ -267,12 +267,12 @@ function ItemDetailView({
             </div>
 
             {item.client_feedback && currentStatus !== 'pendente_aprovacao' && (
-              <div className="mb-3 p-2.5 bg-black/20 rounded-lg">
+              <div className="mb-3 p-2.5 bg-white/70 border border-black/[0.06] rounded-lg">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <MessageSquare className="w-3 h-3 text-gray-500" />
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wide">Seu comentário</span>
+                  <MessageSquare className="w-3 h-3 text-[#a0a0a0]" />
+                  <span className="text-[10px] text-[#a0a0a0] uppercase tracking-wide">Seu comentário</span>
                 </div>
-                <p className="text-xs text-gray-300 leading-relaxed">{item.client_feedback}</p>
+                <p className="text-xs text-[#737373] leading-relaxed">{item.client_feedback}</p>
               </div>
             )}
 
@@ -283,7 +283,7 @@ function ItemDetailView({
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
                   ${currentStatus === 'aprovado'
                     ? 'bg-green-500 text-white'
-                    : 'bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/20'
+                    : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
                   } disabled:opacity-50`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
@@ -294,7 +294,7 @@ function ItemDetailView({
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
                   ${currentStatus === 'ajuste_solicitado'
                     ? 'bg-orange-500 text-white'
-                    : 'bg-orange-500/15 text-orange-400 hover:bg-orange-500/25 border border-orange-500/20'
+                    : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
                   } disabled:opacity-50`}
               >
                 <AlertCircle className="w-3.5 h-3.5" /> Solicitar ajuste
@@ -305,7 +305,7 @@ function ItemDetailView({
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
                   ${currentStatus === 'reprovado'
                     ? 'bg-red-500 text-white'
-                    : 'bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/20'
+                    : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
                   } disabled:opacity-50`}
               >
                 <XCircle className="w-3.5 h-3.5" /> Reprovar
@@ -461,17 +461,17 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                 <div
                   key={item.id}
                   onClick={() => { setSelectedItem(item); setItemOpen(true) }}
-                  className="flex items-start gap-3 p-3 bg-white/3 border border-white/8 rounded-xl cursor-pointer hover:bg-white/5 hover:border-white/15 transition-colors group"
+                  className="flex items-start gap-3 p-3 bg-white border border-[#e8e8e8] rounded-xl cursor-pointer hover:bg-[#f5f5f5] hover:border-[#d0d0d0] transition-colors group"
                 >
                   {thumb && (
-                    <img src={thumb.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+                    <img src={thumb.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-[#e8e8e8]" />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                      <p className="font-medium text-white text-sm truncate">{item.title}</p>
+                      <p className="font-medium text-[#0f0f0f] text-sm truncate">{item.title}</p>
                     </div>
-                    <p className="text-xs text-gray-500 ml-3.5">
+                    <p className="text-xs text-[#737373] ml-3.5">
                       {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                     </p>
                     {item.approval_status && item.approval_status !== 'pendente_aprovacao' && (
@@ -481,24 +481,24 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                       </span>
                     )}
                     {item.notes && (
-                      <p className="text-xs text-gray-500 line-clamp-1 ml-3.5 mt-0.5">{item.notes}</p>
+                      <p className="text-xs text-[#737373] line-clamp-1 ml-3.5 mt-0.5">{item.notes}</p>
                     )}
                     <div className="flex items-center gap-3 ml-3.5 mt-1.5">
                       {item.attachments && item.attachments.length > 0 && (
                         <div className="flex items-center gap-1">
-                          <Paperclip className="w-3 h-3 text-gray-500" />
-                          <span className="text-[11px] text-gray-500">{item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}</span>
+                          <Paperclip className="w-3 h-3 text-[#a0a0a0]" />
+                          <span className="text-[11px] text-[#737373]">{item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}</span>
                         </div>
                       )}
                       {item.links && item.links.length > 0 && (
                         <div className="flex items-center gap-1">
-                          <Link2 className="w-3 h-3 text-blue-400" />
-                          <span className="text-[11px] text-blue-400">{item.links.length} {item.links.length === 1 ? 'link' : 'links'}</span>
+                          <Link2 className="w-3 h-3 text-blue-500" />
+                          <span className="text-[11px] text-blue-600">{item.links.length} {item.links.length === 1 ? 'link' : 'links'}</span>
                         </div>
                       )}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-300 transition-colors flex-shrink-0 mt-0.5" />
+                  <ChevronRight className="w-4 h-4 text-[#a0a0a0] group-hover:text-[#737373] transition-colors flex-shrink-0 mt-0.5" />
                 </div>
               )
             })}
@@ -894,7 +894,7 @@ function ClientDashboardTab({
               <p className="text-[12px] font-semibold text-[#0f0f0f]">Próximos conteúdos</p>
               <button
                 onClick={() => onNavigate('planejamento')}
-                className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+                className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-500 transition-colors"
               >
                 Ver todos <ArrowRight className="w-3 h-3" />
               </button>
