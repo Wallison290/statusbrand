@@ -804,8 +804,6 @@ export function Planner() {
           client_feedback: null,
           reviewed_at: null,
           reviewed_by: null,
-          attachments: [],
-          links: [],
         })
         // Vincular mídia do arsenal como anexo
         if (linkedAsset?.media_url) {
