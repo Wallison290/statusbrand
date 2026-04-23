@@ -92,11 +92,34 @@ export function useRegisterPayment() {
         .select()
         .single()
       if (error) throw error
+
+      // Also register in client_payments so the portal history is updated
+      if (data.valor_mensal != null) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const now = new Date()
+          const refMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+          await supabase
+            .from('client_payments')
+            .insert({
+              client_id: id,
+              user_id: user.id,
+              amount: data.valor_mensal,
+              payment_date: today,
+              reference_month: refMonth,
+              status: 'pago',
+              notes: null,
+            })
+        }
+      }
+
       return data as Client
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['clients'] })
       qc.invalidateQueries({ queryKey: ['clients', data.id] })
+      qc.invalidateQueries({ queryKey: ['client_payments', data.id] })
+      qc.invalidateQueries({ queryKey: ['portal-payments'] })
     },
   })
 }

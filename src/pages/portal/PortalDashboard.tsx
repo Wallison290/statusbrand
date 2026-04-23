@@ -23,13 +23,14 @@ import { Button } from '@/components/ui/button'
 import {
   usePortalClient, usePortalPlanner, usePortalContents, useSubmitApproval,
   usePortalMaterials, usePortalSupportContacts,
+  usePortalContentAssets, usePortalBrandDNA,
 } from '@/hooks/usePortal'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { PortalResultadosTab } from './PortalResultadosTab'
 import { PortalFinanceiroTab } from './PortalFinanceiroTab'
-import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType } from '@/types'
+import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType } from '@/types'
 
@@ -1545,6 +1546,8 @@ export function PortalDashboard() {
   const { data: client, isLoading } = usePortalClient()
   const { data: plannerItems } = usePortalPlanner()
   const { data: contents } = usePortalContents()
+  const { data: contentAssets = [] } = usePortalContentAssets()
+  const { data: brandDNA } = usePortalBrandDNA()
   const { data: materials = [] } = usePortalMaterials()
   const { data: supportContacts = [] } = usePortalSupportContacts()
   const { profile } = useAuth()
@@ -1653,7 +1656,7 @@ export function PortalDashboard() {
               Planejamento ({plannerItems?.length || 0})
             </TabsTrigger>
             <TabsTrigger value="conteudos">
-              Conteúdos ({contents?.length || 0})
+              Conteúdos ({(contents?.length || 0) + contentAssets.length})
             </TabsTrigger>
             <TabsTrigger value="empresa">Empresa</TabsTrigger>
             <TabsTrigger value="materiais">Materiais</TabsTrigger>
@@ -1686,26 +1689,90 @@ export function PortalDashboard() {
 
           {/* Aba Conteúdos */}
           <TabsContent value="conteudos">
-            <div className="space-y-3">
-              {(contents || []).map(c => (
-                <Card key={c.id} className="hover:border-[#d0d0d0] transition-colors">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#0f0f0f] text-sm truncate">{c.title || c.term}</p>
-                      {c.subtitle && <p className="text-xs text-gray-500 truncate mt-0.5">{c.subtitle}</p>}
-                      <p className="text-xs text-gray-600 mt-1">{formatRelative(c.created_at)}</p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge status={c.status} />
-                      <span className="text-xs text-gray-500">{contentTypeLabels[c.content_type]}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {(!contents || contents.length === 0) && (
+            <div className="space-y-6">
+
+              {/* Conteúdos gerados com IA */}
+              {(contents && contents.length > 0) && (
+                <div>
+                  <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wide mb-3">Gerados com IA</p>
+                  <div className="space-y-2">
+                    {contents.map(c => (
+                      <Card key={c.id} className="hover:border-[#d0d0d0] transition-colors">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-[#0f0f0f] text-sm truncate">{c.title || c.term}</p>
+                            {c.subtitle && <p className="text-xs text-[#737373] truncate mt-0.5">{c.subtitle}</p>}
+                            <p className="text-xs text-[#a0a0a0] mt-1">{formatRelative(c.created_at)}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge status={c.status} />
+                            <span className="text-xs text-[#737373]">{contentTypeLabels[c.content_type]}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Arsenal Visual (content_assets) */}
+              {contentAssets.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wide mb-3">Arsenal visual</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {contentAssets.map(asset => {
+                      const isImg = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
+                      return (
+                        <div key={asset.id} className="rounded-xl border border-[#e8e8e8] bg-white overflow-hidden hover:border-[#c8c8c8] hover:shadow-sm transition-all">
+                          {/* Thumbnail */}
+                          <div className="h-28 bg-[#f5f5f5] flex items-center justify-center overflow-hidden">
+                            {asset.media_url ? (
+                              isImg ? (
+                                <img
+                                  src={asset.media_url}
+                                  alt={asset.title}
+                                  className="w-full h-full object-cover"
+                                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
+                              ) : (
+                                <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1">
+                                  <File className="w-6 h-6 text-[#b0b0b0]" />
+                                  <span className="text-[10px] text-[#b0b0b0]">Abrir arquivo</span>
+                                </a>
+                              )
+                            ) : (
+                              <ImageIcon className="w-6 h-6 text-[#c8c8c8]" />
+                            )}
+                          </div>
+                          {/* Info */}
+                          <div className="p-2.5">
+                            <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{asset.title}</p>
+                            {asset.caption && (
+                              <p className="text-[10px] text-[#737373] mt-0.5 line-clamp-2 leading-relaxed">{asset.caption}</p>
+                            )}
+                            {asset.media_url && (
+                              <a
+                                href={asset.media_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-blue-600 hover:text-blue-700"
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" /> Abrir
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty state */}
+              {(!contents || contents.length === 0) && contentAssets.length === 0 && (
                 <div className="text-center py-16">
-                  <Sparkles className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Nenhum conteúdo gerado ainda.</p>
+                  <Sparkles className="w-8 h-8 text-[#c0c0c0] mx-auto mb-2" />
+                  <p className="text-[#737373] text-sm">Nenhum conteúdo disponível ainda.</p>
                 </div>
               )}
             </div>
@@ -1713,20 +1780,89 @@ export function PortalDashboard() {
 
           {/* Aba Empresa */}
           <TabsContent value="empresa">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {infoFields.map(({ label, value }) => value && (
-                <Card key={label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs text-gray-500 uppercase tracking-wide">{label}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-[#737373]">{value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-              {infoFields.every(f => !f.value) && (
-                <div className="col-span-2 text-center py-12">
-                  <p className="text-gray-500 text-sm">Nenhuma informação estratégica cadastrada ainda.</p>
+            <div className="space-y-6">
+              {/* Informações gerais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {infoFields.map(({ label, value }) => value && (
+                  <Card key={label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">{label}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-[#737373]">{value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {infoFields.every(f => !f.value) && (
+                  <div className="col-span-2 text-center py-8">
+                    <p className="text-[#a0a0a0] text-sm">Nenhuma informação estratégica cadastrada ainda.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Brand DNA */}
+              {brandDNA && (
+                brandDNA.how_brand_speaks || brandDNA.how_brand_not_speaks ||
+                brandDNA.positioning || brandDNA.ideal_language || brandDNA.mental_triggers
+              ) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-px flex-1 bg-[#e8e8e8]" />
+                    <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wider px-2">Identidade da marca</p>
+                    <div className="h-px flex-1 bg-[#e8e8e8]" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {brandDNA.how_brand_speaks && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Como a marca fala</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[#737373]">{brandDNA.how_brand_speaks}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {brandDNA.how_brand_not_speaks && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Como não fala</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[#737373]">{brandDNA.how_brand_not_speaks}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {brandDNA.positioning && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Posicionamento</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[#737373]">{brandDNA.positioning}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {brandDNA.ideal_language && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Linguagem ideal</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[#737373]">{brandDNA.ideal_language}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {brandDNA.mental_triggers && (
+                      <Card className="md:col-span-2">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Gatilhos mentais</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[#737373]">{brandDNA.mental_triggers}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

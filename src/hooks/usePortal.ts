@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from './useAuth'
-import type { Client, PlannerItem, Content, ApprovalStatus, ClientMaterial, ClientSupportContact } from '@/types'
+import type { Client, PlannerItem, Content, ApprovalStatus, ClientMaterial, ClientSupportContact, ContentAsset, BrandDNA } from '@/types'
 import type { ClientPayment } from './usePayments'
 
 function useIsPortalClient() {
@@ -63,6 +63,43 @@ export function usePortalContents() {
         .order('created_at', { ascending: false })
       if (error) throw error
       return data as Content[]
+    },
+    enabled: isClient,
+  })
+}
+
+export function usePortalContentAssets() {
+  const { profile } = useAuth()
+  const isClient = useIsPortalClient()
+
+  return useQuery({
+    queryKey: ['portal-content-assets', profile?.linked_client_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('content_assets')
+        .select('*')
+        .eq('client_id', profile!.linked_client_id!)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as ContentAsset[]
+    },
+    enabled: isClient,
+  })
+}
+
+export function usePortalBrandDNA() {
+  const { profile } = useAuth()
+  const isClient = useIsPortalClient()
+
+  return useQuery({
+    queryKey: ['portal-brand-dna', profile?.linked_client_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('brand_dna')
+        .select('*')
+        .eq('client_id', profile!.linked_client_id!)
+        .maybeSingle()
+      return data as BrandDNA | null
     },
     enabled: isClient,
   })
