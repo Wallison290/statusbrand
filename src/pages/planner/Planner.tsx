@@ -860,6 +860,10 @@ export function Planner() {
     set('title', asset.title)
     set('content_type', asset.content_type)
     if (asset.caption) set('notes', asset.caption)
+    if (asset.link_url) setPendingLinks(prev => {
+      if (prev.includes(asset.link_url!)) return prev
+      return [...prev, asset.link_url!]
+    })
   }
 
   // ── Hover handler ──────────────────────────────────────────────────────────

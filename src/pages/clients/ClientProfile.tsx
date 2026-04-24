@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Edit, Sparkles, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
-  Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil,
+  Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
@@ -188,6 +188,18 @@ function AssetViewDialog({
               <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5">Observações</p>
               <p className="text-[13px] text-zinc-400 leading-relaxed">{asset.observations}</p>
             </div>
+          )}
+          {asset.link_url && (
+            <a
+              href={asset.link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+            >
+              <Link2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <span className="text-[12px] text-blue-300 flex-1 truncate">{asset.link_url}</span>
+              <ExternalLink className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
+            </a>
           )}
         </div>
         <DialogFooter>
@@ -408,12 +420,13 @@ export function ClientProfile() {
     caption: '',
     content_type: 'post' as ContentType,
     observations: '',
+    link_url: '',
   })
   const [assetFile, setAssetFile] = useState<File | null>(null)
   const [assetUploading, setAssetUploading] = useState(false)
 
   const resetAssetForm = () => {
-    setAssetForm({ title: '', caption: '', content_type: 'post', observations: '' })
+    setAssetForm({ title: '', caption: '', content_type: 'post', observations: '', link_url: '' })
     setAssetFile(null)
     setEditingAsset(null)
   }
@@ -431,6 +444,7 @@ export function ClientProfile() {
       caption: asset.caption || '',
       content_type: asset.content_type,
       observations: asset.observations || '',
+      link_url: asset.link_url || '',
     })
     setAssetFile(null)
     setAssetModalOpen(true)
@@ -466,7 +480,7 @@ export function ClientProfile() {
         content_type: assetForm.content_type,
         observations: assetForm.observations.trim() || null,
         media_url,
-        link_url: null as string | null,
+        link_url: assetForm.link_url.trim() || null,
         category: null as string | null,
       }
 
@@ -941,6 +955,13 @@ export function ClientProfile() {
               onChange={e => setAssetForm(p => ({ ...p, observations: e.target.value }))}
               placeholder="Notas internas, contexto..."
               rows={2}
+            />
+
+            <Input
+              label="Link externo (opcional)"
+              value={assetForm.link_url}
+              onChange={e => setAssetForm(p => ({ ...p, link_url: e.target.value }))}
+              placeholder="https://..."
             />
           </div>
 
