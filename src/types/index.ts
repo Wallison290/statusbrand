@@ -211,6 +211,7 @@ export interface PlannerItem {
   title: string
   content_type: ContentType
   scheduled_date: string
+  scheduled_time?: string | null
   status: PlannerStatus
   notes: string | null
   approval_status: ApprovalStatus | null

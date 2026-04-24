@@ -183,6 +183,7 @@ function ItemDetailView({
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs text-gray-500">
               {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              {item.scheduled_time && ` às ${item.scheduled_time}`}
             </span>
             <span className="text-gray-700">·</span>
             <span className="text-xs text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
@@ -1602,6 +1603,107 @@ function PortalSuporteTab({ contacts }: { contacts: ClientSupportContact[] }) {
   )
 }
 
+// ─── Content Asset Detail Modal ──────────────────────────────────────────────
+
+function ContentAssetDetailModal({
+  asset,
+  open,
+  onClose,
+}: { asset: ContentAsset; open: boolean; onClose: () => void }) {
+  const isImg = asset.media_url
+    ? /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
+    : false
+  const isVid = asset.media_url
+    ? /\.(mp4|webm|ogg|mov)(\?|$)/i.test(asset.media_url)
+    : false
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2.5">
+            <ImageIcon className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />
+            <DialogTitle className="text-base leading-snug">{asset.title}</DialogTitle>
+          </div>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className="text-xs text-gray-500">{contentTypeLabels[asset.content_type as ContentType]}</span>
+            {asset.category && (
+              <>
+                <span className="text-gray-700">·</span>
+                <span className="text-xs text-gray-500">{asset.category}</span>
+              </>
+            )}
+            <span className="text-gray-700">·</span>
+            <span className="text-xs text-gray-500">{formatDate(asset.created_at)}</span>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-1">
+          {/* Imagem */}
+          {isImg && asset.media_url && (
+            <img
+              src={asset.media_url}
+              alt={asset.title}
+              className="w-full rounded-xl border border-[#e8e8e8] object-cover"
+            />
+          )}
+
+          {/* Vídeo */}
+          {isVid && asset.media_url && (
+            <video
+              src={asset.media_url}
+              controls
+              className="w-full rounded-xl border border-[#e8e8e8]"
+            />
+          )}
+
+          {/* Arquivo não-mídia */}
+          {asset.media_url && !isImg && !isVid && (
+            <div className="flex items-center gap-3 p-3 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl">
+              <File className="w-5 h-5 text-[#a0a0a0] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-[#0f0f0f] truncate">Arquivo disponível</p>
+                <p className="text-[11px] text-[#737373] mt-0.5">Clique em "Abrir arquivo" para visualizar</p>
+              </div>
+            </div>
+          )}
+
+          {/* Legenda / caption */}
+          {asset.caption && (
+            <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
+              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Legenda</p>
+              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{asset.caption}</p>
+            </div>
+          )}
+
+          {/* Observações */}
+          {asset.observations && (
+            <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
+              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Observações</p>
+              <p className="text-sm text-[#737373] leading-relaxed whitespace-pre-wrap">{asset.observations}</p>
+            </div>
+          )}
+
+          {!asset.caption && !asset.observations && !asset.media_url && (
+            <p className="text-xs text-[#a0a0a0] text-center py-4">Nenhuma informação adicional.</p>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          {asset.media_url && (
+            <a href={asset.media_url} target="_blank" rel="noopener noreferrer" download>
+              <Button size="sm">
+                <Download className="w-3.5 h-3.5" /> Abrir arquivo
+              </Button>
+            </a>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Main Portal Dashboard ────────────────────────────────────────────────────
 
 export function PortalDashboard() {
@@ -1614,6 +1716,8 @@ export function PortalDashboard() {
   const { data: supportContacts = [] } = usePortalSupportContacts()
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [selectedAsset, setSelectedAsset] = useState<ContentAsset | null>(null)
+  const [assetModalOpen, setAssetModalOpen] = useState(false)
 
   const rawName = profile?.full_name || ''
   const firstName = rawName.split(' ')[0] || 'Cliente'
@@ -1785,7 +1889,12 @@ export function PortalDashboard() {
                     {contentAssets.map(asset => {
                       const isImg = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
                       return (
-                        <div key={asset.id} className="rounded-xl border border-[#e8e8e8] bg-white overflow-hidden hover:border-[#c8c8c8] hover:shadow-sm transition-all">
+                        <button
+                          key={asset.id}
+                          type="button"
+                          onClick={() => { setSelectedAsset(asset); setAssetModalOpen(true) }}
+                          className="rounded-xl border border-[#e8e8e8] bg-white overflow-hidden hover:border-[#c8c8c8] hover:shadow-sm transition-all text-left w-full"
+                        >
                           {/* Thumbnail */}
                           <div className="h-28 bg-[#f5f5f5] flex items-center justify-center overflow-hidden">
                             {asset.media_url ? (
@@ -1797,10 +1906,10 @@ export function PortalDashboard() {
                                   onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                                 />
                               ) : (
-                                <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1">
+                                <div className="flex flex-col items-center gap-1">
                                   <File className="w-6 h-6 text-[#b0b0b0]" />
-                                  <span className="text-[10px] text-[#b0b0b0]">Abrir arquivo</span>
-                                </a>
+                                  <span className="text-[10px] text-[#b0b0b0]">Ver arquivo</span>
+                                </div>
                               )
                             ) : (
                               <ImageIcon className="w-6 h-6 text-[#c8c8c8]" />
@@ -1812,18 +1921,11 @@ export function PortalDashboard() {
                             {asset.caption && (
                               <p className="text-[10px] text-[#737373] mt-0.5 line-clamp-2 leading-relaxed">{asset.caption}</p>
                             )}
-                            {asset.media_url && (
-                              <a
-                                href={asset.media_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-blue-600 hover:text-blue-700"
-                              >
-                                <ExternalLink className="w-2.5 h-2.5" /> Abrir
-                              </a>
-                            )}
+                            <p className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-blue-600">
+                              <Eye className="w-2.5 h-2.5" /> Ver detalhes
+                            </p>
                           </div>
-                        </div>
+                        </button>
                       )
                     })}
                   </div>
@@ -1951,6 +2053,15 @@ export function PortalDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de detalhe de conteúdo do arsenal */}
+      {selectedAsset && (
+        <ContentAssetDetailModal
+          asset={selectedAsset}
+          open={assetModalOpen}
+          onClose={() => { setAssetModalOpen(false); setSelectedAsset(null) }}
+        />
+      )}
     </PortalLayout>
   )
 }

@@ -306,6 +306,7 @@ function PlannerItemView({
           <div className="flex items-center gap-2 mt-1.5 ml-4.5 flex-wrap">
             <span className="text-xs text-gray-500">
               {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              {item.scheduled_time && ` às ${item.scheduled_time}`}
             </span>
             <span className="text-gray-700">·</span>
             <span className="text-xs text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
@@ -584,6 +585,7 @@ export function Planner() {
     notes: '',
     client_id: null as string | null,
     scheduled_date: format(new Date(), 'yyyy-MM-dd'),
+    scheduled_time: '',
   })
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [linkInput, setLinkInput] = useState('')
@@ -654,6 +656,7 @@ export function Planner() {
       title: '', content_type: 'post', status: 'ideia',
       notes: '', client_id: null,
       scheduled_date: format(new Date(), 'yyyy-MM-dd'),
+      scheduled_time: '',
     })
     setPendingFiles([])
     setPendingLinks([])
@@ -723,6 +726,7 @@ export function Planner() {
       notes: item.notes || '',
       client_id: item.client_id,
       scheduled_date: item.scheduled_date,
+      scheduled_time: item.scheduled_time || '',
     })
     setExistingAttachments(item.attachments || [])
     setExistingLinks(item.links || [])
@@ -761,6 +765,7 @@ export function Planner() {
           notes: form.notes || null,
           client_id: form.client_id,
           scheduled_date: form.scheduled_date,
+          scheduled_time: form.scheduled_time || null,
         })
         for (const att of attachmentsToDelete) {
           const path = extractStoragePath(att.file_url)
@@ -798,6 +803,7 @@ export function Planner() {
           notes: form.notes || null,
           client_id: form.client_id,
           scheduled_date: form.scheduled_date,
+          scheduled_time: form.scheduled_time || null,
           content_id: null,
           asset_id: linkedAsset?.id ?? null,
           approval_status: null,
@@ -1136,14 +1142,25 @@ export function Planner() {
           <div className="space-y-4">
             <Input label="Título *" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Post sobre tendências..." />
 
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Data *</label>
-              <input
-                type="date"
-                value={form.scheduled_date}
-                onChange={e => set('scheduled_date', e.target.value)}
-                className="w-full h-9 px-3 rounded-md border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 [color-scheme:dark]"
-              />
+            <div className="grid grid-cols-[1fr_140px] gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Data *</label>
+                <input
+                  type="date"
+                  value={form.scheduled_date}
+                  onChange={e => set('scheduled_date', e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 [color-scheme:dark]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Hora (opcional)</label>
+                <input
+                  type="time"
+                  value={form.scheduled_time}
+                  onChange={e => set('scheduled_time', e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 [color-scheme:dark]"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
