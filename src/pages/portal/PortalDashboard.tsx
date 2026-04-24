@@ -32,6 +32,7 @@ import { PortalResultadosTab } from './PortalResultadosTab'
 import { PortalFinanceiroTab } from './PortalFinanceiroTab'
 import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
+import { calcFinancialStatus, getFinancialAuxText } from '@/utils/financial'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -461,7 +462,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
               return (
                 <div
                   key={item.id}
-                  onClick={() => { setSelectedItem(item); setItemOpen(true) }}
+                  onClick={() => { setDayOpen(false); setSelectedItem(item); setItemOpen(true) }}
                   className="flex items-start gap-3 p-3 bg-white border border-[#e8e8e8] rounded-xl cursor-pointer hover:bg-[#f5f5f5] hover:border-[#d0d0d0] transition-colors group"
                 >
                   {thumb && (
@@ -630,6 +631,11 @@ function ClientDashboardTab({
     .sort((a, b) => parseISO(b.reviewed_at!).getTime() - parseISO(a.reviewed_at!).getTime())
     .slice(0, 5)
 
+  // Financial alert — only show for 'vence_em_breve'
+  const financialStatus = calcFinancialStatus(client)
+  const financialAux = getFinancialAuxText(client, financialStatus)
+  const showFinancialAlert = financialStatus === 'vence_em_breve' && client.dia_vencimento != null
+
   // Dynamic hero copy
   const headline = pendingItems.length > 0
     ? pendingItems.length === 1
@@ -647,6 +653,62 @@ function ClientDashboardTab({
 
   return (
     <div className="space-y-6">
+
+      {/* ── Alertas de atenção ── */}
+      {(showFinancialAlert || pendingItems.length > 0) && (
+        <div className="space-y-2">
+
+          {/* Alerta financeiro: vence em breve */}
+          {showFinancialAlert && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50"
+            >
+              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-amber-700">Vence em breve</p>
+                <p className="text-[12px] text-amber-800 mt-0.5 leading-snug">
+                  {financialAux === 'Vence hoje'
+                    ? 'Seu pagamento vence hoje.'
+                    : `${financialAux}. Fique atento ao pagamento.`}
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('financeiro')}
+                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-600 transition-colors whitespace-nowrap"
+              >
+                Ver <ArrowRight className="w-3 h-3" />
+              </button>
+            </motion.div>
+          )}
+
+          {/* Alerta de conteúdos pendentes */}
+          {pendingItems.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: showFinancialAlert ? 0.05 : 0 }}
+              className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50"
+            >
+              <Bell className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-blue-700">Conteúdos aguardando aprovação</p>
+                <p className="text-[12px] text-blue-800 mt-0.5 leading-snug">
+                  Você possui {pendingItems.length} {pendingItems.length === 1 ? 'conteúdo' : 'conteúdos'} para revisar.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('planejamento')}
+                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-blue-700 hover:text-blue-600 transition-colors whitespace-nowrap"
+              >
+                Revisar <ArrowRight className="w-3 h-3" />
+              </button>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* ── Hero header ── */}
       <motion.div
