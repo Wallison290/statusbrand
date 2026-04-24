@@ -1617,6 +1617,8 @@ function ContentAssetDetailModal({
     ? /\.(mp4|webm|ogg|mov)(\?|$)/i.test(asset.media_url)
     : false
 
+  const hasContent = !!(asset.caption || asset.observations || asset.media_url || asset.link_url)
+
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1641,11 +1643,13 @@ function ContentAssetDetailModal({
         <div className="space-y-4 mt-1">
           {/* Imagem */}
           {isImg && asset.media_url && (
-            <img
-              src={asset.media_url}
-              alt={asset.title}
-              className="w-full rounded-xl border border-[#e8e8e8] object-cover"
-            />
+            <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="block">
+              <img
+                src={asset.media_url}
+                alt={asset.title}
+                className="w-full rounded-xl border border-[#e8e8e8] object-cover"
+              />
+            </a>
           )}
 
           {/* Vídeo */}
@@ -1659,19 +1663,22 @@ function ContentAssetDetailModal({
 
           {/* Arquivo não-mídia */}
           {asset.media_url && !isImg && !isVid && (
-            <div className="flex items-center gap-3 p-3 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl">
-              <File className="w-5 h-5 text-[#a0a0a0] flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#0f0f0f] truncate">Arquivo disponível</p>
-                <p className="text-[11px] text-[#737373] mt-0.5">Clique em "Abrir arquivo" para visualizar</p>
-              </div>
-            </div>
+            <a
+              href={asset.media_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors"
+            >
+              <File className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />
+              <span className="text-xs text-[#0f0f0f] truncate flex-1">Abrir arquivo</span>
+              <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
+            </a>
           )}
 
           {/* Legenda / caption */}
           {asset.caption && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
-              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Legenda</p>
+              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Legenda / Copy</p>
               <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{asset.caption}</p>
             </div>
           )}
@@ -1684,17 +1691,34 @@ function ContentAssetDetailModal({
             </div>
           )}
 
-          {!asset.caption && !asset.observations && !asset.media_url && (
+          {/* Link externo */}
+          {asset.link_url && (
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Link</p>
+              <a
+                href={asset.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors"
+              >
+                <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                <span className="text-xs text-blue-600 truncate flex-1">{asset.link_url}</span>
+                <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
+              </a>
+            </div>
+          )}
+
+          {!hasContent && (
             <p className="text-xs text-[#a0a0a0] text-center py-4">Nenhuma informação adicional.</p>
           )}
         </div>
 
         <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
-          {asset.media_url && (
+          {asset.media_url && !isImg && !isVid && (
             <a href={asset.media_url} target="_blank" rel="noopener noreferrer" download>
               <Button size="sm">
-                <Download className="w-3.5 h-3.5" /> Abrir arquivo
+                <Download className="w-3.5 h-3.5" /> Baixar arquivo
               </Button>
             </a>
           )}

@@ -185,6 +185,7 @@ function AssetDetailModal({
     caption: '',
     observations: '',
     media_url: '',
+    link_url: '',
   })
 
   // Sync form whenever the asset changes or modal opens
@@ -198,6 +199,7 @@ function AssetDetailModal({
         caption: asset.caption ?? '',
         observations: asset.observations ?? '',
         media_url: asset.media_url ?? '',
+        link_url: asset.link_url ?? '',
       })
       setEditMode(false)
       setConfirming(false)
@@ -238,6 +240,7 @@ function AssetDetailModal({
         caption:      form.caption.trim() || null,
         observations: form.observations.trim() || null,
         media_url:    form.media_url.trim() || null,
+        link_url:     form.link_url.trim() || null,
       })
       toast('Conteúdo atualizado!', 'success')
       setEditMode(false)
@@ -357,8 +360,22 @@ function AssetDetailModal({
               </div>
             )}
 
+            {/* Link externo */}
+            {asset.link_url && (
+              <a
+                href={asset.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-[#f7f7f7] border border-[#e8e8e8] hover:bg-[#f0f0f0] transition-colors"
+              >
+                <Link2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <span className="text-[12px] text-blue-600 truncate flex-1">{asset.link_url}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-[#b0b0b0] flex-shrink-0" />
+              </a>
+            )}
+
             {/* Empty state for content */}
-            {!asset.caption && !asset.observations && !asset.media_url && (
+            {!asset.caption && !asset.observations && !asset.media_url && !asset.link_url && (
               <div className="flex flex-col items-center justify-center py-8 text-center text-[12px] text-[#b0b0b0]">
                 <FileIcon className="w-6 h-6 mb-2 text-[#d8d8d8]" />
                 Nenhum conteúdo adicional cadastrado.
@@ -484,6 +501,13 @@ function AssetDetailModal({
                 </div>
               )}
             </div>
+
+            <Input
+              label="Link externo (opcional)"
+              value={form.link_url}
+              onChange={e => set('link_url', e.target.value)}
+              placeholder="https://..."
+            />
           </div>
         )}
 
@@ -569,6 +593,7 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
     caption: '',
     observations: '',
     media_url: '',
+    link_url: '',
   }
   const [form, setForm] = useState(blank)
   const [uploading, setUploading] = useState(false)
@@ -606,6 +631,7 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
         caption:   form.caption.trim() || null,
         observations: form.observations.trim() || null,
         media_url: form.media_url.trim() || null,
+        link_url:  form.link_url.trim() || null,
       })
       toast('Conteúdo adicionado à biblioteca!', 'success')
       setForm(blank)
@@ -726,6 +752,13 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
               </div>
             )}
           </div>
+
+          <Input
+            label="Link externo (opcional)"
+            value={form.link_url}
+            onChange={e => set('link_url', e.target.value)}
+            placeholder="https://..."
+          />
         </div>
 
         <DialogFooter>

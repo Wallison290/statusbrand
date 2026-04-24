@@ -292,6 +292,7 @@ export interface ContentAsset {
   caption: string | null
   content_type: ContentType
   media_url: string | null
+  link_url: string | null
   observations: string | null
   created_at: string
   updated_at: string
