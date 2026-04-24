@@ -114,13 +114,13 @@ function DayTooltip({ state }: { state: HoverState }) {
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-white text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className="text-[10px] text-gray-300 mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.notes && (
-              <p className="text-[10px] text-gray-500 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-gray-300 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
@@ -129,8 +129,8 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-gray-500" />
-                  <span className="text-[10px] text-gray-500">
+                  <Paperclip className="w-3 h-3 text-gray-400" />
+                  <span className="text-[10px] text-gray-300">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
@@ -656,59 +656,29 @@ function ClientDashboardTab({
     <div className="space-y-6">
 
       {/* ── Alertas de atenção ── */}
-      {(showFinancialAlert || pendingItems.length > 0) && (
-        <div className="space-y-2">
-
-          {/* Alerta financeiro: vence em breve */}
-          {showFinancialAlert && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18 }}
-              className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50"
-            >
-              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-amber-700">Vence em breve</p>
-                <p className="text-[12px] text-amber-800 mt-0.5 leading-snug">
-                  {financialAux === 'Vence hoje'
-                    ? 'Seu pagamento vence hoje.'
-                    : `${financialAux}. Fique atento ao pagamento.`}
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate('financeiro')}
-                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-600 transition-colors whitespace-nowrap"
-              >
-                Ver <ArrowRight className="w-3 h-3" />
-              </button>
-            </motion.div>
-          )}
-
-          {/* Alerta de conteúdos pendentes */}
-          {pendingItems.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18, delay: showFinancialAlert ? 0.05 : 0 }}
-              className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50"
-            >
-              <Bell className="w-4 h-4 text-blue-600 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-blue-700">Conteúdos aguardando aprovação</p>
-                <p className="text-[12px] text-blue-800 mt-0.5 leading-snug">
-                  Você possui {pendingItems.length} {pendingItems.length === 1 ? 'conteúdo' : 'conteúdos'} para revisar.
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate('planejamento')}
-                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-blue-700 hover:text-blue-600 transition-colors whitespace-nowrap"
-              >
-                Revisar <ArrowRight className="w-3 h-3" />
-              </button>
-            </motion.div>
-          )}
-        </div>
+      {showFinancialAlert && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+          className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50"
+        >
+          <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-amber-700">Vence em breve</p>
+            <p className="text-[12px] text-amber-800 mt-0.5 leading-snug">
+              {financialAux === 'Vence hoje'
+                ? 'Seu pagamento vence hoje.'
+                : `${financialAux}. Fique atento ao pagamento.`}
+            </p>
+          </div>
+          <button
+            onClick={() => onNavigate('financeiro')}
+            className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-600 transition-colors whitespace-nowrap"
+          >
+            Ver <ArrowRight className="w-3 h-3" />
+          </button>
+        </motion.div>
       )}
 
       {/* ── Hero header ── */}
@@ -735,7 +705,7 @@ function ClientDashboardTab({
           {pendingItems.length > 0 && (
             <button
               onClick={() => { setSelectedItem(pendingItems[0]); setItemOpen(true) }}
-              className="hidden sm:flex items-center gap-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-amber-500/12 border border-amber-500/25 text-amber-300 text-[12px] font-semibold hover:bg-amber-500/20 transition-all"
+              className="hidden sm:flex items-center gap-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-amber-100 border border-amber-200 text-amber-700 text-[12px] font-semibold hover:bg-amber-200 transition-all"
             >
               Revisar agora <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -744,7 +714,7 @@ function ClientDashboardTab({
         {pendingItems.length > 0 && (
           <button
             onClick={() => { setSelectedItem(pendingItems[0]); setItemOpen(true) }}
-            className="sm:hidden mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/12 border border-amber-500/25 text-amber-300 text-[12px] font-semibold hover:bg-amber-500/20 transition-all"
+            className="sm:hidden mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 border border-amber-200 text-amber-700 text-[12px] font-semibold hover:bg-amber-200 transition-all"
           >
             Revisar agora <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -1743,6 +1713,10 @@ export function PortalDashboard() {
   const rawName = profile?.full_name || ''
   const firstName = rawName.split(' ')[0] || 'Cliente'
 
+  const pendingCount = (plannerItems || []).filter(
+    i => i.approval_status === 'pendente_aprovacao' || (i.status === 'revisao' && !i.approval_status)
+  ).length
+
   if (isLoading) {
     return (
       <PortalLayout>
@@ -1781,7 +1755,7 @@ export function PortalDashboard() {
   ]
 
   return (
-    <PortalLayout clientName={client.company_name}>
+    <PortalLayout clientName={client.company_name} pendingCount={pendingCount} onBellClick={() => setActiveTab('planejamento')}>
       <div className="max-w-5xl mx-auto px-6 py-8">
 
         {/* Cabeçalho da empresa */}

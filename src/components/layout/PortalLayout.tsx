@@ -1,12 +1,14 @@
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Bell } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 interface PortalLayoutProps {
   children: React.ReactNode
   clientName?: string
+  pendingCount?: number
+  onBellClick?: () => void
 }
 
-export function PortalLayout({ children, clientName }: PortalLayoutProps) {
+export function PortalLayout({ children, clientName, pendingCount = 0, onBellClick }: PortalLayoutProps) {
   const { profile, signOut } = useAuth()
 
   const rawName   = profile?.full_name || ''
@@ -35,6 +37,20 @@ export function PortalLayout({ children, clientName }: PortalLayoutProps) {
             </>
           )}
         </div>
+
+        {/* Bell */}
+        {pendingCount > 0 && (
+          <button
+            onClick={onBellClick}
+            title={`${pendingCount} conteúdo${pendingCount === 1 ? '' : 's'} aguardando aprovação`}
+            className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#f0f0f0] transition-colors mr-1"
+          >
+            <Bell className="w-4 h-4 text-[#737373]" />
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+              {pendingCount > 9 ? '9+' : pendingCount}
+            </span>
+          </button>
+        )}
 
         {/* User */}
         <div className="flex items-center gap-3">

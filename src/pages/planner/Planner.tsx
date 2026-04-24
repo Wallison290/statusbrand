@@ -218,15 +218,15 @@ function DayTooltip({ state }: { state: HoverState }) {
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-white text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className="text-[10px] text-gray-300 mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.client && (
               <div className="flex items-center gap-1 mb-1">
-                <Building2 className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                <span className="text-[10px] text-gray-400 truncate">{item.client.company_name}</span>
+                <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                <span className="text-[10px] text-gray-300 truncate">{item.client.company_name}</span>
               </div>
             )}
             {/* Approval badge no tooltip */}
@@ -245,10 +245,10 @@ function DayTooltip({ state }: { state: HoverState }) {
               )
             })()}
             {item.notes && (
-              <p className="text-[10px] text-gray-500 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-gray-300 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {item.client_feedback && (
-              <p className="text-[10px] text-gray-500 italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
+              <p className="text-[10px] text-gray-300 italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
@@ -257,8 +257,8 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-gray-500" />
-                  <span className="text-[10px] text-gray-500">
+                  <Paperclip className="w-3 h-3 text-gray-400" />
+                  <span className="text-[10px] text-gray-300">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
