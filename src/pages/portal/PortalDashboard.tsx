@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Paperclip, Link2,
@@ -338,6 +338,13 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
   const [dayOpen, setDayOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<PlannerItem | null>(null)
   const [itemOpen, setItemOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -399,8 +406,8 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                 <div
                   key={day.toISOString()}
                   onClick={() => inMonth && handleDayClick(day, di)}
-                  onMouseEnter={e => inMonth && handleMouseEnter(e, di)}
-                  onMouseLeave={() => setHover(null)}
+                  onMouseEnter={!isMobile ? e => inMonth && handleMouseEnter(e, di) : undefined}
+                  onMouseLeave={!isMobile ? () => setHover(null) : undefined}
                   className={`
                     min-h-[90px] p-1.5 rounded-lg border transition-all
                     ${inMonth ? 'border-[#e8e8e8]' : 'border-transparent opacity-30 cursor-default'}
@@ -441,9 +448,9 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
         ))}
       </div>
 
-      {/* Tooltip */}
+      {/* Tooltip — desktop only */}
       <AnimatePresence>
-        {hover && <DayTooltip state={hover} />}
+        {!isMobile && hover && <DayTooltip state={hover} />}
       </AnimatePresence>
 
       {/* Day modal */}
