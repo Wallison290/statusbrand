@@ -471,6 +471,7 @@ export interface Database {
           caption: string | null
           content_type: string
           media_url: string | null
+          link_url: string | null
           observations: string | null
           created_at: string
           updated_at: string
@@ -484,6 +485,7 @@ export interface Database {
           caption?: string | null
           content_type: string
           media_url?: string | null
+          link_url?: string | null
           observations?: string | null
           created_at?: string
           updated_at?: string
@@ -495,6 +497,7 @@ export interface Database {
           caption?: string | null
           content_type?: string
           media_url?: string | null
+          link_url?: string | null
           observations?: string | null
           updated_at?: string
         }

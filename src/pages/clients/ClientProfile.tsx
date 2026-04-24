@@ -466,6 +466,7 @@ export function ClientProfile() {
         content_type: assetForm.content_type,
         observations: assetForm.observations.trim() || null,
         media_url,
+        link_url: null as string | null,
         category: null as string | null,
       }
 
