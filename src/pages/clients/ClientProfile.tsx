@@ -592,7 +592,7 @@ export function ClientProfile() {
         <FinancialCard client={client} />
 
         <Tabs defaultValue="overview">
-          <TabsList className="flex-wrap h-auto gap-1">
+          <TabsList className="flex-wrap h-auto gap-1 overflow-x-auto max-w-full">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
             <TabsTrigger value="onboarding">Onboarding</TabsTrigger>

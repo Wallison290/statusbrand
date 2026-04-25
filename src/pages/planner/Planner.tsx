@@ -983,7 +983,9 @@ export function Planner() {
 
         {/* Calendar grid */}
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-0 sm:p-4">
+            <div className="overflow-x-auto">
+            <div className="min-w-[420px] p-4 sm:p-0">
             <div className="grid grid-cols-7 mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
                 <div key={d} className="text-center text-xs font-medium text-gray-500 py-2">{d}</div>
@@ -1039,6 +1041,8 @@ export function Planner() {
                 )
               })}
             </div>
+            </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -1060,7 +1064,7 @@ export function Planner() {
 
       {/* ── Modal: Detalhes do Dia ── */}
       <Dialog open={dayDetailsOpen} onOpenChange={setDayDetailsOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-gray-400" />
@@ -1138,7 +1142,7 @@ export function Planner() {
 
       {/* ── Modal: Criar / Editar Post ── */}
       <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) resetForm() }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Editar Post' : 'Adicionar ao Planejamento'}</DialogTitle>
           </DialogHeader>
@@ -1146,7 +1150,7 @@ export function Planner() {
           <div className="space-y-4">
             <Input label="Título *" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Post sobre tendências..." />
 
-            <div className="grid grid-cols-[1fr_140px] gap-3">
+            <div className="grid grid-cols-1 xs:grid-cols-[1fr_140px] sm:grid-cols-[1fr_140px] gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">Data *</label>
                 <input

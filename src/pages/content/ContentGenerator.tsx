@@ -167,9 +167,9 @@ export function ContentGenerator() {
       <Header title="Gerador de Conteúdo" subtitle="Powered by OpenAI GPT-4o" />
 
       <div className="p-4 md:p-6">
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-6">
           {/* Form */}
-          <div className="xl:col-span-2 space-y-4">
+          <div className="lg:col-span-1 xl:col-span-2 space-y-4">
             <Card>
               <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-400" /> Configurar Conteúdo</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -339,7 +339,7 @@ export function ContentGenerator() {
           </div>
 
           {/* Result */}
-          <div className="xl:col-span-3">
+          <div className="lg:col-span-1 xl:col-span-3">
             <AnimatePresence mode="wait">
               {!generated && !loading && (
                 <motion.div

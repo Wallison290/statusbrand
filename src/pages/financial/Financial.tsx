@@ -101,9 +101,9 @@ function KpiCard({
         <span className="opacity-50">{icon}</span>
         <p className="text-[10px] text-zinc-500 uppercase tracking-wide">{label}</p>
       </div>
-      <div>
-        <p className="text-[22px] font-bold text-[#0f0f0f] leading-tight">{value}</p>
-        {sub && <p className="text-[11px] text-[#737373] mt-0.5">{sub}</p>}
+      <div className="min-w-0">
+        <p className="text-[22px] font-bold text-[#0f0f0f] leading-tight break-words">{value}</p>
+        {sub && <p className="text-[11px] text-[#737373] mt-0.5 break-words">{sub}</p>}
       </div>
     </motion.div>
   )
@@ -135,7 +135,7 @@ function AlertCard({
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 text-center">
+      <div className="grid grid-cols-3 gap-2 text-center">
         <div>
           <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">Previsto</p>
           <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(previsto)}</p>
@@ -208,7 +208,7 @@ function StatusDropdown({ client }: { client: Client }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-[#e8e8e8] bg-white shadow-lg overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 z-20 w-44 max-w-[90vw] rounded-xl border border-[#e8e8e8] bg-white shadow-lg overflow-hidden">
             {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
               const st = statusStyles[s]
               return (
@@ -278,7 +278,7 @@ function RegisterPaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="w-[95vw] max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-[14px]">Registrar pagamento</DialogTitle>
           <p className="text-[12px] text-zinc-500 mt-0.5">{client.company_name}</p>
@@ -345,7 +345,7 @@ function PaymentHistoryModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-md max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-[14px]">Histórico de pagamentos</DialogTitle>
           <p className="text-[12px] text-zinc-500 mt-0.5">{client.company_name}</p>
@@ -414,7 +414,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
     <motion.div
       initial={{ opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-[#e8e8e8] bg-white hover:bg-[#f7f7f7] hover:border-[#d0d0d0] transition-all group"
+      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-[#e8e8e8] bg-white hover:bg-[#f7f7f7] hover:border-[#d0d0d0] transition-all group flex-wrap sm:flex-nowrap"
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
@@ -466,7 +466,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
       </div>
 
       {/* Actions (show on hover) */}
-      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 flex-shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         {/* Registrar pagamento */}
         {status !== 'cancelado' && (
           <button
@@ -608,7 +608,7 @@ export function Financial() {
       <div className="p-4 md:p-6 space-y-6">
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard
             icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />}
             label="Recebido no mês"

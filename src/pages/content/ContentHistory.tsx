@@ -42,15 +42,15 @@ export function ContentHistory() {
       <Header title="Histórico de Conteúdos" subtitle={`${contents?.length || 0} conteúdos salvos`} />
       <div className="p-4 md:p-6 space-y-4">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <Input
             placeholder="Buscar..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             icon={<Search className="w-4 h-4" />}
-            className="max-w-xs"
+            className="w-full sm:max-w-xs"
           />
-          <div className="w-44">
+          <div className="w-full sm:w-44">
             <Select value={clientFilter} onValueChange={setClientFilter}>
               <SelectTrigger><SelectValue placeholder="Todos os clientes" /></SelectTrigger>
               <SelectContent>
@@ -59,7 +59,7 @@ export function ContentHistory() {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-36">
+          <div className="w-full sm:w-36">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger><SelectValue placeholder="Todos os tipos" /></SelectTrigger>
               <SelectContent>
