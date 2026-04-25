@@ -113,7 +113,7 @@ export function PlannerItemViewModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setConfirmDelete(false); setEditingStatus(false) } }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
@@ -134,7 +134,7 @@ export function PlannerItemViewModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
 
           {/* Cliente */}
           {item.client && (
@@ -205,9 +205,8 @@ export function PlannerItemViewModal({
               <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {images.map(img => (
                   <a key={img.id} href={img.file_url} target="_blank" rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors">
-                    <img src={img.file_url} alt={img.file_name} className="w-full object-cover"
-                      style={{ maxHeight: images.length === 1 ? 260 : 150 }} />
+                    className="block w-full max-w-full overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors">
+                    <img src={img.file_url} alt={img.file_name} className="w-full max-w-full object-contain max-h-[60vh]" />
                     <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/3">
                       <ImageIcon className="w-3 h-3 text-blue-400" />
                       <span className="text-[10px] text-gray-400 truncate flex-1">{img.file_name}</span>
@@ -226,7 +225,7 @@ export function PlannerItemViewModal({
               <div className="space-y-1.5">
                 {otherAttachments.map((att: PlannerAttachment) => (
                   <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors">
+                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 max-w-full overflow-hidden">
                     <FileTypeIcon type={att.file_type} size="md" />
                     <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
                     {att.file_size && (

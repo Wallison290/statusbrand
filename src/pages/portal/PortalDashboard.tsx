@@ -174,7 +174,7 @@ function ItemDetailView({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
@@ -194,7 +194,7 @@ function ItemDetailView({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {item.notes && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
               <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Notas</p>
@@ -208,9 +208,8 @@ function ItemDetailView({
               <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {images.map(img => (
                   <a key={img.id} href={img.file_url} target="_blank" rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
-                    <img src={img.file_url} alt={img.file_name} className="w-full object-cover"
-                      style={{ maxHeight: images.length === 1 ? 260 : 150 }} />
+                    className="block w-full max-w-full overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
+                    <img src={img.file_url} alt={img.file_name} className="w-full max-w-full object-contain max-h-[60vh]" />
                     <div className="flex items-center gap-1.5 px-2 py-1.5 bg-[#f5f5f5]">
                       <ImageIcon className="w-3 h-3 text-blue-500" />
                       <span className="text-[10px] text-[#737373] truncate flex-1">{img.file_name}</span>
@@ -228,7 +227,7 @@ function ItemDetailView({
               <div className="space-y-1.5">
                 {otherAttachments.map((att: PlannerAttachment) => (
                   <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors">
+                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0 max-w-full overflow-hidden">
                     <FileTypeIcon type={att.file_type} size="md" />
                     <span className="text-xs text-[#0f0f0f] truncate flex-1">{att.file_name}</span>
                     {att.file_size && <span className="text-[10px] text-[#a0a0a0] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
@@ -459,7 +458,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
 
       {/* Day modal */}
       <Dialog open={dayOpen} onOpenChange={setDayOpen}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[85vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>
               {dayDate && format(dayDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -468,7 +467,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
               {dayItems.length} {dayItems.length === 1 ? 'post planejado' : 'posts planejados'} · clique para ver detalhes
             </p>
           </DialogHeader>
-          <div className="space-y-3 my-1">
+          <div className="space-y-3 my-1 min-w-0 w-full max-w-full overflow-x-hidden">
             {dayItems.map(item => {
               const thumb = item.attachments?.find(a => a.file_type.startsWith('image/'))
               return (
@@ -483,7 +482,7 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                      <p className="font-medium text-[#0f0f0f] text-sm truncate">{item.title}</p>
+                      <p className="font-medium text-[#0f0f0f] text-sm break-words">{item.title}</p>
                     </div>
                     <p className="text-xs text-[#737373] ml-3.5">
                       {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
@@ -1163,7 +1162,7 @@ function MaterialDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <PortalMaterialIcon type={mat.type} />
@@ -1176,21 +1175,23 @@ function MaterialDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {mat.description && (
             <div className="p-3 bg-white/3 rounded-xl border border-white/8">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Descrição</p>
-              <p className="text-sm text-gray-300 leading-relaxed">{mat.description}</p>
+              <p className="text-sm text-gray-300 leading-relaxed break-words">{mat.description}</p>
             </div>
           )}
 
           {/* Preview: imagem */}
           {isImg && mat.file_url && (
-            <img
-              src={mat.file_url}
-              alt={mat.title}
-              className="w-full rounded-xl border border-white/8 object-cover"
-            />
+            <div className="w-full max-w-full overflow-hidden rounded-xl border border-white/8">
+              <img
+                src={mat.file_url}
+                alt={mat.title}
+                className="w-full max-w-full max-h-[60vh] object-contain"
+              />
+            </div>
           )}
 
           {/* Preview: vídeo */}
@@ -1198,7 +1199,7 @@ function MaterialDetailModal({
             <video
               src={mat.file_url}
               controls
-              className="w-full rounded-xl border border-white/8"
+              className="w-full max-w-full rounded-xl border border-white/8"
             />
           )}
 
@@ -1222,7 +1223,7 @@ function MaterialDetailModal({
               className="flex items-center gap-2.5 p-3 bg-white/3 border border-white/8 rounded-xl hover:bg-white/5 hover:border-white/15 transition-colors"
             >
               <Link2 className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              <span className="text-sm text-sky-300 truncate flex-1 break-all">{mat.link_url}</span>
+              <span className="text-sm text-sky-300 flex-1 min-w-0 break-all">{mat.link_url}</span>
               <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
             </a>
           )}
@@ -1600,7 +1601,7 @@ function ContentAssetDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <ImageIcon className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />

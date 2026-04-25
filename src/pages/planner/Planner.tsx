@@ -132,7 +132,7 @@ function ContentPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[80vh] flex flex-col overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Selecionar conteúdo do arsenal</DialogTitle>
         </DialogHeader>
@@ -297,7 +297,7 @@ function PlannerItemView({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
@@ -317,7 +317,7 @@ function PlannerItemView({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {/* Cliente */}
           {item.client && (
             <div className="flex items-center gap-3 p-3 bg-white/3 rounded-xl border border-white/8">
@@ -348,13 +348,12 @@ function PlannerItemView({
                     href={img.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors"
+                    className="block w-full max-w-full overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors"
                   >
                     <img
                       src={img.file_url}
                       alt={img.file_name}
-                      className="w-full object-cover"
-                      style={{ maxHeight: images.length === 1 ? 260 : 150 }}
+                      className="w-full max-w-full object-contain max-h-[60vh]"
                     />
                     <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/3">
                       <ImageIcon className="w-3 h-3 text-blue-400" />
@@ -378,7 +377,7 @@ function PlannerItemView({
                     href={att.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 max-w-full overflow-hidden"
                   >
                     <FileTypeIcon type={att.file_type} size="md" />
                     <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
@@ -474,11 +473,11 @@ function DayItemCard({
   const thumbnail = item.attachments?.find(a => a.file_type.startsWith('image/'))
 
   return (
-    <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden">
+    <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden w-full max-w-full min-w-0">
       {/* Área clicável para visualização */}
       <div
         onClick={onView}
-        className="flex items-start gap-3 p-3 cursor-pointer hover:bg-white/5 transition-colors group/view"
+        className="flex items-start gap-3 p-3 cursor-pointer hover:bg-white/5 transition-colors group/view min-w-0 w-full max-w-full"
       >
         {thumbnail && (
           <img src={thumbnail.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
@@ -486,7 +485,7 @@ function DayItemCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <p className="font-medium text-white text-sm truncate">{item.title}</p>
+            <p className="font-medium text-white text-sm break-words">{item.title}</p>
           </div>
           <p className="text-xs text-gray-500 mb-1 ml-3.5">
             {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
@@ -1064,7 +1063,7 @@ export function Planner() {
 
       {/* ── Modal: Detalhes do Dia ── */}
       <Dialog open={dayDetailsOpen} onOpenChange={setDayDetailsOpen}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[85vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-gray-400" />
@@ -1082,7 +1081,7 @@ export function Planner() {
             })()}
           </DialogHeader>
 
-          <div className="space-y-3 my-1">
+          <div className="space-y-3 my-1 min-w-0 w-full max-w-full overflow-x-hidden">
             {selectedDayDate && getItemsForDay(selectedDayDate).length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-sm text-gray-500">Nenhum post neste dia.</p>
@@ -1142,12 +1141,12 @@ export function Planner() {
 
       {/* ── Modal: Criar / Editar Post ── */}
       <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) resetForm() }}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Editar Post' : 'Adicionar ao Planejamento'}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0 w-full max-w-full overflow-x-hidden">
             <Input label="Título *" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Post sobre tendências..." />
 
             <div className="grid grid-cols-1 xs:grid-cols-[1fr_140px] sm:grid-cols-[1fr_140px] gap-3">

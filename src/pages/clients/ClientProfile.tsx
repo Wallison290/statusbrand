@@ -148,21 +148,21 @@ function AssetViewDialog({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle className="text-[14px]">{asset.title}</DialogTitle>
+          <DialogTitle className="text-[14px] break-words">{asset.title}</DialogTitle>
           <p className="text-[11px] text-zinc-500 mt-0.5">
             {contentTypeLabels[asset.content_type]} · {formatDate(asset.created_at)}
           </p>
         </DialogHeader>
-        <div className="space-y-3 mt-1">
+        <div className="space-y-3 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {asset.media_url && (
             isImage ? (
-              <a href={asset.media_url} target="_blank" rel="noopener noreferrer">
+              <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="block w-full max-w-full overflow-hidden">
                 <img
                   src={asset.media_url}
                   alt={asset.title}
-                  className="w-full rounded-lg border border-white/[0.06] object-cover"
+                  className="w-full max-w-full max-h-[60vh] rounded-lg border border-white/[0.06] object-contain"
                 />
               </a>
             ) : (
@@ -180,13 +180,13 @@ function AssetViewDialog({
           {asset.caption && (
             <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
               <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5">Legenda</p>
-              <p className="text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap">{asset.caption}</p>
+              <p className="text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
             </div>
           )}
           {asset.observations && (
             <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
               <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5">Observações</p>
-              <p className="text-[13px] text-zinc-400 leading-relaxed">{asset.observations}</p>
+              <p className="text-[13px] text-zinc-400 leading-relaxed break-words">{asset.observations}</p>
             </div>
           )}
           {asset.link_url && (
@@ -194,10 +194,10 @@ function AssetViewDialog({
               href={asset.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+              className="flex items-center gap-2.5 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors min-w-0 max-w-full overflow-hidden"
             >
               <Link2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <span className="text-[12px] text-blue-300 flex-1 truncate">{asset.link_url}</span>
+              <span className="text-[12px] text-blue-300 flex-1 min-w-0 break-all">{asset.link_url}</span>
               <ExternalLink className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
             </a>
           )}
@@ -845,12 +845,12 @@ export function ClientProfile() {
 
       {/* ── Asset Create / Edit Modal ── */}
       <Dialog open={assetModalOpen} onOpenChange={v => { setAssetModalOpen(v); if (!v) resetAssetForm() }}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>{editingAsset ? 'Editar conteúdo' : 'Adicionar ao Arsenal'}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 mt-1">
+          <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
             <Input
               label="Título *"
               value={assetForm.title}

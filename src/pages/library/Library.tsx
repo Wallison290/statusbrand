@@ -272,7 +272,7 @@ function AssetDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setEditMode(false); setConfirming(false) } }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[92vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[92vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-start justify-between gap-3 pr-6">
             <div className="min-w-0">
@@ -386,7 +386,7 @@ function AssetDetailModal({
 
         {/* ── EDIT MODE ────────────────────────────────────────────────── */}
         {editMode && (
-          <div className="space-y-3 mt-1">
+          <div className="space-y-3 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
             {/* Client */}
             <div>
               <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
@@ -643,12 +643,12 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { setForm(blank); onClose() } }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Novo conteúdo na biblioteca</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3 mt-1">
+        <div className="space-y-3 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {/* Client */}
           <div>
             <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
