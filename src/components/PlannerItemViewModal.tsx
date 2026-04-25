@@ -113,11 +113,11 @@ export function PlannerItemViewModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setConfirmDelete(false); setEditingStatus(false) } }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug">{item.title}</DialogTitle>
+            <DialogTitle className="text-base leading-snug break-words min-w-0">{item.title}</DialogTitle>
           </div>
           <div className="flex items-center gap-2 mt-1.5 ml-4.5 flex-wrap">
             <span className="text-xs text-gray-500">
@@ -194,7 +194,7 @@ export function PlannerItemViewModal({
           {item.notes && (
             <div className="p-3 bg-white/3 rounded-xl border border-white/8">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{item.notes}</p>
+              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">{item.notes}</p>
             </div>
           )}
 
@@ -246,9 +246,9 @@ export function PlannerItemViewModal({
               <div className="space-y-1.5">
                 {item.links.map(link => (
                   <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors">
+                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 overflow-hidden">
                     <Link2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                    <span className="text-xs text-blue-300 truncate flex-1">{link.label || link.url}</span>
+                    <span className="text-xs text-blue-300 flex-1 min-w-0 break-all">{link.label || link.url}</span>
                     <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
                   </a>
                 ))}
@@ -272,7 +272,7 @@ export function PlannerItemViewModal({
                 )}
               </div>
               {item.client_feedback && (
-                <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2">
+                <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words">
                   "{item.client_feedback}"
                 </p>
               )}
@@ -283,7 +283,7 @@ export function PlannerItemViewModal({
           <PlannerCommentsThread plannerId={item.id} role="agency" />
         </div>
 
-        <DialogFooter className="flex-wrap gap-2">
+        <DialogFooter className="flex flex-wrap gap-2">
           {showAgencyActions && (
             <>
               {confirmDelete ? (

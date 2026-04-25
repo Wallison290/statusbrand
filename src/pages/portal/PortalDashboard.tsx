@@ -174,11 +174,11 @@ function ItemDetailView({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug">{item.title}</DialogTitle>
+            <DialogTitle className="text-base leading-snug break-words min-w-0">{item.title}</DialogTitle>
           </div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs text-gray-500">
@@ -198,7 +198,7 @@ function ItemDetailView({
           {item.notes && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
               <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{item.notes}</p>
+              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words">{item.notes}</p>
             </div>
           )}
 
@@ -245,9 +245,9 @@ function ItemDetailView({
               <div className="space-y-1.5">
                 {item.links.map(link => (
                   <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors">
+                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0 overflow-hidden">
                     <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                    <span className="text-xs text-blue-600 truncate flex-1">{link.label || link.url}</span>
+                    <span className="text-xs text-blue-600 flex-1 min-w-0 break-all">{link.label || link.url}</span>
                     <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
                   </a>
                 ))}
@@ -275,7 +275,7 @@ function ItemDetailView({
                   <MessageSquare className="w-3 h-3 text-[#a0a0a0]" />
                   <span className="text-[10px] text-[#a0a0a0] uppercase tracking-wide">Seu comentário</span>
                 </div>
-                <p className="text-xs text-[#737373] leading-relaxed">{item.client_feedback}</p>
+                <p className="text-xs text-[#737373] leading-relaxed break-words">{item.client_feedback}</p>
               </div>
             )}
 
@@ -1163,11 +1163,11 @@ function MaterialDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <PortalMaterialIcon type={mat.type} />
-            <DialogTitle className="text-base leading-snug">{mat.title}</DialogTitle>
+            <DialogTitle className="text-base leading-snug break-words min-w-0">{mat.title}</DialogTitle>
           </div>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-xs text-gray-500">{MATERIAL_TYPE_LABELS[mat.type]}</span>
@@ -1600,11 +1600,11 @@ function ContentAssetDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <ImageIcon className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />
-            <DialogTitle className="text-base leading-snug">{asset.title}</DialogTitle>
+            <DialogTitle className="text-base leading-snug break-words min-w-0">{asset.title}</DialogTitle>
           </div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs text-gray-500">{contentTypeLabels[asset.content_type as ContentType]}</span>
