@@ -272,7 +272,7 @@ function AssetDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setEditMode(false); setConfirming(false) } }}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[92vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-start justify-between gap-3 pr-6">
             <div className="min-w-0">
@@ -281,7 +281,7 @@ function AssetDetailModal({
               ) : (
                 <p className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mb-1">Conteúdo</p>
               )}
-              <DialogTitle className="text-[15px] leading-snug truncate">
+              <DialogTitle className="text-[15px] leading-snug break-words">
                 {editMode ? form.title || 'Sem título' : asset.title}
               </DialogTitle>
             </div>
@@ -298,15 +298,15 @@ function AssetDetailModal({
 
         {/* ── VIEW MODE ────────────────────────────────────────────────── */}
         {!editMode && (
-          <div className="space-y-4 mt-1">
+          <div className="space-y-4 mt-1 min-w-0">
             {/* Media preview */}
             {asset.media_url && (
               isImage ? (
-                <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="block">
+                <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-xl border border-[#e8e8e8]">
                   <img
                     src={asset.media_url}
                     alt={asset.title}
-                    className="w-full rounded-xl border border-[#e8e8e8] object-cover max-h-64"
+                    className="w-full max-w-full object-contain max-h-64"
                   />
                 </a>
               ) : (
@@ -314,11 +314,11 @@ function AssetDetailModal({
                   href={asset.media_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 p-3 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7] hover:bg-[#f0f0f0] transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7] hover:bg-[#f0f0f0] transition-colors min-w-0 overflow-hidden"
                 >
-                  <FileIcon className="w-4 h-4 text-[#a0a0a0]" />
-                  <span className="text-[12px] text-[#737373] flex-1 truncate">Abrir arquivo</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#b0b0b0]" />
+                  <FileIcon className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />
+                  <span className="text-[12px] text-[#737373] flex-1 min-w-0 truncate">Abrir arquivo</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#b0b0b0] flex-shrink-0" />
                 </a>
               )
             )}
@@ -348,7 +348,7 @@ function AssetDetailModal({
             {asset.caption && (
               <div className="p-3.5 rounded-xl bg-[#f7f7f7] border border-[#e8e8e8]">
                 <p className="text-[10px] font-medium text-[#a0a0a0] uppercase tracking-wide mb-2">Legenda / Copy</p>
-                <p className="text-[13px] text-[#1a1a1a] leading-relaxed whitespace-pre-wrap">{asset.caption}</p>
+                <p className="text-[13px] text-[#1a1a1a] leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
               </div>
             )}
 
@@ -356,7 +356,7 @@ function AssetDetailModal({
             {asset.observations && (
               <div className="p-3.5 rounded-xl bg-[#f7f7f7] border border-[#e8e8e8]">
                 <p className="text-[10px] font-medium text-[#a0a0a0] uppercase tracking-wide mb-2">Observações</p>
-                <p className="text-[13px] text-[#737373] leading-relaxed">{asset.observations}</p>
+                <p className="text-[13px] text-[#737373] leading-relaxed break-words">{asset.observations}</p>
               </div>
             )}
 
@@ -366,10 +366,10 @@ function AssetDetailModal({
                 href={asset.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-[#f7f7f7] border border-[#e8e8e8] hover:bg-[#f0f0f0] transition-colors"
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-[#f7f7f7] border border-[#e8e8e8] hover:bg-[#f0f0f0] transition-colors min-w-0 overflow-hidden"
               >
                 <Link2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <span className="text-[12px] text-blue-600 truncate flex-1">{asset.link_url}</span>
+                <span className="text-[12px] text-blue-600 flex-1 min-w-0 break-all">{asset.link_url}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-[#b0b0b0] flex-shrink-0" />
               </a>
             )}
@@ -643,7 +643,7 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { setForm(blank); onClose() } }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Novo conteúdo na biblioteca</DialogTitle>
         </DialogHeader>

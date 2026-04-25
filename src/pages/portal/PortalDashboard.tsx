@@ -1619,27 +1619,27 @@ function ContentAssetDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 min-w-0">
 
           {/* Imagem */}
           {isImg && asset.media_url && (
             <a href={asset.media_url} target="_blank" rel="noopener noreferrer"
-              className="block overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
-              <img src={asset.media_url} alt={asset.title} className="w-full object-cover" style={{ maxHeight: 280 }} />
+              className="block w-full overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
+              <img src={asset.media_url} alt={asset.title} className="w-full max-w-full object-contain" style={{ maxHeight: 280 }} />
             </a>
           )}
 
           {/* Vídeo */}
           {isVid && asset.media_url && (
-            <video src={asset.media_url} controls className="w-full rounded-xl border border-[#e8e8e8]" />
+            <video src={asset.media_url} controls className="w-full max-w-full rounded-xl border border-[#e8e8e8]" />
           )}
 
           {/* Arquivo não-mídia */}
           {asset.media_url && !isImg && !isVid && (
             <a href={asset.media_url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors">
+              className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0">
               <File className="w-4 h-4 text-[#a0a0a0] flex-shrink-0" />
-              <span className="text-xs text-[#0f0f0f] truncate flex-1">Abrir arquivo</span>
+              <span className="text-xs text-[#0f0f0f] truncate flex-1 min-w-0">Abrir arquivo</span>
               <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
             </a>
           )}
@@ -1648,7 +1648,7 @@ function ContentAssetDetailModal({
           {asset.caption && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
               <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Legenda / Copy</p>
-              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{asset.caption}</p>
+              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
             </div>
           )}
 
@@ -1656,7 +1656,7 @@ function ContentAssetDetailModal({
           {asset.observations && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
               <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Observações</p>
-              <p className="text-sm text-[#737373] leading-relaxed whitespace-pre-wrap">{asset.observations}</p>
+              <p className="text-sm text-[#737373] leading-relaxed whitespace-pre-wrap break-words">{asset.observations}</p>
             </div>
           )}
 
@@ -1668,10 +1668,10 @@ function ContentAssetDetailModal({
                 href={asset.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 p-3 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors"
+                className="flex items-center gap-2.5 p-3 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0 overflow-hidden"
               >
                 <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                <span className="text-xs text-blue-600 truncate flex-1">{asset.link_url}</span>
+                <span className="text-xs text-blue-600 flex-1 min-w-0 break-all">{asset.link_url}</span>
                 <span className="flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-2 py-1 flex-shrink-0">
                   Abrir link <ExternalLink className="w-3 h-3" />
                 </span>
