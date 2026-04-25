@@ -390,15 +390,14 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
 
       {/* Calendar */}
       <Card>
-        <CardContent className="p-0 sm:p-4">
-          <div className="overflow-x-auto">
-          <div className="min-w-[420px] p-4 sm:p-0">
-          <div className="grid grid-cols-7 mb-2">
+        <CardContent className="p-2 sm:p-4">
+          <div className="w-full max-w-full min-w-0">
+          <div className="grid grid-cols-7 mb-1 sm:mb-2">
             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-              <div key={d} className="text-center text-xs font-medium text-gray-500 py-2">{d}</div>
+              <div key={d} className="text-center text-[9px] sm:text-xs font-medium text-gray-500 py-1 sm:py-2 truncate">{d}</div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {days.map(day => {
               const di = getDay(day)
               const inMonth = isSameMonth(day, currentMonth)
@@ -410,32 +409,28 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
                   onMouseEnter={!isMobile ? e => inMonth && handleMouseEnter(e, di) : undefined}
                   onMouseLeave={!isMobile ? () => setHover(null) : undefined}
                   className={`
-                    min-h-[90px] p-1.5 rounded-lg border transition-all
+                    min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
                     ${inMonth ? 'border-[#e8e8e8]' : 'border-transparent opacity-30 cursor-default'}
                     ${inMonth && di.length > 0 ? 'hover:border-[#d0d0d0] hover:bg-[#f5f5f5] cursor-pointer' : ''}
                     ${today ? 'border-blue-500/40 bg-blue-500/5' : ''}
                   `}
                 >
-                  <div className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full
+                  <div className={`text-[10px] sm:text-xs font-medium mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
                     ${today ? 'bg-blue-600 text-white' : inMonth ? 'text-[#737373]' : 'text-gray-400'}`}>
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-0.5">
-                    {di.slice(0, 3).map(item => (
-                      <div key={item.id} className="flex items-center gap-1 truncate">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                        <span className="text-[#737373] truncate text-[10px] flex-1">{item.title}</span>
-                        {item.attachments && item.attachments.length > 0 && (
-                          <Paperclip className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" />
-                        )}
+                    {di.slice(0, 2).map(item => (
+                      <div key={item.id} className="flex items-center gap-0.5 min-w-0">
+                        <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
+                        <span className="text-[#737373] truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden xs:block sm:block">{item.title}</span>
                       </div>
                     ))}
-                    {di.length > 3 && <p className="text-[10px] text-gray-600">+{di.length - 3} mais</p>}
+                    {di.length > 2 && <p className="text-[8px] sm:text-[10px] text-gray-600">+{di.length - 2}</p>}
                   </div>
                 </div>
               )
             })}
-          </div>
           </div>
           </div>
         </CardContent>

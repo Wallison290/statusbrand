@@ -982,15 +982,14 @@ export function Planner() {
 
         {/* Calendar grid */}
         <Card>
-          <CardContent className="p-0 sm:p-4">
-            <div className="overflow-x-auto">
-            <div className="min-w-[420px] p-4 sm:p-0">
-            <div className="grid grid-cols-7 mb-2">
+          <CardContent className="p-2 sm:p-4">
+            <div className="w-full max-w-full min-w-0">
+            <div className="grid grid-cols-7 mb-1 sm:mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-xs font-medium text-gray-500 py-2">{d}</div>
+                <div key={d} className="text-center text-[9px] sm:text-xs font-medium text-gray-500 py-1 sm:py-2 truncate">{d}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
               {days.map(day => {
                 const dayItems = getItemsForDay(day)
                 const isCurrentMonth = isSameMonth(day, currentMonth)
@@ -1004,7 +1003,7 @@ export function Planner() {
                     onMouseEnter={e => isCurrentMonth && handleDayMouseEnter(e, dayItems)}
                     onMouseLeave={() => setHover(null)}
                     className={`
-                      min-h-[90px] p-1.5 rounded-lg border transition-all
+                      min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
                       ${isCurrentMonth
                         ? 'border-white/8 hover:border-white/20 hover:bg-white/3 cursor-pointer'
                         : 'border-transparent opacity-30 cursor-default'}
@@ -1013,33 +1012,29 @@ export function Planner() {
                     `}
                   >
                     <div className={`
-                      text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full
+                      text-[10px] sm:text-xs font-medium mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
                       ${isCurrentDay ? 'bg-blue-600 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
                     `}>
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-0.5">
-                      {dayItems.slice(0, 3).map(item => {
+                      {dayItems.slice(0, 2).map(item => {
                         const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
                         return (
-                          <div key={item.id} onClick={e => e.stopPropagation()} className="flex items-center gap-1 truncate group">
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                            <span className="text-gray-400 truncate text-[10px] flex-1">{item.title}</span>
-                            {item.attachments && item.attachments.length > 0 && (
-                              <Paperclip className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" />
-                            )}
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} title={approvalLabel[as_]} />
+                          <div key={item.id} onClick={e => e.stopPropagation()} className="flex items-center gap-0.5 min-w-0">
+                            <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
+                            <span className="text-gray-400 truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden sm:block">{item.title}</span>
+                            <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} title={approvalLabel[as_]} />
                           </div>
                         )
                       })}
-                      {dayItems.length > 3 && (
-                        <p className="text-[10px] text-gray-600">+{dayItems.length - 3} mais</p>
+                      {dayItems.length > 2 && (
+                        <p className="text-[8px] sm:text-[10px] text-gray-600">+{dayItems.length - 2}</p>
                       )}
                     </div>
                   </div>
                 )
               })}
-            </div>
             </div>
             </div>
           </CardContent>
