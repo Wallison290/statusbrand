@@ -106,7 +106,7 @@ function DayTooltip({ state }: { state: HoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[260px] p-3 text-xs"
+        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[260px] p-3 text-xs text-white"
       >
         {state.items.map((item, i) => (
           <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-white/8' : ''}>
@@ -1150,7 +1150,7 @@ function MaterialHoverCard({ state }: { state: MatHoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[220px] overflow-hidden"
+        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[220px] overflow-hidden text-white"
       >
         {isImg && mat.file_url ? (
           <img
@@ -1166,12 +1166,12 @@ function MaterialHoverCard({ state }: { state: MatHoverState }) {
         <div className="p-3">
           <p className="text-[12px] font-medium text-white leading-snug">{mat.title}</p>
           {mat.description && (
-            <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{mat.description}</p>
+            <p className="text-[10px] text-gray-300 mt-0.5 line-clamp-2 leading-relaxed">{mat.description}</p>
           )}
           <div className="flex items-center gap-1.5 mt-1.5">
-            <span className="text-[10px] text-gray-600">{MATERIAL_TYPE_LABELS[mat.type]}</span>
-            <span className="text-gray-700 text-[10px]">·</span>
-            <span className="text-[10px] text-gray-600">{formatDate(mat.created_at)}</span>
+            <span className="text-[10px] text-gray-400">{MATERIAL_TYPE_LABELS[mat.type]}</span>
+            <span className="text-gray-500 text-[10px]">·</span>
+            <span className="text-[10px] text-gray-400">{formatDate(mat.created_at)}</span>
           </div>
           <p className="text-[10px] text-blue-400 mt-1.5 flex items-center gap-1">
             <Eye className="w-2.5 h-2.5" /> Clique para visualizar
