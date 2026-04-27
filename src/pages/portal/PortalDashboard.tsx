@@ -605,12 +605,14 @@ function ClientDashboardTab({
   contents,
   onNavigate,
   firstName,
+  payments,
 }: {
   client: Client
   plannerItems: PlannerItem[]
   contents: Content[]
   onNavigate: (tab: string) => void
   firstName: string
+  payments: Array<{ status: string; payment_date: string }>
 }) {
   const [selectedItem, setSelectedItem] = useState<PlannerItem | null>(null)
   const [itemOpen, setItemOpen] = useState(false)
@@ -642,7 +644,7 @@ function ClientDashboardTab({
   const financialAux = getFinancialAuxText(client, financialStatus)
   const showFinancialAlert = financialStatus === 'vence_em_breve'
     && client.dia_vencimento != null
-    && !hasPaidCurrentCycle(portalPayments, client.dia_vencimento)
+    && !hasPaidCurrentCycle(payments, client.dia_vencimento)
 
   // Dynamic hero copy
   const headline = pendingItems.length > 0
@@ -1844,6 +1846,7 @@ export function PortalDashboard() {
               contents={contents || []}
               onNavigate={setActiveTab}
               firstName={firstName}
+              payments={portalPayments}
             />
           </TabsContent>
 
