@@ -130,6 +130,9 @@
   /* Sidebar active item (dark bg) */
   .bg-\[\#0f0f0f\] .text-white,
   .bg-\[\#0f0f0f\].text-white,
+  /* Tooltip/preview dark cards */
+  .bg-\[\#13131f\] .text-white,
+  .bg-\[\#13131f\].text-white,
   .sb-invert .text-white,
   .sb-invert.text-white { color: #ffffff !important; }
 
