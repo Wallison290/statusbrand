@@ -1,5 +1,25 @@
 import type { Client, FinancialStatus } from '@/types'
 
+// Returns true when client_payments contains a 'pago' record for the current
+// billing cycle (same month as dueThisMonth, or on/after it).
+export function hasPaidCurrentCycle(
+  payments: Array<{ status: string; payment_date: string }>,
+  diaVencimento: number | null | undefined,
+): boolean {
+  if (!diaVencimento || payments.length === 0) return false
+  const today = new Date()
+  const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), diaVencimento)
+  return payments.some(p => {
+    if (p.status !== 'pago') return false
+    const paid = new Date(p.payment_date + 'T00:00:00')
+    return (
+      paid >= dueThisMonth ||
+      (paid.getFullYear() === dueThisMonth.getFullYear() &&
+        paid.getMonth() === dueThisMonth.getMonth())
+    )
+  })
+}
+
 export function calcFinancialStatus(client: Client): FinancialStatus {
   // Cancelled is always manual and never overridden automatically
   if (client.manual_status_override && client.financial_status === 'cancelado') return 'cancelado'
@@ -19,8 +39,13 @@ export function calcFinancialStatus(client: Client): FinancialStatus {
     ? new Date(client.last_payment_date + 'T00:00:00')
     : null
 
-  // Already paid for this month's cycle (payment on or after due date this month)
-  const paidThisCycle = lastPaid != null && lastPaid >= dueThisMonth
+  // Paid for this cycle if payment date is on/after due date OR falls within the same
+  // calendar month as the due date (covers payments made before the due day)
+  const paidThisCycle = lastPaid != null && (
+    lastPaid >= dueThisMonth ||
+    (lastPaid.getFullYear() === dueThisMonth.getFullYear() &&
+      lastPaid.getMonth() === dueThisMonth.getMonth())
+  )
 
   if (paidThisCycle) {
     const nextDue = new Date(today.getFullYear(), today.getMonth() + 1, dayDue)

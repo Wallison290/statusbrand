@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import {
   usePortalClient, usePortalPlanner, usePortalContents, useSubmitApproval,
   usePortalMaterials, usePortalSupportContacts,
-  usePortalContentAssets, usePortalBrandDNA,
+  usePortalContentAssets, usePortalBrandDNA, usePortalPayments,
 } from '@/hooks/usePortal'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
@@ -32,7 +32,7 @@ import { PortalResultadosTab } from './PortalResultadosTab'
 import { PortalFinanceiroTab } from './PortalFinanceiroTab'
 import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
-import { calcFinancialStatus, getFinancialAuxText } from '@/utils/financial'
+import { calcFinancialStatus, getFinancialAuxText, hasPaidCurrentCycle } from '@/utils/financial'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -640,7 +640,9 @@ function ClientDashboardTab({
   // Financial alert — only show for 'vence_em_breve'
   const financialStatus = calcFinancialStatus(client)
   const financialAux = getFinancialAuxText(client, financialStatus)
-  const showFinancialAlert = financialStatus === 'vence_em_breve' && client.dia_vencimento != null
+  const showFinancialAlert = financialStatus === 'vence_em_breve'
+    && client.dia_vencimento != null
+    && !hasPaidCurrentCycle(portalPayments, client.dia_vencimento)
 
   // Dynamic hero copy
   const headline = pendingItems.length > 0
@@ -1712,6 +1714,7 @@ export function PortalDashboard() {
   const { data: brandDNA } = usePortalBrandDNA()
   const { data: materials = [] } = usePortalMaterials()
   const { data: supportContacts = [] } = usePortalSupportContacts()
+  const { data: portalPayments = [] } = usePortalPayments()
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [selectedAsset, setSelectedAsset] = useState<ContentAsset | null>(null)

@@ -3,7 +3,7 @@ import {
   CalendarDays, History, MessageCircle, ExternalLink,
 } from 'lucide-react'
 import { usePortalClient, usePortalPayments, usePortalSupportContacts } from '@/hooks/usePortal'
-import { calcFinancialStatus, getFinancialAuxText } from '@/utils/financial'
+import { calcFinancialStatus, getFinancialAuxText, hasPaidCurrentCycle } from '@/utils/financial'
 import type { FinancialStatus, ContactType } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -104,7 +104,11 @@ export function PortalFinanceiroTab() {
     )
   }
 
-  const status = calcFinancialStatus(client)
+  const rawStatus = calcFinancialStatus(client)
+  const status = (rawStatus === 'vence_em_breve' || rawStatus === 'atrasado') &&
+    hasPaidCurrentCycle(payments, client.dia_vencimento)
+    ? 'ativo' as const
+    : rawStatus
   const aux = getFinancialAuxText(client, status)
   const cfg = statusConfig[status]
 
