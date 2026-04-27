@@ -1,4 +1,9 @@
 import { useState, useRef } from 'react'
+import {
+  DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
+  useDroppable, useDraggable,
+} from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -566,6 +571,69 @@ function DayItemCard({
   )
 }
 
+// ─── Drag & Drop primitives ───────────────────────────────────────────────────
+
+function DraggableChip({ item, disabled }: { item: PlannerItem; disabled: boolean }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, disabled })
+  const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={e => e.stopPropagation()}
+      style={{ touchAction: 'none' }}
+      className={`flex items-center gap-0.5 min-w-0 rounded transition-opacity select-none
+        ${isDragging ? 'opacity-0' : ''}
+        ${disabled ? '' : 'cursor-grab active:cursor-grabbing'}`}
+    >
+      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
+      <span className="text-gray-400 truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden sm:block">{item.title}</span>
+      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} title={approvalLabel[as_]} />
+    </div>
+  )
+}
+
+function DroppableDay({
+  day, isCurrentMonth, isCurrentDay, hasItems, dragging,
+  onDayClick, onMouseEnter, onMouseLeave, children,
+}: {
+  day: Date
+  isCurrentMonth: boolean
+  isCurrentDay: boolean
+  hasItems: boolean
+  dragging: boolean
+  onDayClick: () => void
+  onMouseEnter: (e: React.MouseEvent<HTMLDivElement>) => void
+  onMouseLeave: () => void
+  children: React.ReactNode
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `day-${format(day, 'yyyy-MM-dd')}`,
+    disabled: !isCurrentMonth,
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={() => isCurrentMonth && !dragging && onDayClick()}
+      onMouseEnter={e => isCurrentMonth && !dragging && onMouseEnter(e)}
+      onMouseLeave={() => !dragging && onMouseLeave()}
+      className={`
+        min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
+        ${isCurrentMonth
+          ? `cursor-pointer ${isOver
+              ? 'border-blue-400/60 bg-blue-500/10 scale-[1.02]'
+              : 'border-white/8 hover:border-white/20 hover:bg-white/3'}`
+          : 'border-transparent opacity-30 cursor-default'}
+        ${isCurrentDay && !isOver ? 'border-blue-500/40 bg-blue-500/5' : ''}
+        ${hasItems && isCurrentMonth && !isOver ? 'hover:border-white/25' : ''}
+      `}
+    >
+      {children}
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function Planner() {
@@ -618,6 +686,13 @@ export function Planner() {
 
   // Hover tooltip
   const [hover, setHover] = useState<HoverState | null>(null)
+
+  // Drag and drop
+  const [draggingItem, setDraggingItem] = useState<PlannerItem | null>(null)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
 
   const { data: items } = usePlanner()
   const { data: clients } = useClients()
@@ -679,6 +754,30 @@ export function Planner() {
     if (!url) return
     setPendingLinks(prev => [...prev, url])
     setLinkInput('')
+  }
+
+  // ── Drag and drop handlers ─────────────────────────────────────────────────
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = (items || []).find(i => i.id === event.active.id)
+    if (item) { setDraggingItem(item); setHover(null) }
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setDraggingItem(null)
+    const { active, over } = event
+    if (!over || !active) return
+    const newDate = over.id as string          // "day-YYYY-MM-DD"
+    if (!newDate.startsWith('day-')) return
+    const dateStr = newDate.replace('day-', '')
+    const item = (items || []).find(i => i.id === active.id)
+    if (!item || item.scheduled_date === dateStr) return
+    try {
+      await updateItem.mutateAsync({ id: item.id, scheduled_date: dateStr })
+      toast('Post movido para ' + format(new Date(dateStr + 'T00:00:00'), "dd/MM", { locale: ptBR }), 'success')
+    } catch {
+      toast('Erro ao mover post. Tente novamente.', 'error')
+    }
   }
 
   // ── Click: dia vazio → criar | dia com itens → detalhes ───────────────────
@@ -981,6 +1080,11 @@ export function Planner() {
         </div>
 
         {/* Calendar grid */}
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
         <Card>
           <CardContent className="p-2 sm:p-4">
             <div className="w-full max-w-full min-w-0">
@@ -997,19 +1101,16 @@ export function Planner() {
                 const hasItems = dayItems.length > 0
 
                 return (
-                  <div
+                  <DroppableDay
                     key={day.toISOString()}
-                    onClick={() => isCurrentMonth && handleDayClick(day, dayItems)}
-                    onMouseEnter={e => isCurrentMonth && handleDayMouseEnter(e, dayItems)}
+                    day={day}
+                    isCurrentMonth={isCurrentMonth}
+                    isCurrentDay={isCurrentDay}
+                    hasItems={hasItems}
+                    dragging={!!draggingItem}
+                    onDayClick={() => handleDayClick(day, dayItems)}
+                    onMouseEnter={e => handleDayMouseEnter(e, dayItems)}
                     onMouseLeave={() => setHover(null)}
-                    className={`
-                      min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
-                      ${isCurrentMonth
-                        ? 'border-white/8 hover:border-white/20 hover:bg-white/3 cursor-pointer'
-                        : 'border-transparent opacity-30 cursor-default'}
-                      ${isCurrentDay ? 'border-blue-500/40 bg-blue-500/5' : ''}
-                      ${hasItems && isCurrentMonth ? 'hover:border-white/25' : ''}
-                    `}
                   >
                     <div className={`
                       text-[10px] sm:text-xs font-medium mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
@@ -1018,27 +1119,31 @@ export function Planner() {
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-0.5">
-                      {dayItems.slice(0, 2).map(item => {
-                        const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
-                        return (
-                          <div key={item.id} onClick={e => e.stopPropagation()} className="flex items-center gap-0.5 min-w-0">
-                            <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                            <span className="text-gray-400 truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden sm:block">{item.title}</span>
-                            <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} title={approvalLabel[as_]} />
-                          </div>
-                        )
-                      })}
+                      {dayItems.slice(0, 2).map(item => (
+                        <DraggableChip key={item.id} item={item} disabled={isMobile} />
+                      ))}
                       {dayItems.length > 2 && (
                         <p className="text-[8px] sm:text-[10px] text-gray-600">+{dayItems.length - 2}</p>
                       )}
                     </div>
-                  </div>
+                  </DroppableDay>
                 )
               })}
             </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Overlay visual durante o drag */}
+        <DragOverlay dropAnimation={null}>
+          {draggingItem ? (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#13131f] border border-white/20 shadow-xl text-[10px] text-white max-w-[160px]">
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[draggingItem.status as PlannerStatus]}`} />
+              <span className="truncate">{draggingItem.title}</span>
+            </div>
+          ) : null}
+        </DragOverlay>
+        </DndContext>
 
         {/* Legend */}
         <div className="flex gap-3 mt-4 flex-wrap">
