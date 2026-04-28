@@ -267,64 +267,66 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.08 }}
-      className="flex flex-wrap items-center gap-4 mb-6 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]"
+      className="flex flex-col gap-3 mb-6 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02] sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
     >
-      {/* Icon */}
-      <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
-        <DollarSign className="w-4 h-4 text-zinc-400" />
-      </div>
-
-      {/* Main info */}
-      <div className="flex flex-wrap items-center gap-5 flex-1 min-w-0">
-        {client.valor_mensal != null && (
-          <div>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Mensalidade</p>
-            <p className="text-[14px] font-semibold text-zinc-100">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.valor_mensal)}
-            </p>
-          </div>
-        )}
-
-        {client.dia_vencimento != null && (
-          <div>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Vencimento</p>
-            <p className="text-[13px] font-medium text-zinc-300 flex items-center gap-1.5">
-              <CalendarDays className="w-3 h-3 text-zinc-500" />
-              Dia {client.dia_vencimento}
-            </p>
-          </div>
-        )}
-
-        {/* Status badge */}
-        <div>
-          <p className="text-[10px] text-zinc-600 uppercase tracking-wide mb-1">Status financeiro</p>
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ${styles.bg} ${styles.text}`}>
-            {styles.icon}
-            {financialStatusLabel(computedStatus)}
-          </span>
+      {/* Ícone + dados — ficam na mesma linha no mobile */}
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <DollarSign className="w-4 h-4 text-zinc-400" />
         </div>
 
-        {/* Aux text */}
-        {auxText && (
-          <div className="hidden sm:block">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Info</p>
-            <p className={`text-[12px] font-medium ${
-              computedStatus === 'atrasado' ? 'text-red-400' :
-              computedStatus === 'vence_em_breve' ? 'text-amber-400' : 'text-zinc-400'
-            }`}>{auxText}</p>
+        {/* Main info */}
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 flex-1 min-w-0">
+          {client.valor_mensal != null && (
+            <div className="min-w-0">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Mensalidade</p>
+              <p className="text-[14px] font-semibold text-zinc-100 break-words whitespace-normal">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.valor_mensal)}
+              </p>
+            </div>
+          )}
+
+          {client.dia_vencimento != null && (
+            <div className="min-w-0">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Vencimento</p>
+              <p className="text-[13px] font-medium text-zinc-300 flex items-center gap-1.5">
+                <CalendarDays className="w-3 h-3 text-zinc-500 flex-shrink-0" />
+                Dia {client.dia_vencimento}
+              </p>
+            </div>
+          )}
+
+          {/* Status badge */}
+          <div className="min-w-0">
+            <p className="text-[10px] text-zinc-600 uppercase tracking-wide mb-1">Status financeiro</p>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ${styles.bg} ${styles.text}`}>
+              {styles.icon}
+              {financialStatusLabel(computedStatus)}
+            </span>
           </div>
-        )}
+
+          {/* Aux text */}
+          {auxText && (
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Info</p>
+              <p className={`text-[12px] font-medium break-words whitespace-normal ${
+                computedStatus === 'atrasado' ? 'text-red-400' :
+                computedStatus === 'vence_em_breve' ? 'text-amber-400' : 'text-zinc-400'
+              }`}>{auxText}</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      {/* Actions — coluna no mobile, linha no desktop */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-shrink-0">
         {computedStatus !== 'cancelado' && (
           <Button
             size="sm"
             variant="outline"
             onClick={handleRegisterPayment}
             disabled={registerPayment.isPending}
-            className="text-[11px] h-7 px-3"
+            className="text-[11px] h-7 px-3 w-full sm:w-auto justify-center"
           >
             <CheckCircle2 className="w-3 h-3" />
             {registerPayment.isPending ? 'Salvando...' : 'Registrar pagamento'}
@@ -332,12 +334,12 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
         )}
 
         {/* Manual override dropdown */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setOverrideOpen(o => !o)}
-            className="text-[11px] h-7 px-2.5 text-zinc-500 hover:text-zinc-200"
+            className="text-[11px] h-7 px-2.5 text-zinc-500 hover:text-zinc-200 w-full sm:w-auto justify-center"
           >
             <ChevronDown className="w-3 h-3" /> Alterar
           </Button>
