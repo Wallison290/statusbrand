@@ -372,6 +372,25 @@ export interface ClientReport {
   attachments?: ReportAttachment[]
 }
 
+export type NotificationType =
+  | 'NEW_CONTENT'
+  | 'APPROVAL_REQUEST'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'COMMENT'
+
+export interface Notification {
+  id: string
+  user_id: string
+  client_id: string | null
+  type: NotificationType
+  title: string
+  message: string
+  link: string | null
+  is_read: boolean
+  created_at: string
+}
+
 export interface DashboardStats {
   total_clients: number
   contents_this_week: number

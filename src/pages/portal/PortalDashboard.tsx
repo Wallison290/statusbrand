@@ -28,8 +28,10 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
+import { NotificationsModal } from '@/components/NotificationsModal'
 import { PortalResultadosTab } from './PortalResultadosTab'
 import { PortalFinanceiroTab } from './PortalFinanceiroTab'
+import { useNotifications } from '@/hooks/useNotifications'
 import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
 import { calcFinancialStatus, getFinancialAuxText, hasPaidCurrentCycle } from '@/utils/financial'
@@ -1750,10 +1752,12 @@ export function PortalDashboard() {
   const { data: materials = [] } = usePortalMaterials()
   const { data: supportContacts = [] } = usePortalSupportContacts()
   const { data: portalPayments = [] } = usePortalPayments()
+  const { data: notifications = [] } = useNotifications()
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [selectedAsset, setSelectedAsset] = useState<ContentAsset | null>(null)
   const [assetModalOpen, setAssetModalOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
 
   const rawName = profile?.full_name || ''
   const firstName = rawName.split(' ')[0] || 'Cliente'
@@ -1761,6 +1765,8 @@ export function PortalDashboard() {
   const pendingCount = (plannerItems || []).filter(
     i => i.approval_status === 'pendente_aprovacao' || (i.status === 'revisao' && !i.approval_status)
   ).length
+
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   if (isLoading) {
     return (
@@ -1800,7 +1806,13 @@ export function PortalDashboard() {
   ]
 
   return (
-    <PortalLayout clientName={client.company_name} pendingCount={pendingCount} onBellClick={() => setActiveTab('planejamento')}>
+    <>
+    <PortalLayout
+      clientName={client.company_name}
+      unreadCount={unreadCount}
+      pendingCount={pendingCount}
+      onBellClick={() => setShowNotifications(true)}
+    >
       <div className="max-w-5xl mx-auto px-6 py-8">
 
         {/* Cabeçalho da empresa */}
@@ -2104,5 +2116,16 @@ export function PortalDashboard() {
         />
       )}
     </PortalLayout>
+
+    {/* Modal de notificações */}
+    <NotificationsModal
+      open={showNotifications}
+      onClose={() => setShowNotifications(false)}
+      onView={(notification) => {
+        setShowNotifications(false)
+        setActiveTab('planejamento')
+      }}
+    />
+    </>
   )
 }
