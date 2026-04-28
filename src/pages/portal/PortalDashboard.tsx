@@ -199,7 +199,7 @@ function ItemDetailView({
         <DialogHeader>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug break-words min-w-0">{item.title}</DialogTitle>
+            <DialogTitle className="text-base leading-snug break-words min-w-0 select-text">{item.title}</DialogTitle>
           </div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs text-gray-500">
@@ -219,7 +219,7 @@ function ItemDetailView({
           {item.notes && (
             <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
               <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words">{item.notes}</p>
+              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words select-text">{item.notes}</p>
             </div>
           )}
 
@@ -303,7 +303,7 @@ function ItemDetailView({
                   <MessageSquare className="w-3 h-3 text-[#a0a0a0]" />
                   <span className="text-[10px] text-[#a0a0a0] uppercase tracking-wide">Seu comentário</span>
                 </div>
-                <p className="text-xs text-[#737373] leading-relaxed break-words">{item.client_feedback}</p>
+                <p className="text-xs text-[#737373] leading-relaxed break-words select-text">{item.client_feedback}</p>
               </div>
             )}
 
