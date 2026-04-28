@@ -32,6 +32,7 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
       className={cn(
         'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%]',
         'gap-4 border border-white/10 bg-[#0d0f14] p-6 shadow-2xl rounded-2xl',
