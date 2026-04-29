@@ -358,7 +358,7 @@ function PlannerItemView({
           {item.notes && (
             <div className="p-3 bg-white/3 rounded-xl border border-white/8">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">{item.notes}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words select-text" style={{ color: '#0f0f0f' }}>{item.notes}</p>
             </div>
           )}
 
