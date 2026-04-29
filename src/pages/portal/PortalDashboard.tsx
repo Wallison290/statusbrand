@@ -1917,7 +1917,7 @@ export function PortalDashboard() {
             <TabsTrigger value="suporte">Suporte</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="notas">Planejamento</TabsTrigger>
+            <TabsTrigger value="notas">Solicitações</TabsTrigger>
           </TabsList>
 
           {/* Aba Dashboard */}
