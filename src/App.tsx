@@ -19,6 +19,7 @@ import { Planner } from '@/pages/planner/Planner'
 import { Tasks } from '@/pages/tasks/Tasks'
 import { Library } from '@/pages/library/Library'
 import { Financial } from '@/pages/financial/Financial'
+import { Notes } from '@/pages/notes/Notes'
 import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 
 const qc = new QueryClient({
@@ -94,6 +95,7 @@ function AppRoutes() {
         <Route path="/history/:id" element={<ContentDetail />} />
         <Route path="/planner" element={<Planner />} />
         <Route path="/tasks" element={<Tasks />} />
+        <Route path="/notes" element={<Notes />} />
         <Route path="/library" element={<Library />} />
         <Route path="/financial" element={<Financial />} />
       </Route>

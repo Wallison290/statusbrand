@@ -391,6 +391,22 @@ export interface Notification {
   created_at: string
 }
 
+export interface NoteChecklistItem {
+  id: string
+  text: string
+  done: boolean
+}
+
+export interface Note {
+  id: string
+  user_id: string
+  title: string
+  content: string | null
+  checklist: NoteChecklistItem[]
+  created_at: string
+  updated_at: string
+}
+
 export interface DashboardStats {
   total_clients: number
   contents_this_week: number
