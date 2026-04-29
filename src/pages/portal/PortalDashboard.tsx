@@ -31,6 +31,7 @@ import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { NotificationsModal } from '@/components/NotificationsModal'
 import { PortalResultadosTab } from './PortalResultadosTab'
 import { PortalFinanceiroTab } from './PortalFinanceiroTab'
+import { PortalNotesTab } from './PortalNotesTab'
 import { useNotifications } from '@/hooks/useNotifications'
 import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
@@ -1916,6 +1917,7 @@ export function PortalDashboard() {
             <TabsTrigger value="suporte">Suporte</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="notas">Notas</TabsTrigger>
           </TabsList>
 
           {/* Aba Dashboard */}
@@ -2142,6 +2144,11 @@ export function PortalDashboard() {
           {/* Aba Financeiro */}
           <TabsContent value="financeiro">
             <PortalFinanceiroTab />
+          </TabsContent>
+
+          {/* Aba Notas */}
+          <TabsContent value="notas">
+            <PortalNotesTab />
           </TabsContent>
         </Tabs>
       </div>

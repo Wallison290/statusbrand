@@ -399,14 +399,21 @@ export interface NoteChecklistItem {
   done: boolean
 }
 
+export type NoteType   = 'interna' | 'ideia' | 'solicitacao'
+export type NoteOrigin = 'agency' | 'client'
+
 export interface Note {
   id: string
   user_id: string
+  client_id: string | null
+  type: NoteType
+  origin: NoteOrigin
   title: string
   content: string | null
   checklist: NoteChecklistItem[]
   created_at: string
   updated_at: string
+  client?: { id: string; company_name: string }
 }
 
 export interface DashboardStats {
