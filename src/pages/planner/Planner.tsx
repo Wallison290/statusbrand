@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
-  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink,
+  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -304,6 +304,22 @@ function PlannerItemView({
   const images = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
   const otherAttachments = item.attachments?.filter(a => !a.file_type.startsWith('image/')) || []
 
+  const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
+    item.approval_status as ApprovalStatus | null
+  )
+  const updateItem = useUpdatePlannerItem()
+  const { toast } = useToast()
+
+  const handleMarkAdjustmentDone = async () => {
+    try {
+      await updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' })
+      setLocalApprovalStatus('ajuste_realizado')
+      toast('Ajuste marcado como realizado.', 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
@@ -432,9 +448,9 @@ function PlannerItemView({
             <div className="p-3 bg-white/3 rounded-xl border border-white/8">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Resposta do Cliente</p>
               <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[item.approval_status as ApprovalStatus]}`} />
-                <span className={`text-xs font-medium ${approvalTextColor[item.approval_status as ApprovalStatus]}`}>
-                  {approvalLabel[item.approval_status as ApprovalStatus]}
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
+                <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
+                  {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
                 </span>
                 {item.reviewed_at && (
                   <span className="text-[10px] text-gray-600 ml-auto">
@@ -446,6 +462,18 @@ function PlannerItemView({
                 <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words">
                   "{item.client_feedback}"
                 </p>
+              )}
+              {(localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
+                <button
+                  onClick={handleMarkAdjustmentDone}
+                  disabled={updateItem.isPending}
+                  className="mt-3 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+                >
+                  {updateItem.isPending
+                    ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    : <Check className="w-3 h-3" />}
+                  Ajuste realizado
+                </button>
               )}
             </div>
           )}
