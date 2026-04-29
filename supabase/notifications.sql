@@ -53,9 +53,9 @@ BEGIN
   IF NEW.status = 'revisao'
      AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'revisao')
   THEN
-    SELECT user_id INTO v_client_user_id
+    SELECT id INTO v_client_user_id
     FROM profiles
-    WHERE client_id = NEW.client_id
+    WHERE linked_client_id = NEW.client_id
       AND role = 'client'
     LIMIT 1;
 
@@ -148,9 +148,9 @@ BEGIN
 
   IF NEW.role = 'agency' THEN
     v_notif_title := 'Comentário da agência';
-    SELECT user_id INTO v_recipient_id
+    SELECT id INTO v_recipient_id
     FROM profiles
-    WHERE client_id = v_client_id AND role = 'client'
+    WHERE linked_client_id = v_client_id AND role = 'client'
     LIMIT 1;
   ELSE
     v_notif_title := 'Comentário do cliente';
