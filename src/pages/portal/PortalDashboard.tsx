@@ -58,24 +58,28 @@ const approvalBg: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'bg-yellow-50 border-yellow-200',
   aprovado: 'bg-green-50 border-green-200',
   ajuste_solicitado: 'bg-orange-50 border-orange-200',
+  ajuste_realizado: 'bg-blue-50 border-blue-200',
   reprovado: 'bg-red-50 border-red-200',
 }
 const approvalText: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'text-yellow-600',
   aprovado: 'text-green-600',
   ajuste_solicitado: 'text-orange-600',
+  ajuste_realizado: 'text-blue-600',
   reprovado: 'text-red-600',
 }
 const approvalLabels: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação',
   aprovado: 'Aprovado',
   ajuste_solicitado: 'Ajuste solicitado',
+  ajuste_realizado: 'Ajuste realizado — revise e decida',
   reprovado: 'Reprovado',
 }
 const approvalIcons: Record<ApprovalStatus, React.ReactNode> = {
   pendente_aprovacao: <Clock className="w-3.5 h-3.5" />,
   aprovado: <CheckCircle2 className="w-3.5 h-3.5" />,
   ajuste_solicitado: <AlertCircle className="w-3.5 h-3.5" />,
+  ajuste_realizado: <CheckCircle2 className="w-3.5 h-3.5" />,
   reprovado: <XCircle className="w-3.5 h-3.5" />,
 }
 
@@ -190,7 +194,8 @@ function ItemDetailView({
     }
   }
 
-  const isDecided = localStatus !== 'pendente_aprovacao'
+  // ajuste_realizado = agência fez o ajuste, cliente precisa revisar novamente
+  const isDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
   const isBusy = submitApproval.isPending
 
   return (
@@ -579,6 +584,7 @@ function humanizeActivity(status: ApprovalStatus, _item: PlannerItem): string {
     case 'aprovado':          return 'Você aprovou um conteúdo'
     case 'reprovado':         return 'Você reprovou um conteúdo'
     case 'ajuste_solicitado': return 'Você solicitou ajuste em um conteúdo'
+    case 'ajuste_realizado':  return 'A agência realizou o ajuste solicitado'
     default:                  return 'Conteúdo enviado para revisão'
   }
 }

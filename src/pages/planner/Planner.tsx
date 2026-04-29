@@ -66,18 +66,21 @@ const approvalDot: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'bg-yellow-400',
   aprovado: 'bg-green-400',
   ajuste_solicitado: 'bg-orange-400',
+  ajuste_realizado: 'bg-blue-400',
   reprovado: 'bg-red-400',
 }
 const approvalTextColor: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'text-yellow-400',
   aprovado: 'text-green-400',
   ajuste_solicitado: 'text-orange-400',
+  ajuste_realizado: 'text-blue-400',
   reprovado: 'text-red-400',
 }
 const approvalLabel: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação',
   aprovado: 'Aprovado pelo cliente',
   ajuste_solicitado: 'Ajuste solicitado',
+  ajuste_realizado: 'Ajuste realizado',
   reprovado: 'Reprovado pelo cliente',
 }
 
@@ -241,6 +244,7 @@ function DayTooltip({ state }: { state: HoverState }) {
                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md mb-1.5 ${
                   as_ === 'aprovado' ? 'bg-green-500/15 text-green-400' :
                   as_ === 'ajuste_solicitado' ? 'bg-orange-500/15 text-orange-400' :
+                  as_ === 'ajuste_realizado' ? 'bg-blue-500/15 text-blue-400' :
                   as_ === 'reprovado' ? 'bg-red-500/15 text-red-400' :
                   'bg-yellow-500/10 text-yellow-400'
                 }`}>
@@ -1043,10 +1047,11 @@ export function Planner() {
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           {([
             { key: 'todos',              label: 'Todos',             dot: 'bg-gray-500' },
-            { key: 'pendente_aprovacao', label: 'Pendentes',         dot: 'bg-yellow-400' },
-            { key: 'aprovado',           label: 'Aprovados',         dot: 'bg-green-400' },
-            { key: 'ajuste_solicitado',  label: 'Ajuste solicitado', dot: 'bg-orange-400' },
-            { key: 'reprovado',          label: 'Reprovados',        dot: 'bg-red-400' },
+            { key: 'pendente_aprovacao', label: 'Pendentes',          dot: 'bg-yellow-400' },
+            { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
+            { key: 'ajuste_solicitado',  label: 'Ajuste solicitado',  dot: 'bg-orange-400' },
+            { key: 'ajuste_realizado',   label: 'Ajuste realizado',   dot: 'bg-blue-400' },
+            { key: 'reprovado',          label: 'Reprovados',         dot: 'bg-red-400' },
           ] as const).map(({ key, label, dot }) => (
             <button
               key={key}

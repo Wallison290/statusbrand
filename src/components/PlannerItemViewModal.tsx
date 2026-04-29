@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   ImageIcon, Video, Music, FileText, File,
-  ExternalLink, Link2, Building2, Pencil, Trash2,
+  ExternalLink, Link2, Building2, Pencil, Trash2, Check,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -30,15 +30,16 @@ const statusLabels: Record<PlannerStatus, string> = {
 }
 const approvalDot: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'bg-yellow-400', aprovado: 'bg-green-400',
-  ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-400',
+  ajuste_solicitado: 'bg-orange-400', ajuste_realizado: 'bg-blue-400', reprovado: 'bg-red-400',
 }
 const approvalTextColor: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'text-yellow-400', aprovado: 'text-green-400',
-  ajuste_solicitado: 'text-orange-400', reprovado: 'text-red-400',
+  ajuste_solicitado: 'text-orange-400', ajuste_realizado: 'text-blue-400', reprovado: 'text-red-400',
 }
 const approvalLabel: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação', aprovado: 'Aprovado pelo cliente',
-  ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado pelo cliente',
+  ajuste_solicitado: 'Ajuste solicitado', ajuste_realizado: 'Ajuste realizado — aguardando revisão',
+  reprovado: 'Reprovado pelo cliente',
 }
 
 const PLANNER_STATUSES: { value: PlannerStatus; label: string }[] = [
@@ -85,10 +86,23 @@ export function PlannerItemViewModal({
   const [editingStatus, setEditingStatus] = useState(false)
   const [newStatus, setNewStatus] = useState<PlannerStatus>(item.status as PlannerStatus)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
+    item.approval_status as ApprovalStatus | null
+  )
 
   const updateItem = useUpdatePlannerItem()
   const deleteItem = useDeletePlannerItem()
   const { toast } = useToast()
+
+  const handleMarkAdjustmentDone = async () => {
+    try {
+      await updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' })
+      setLocalApprovalStatus('ajuste_realizado')
+      toast('Ajuste marcado como realizado.', 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
 
   const handleStatusSave = async () => {
     try {
@@ -260,9 +274,9 @@ export function PlannerItemViewModal({
             <div className="p-3 bg-white/3 rounded-xl border border-white/8">
               <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Resposta do Cliente</p>
               <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[item.approval_status as ApprovalStatus]}`} />
-                <span className={`text-xs font-medium ${approvalTextColor[item.approval_status as ApprovalStatus]}`}>
-                  {approvalLabel[item.approval_status as ApprovalStatus]}
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
+                <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
+                  {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
                 </span>
                 {item.reviewed_at && (
                   <span className="text-[10px] text-gray-600 ml-auto">
@@ -274,6 +288,19 @@ export function PlannerItemViewModal({
                 <p className="text-xs text-[#0f0f0f] leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words select-text">
                   "{item.client_feedback}"
                 </p>
+              )}
+              {/* Botão "Ajuste realizado" — aparece apenas quando status é ajuste_solicitado e agência pode agir */}
+              {showAgencyActions && (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
+                <button
+                  onClick={handleMarkAdjustmentDone}
+                  disabled={updateItem.isPending}
+                  className="mt-3 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+                >
+                  {updateItem.isPending
+                    ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    : <Check className="w-3 h-3" />}
+                  Ajuste realizado
+                </button>
               )}
             </div>
           )}

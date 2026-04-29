@@ -181,6 +181,7 @@ export type ApprovalStatus =
   | 'pendente_aprovacao'
   | 'aprovado'
   | 'ajuste_solicitado'
+  | 'ajuste_realizado'
   | 'reprovado'
 
 export interface PlannerAttachment {
