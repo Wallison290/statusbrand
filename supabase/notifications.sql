@@ -29,12 +29,10 @@ CREATE INDEX IF NOT EXISTS idx_notifications_unread
 
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- Cada usuário vê apenas suas próprias notificações
 CREATE POLICY "notifications_select_own"
   ON public.notifications FOR SELECT
   USING (auth.uid() = user_id);
 
--- Usuário pode marcar as próprias como lidas
 CREATE POLICY "notifications_update_own"
   ON public.notifications FOR UPDATE
   USING (auth.uid() = user_id)
@@ -49,14 +47,12 @@ AS $$
 DECLARE
   v_client_user_id uuid;
 BEGIN
-  -- Dispara quando status muda PARA 'revisao'
   IF NEW.status = 'revisao'
      AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'revisao')
   THEN
     SELECT id INTO v_client_user_id
     FROM profiles
-    WHERE linked_client_id = NEW.client_id
-      AND role = 'client'
+    WHERE linked_client_id = NEW.client_id AND role = 'client'
     LIMIT 1;
 
     IF v_client_user_id IS NOT NULL THEN
@@ -80,7 +76,7 @@ CREATE TRIGGER trigger_notify_approval_request
   AFTER INSERT OR UPDATE OF status ON public.planner
   FOR EACH ROW EXECUTE FUNCTION public.notify_approval_request();
 
--- ── 4. Trigger: agência marca ajuste como realizado → notifica cliente ───────
+-- ── 4. Trigger: agência marca ajuste como realizado → notifica cliente ────────
 
 CREATE OR REPLACE FUNCTION public.notify_adjustment_done()
 RETURNS trigger LANGUAGE plpgsql
@@ -94,8 +90,7 @@ BEGIN
   THEN
     SELECT id INTO v_client_user_id
     FROM profiles
-    WHERE linked_client_id = NEW.client_id
-      AND role = 'client'
+    WHERE linked_client_id = NEW.client_id AND role = 'client'
     LIMIT 1;
 
     IF v_client_user_id IS NOT NULL THEN
@@ -104,7 +99,7 @@ BEGIN
         v_client_user_id,
         NEW.client_id,
         'ADJUSTMENT_DONE',
-        'Ajuste realizado',
+        'Ajuste realizado — ' || COALESCE(NEW.title, 'conteúdo atualizado'),
         'O conteúdo "' || COALESCE(NEW.title, 'sem título') || '" foi ajustado e está pronto para nova revisão.',
         NEW.id::text
       );
@@ -119,7 +114,7 @@ CREATE TRIGGER trigger_notify_adjustment_done
   AFTER UPDATE OF approval_status ON public.planner
   FOR EACH ROW EXECUTE FUNCTION public.notify_adjustment_done();
 
--- ── 5. Trigger: cliente aprova/reprova → notifica agência ─────────────────────
+-- ── 5. Trigger: cliente aprova/reprova → notifica agência (com nome do cliente) ─
 
 CREATE OR REPLACE FUNCTION public.notify_approval_result()
 RETURNS trigger LANGUAGE plpgsql
@@ -127,6 +122,7 @@ SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   v_agency_user_id uuid;
+  v_company_name   text;
   v_type           text;
   v_title          text;
   v_message        text;
@@ -134,22 +130,20 @@ BEGIN
   IF NEW.approval_status IS DISTINCT FROM OLD.approval_status
      AND NEW.approval_status IN ('aprovado', 'reprovado', 'ajuste_solicitado')
   THEN
-    SELECT user_id INTO v_agency_user_id
-    FROM clients
-    WHERE id = NEW.client_id
-    LIMIT 1;
+    SELECT user_id      INTO v_agency_user_id FROM clients WHERE id = NEW.client_id LIMIT 1;
+    SELECT company_name INTO v_company_name   FROM clients WHERE id = NEW.client_id LIMIT 1;
 
     IF NEW.approval_status = 'aprovado' THEN
       v_type    := 'APPROVED';
-      v_title   := 'Conteúdo aprovado pelo cliente';
+      v_title   := COALESCE(v_company_name, 'Cliente') || ' aprovou um conteúdo';
       v_message := COALESCE(NEW.title, 'Um conteúdo foi aprovado pelo cliente');
     ELSIF NEW.approval_status = 'ajuste_solicitado' THEN
       v_type    := 'REJECTED';
-      v_title   := 'Ajuste solicitado pelo cliente';
+      v_title   := COALESCE(v_company_name, 'Cliente') || ' solicitou ajuste';
       v_message := COALESCE(NEW.title, 'O cliente solicitou ajustes no conteúdo');
     ELSE
       v_type    := 'REJECTED';
-      v_title   := 'Conteúdo reprovado pelo cliente';
+      v_title   := COALESCE(v_company_name, 'Cliente') || ' reprovou um conteúdo';
       v_message := COALESCE(NEW.title, 'Um conteúdo foi reprovado pelo cliente');
     END IF;
 
@@ -167,7 +161,7 @@ CREATE TRIGGER trigger_notify_approval_result
   AFTER UPDATE OF approval_status ON public.planner
   FOR EACH ROW EXECUTE FUNCTION public.notify_approval_result();
 
--- ── 5. Trigger: novo comentário → notifica a outra parte ──────────────────────
+-- ── 6. Trigger: novo comentário → notifica a outra parte (com nome do cliente) ─
 
 CREATE OR REPLACE FUNCTION public.notify_new_comment()
 RETURNS trigger LANGUAGE plpgsql
@@ -179,31 +173,22 @@ DECLARE
   v_item_title   text;
   v_notif_title  text;
   v_preview      text;
+  v_company_name text;
 BEGIN
-  SELECT client_id, title
-    INTO v_client_id, v_item_title
-    FROM planner
-   WHERE id = NEW.planner_id;
+  SELECT client_id, title INTO v_client_id, v_item_title FROM planner WHERE id = NEW.planner_id;
+  SELECT company_name INTO v_company_name FROM clients WHERE id = v_client_id LIMIT 1;
 
   IF NEW.role = 'agency' THEN
     v_notif_title := 'Comentário da agência';
     SELECT id INTO v_recipient_id
-    FROM profiles
-    WHERE linked_client_id = v_client_id AND role = 'client'
+    FROM profiles WHERE linked_client_id = v_client_id AND role = 'client'
     LIMIT 1;
   ELSE
-    v_notif_title := 'Comentário do cliente';
-    SELECT user_id INTO v_recipient_id
-    FROM clients
-    WHERE id = v_client_id
-    LIMIT 1;
+    v_notif_title := COALESCE(v_company_name, 'Cliente') || ' comentou em um conteúdo';
+    SELECT user_id INTO v_recipient_id FROM clients WHERE id = v_client_id LIMIT 1;
   END IF;
 
-  -- Monta preview: "Título do post: mensagem..."
-  v_preview := LEFT(
-    COALESCE(v_item_title || ': ', '') || NEW.message,
-    120
-  );
+  v_preview := LEFT(COALESCE(v_item_title || ': ', '') || NEW.message, 120);
 
   IF v_recipient_id IS NOT NULL THEN
     INSERT INTO notifications (user_id, client_id, type, title, message, link)

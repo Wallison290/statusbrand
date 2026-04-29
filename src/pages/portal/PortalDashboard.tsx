@@ -378,7 +378,15 @@ function ItemDetailView({
 
 // ─── Portal Planner (read-only) ───────────────────────────────────────────────
 
-function PortalPlannerView({ items }: { items: PlannerItem[] }) {
+function PortalPlannerView({
+  items,
+  autoOpenItemId,
+  onItemAutoOpened,
+}: {
+  items: PlannerItem[]
+  autoOpenItemId?: string | null
+  onItemAutoOpened?: () => void
+}) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [hover, setHover] = useState<HoverState | null>(null)
   const [dayItems, setDayItems] = useState<PlannerItem[]>([])
@@ -387,6 +395,17 @@ function PortalPlannerView({ items }: { items: PlannerItem[] }) {
   const [selectedItem, setSelectedItem] = useState<PlannerItem | null>(null)
   const [itemOpen, setItemOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
+  // Auto-abrir item ao receber autoOpenItemId (vindo de notificação)
+  useEffect(() => {
+    if (!autoOpenItemId || !items.length) return
+    const found = items.find(i => i.id === autoOpenItemId)
+    if (found) {
+      setSelectedItem(found)
+      setItemOpen(true)
+      onItemAutoOpened?.()
+    }
+  }, [autoOpenItemId, items])
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 640)
@@ -1773,6 +1792,7 @@ export function PortalDashboard() {
   const [selectedAsset, setSelectedAsset] = useState<ContentAsset | null>(null)
   const [assetModalOpen, setAssetModalOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [autoOpenPlannerItemId, setAutoOpenPlannerItemId] = useState<string | null>(null)
 
   const rawName = profile?.full_name || ''
   const firstName = rawName.split(' ')[0] || 'Cliente'
@@ -1917,7 +1937,11 @@ export function PortalDashboard() {
                 <p className="text-gray-500 text-sm">Nenhum conteúdo planejado ainda.</p>
               </div>
             ) : (
-              <PortalPlannerView items={plannerItems || []} />
+              <PortalPlannerView
+                items={plannerItems || []}
+                autoOpenItemId={autoOpenPlannerItemId}
+                onItemAutoOpened={() => setAutoOpenPlannerItemId(null)}
+              />
             )}
           </TabsContent>
 
@@ -2139,6 +2163,9 @@ export function PortalDashboard() {
       onView={(notification) => {
         setShowNotifications(false)
         setActiveTab('planejamento')
+        if (notification.link) {
+          setAutoOpenPlannerItemId(notification.link)
+        }
       }}
     />
     </>

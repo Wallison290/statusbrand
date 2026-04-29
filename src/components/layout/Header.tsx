@@ -73,7 +73,11 @@ export function Header({ title, subtitle, action }: HeaderProps) {
         onClose={() => setShowNotifications(false)}
         onView={(notification) => {
           setShowNotifications(false)
-          navigate('/planner')
+          if (notification.link) {
+            navigate(`/planner?item=${notification.link}`)
+          } else {
+            navigate('/planner')
+          }
         }}
       />
     </>

@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable,
 } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
@@ -705,6 +706,8 @@ export function Planner() {
   // ── NOVO: visualização completa do evento ──────────────────────────────────
   const [selectedPlannerItem, setSelectedPlannerItem] = useState<PlannerItem | null>(null)
   const [itemViewOpen, setItemViewOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const autoOpenProcessed = useRef(false)
 
   // Arsenal: picker de conteúdo
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -728,6 +731,19 @@ export function Planner() {
 
   const { data: items } = usePlanner()
   const { data: clients } = useClients()
+
+  // Auto-abrir item via query param ?item=UUID (vindo de notificação)
+  useEffect(() => {
+    const itemId = searchParams.get('item')
+    if (!itemId || !items?.length || autoOpenProcessed.current) return
+    const found = items.find(i => i.id === itemId)
+    if (found) {
+      autoOpenProcessed.current = true
+      setSelectedPlannerItem(found)
+      setItemViewOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, items])
   const createItem = useCreatePlannerItem()
   const updateItem = useUpdatePlannerItem()
   const deleteItem = useDeletePlannerItem()
