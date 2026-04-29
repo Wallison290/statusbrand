@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   user_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   client_id  uuid        REFERENCES public.clients(id) ON DELETE CASCADE,
   type       text        NOT NULL
-               CHECK (type IN ('NEW_CONTENT','APPROVAL_REQUEST','APPROVED','REJECTED','COMMENT')),
+               CHECK (type IN ('NEW_CONTENT','APPROVAL_REQUEST','APPROVED','REJECTED','COMMENT','ADJUSTMENT_DONE')),
   title      text        NOT NULL,
   message    text        NOT NULL,
   link       text,                          -- planner item id (UUID como texto)
@@ -80,7 +80,46 @@ CREATE TRIGGER trigger_notify_approval_request
   AFTER INSERT OR UPDATE OF status ON public.planner
   FOR EACH ROW EXECUTE FUNCTION public.notify_approval_request();
 
--- ── 4. Trigger: cliente aprova/reprova → notifica agência ─────────────────────
+-- ── 4. Trigger: agência marca ajuste como realizado → notifica cliente ───────
+
+CREATE OR REPLACE FUNCTION public.notify_adjustment_done()
+RETURNS trigger LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_client_user_id uuid;
+BEGIN
+  IF OLD.approval_status IS DISTINCT FROM NEW.approval_status
+     AND NEW.approval_status = 'ajuste_realizado'
+  THEN
+    SELECT id INTO v_client_user_id
+    FROM profiles
+    WHERE linked_client_id = NEW.client_id
+      AND role = 'client'
+    LIMIT 1;
+
+    IF v_client_user_id IS NOT NULL THEN
+      INSERT INTO notifications (user_id, client_id, type, title, message, link)
+      VALUES (
+        v_client_user_id,
+        NEW.client_id,
+        'ADJUSTMENT_DONE',
+        'Ajuste realizado',
+        'O conteúdo "' || COALESCE(NEW.title, 'sem título') || '" foi ajustado e está pronto para nova revisão.',
+        NEW.id::text
+      );
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_notify_adjustment_done ON public.planner;
+CREATE TRIGGER trigger_notify_adjustment_done
+  AFTER UPDATE OF approval_status ON public.planner
+  FOR EACH ROW EXECUTE FUNCTION public.notify_adjustment_done();
+
+-- ── 5. Trigger: cliente aprova/reprova → notifica agência ─────────────────────
 
 CREATE OR REPLACE FUNCTION public.notify_approval_result()
 RETURNS trigger LANGUAGE plpgsql

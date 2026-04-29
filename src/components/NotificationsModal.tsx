@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
   Bell, CheckCircle2, XCircle, MessageSquare,
-  Clock, FileText, Check,
+  Clock, FileText, Check, Wrench,
 } from 'lucide-react'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -18,11 +18,12 @@ const typeConfig: Record<
   Notification['type'],
   { Icon: React.ElementType; color: string; bg: string }
 > = {
-  NEW_CONTENT:       { Icon: FileText,      color: 'text-purple-600', bg: 'bg-purple-50'  },
-  APPROVAL_REQUEST:  { Icon: Clock,         color: 'text-amber-600',  bg: 'bg-amber-50'   },
-  APPROVED:          { Icon: CheckCircle2,  color: 'text-emerald-600',bg: 'bg-emerald-50' },
-  REJECTED:          { Icon: XCircle,       color: 'text-red-600',    bg: 'bg-red-50'     },
-  COMMENT:           { Icon: MessageSquare, color: 'text-blue-600',   bg: 'bg-blue-50'    },
+  NEW_CONTENT:      { Icon: FileText,      color: 'text-purple-600', bg: 'bg-purple-50'  },
+  APPROVAL_REQUEST: { Icon: Clock,         color: 'text-amber-600',  bg: 'bg-amber-50'   },
+  APPROVED:         { Icon: CheckCircle2,  color: 'text-emerald-600',bg: 'bg-emerald-50' },
+  REJECTED:         { Icon: XCircle,       color: 'text-red-600',    bg: 'bg-red-50'     },
+  COMMENT:          { Icon: MessageSquare, color: 'text-blue-600',   bg: 'bg-blue-50'    },
+  ADJUSTMENT_DONE:  { Icon: Wrench,        color: 'text-blue-600',   bg: 'bg-blue-50'    },
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

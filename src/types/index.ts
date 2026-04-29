@@ -379,6 +379,7 @@ export type NotificationType =
   | 'APPROVED'
   | 'REJECTED'
   | 'COMMENT'
+  | 'ADJUSTMENT_DONE'
 
 export interface Notification {
   id: string
