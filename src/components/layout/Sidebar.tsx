@@ -75,7 +75,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-2.5 px-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const active =
             location.pathname === item.href ||
@@ -85,28 +85,26 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             <Link key={item.href} to={item.href}>
               <div
                 title={collapsed ? item.label : undefined}
-                style={active ? { color: '#ffffff' } : undefined}
                 className={cn(
-                  'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] transition-all duration-100 group sb-invert',
+                  'flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group',
                   active
-                    ? 'bg-[#0f0f0f] text-white'
-                    : 'text-[#737373] hover:bg-[#f0f0f0] hover:text-[#0f0f0f]'
+                    ? 'bg-[#0f0f0f]/[0.07] text-[#0f0f0f] font-medium'
+                    : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
                 )}
               >
                 <item.icon
-                  style={active ? { color: '#ffffff' } : undefined}
                   className={cn(
                     'w-[15px] h-[15px] flex-shrink-0 transition-colors',
-                    active ? 'text-white' : 'text-[#a0a0a0] group-hover:text-[#0f0f0f]'
+                    active ? 'text-[#0f0f0f]' : 'text-[#b0b0b0] group-hover:text-[#737373]'
                   )}
                 />
                 {!collapsed && (
-                  <span
-                    style={active ? { color: '#ffffff' } : undefined}
-                    className="whitespace-nowrap font-normal"
-                  >
+                  <span className="whitespace-nowrap">
                     {item.label}
                   </span>
+                )}
+                {!collapsed && active && (
+                  <div className="ml-auto w-1 h-1 rounded-full bg-[#0f0f0f]" />
                 )}
               </div>
             </Link>
@@ -115,9 +113,9 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </nav>
 
       {/* Profile + sign out */}
-      <div className="p-2 border-t border-[#e8e8e8] space-y-0.5">
+      <div className="p-2 border-t border-[#f0f0f0] space-y-1">
         {!collapsed && profile && (
-          <div className="px-2.5 py-2 mb-0.5">
+          <div className="px-2.5 py-2 rounded-xl bg-[#fafafa] mb-1">
             <p className="text-[12px] font-medium text-[#0f0f0f] truncate">
               {profile.full_name || 'Usuário'}
             </p>
@@ -126,10 +124,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         )}
         <button
           onClick={() => signOut()}
-          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-[#a0a0a0] hover:bg-[#f0f0f0] hover:text-[#0f0f0f] transition-colors duration-100"
+          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-[#a0a0a0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] transition-colors duration-150"
         >
-          <LogOut className="w-[15px] h-[15px] flex-shrink-0" />
-          {!collapsed && <span className="font-normal">Sair</span>}
+          <LogOut className="w-[15px] h-[15px] flex-shrink-0 text-[#c0c0c0]" />
+          {!collapsed && <span>Sair</span>}
         </button>
       </div>
 
