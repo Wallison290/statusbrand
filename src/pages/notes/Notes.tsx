@@ -512,16 +512,16 @@ export function Notes() {
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh] gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#f8f8f8] flex items-center justify-center">
-              <StickyNote className="w-8 h-8 text-[#d0d0d0]" />
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
+              <StickyNote className="w-8 h-8 text-white/30" />
             </div>
             <div>
-              <p className="text-[15px] font-semibold text-[#0f0f0f] mb-1">
+              <p className="text-[15px] font-semibold text-white mb-1">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Nenhuma nota encontrada com esses filtros'
                   : 'Nenhuma nota ainda'}
               </p>
-              <p className="text-[13px] text-[#a0a0a0]">
+              <p className="text-[13px] text-white/50">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Tente alterar ou limpar os filtros'
                   : 'Crie sua primeira nota clicando em "Nova nota"'}

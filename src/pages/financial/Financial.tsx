@@ -98,12 +98,12 @@ function KpiCard({
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="opacity-50">{icon}</span>
-        <p className="text-[10px] text-zinc-500 uppercase tracking-wide">{label}</p>
+        <span className="opacity-70">{icon}</span>
+        <p className="text-[10px] text-white/40 uppercase tracking-wide">{label}</p>
       </div>
       <div className="min-w-0">
-        <p className="text-[22px] font-bold text-[#0f0f0f] leading-tight break-words">{value}</p>
-        {sub && <p className="text-[11px] text-[#737373] mt-0.5 break-words">{sub}</p>}
+        <p className="text-[22px] font-bold text-white leading-tight break-words">{value}</p>
+        {sub && <p className="text-[11px] text-white/50 mt-0.5 break-words">{sub}</p>}
       </div>
     </motion.div>
   )
@@ -129,29 +129,29 @@ function AlertCard({
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-amber-800">Receita prevista menor que o MRR</p>
-          <p className="text-[11px] text-amber-700 mt-0.5">
+          <p className="text-[12px] font-semibold text-amber-300">Receita prevista menor que o MRR</p>
+          <p className="text-[11px] text-amber-400/70 mt-0.5">
             Impacto de {affectedCount} cliente{affectedCount !== 1 ? 's' : ''} em atraso
           </p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">Previsto</p>
-          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(previsto)}</p>
+          <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Previsto</p>
+          <p className="text-[13px] font-semibold text-white">{fmtBRL(previsto)}</p>
         </div>
         <div>
-          <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">MRR</p>
-          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(mrr)}</p>
+          <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">MRR</p>
+          <p className="text-[13px] font-semibold text-white">{fmtBRL(mrr)}</p>
         </div>
         <div>
-          <p className="text-[9px] text-zinc-600 uppercase tracking-wide mb-0.5">Diferença</p>
-          <p className="text-[13px] font-semibold text-red-600">-{fmtBRL(diff)}</p>
+          <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Diferença</p>
+          <p className="text-[13px] font-semibold text-red-400">-{fmtBRL(diff)}</p>
         </div>
       </div>
       <button
         onClick={onViewAffected}
-        className="w-full h-7 rounded-lg border border-amber-300 bg-amber-50 text-[11px] text-amber-800 hover:bg-amber-100 transition-colors"
+        className="w-full h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-300 hover:bg-amber-500/20 transition-colors"
       >
         Ver clientes afetados
       </button>
@@ -676,14 +676,14 @@ export function Financial() {
                 onClick={() => setFilter(key)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border ${
                   filter === key
-                    ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
-                    : 'text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border-transparent'
+                    ? 'bg-white text-[#0f0f0f] border-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent'
                 }`}
               >
                 {filterLabels[key]}
                 {counts[key] > 0 && (
                   <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${
-                    filter === key ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#737373]'
+                    filter === key ? 'bg-black/10 text-[#0f0f0f]' : 'bg-white/10 text-white/50'
                   }`}>
                     {counts[key]}
                   </span>
@@ -708,10 +708,10 @@ export function Financial() {
         {filtered.length > 0 && (
           <div className="hidden md:grid grid-cols-[32px_1fr_112px_144px_112px_auto] items-center gap-4 px-4 pb-1">
             <div />
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Cliente</p>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide text-right">Mensalidade</p>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Status</p>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide text-right">Últ. pagamento</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-wide">Cliente</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-wide text-right">Mensalidade</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-wide">Status</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-wide text-right">Últ. pagamento</p>
             <div />
           </div>
         )}
@@ -719,16 +719,16 @@ export function Financial() {
         {/* Client list */}
         <div className="space-y-1.5">
           {isLoading && (
-            <div className="py-12 text-center text-[12px] text-zinc-600">Carregando clientes...</div>
+            <div className="py-12 text-center text-[12px] text-white/40">Carregando clientes...</div>
           )}
 
           {!isLoading && financialClients.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f0f0f0] flex items-center justify-center mb-4">
-                <DollarSign className="w-5 h-5 text-[#a0a0a0]" />
+              <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/10 flex items-center justify-center mb-4">
+                <DollarSign className="w-5 h-5 text-white/40" />
               </div>
-              <p className="text-[14px] font-medium text-[#737373]">Nenhum cliente com dados financeiros</p>
-              <p className="text-[12px] text-zinc-600 mt-1 max-w-xs">
+              <p className="text-[14px] font-medium text-white/70">Nenhum cliente com dados financeiros</p>
+              <p className="text-[12px] text-white/40 mt-1 max-w-xs">
                 Cadastre o valor mensal e o dia de vencimento no perfil de cada cliente.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-4">
@@ -738,7 +738,7 @@ export function Financial() {
           )}
 
           {!isLoading && financialClients.length > 0 && filtered.length === 0 && (
-            <div className="py-12 text-center text-[12px] text-zinc-600">
+            <div className="py-12 text-center text-[12px] text-white/40">
               Nenhum cliente encontrado para este filtro.
             </div>
           )}
@@ -754,7 +754,7 @@ export function Financial() {
         </div>
 
         {filtered.length > 0 && (
-          <p className="text-[11px] text-zinc-700 text-center">
+          <p className="text-[11px] text-white/30 text-center">
             {filtered.length} cliente{filtered.length !== 1 ? 's' : ''} exibido{filtered.length !== 1 ? 's' : ''}
           </p>
         )}

@@ -375,9 +375,8 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
+    <div>
       <Header
-        dark
         title="Dashboard"
         subtitle="Visão geral da operação"
         action={

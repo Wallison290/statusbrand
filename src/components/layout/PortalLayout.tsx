@@ -27,36 +27,36 @@ export function PortalLayout({
   const initial   = (rawName || profile?.email || 'C')[0].toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7] flex flex-col">
+    <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
       {/* Top bar */}
-      <header className="h-14 border-b border-[#e8e8e8] bg-white/95 backdrop-blur-sm flex items-center px-6 flex-shrink-0 sticky top-0 z-30">
+      <header className="h-14 border-b border-white/10 bg-[#0f0f0f] flex items-center px-6 flex-shrink-0 sticky top-0 z-30">
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-1">
-          <div className="w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-md bg-white/15 flex items-center justify-center flex-shrink-0">
             <span className="font-bold text-[11px] tracking-tight select-none" style={{ color: '#ffffff' }}>SB</span>
           </div>
           <span
-            className="text-[#0f0f0f] font-semibold text-[13px] tracking-tight"
+            className="text-white font-semibold text-[13px] tracking-tight"
             style={{ fontFamily: "'Georgia', serif" }}
           >
             StatusBrand
           </span>
           {clientName && (
             <>
-              <span className="text-[#c8c8c8] text-xs mx-1">/</span>
-              <span className="text-[#a0a0a0] text-[12px]">{clientName}</span>
+              <span className="text-white/30 text-xs mx-1">/</span>
+              <span className="text-white/50 text-[12px]">{clientName}</span>
             </>
           )}
         </div>
 
-        {/* Bell — sempre visível para abrir o painel de notificações */}
+        {/* Bell */}
         <button
           onClick={onBellClick}
           title={badgeCount > 0 ? `${badgeCount} notificação${badgeCount === 1 ? '' : 'ões'} não lida${badgeCount === 1 ? '' : 's'}` : 'Notificações'}
-          className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#f0f0f0] transition-colors mr-1"
+          className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/10 transition-colors mr-1"
         >
-          <Bell className="w-4 h-4 text-[#737373]" />
+          <Bell className="w-4 h-4 text-white/70" />
           {badgeCount > 0 && (
             <span
               className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-red-500 text-[9px] font-bold flex items-center justify-center px-0.5 leading-none"
@@ -70,19 +70,19 @@ export function PortalLayout({
         {/* User */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#0f0f0f] border border-[#0f0f0f] flex items-center justify-center sb-invert">
+            <div className="w-7 h-7 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
               {initial !== 'C' ? (
                 <span className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{initial}</span>
               ) : (
                 <User className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
               )}
             </div>
-            <span className="text-[13px] text-[#0f0f0f] font-medium hidden sm:block">{firstName}</span>
+            <span className="text-[13px] text-white font-medium hidden sm:block">{firstName}</span>
           </div>
 
           <button
             onClick={signOut}
-            className="flex items-center gap-1.5 text-[12px] text-[#a0a0a0] hover:text-[#0f0f0f] transition-colors px-2 py-1.5 rounded-lg hover:bg-[#f0f0f0]"
+            className="flex items-center gap-1.5 text-[12px] text-white/50 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-white/10"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:block">Sair</span>

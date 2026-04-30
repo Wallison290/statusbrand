@@ -443,7 +443,7 @@ function PortalPlannerView({
     <div>
       {/* Nav */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-[#0f0f0f] capitalize">
+        <h3 className="text-base font-semibold text-white capitalize">
           {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
         </h3>
         <div className="flex gap-2">
@@ -855,37 +855,37 @@ function ClientDashboardTab({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.1 }}
-              className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] overflow-hidden"
+              className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.12] overflow-hidden"
             >
-              <div className="flex items-center gap-2.5 px-5 py-4 border-b border-amber-500/[0.12]">
+              <div className="flex items-center gap-2.5 px-5 py-4 border-b border-amber-500/20">
                 <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
-                <p className="text-[13px] font-semibold text-[#0f0f0f]">
+                <p className="text-[13px] font-semibold text-amber-100">
                   {pendingItems.length === 1
                     ? '1 conteúdo precisa da sua aprovação'
                     : `${pendingItems.length} conteúdos precisam da sua aprovação`}
                 </p>
               </div>
-              <div className="divide-y divide-amber-500/[0.06]">
+              <div className="divide-y divide-white/10">
                 {pendingItems.map(item => {
                   const thumb = item.attachments?.find(a => a.file_type.startsWith('image/'))
                   return (
                     <button
                       key={item.id}
                       onClick={() => { setSelectedItem(item); setItemOpen(true) }}
-                      className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-amber-500/[0.06] transition-colors text-left group"
+                      className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-amber-500/20 transition-colors text-left group"
                     >
                       {thumb ? (
-                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-[#e8e8e8] flex-shrink-0" />
+                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/10 flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
                           <div className={`w-2 h-2 rounded-full ${statusColors[item.status as PlannerStatus]}`} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{item.title}</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
+                        <p className="text-[13px] font-medium text-white truncate">{item.title}</p>
+                        <p className="text-[11px] text-white/50 mt-0.5">
                           {format(parseISO(item.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
-                          <span className="mx-1.5 text-gray-700">·</span>
+                          <span className="mx-1.5 text-white/30">·</span>
                           {contentTypeLabels[item.content_type as ContentType]}
                         </p>
                       </div>

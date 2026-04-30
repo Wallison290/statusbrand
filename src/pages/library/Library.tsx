@@ -1577,7 +1577,7 @@ export function Library() {
 
       <div className="p-4 md:p-6 space-y-5">
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-[#f0f0f0] rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-white/10 rounded-xl p-1 w-fit">
           {([
             ['conteudos', 'Conteúdos'],
             ['materiais', 'Materiais'],
@@ -1588,8 +1588,8 @@ export function Library() {
               onClick={() => setTab(key)}
               className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                 tab === key
-                  ? 'bg-white text-[#0f0f0f] shadow-sm border border-[#e8e8e8]'
-                  : 'text-[#737373] hover:text-[#0f0f0f]'
+                  ? 'bg-white text-[#0f0f0f] shadow-sm border border-white/20'
+                  : 'text-white/50 hover:text-white'
               }`}
             >
               {label}

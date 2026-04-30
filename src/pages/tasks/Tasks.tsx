@@ -747,21 +747,21 @@ export function Tasks() {
         <div className="flex items-center gap-3 mb-5 flex-shrink-0">
           <button
             onClick={() => setWeekBase(d => subWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#c0c0c0] hover:text-[#0f0f0f] transition-all"
+            className="w-8 h-8 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center text-white/50 hover:border-white/20 hover:text-white transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           <div className="flex items-center gap-2">
-            <CalendarDays className="w-3.5 h-3.5 text-[#a0a0a0]" />
-            <span className="text-[13px] font-semibold text-[#0f0f0f] capitalize">
+            <CalendarDays className="w-3.5 h-3.5 text-white/40" />
+            <span className="text-[13px] font-semibold text-white capitalize">
               {weekLabel}
             </span>
           </div>
 
           <button
             onClick={() => setWeekBase(d => addWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#c0c0c0] hover:text-[#0f0f0f] transition-all"
+            className="w-8 h-8 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center text-white/50 hover:border-white/20 hover:text-white transition-all"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -770,14 +770,14 @@ export function Tasks() {
           {!days.some(d => isToday(d)) && (
             <button
               onClick={() => setWeekBase(new Date())}
-              className="px-2.5 py-1 text-[11px] font-medium text-[#0f0f0f] border border-[#e0e0e0] bg-white rounded-lg hover:bg-[#f5f5f5] transition-colors"
+              className="px-2.5 py-1 text-[11px] font-medium text-white/70 border border-white/10 bg-white/10 rounded-lg hover:bg-white/15 transition-colors"
             >
               Hoje
             </button>
           )}
 
           {/* Summary */}
-          <div className="ml-auto flex items-center gap-4 text-[11px] text-[#a0a0a0]">
+          <div className="ml-auto flex items-center gap-4 text-[11px] text-white/40">
             <span>{tasks.length} tarefa{tasks.length !== 1 ? 's' : ''}</span>
             {overdueCount > 0 && (
               <span className="flex items-center gap-1 text-red-400 font-medium">

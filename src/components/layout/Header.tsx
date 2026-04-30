@@ -12,7 +12,7 @@ interface HeaderProps {
   dark?: boolean
 }
 
-export function Header({ title, subtitle, action, dark = false }: HeaderProps) {
+export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
   const { profile, user } = useAuth()
   const navigate = useNavigate()
   const { data: notifications = [] } = useNotifications()
