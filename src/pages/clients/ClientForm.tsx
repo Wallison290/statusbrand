@@ -112,14 +112,14 @@ export function ClientForm() {
 
               {/* Logo upload — ocupa largura total */}
               <div className="col-span-full">
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Logo do cliente</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Logo do cliente</label>
                 <div className="flex items-center gap-4">
                   {/* Preview */}
-                  <div className="w-16 h-16 rounded-xl border border-white/10 flex-shrink-0 overflow-hidden bg-white/5 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl border border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
                     {form.logo_url ? (
                       <img src={form.logo_url} alt="logo" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xl font-bold text-gray-600">
+                      <span className="text-xl font-bold text-gray-500">
                         {form.company_name ? form.company_name[0].toUpperCase() : '?'}
                       </span>
                     )}
@@ -131,7 +131,7 @@ export function ClientForm() {
                       type="button"
                       onClick={() => logoRef.current?.click()}
                       disabled={isUploadingLogo}
-                      className="flex items-center gap-2 h-8 px-3 rounded-md border border-dashed border-white/15 bg-white/3 text-gray-400 text-xs hover:border-white/30 hover:bg-white/5 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2 h-8 px-3 rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-600 text-xs hover:border-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-50"
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
                       {isUploadingLogo ? 'Enviando...' : form.logo_url ? 'Trocar logo' : 'Selecionar logo'}
@@ -140,7 +140,7 @@ export function ClientForm() {
                       <button
                         type="button"
                         onClick={() => set('logo_url', null)}
-                        className="flex items-center gap-1.5 h-8 px-3 rounded-md text-gray-500 hover:text-red-400 text-xs transition-colors"
+                        className="flex items-center gap-1.5 h-8 px-3 rounded-md text-gray-500 hover:text-red-500 text-xs transition-colors"
                       >
                         <X className="w-3 h-3" /> Remover logo
                       </button>
@@ -155,7 +155,7 @@ export function ClientForm() {
                     onChange={handleLogoSelect}
                   />
                 </div>
-                <p className="text-[10px] text-gray-600 mt-1.5">PNG, JPG, WEBP, SVG · Máx. 5 MB</p>
+                <p className="text-[10px] text-gray-500 mt-1.5">PNG, JPG, WEBP, SVG · Máx. 5 MB</p>
               </div>
 
               <Input label="Nome da empresa *" value={form.company_name} onChange={e => set('company_name', e.target.value)} required placeholder="Ex: Studio Fitness" />
@@ -167,7 +167,7 @@ export function ClientForm() {
               <Input label="Site" value={form.website || ''} onChange={e => set('website', e.target.value)} placeholder="https://empresa.com" />
               <Input label="Data de entrada" type="date" value={form.entry_date} onChange={e => set('entry_date', e.target.value)} />
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Status</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Status</label>
                 <Select value={form.status} onValueChange={v => set('status', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>

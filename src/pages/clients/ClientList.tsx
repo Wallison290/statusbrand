@@ -76,8 +76,8 @@ export function ClientList() {
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <CardContent className="p-5">
-                  <div className="h-4 bg-white/5 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-white/5 rounded w-1/2" />
+                  <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
                 </CardContent>
               </Card>
             ))}
@@ -116,15 +116,15 @@ export function ClientList() {
                             <img
                               src={client.logo_url}
                               alt={client.company_name}
-                              className="w-10 h-10 rounded-xl object-cover border border-white/10 flex-shrink-0"
+                              className="w-10 h-10 rounded-xl object-cover border border-gray-200 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm flex-shrink-0">
                               {client.company_name[0].toUpperCase()}
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="font-semibold text-white text-sm leading-tight truncate">{client.company_name}</p>
+                            <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{client.company_name}</p>
                             <p className="text-xs text-gray-500 truncate">{client.responsible_name}</p>
                           </div>
                         </div>
@@ -132,25 +132,25 @@ export function ClientList() {
                       </div>
 
                       <div className="mb-3">
-                        <span className="text-xs text-gray-500 bg-white/5 border border-white/8 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
                           {client.niche}
                         </span>
                       </div>
 
                       <div className="space-y-1.5 mb-4">
                         {client.instagram && (
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <Instagram className="w-3 h-3" /> @{client.instagram.replace('@', '')}
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Instagram className="w-3 h-3 text-gray-400" /> @{client.instagram.replace('@', '')}
                           </div>
                         )}
                         {client.email && (
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <Mail className="w-3 h-3" /> {client.email}
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Mail className="w-3 h-3 text-gray-400" /> {client.email}
                           </div>
                         )}
                         {client.website && (
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <Globe className="w-3 h-3" /> {client.website}
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Globe className="w-3 h-3 text-gray-400" /> {client.website}
                           </div>
                         )}
                       </div>
@@ -170,7 +170,7 @@ export function ClientList() {
                         </Button>
                       </div>
 
-                      <p className="text-xs text-gray-600 mt-2">Desde {formatDate(client.entry_date)}</p>
+                      <p className="text-xs text-gray-500 mt-2">Desde {formatDate(client.entry_date)}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
