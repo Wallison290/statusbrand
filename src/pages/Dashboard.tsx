@@ -317,10 +317,10 @@ export function Dashboard() {
       supabase.from('planner').select('status, approval_status').eq('user_id', user!.id),
       // Mini calendar (5-day window)
       supabase.from('planner').select('id, title, content_type, status, scheduled_date').eq('user_id', user!.id).gte('scheduled_date', calStart).lte('scheduled_date', calEnd),
-      // All pending approvals (for smart alerts)
-      supabase.from('planner').select('id').eq('user_id', user!.id).eq('approval_status', 'pendente_aprovacao'),
-      // This week's pending approval (KPI card)
-      supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'pendente_aprovacao'),
+      // All pending approvals (for smart alerts) — status revisao + not yet resolved
+      supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao'),
+      // This week's items in revisao (KPI card — filtered client-side)
+      supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao').gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate),
       // This week's approved (KPI card)
       supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'aprovado'),
     ])
@@ -329,18 +329,21 @@ export function Dashboard() {
     const taskList = tasksRes.data   || []
     const overdue  = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
 
+    const NOT_AWAITING = ['aprovado', 'reprovado', 'ajuste_solicitado']
+    const isAwaiting = (p: any) => !NOT_AWAITING.includes(p.approval_status)
+
     setStats({
       total_clients:         clients.length,
       active_clients:        clients.filter(c => c.status === 'ativo').length,
       pending_tasks:         taskList.length,
       overdue_tasks:         overdue,
-      week_pending_approval: weekPendingRes.data?.length  || 0,
+      week_pending_approval: (weekPendingRes.data || []).filter(isAwaiting).length,
       week_approved:         weekApprovedRes.data?.length || 0,
     })
 
     setRecentContents(recentRes.data || [])
     setPlannerWeekItems((plannerCalRes.data || []) as PlannerDay[])
-    setPendingApproval(pendingApprovalRes.data?.length || 0)
+    setPendingApproval((pendingApprovalRes.data || []).filter(isAwaiting).length)
 
     // Weekly bar chart (contents)
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
@@ -365,7 +368,7 @@ export function Dashboard() {
     setPlannerChartData([
       { label: 'Ideia',          value: pList.filter((p: any) => p.status === 'ideia').length,                      color: '#8b5cf6' },
       { label: 'Revisão',        value: pList.filter((p: any) => p.status === 'revisao').length,                    color: '#f59e0b' },
-      { label: 'Ag. aprovação',  value: pList.filter((p: any) => p.approval_status === 'pendente_aprovacao').length, color: '#f97316' },
+      { label: 'Ag. aprovação',  value: pList.filter((p: any) => p.status === 'revisao' && !NOT_AWAITING.includes(p.approval_status)).length, color: '#f97316' },
       { label: 'Aprovado',       value: pList.filter((p: any) => p.approval_status === 'aprovado').length,          color: '#10b981' },
     ])
   }
