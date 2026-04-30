@@ -79,10 +79,10 @@ const statusStyles: Record<FinancialStatus, { bg: string; text: string; dot: str
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  icon, label, value, sub, accent, delay = 0, onClick,
+  icon, label, value, sub, borderAccent, iconBg, delay = 0, onClick,
 }: {
   icon: React.ReactNode; label: string; value: string; sub?: string
-  accent: string; delay?: number; onClick?: () => void
+  borderAccent: string; iconBg: string; delay?: number; onClick?: () => void
 }) {
   return (
     <motion.div
@@ -93,17 +93,19 @@ function KpiCard({
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
-      className={`rounded-xl border p-4 flex flex-col gap-3 transition-all ${accent} ${
-        onClick ? 'cursor-pointer hover:brightness-110 active:scale-[0.99]' : ''
+      className={`rounded-2xl border bg-[#131313] shadow-sm p-4 flex flex-col gap-3.5 transition-all ${borderAccent} ${
+        onClick ? 'cursor-pointer hover:bg-[#181818] active:scale-[0.99]' : ''
       }`}
     >
-      <div className="flex items-center justify-between">
-        <span className="opacity-70">{icon}</span>
-        <p className="text-[10px] text-white/40 uppercase tracking-wide">{label}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+          {icon}
+        </div>
+        <p className="text-[10px] text-white/40 uppercase tracking-wide text-right leading-tight mt-1">{label}</p>
       </div>
       <div className="min-w-0">
         <p className="text-[22px] font-bold text-white leading-tight break-words">{value}</p>
-        {sub && <p className="text-[11px] text-white/50 mt-0.5 break-words">{sub}</p>}
+        {sub && <p className="text-[11px] text-white/40 mt-0.5 break-words">{sub}</p>}
       </div>
     </motion.div>
   )
@@ -614,7 +616,8 @@ export function Financial() {
             label="Recebido no mês"
             value={fmtBRL(kpis.receivedRevenue)}
             sub={`${kpis.receivedCount} pagamento${kpis.receivedCount !== 1 ? 's' : ''} confirmado${kpis.receivedCount !== 1 ? 's' : ''}`}
-            accent="border-emerald-500/20 bg-emerald-500/[0.04]"
+            borderAccent="border-emerald-500/20"
+            iconBg="bg-emerald-500/15"
             delay={0}
           />
           <KpiCard
@@ -622,7 +625,8 @@ export function Financial() {
             label="MRR"
             value={fmtBRL(kpis.mrr)}
             sub={`${kpis.mrrCount} contrato${kpis.mrrCount !== 1 ? 's' : ''} ativo${kpis.mrrCount !== 1 ? 's' : ''}`}
-            accent="border-blue-500/20 bg-blue-500/[0.04]"
+            borderAccent="border-blue-500/20"
+            iconBg="bg-blue-500/15"
             delay={0.04}
           />
           <KpiCard
@@ -632,7 +636,8 @@ export function Financial() {
             sub={kpis.soonCount > 0
               ? `${kpis.soonCount} cliente${kpis.soonCount !== 1 ? 's' : ''} vence${kpis.soonCount !== 1 ? 'm' : ''} em até 5 dias`
               : 'nenhum vencimento próximo'}
-            accent={kpis.soonCount > 0 ? 'border-amber-500/20 bg-amber-500/[0.04]' : 'border-[#e8e8e8] bg-white'}
+            borderAccent={kpis.soonCount > 0 ? 'border-amber-500/20' : 'border-white/8'}
+            iconBg="bg-amber-500/15"
             delay={0.08}
             onClick={kpis.soonCount > 0 ? () => setFilter('vence_em_breve') : undefined}
           />
@@ -641,16 +646,18 @@ export function Financial() {
             label="Em atraso"
             value={kpis.overdueCount > 0 ? fmtBRL(kpis.overdueRevenue) : '—'}
             sub={`${kpis.overdueCount} cliente${kpis.overdueCount !== 1 ? 's' : ''} em atraso`}
-            accent={kpis.overdueRevenue > 0 ? 'border-red-500/20 bg-red-500/[0.04]' : 'border-[#e8e8e8] bg-white'}
+            borderAccent={kpis.overdueCount > 0 ? 'border-red-500/20' : 'border-white/8'}
+            iconBg="bg-red-500/15"
             delay={0.12}
             onClick={kpis.overdueCount > 0 ? () => setFilter('atrasado') : undefined}
           />
           <KpiCard
-            icon={<BarChart3 className="w-4 h-4 text-purple-400" />}
+            icon={<BarChart3 className="w-4 h-4 text-violet-400" />}
             label="Ticket médio"
             value={kpis.mrrCount > 0 ? fmtBRL(kpis.avgTicket) : '—'}
             sub="média por contrato ativo"
-            accent="border-purple-500/20 bg-purple-500/[0.04]"
+            borderAccent="border-violet-500/20"
+            iconBg="bg-violet-500/15"
             delay={0.16}
           />
         </div>
