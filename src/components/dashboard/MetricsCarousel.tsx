@@ -11,28 +11,10 @@ import type { ContentType } from '@/types'
 
 // ─── Label / colour maps ──────────────────────────────────────────────────────
 
-const plannerStatusLabels: Record<string, string> = {
-  ideia:     'Ideia',
-  producao:  'Produção',
-  revisao:   'Revisão',
-  aprovado:  'Aprovado',
-  publicado: 'Publicado',
-}
-
-const plannerStatusColors: Record<string, string> = {
-  ideia:     '#8b5cf6',
-  producao:  '#3b82f6',
-  revisao:   '#f59e0b',
-  aprovado:  '#10b981',
-  publicado: '#22c55e',
-}
-
 const typePalette = [
   '#0f0f0f', '#3b82f6', '#8b5cf6', '#f59e0b',
   '#10b981', '#ef4444', '#ec4899', '#14b8a6',
 ]
-
-// ─── Shared tooltip style (light theme) ──────────────────────────────────────
 
 const tooltipStyle = {
   contentStyle: {
@@ -45,7 +27,66 @@ const tooltipStyle = {
   },
 }
 
-// ─── View 1 — Generated contents (bar by day) ─────────────────────────────────
+// ─── View 1 — Planejamento (4 categorias) ────────────────────────────────────
+
+function PlannerBarChart({
+  data,
+}: {
+  data: { label: string; value: number; color: string }[]
+}) {
+  const hasData = data.some(d => d.value > 0)
+
+  if (!hasData) {
+    return (
+      <div className="flex items-center justify-center h-[216px]">
+        <p className="text-[12px] text-[#b0b0b0] text-center">
+          Nenhum item no planejamento ainda.<br />
+          <span className="text-[11px]">Crie posts em Planejamento.</span>
+        </p>
+      </div>
+    )
+  }
+
+  const chartData = data.map(d => ({ name: d.label, value: d.value, fill: d.color }))
+  const total = data.reduce((s, d) => s + d.value, 0)
+
+  return (
+    <div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={chartData} barSize={32}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fill: '#a0a0a0', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: '#a0a0a0', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+            width={24}
+          />
+          <Tooltip
+            {...tooltipStyle}
+            cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+          />
+          <Bar dataKey="value" radius={[5, 5, 0, 0]} name="Itens">
+            {chartData.map((entry, i) => (
+              <Cell key={i} fill={entry.fill} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      <p className="text-center text-[11px] text-[#a0a0a0] mt-2">
+        {total} item{total !== 1 ? 's' : ''} no planejamento
+      </p>
+    </div>
+  )
+}
+
+// ─── View 2 — Generated contents (bar by day) ────────────────────────────────
 
 function GeneratedChart({
   data, summary,
@@ -82,7 +123,7 @@ function GeneratedChart({
   )
 }
 
-// ─── View 2 — Arsenal assets (donut by content type) ─────────────────────────
+// ─── View 3 — Arsenal assets (donut by content type) ─────────────────────────
 
 function AssetsDonut({
   data, summary,
@@ -140,65 +181,6 @@ function AssetsDonut({
   )
 }
 
-// ─── View 3 — Planner (donut by status) ──────────────────────────────────────
-
-function PlannerDonut({
-  data, summary,
-}: {
-  data: { status: string; count: number }[]
-  summary: string
-}) {
-  const chartData = data.map(d => ({
-    name:  plannerStatusLabels[d.status] ?? d.status,
-    value: d.count,
-    color: plannerStatusColors[d.status] ?? '#a0a0a0',
-  }))
-
-  if (!chartData.some(d => d.value > 0)) {
-    return (
-      <div className="flex items-center justify-center h-[216px]">
-        <p className="text-[12px] text-[#b0b0b0] text-center">
-          Nenhum item no planejamento ainda.<br />
-          <span className="text-[11px]">Crie posts em Planejamento.</span>
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={74}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {chartData.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
-            ))}
-          </Pie>
-          <Legend
-            iconType="circle"
-            iconSize={7}
-            formatter={value => (
-              <span style={{ fontSize: 11, color: '#737373' }}>{value}</span>
-            )}
-          />
-          <Tooltip {...tooltipStyle} />
-        </PieChart>
-      </ResponsiveContainer>
-      {summary && (
-        <p className="text-center text-[11px] text-[#a0a0a0] mt-2">{summary}</p>
-      )}
-    </div>
-  )
-}
-
 // ─── Slide transition variants ────────────────────────────────────────────────
 
 const slideVariants = {
@@ -222,12 +204,13 @@ const headerVariants = {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface MetricsCarouselProps {
-  weeklyData:       { day: string; conteudos: number }[]
-  assetTypes:       { type: string; count: number }[]
-  plannerStatuses:  { status: string; count: number }[]
-  contentsThisWeek: number
-  totalAssets:      number
-  totalPlanner:     number
+  weeklyData:        { day: string; conteudos: number }[]
+  assetTypes:        { type: string; count: number }[]
+  plannerStatuses:   { status: string; count: number }[]
+  plannerChartData?: { label: string; value: number; color: string }[]
+  contentsThisWeek:  number
+  totalAssets:       number
+  totalPlanner:      number
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -236,11 +219,11 @@ export function MetricsCarousel({
   weeklyData,
   assetTypes,
   plannerStatuses,
+  plannerChartData = [],
   contentsThisWeek,
   totalAssets,
   totalPlanner,
 }: MetricsCarouselProps) {
-  // [slideIndex, direction]  direction: 1 = right, -1 = left
   const [[activeIdx, dir], setSlide] = useState<[number, number]>([0, 0])
 
   const navigate = (d: 1 | -1) =>
@@ -250,6 +233,15 @@ export function MetricsCarousel({
     setSlide(([curr]) => [i, i > curr ? 1 : -1])
 
   const slides = useMemo(() => [
+    // ── Slide 1: Planejamento (4 categorias) ──
+    {
+      title:    'Planejamento',
+      subtitle: '4 categorias de status',
+      content: (
+        <PlannerBarChart data={plannerChartData} />
+      ),
+    },
+    // ── Slide 2: Conteúdos gerados ──
     {
       title:    'Conteúdos gerados',
       subtitle: 'Esta semana por dia',
@@ -264,6 +256,7 @@ export function MetricsCarousel({
         />
       ),
     },
+    // ── Slide 3: Arsenal ──
     {
       title:    'Arsenal de conteúdos',
       subtitle: 'Distribuição por tipo',
@@ -278,39 +271,23 @@ export function MetricsCarousel({
         />
       ),
     },
-    {
-      title:    'Planejamento',
-      subtitle: 'Distribuição por status',
-      content: (
-        <PlannerDonut
-          data={plannerStatuses}
-          summary={
-            totalPlanner > 0
-              ? `${totalPlanner} item${totalPlanner !== 1 ? 's' : ''} no planejamento`
-              : ''
-          }
-        />
-      ),
-    },
-  ], [weeklyData, assetTypes, plannerStatuses, contentsThisWeek, totalAssets, totalPlanner])
+  ], [weeklyData, assetTypes, plannerChartData, contentsThisWeek, totalAssets, totalPlanner])
 
   const slide = slides[activeIdx]
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="lg:col-span-2 h-full">
       {/* ── Header with arrows ─────────────────────────────────────────────── */}
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
-          {/* Left arrow */}
           <button
             onClick={() => navigate(-1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#c0c0c0] hover:text-[#0f0f0f] transition-all"
+            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#0f0f0f] hover:bg-[#0f0f0f] hover:text-white transition-all"
             aria-label="Anterior"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
 
-          {/* Title — animated on slide change */}
           <div className="flex-1 text-center min-w-0 overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -330,17 +307,15 @@ export function MetricsCarousel({
             </AnimatePresence>
           </div>
 
-          {/* Right arrow */}
           <button
             onClick={() => navigate(1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#c0c0c0] hover:text-[#0f0f0f] transition-all"
+            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#e8e8e8] bg-white flex items-center justify-center text-[#a0a0a0] hover:border-[#0f0f0f] hover:bg-[#0f0f0f] hover:text-white transition-all"
             aria-label="Próximo"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Dot indicators */}
         <div className="flex items-center justify-center gap-1.5 mt-2.5">
           {slides.map((_, i) => (
             <button
@@ -357,7 +332,6 @@ export function MetricsCarousel({
         </div>
       </CardHeader>
 
-      {/* ── Chart content ──────────────────────────────────────────────────── */}
       <CardContent className="overflow-hidden pt-0">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div

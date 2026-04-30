@@ -85,26 +85,25 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             <Link key={item.href} to={item.href}>
               <div
                 title={collapsed ? item.label : undefined}
+                style={active ? { color: '#ffffff' } : undefined}
                 className={cn(
                   'flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group',
                   active
-                    ? 'bg-[#0f0f0f]/[0.07] text-[#0f0f0f] font-medium'
+                    ? 'bg-[#0f0f0f] font-medium'
                     : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
                 )}
               >
                 <item.icon
+                  style={active ? { color: '#ffffff' } : undefined}
                   className={cn(
                     'w-[15px] h-[15px] flex-shrink-0 transition-colors',
-                    active ? 'text-[#0f0f0f]' : 'text-[#b0b0b0] group-hover:text-[#737373]'
+                    active ? '' : 'text-[#b0b0b0] group-hover:text-[#737373]'
                   )}
                 />
                 {!collapsed && (
-                  <span className="whitespace-nowrap">
+                  <span style={active ? { color: '#ffffff' } : undefined} className="whitespace-nowrap">
                     {item.label}
                   </span>
-                )}
-                {!collapsed && active && (
-                  <div className="ml-auto w-1 h-1 rounded-full bg-[#0f0f0f]" />
                 )}
               </div>
             </Link>

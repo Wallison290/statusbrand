@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Sparkles, CheckSquare, ArrowRight, Plus, Clock,
-  AlertTriangle, TrendingUp, Layers, CalendarDays, CheckCircle2,
-  BarChart2,
+  AlertTriangle, TrendingUp, CalendarDays, CheckCircle2, BarChart2,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Badge } from '@/components/ui/badge'
@@ -22,12 +21,12 @@ import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Stats {
-  total_clients:        number
-  active_clients:       number
-  contents_this_week:   number
-  pending_tasks:        number
-  overdue_tasks:        number
-  contents_in_production: number
+  total_clients:         number
+  active_clients:        number
+  pending_tasks:         number
+  overdue_tasks:         number
+  week_pending_approval: number
+  week_approved:         number
 }
 
 interface PlannerDay {
@@ -36,6 +35,12 @@ interface PlannerDay {
   content_type: string
   status: string
   scheduled_date: string
+}
+
+interface PlannerChartEntry {
+  label: string
+  value: number
+  color: string
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -57,8 +62,8 @@ function KpiCard({
   const inner = (
     <div className={`group rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all duration-200 h-full flex flex-col gap-3 ${
       isWarning
-        ? 'border-red-100 bg-red-50/40 hover:border-red-200'
-        : 'border-[#e8e8e8] bg-white hover:border-[#d0d0d0]'
+        ? 'border-red-200/60 bg-red-50/60 hover:border-red-300/60'
+        : 'border-white/10 bg-white hover:border-white/20'
     }`}>
       <div className="flex items-center justify-between">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg}`}>
@@ -71,7 +76,7 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className="text-[28px] font-bold text-[#0f0f0f] tabular-nums leading-none">
+        <p className="text-[30px] font-bold text-[#0f0f0f] tabular-nums leading-none">
           {value}
         </p>
         <p className="text-[12px] font-medium text-[#737373] mt-1">{label}</p>
@@ -82,13 +87,11 @@ function KpiCard({
     </div>
   )
 
-  if (href) {
-    return <Link to={href} className="block h-full">{inner}</Link>
-  }
+  if (href) return <Link to={href} className="block h-full">{inner}</Link>
   return inner
 }
 
-// ─── Mini Planner Preview ──────────────────────────────────────────────────────
+// ─── Mini Planner Preview ─────────────────────────────────────────────────────
 
 const statusDotColor: Record<string, string> = {
   ideia:     'bg-purple-400',
@@ -111,7 +114,6 @@ function MiniPlannerPreview({
 
   return (
     <div>
-      {/* Day strip */}
       <div className="flex gap-1.5">
         {days.map(day => {
           const dayStr = format(day, 'yyyy-MM-dd')
@@ -137,7 +139,6 @@ function MiniPlannerPreview({
                 {format(day, 'd')}
               </span>
 
-              {/* Dots */}
               {dayItems.length > 0 && (
                 <div className="flex gap-0.5 mt-2 flex-wrap justify-center">
                   {dayItems.slice(0, 3).map(item => (
@@ -156,7 +157,6 @@ function MiniPlannerPreview({
                 </div>
               )}
 
-              {/* Hover tooltip */}
               <AnimatePresence>
                 {hoveredDay === dayStr && dayItems.length > 0 && (
                   <motion.div
@@ -176,7 +176,6 @@ function MiniPlannerPreview({
                     {dayItems.length > 4 && (
                       <p className="text-[9px] text-white/40 mt-1 text-center">+{dayItems.length - 4} mais</p>
                     )}
-                    {/* Arrow */}
                     <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
                       <div className="w-2 h-2 bg-[#0f0f0f] rotate-45 mx-auto" />
                     </div>
@@ -188,7 +187,6 @@ function MiniPlannerPreview({
         })}
       </div>
 
-      {/* Legenda */}
       <div className="flex items-center gap-3 mt-3 flex-wrap">
         {Object.entries(statusDotColor).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1">
@@ -261,7 +259,7 @@ function SmartAlerts({
       {alerts.map((alert, i) => (
         <Link key={i} to={alert.href}>
           <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border border-transparent hover:border-[#e8e8e8] transition-all ${alert.bg} group`}>
-            <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/70`}>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/70">
               <alert.icon className={`w-3.5 h-3.5 ${alert.color}`} />
             </div>
             <p className={`text-[12px] font-medium flex-1 ${alert.color}`}>{alert.text}</p>
@@ -280,16 +278,17 @@ export function Dashboard() {
   const navigate = useNavigate()
 
   const [stats, setStats] = useState<Stats>({
-    total_clients: 0, active_clients: 0, contents_this_week: 0,
-    pending_tasks: 0, overdue_tasks: 0, contents_in_production: 0,
+    total_clients: 0, active_clients: 0,
+    pending_tasks: 0, overdue_tasks: 0,
+    week_pending_approval: 0, week_approved: 0,
   })
-  const [recentContents, setRecentContents]       = useState<any[]>([])
-  const [weeklyData, setWeeklyData]               = useState<any[]>([])
-  const [assetTypes, setAssetTypes]               = useState<{ type: string; count: number }[]>([])
-  const [plannerStatuses, setPlannerStatuses]     = useState<{ status: string; count: number }[]>([])
-  const [plannerWeekItems, setPlannerWeekItems]   = useState<PlannerDay[]>([])
-  const [pendingApproval, setPendingApproval]     = useState(0)
-  const [loading, setLoading]                     = useState(true)
+  const [recentContents, setRecentContents]     = useState<any[]>([])
+  const [weeklyData, setWeeklyData]             = useState<any[]>([])
+  const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
+  const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
+  const [plannerChartData, setPlannerChartData] = useState<PlannerChartEntry[]>([])
+  const [plannerWeekItems, setPlannerWeekItems] = useState<PlannerDay[]>([])
+  const [pendingApproval, setPendingApproval]   = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -297,52 +296,58 @@ export function Dashboard() {
   }, [user])
 
   async function fetchStats() {
-    const now = new Date()
-    const weekStart = startOfWeek(now, { locale: ptBR }).toISOString()
-    const weekEnd   = endOfWeek(now, { locale: ptBR }).toISOString()
-
-    // Mini calendar window: today -2 / +2
-    const calStart = format(subDays(now, 2), 'yyyy-MM-dd')
-    const calEnd   = format(addDays(now, 2),  'yyyy-MM-dd')
+    const now       = new Date()
+    const weekStart = startOfWeek(now, { locale: ptBR })
+    const weekEnd   = endOfWeek(now, { locale: ptBR })
+    const weekStartIso  = weekStart.toISOString()
+    const weekEndIso    = weekEnd.toISOString()
+    const weekStartDate = format(weekStart, 'yyyy-MM-dd')
+    const weekEndDate   = format(weekEnd,   'yyyy-MM-dd')
+    const calStart  = format(subDays(now, 2), 'yyyy-MM-dd')
+    const calEnd    = format(addDays(now, 2), 'yyyy-MM-dd')
 
     const [
-      clientsRes, contentsWeekRes, tasksRes, plannerRes,
+      clientsRes, tasksRes,
       recentRes, allContentsRes, assetsRes, plannerFullRes,
       plannerCalRes, pendingApprovalRes,
+      weekPendingRes, weekApprovedRes,
     ] = await Promise.all([
       supabase.from('clients').select('id, status').eq('user_id', user!.id),
-      supabase.from('contents').select('id').eq('user_id', user!.id).gte('created_at', weekStart).lte('created_at', weekEnd),
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
-      supabase.from('planner').select('id, status').eq('user_id', user!.id).eq('status', 'producao'),
       supabase.from('contents').select('id, term, content_type, status, created_at, client:clients(company_name)').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('contents').select('created_at').eq('user_id', user!.id).gte('created_at', weekStart).lte('created_at', weekEnd),
+      supabase.from('contents').select('created_at').eq('user_id', user!.id).gte('created_at', weekStartIso).lte('created_at', weekEndIso),
       supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
-      supabase.from('planner').select('status').eq('user_id', user!.id),
-      // Mini calendar
+      // Planner full: status + approval_status for 4-category chart
+      supabase.from('planner').select('status, approval_status').eq('user_id', user!.id),
+      // Mini calendar (5-day window)
       supabase.from('planner').select('id, title, content_type, status, scheduled_date').eq('user_id', user!.id).gte('scheduled_date', calStart).lte('scheduled_date', calEnd),
-      // Pending client approvals
+      // All pending approvals (for smart alerts)
       supabase.from('planner').select('id').eq('user_id', user!.id).eq('approval_status', 'pendente_aprovacao'),
+      // This week's pending approval (KPI card)
+      supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'pendente_aprovacao'),
+      // This week's approved (KPI card)
+      supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'aprovado'),
     ])
 
-    const clients  = clientsRes.data  || []
-    const taskList = tasksRes.data    || []
+    const clients  = clientsRes.data || []
+    const taskList = tasksRes.data   || []
     const overdue  = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
 
     setStats({
-      total_clients:          clients.length,
-      active_clients:         clients.filter(c => c.status === 'ativo').length,
-      contents_this_week:     contentsWeekRes.data?.length || 0,
-      pending_tasks:          taskList.length,
-      overdue_tasks:          overdue,
-      contents_in_production: plannerRes.data?.length || 0,
+      total_clients:         clients.length,
+      active_clients:        clients.filter(c => c.status === 'ativo').length,
+      pending_tasks:         taskList.length,
+      overdue_tasks:         overdue,
+      week_pending_approval: weekPendingRes.data?.length  || 0,
+      week_approved:         weekApprovedRes.data?.length || 0,
     })
 
     setRecentContents(recentRes.data || [])
     setPlannerWeekItems((plannerCalRes.data || []) as PlannerDay[])
     setPendingApproval(pendingApprovalRes.data?.length || 0)
 
-    // Weekly bar chart
-    const days = eachDayOfInterval({ start: startOfWeek(now, { locale: ptBR }), end: endOfWeek(now, { locale: ptBR }) })
+    // Weekly bar chart (contents)
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
     const contents = allContentsRes.data || []
     setWeeklyData(days.map(day => ({
       day: format(day, 'EEE', { locale: ptBR }),
@@ -354,20 +359,27 @@ export function Dashboard() {
     ;(assetsRes.data || []).forEach((a: any) => { typeMap[a.content_type] = (typeMap[a.content_type] || 0) + 1 })
     setAssetTypes(Object.entries(typeMap).map(([type, count]) => ({ type, count })))
 
-    // Planner status donut
+    // Legacy planner status (kept for fallback)
     const statusMap: Record<string, number> = {}
     ;(plannerFullRes.data || []).forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    setLoading(false)
+    // New 4-category planner chart
+    const pList = plannerFullRes.data || []
+    setPlannerChartData([
+      { label: 'Ideia',          value: pList.filter((p: any) => p.status === 'ideia').length,                      color: '#8b5cf6' },
+      { label: 'Revisão',        value: pList.filter((p: any) => p.status === 'revisao').length,                    color: '#f59e0b' },
+      { label: 'Ag. aprovação',  value: pList.filter((p: any) => p.approval_status === 'pendente_aprovacao').length, color: '#f97316' },
+      { label: 'Aprovado',       value: pList.filter((p: any) => p.approval_status === 'aprovado').length,          color: '#10b981' },
+    ])
   }
 
-  function handleDayClick(dateStr: string) {
+  function handleDayClick(_dateStr: string) {
     navigate('/planner')
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#0f0f0f]">
       <Header
         title="Dashboard"
         subtitle="Visão geral da operação"
@@ -378,10 +390,10 @@ export function Dashboard() {
         }
       />
 
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-5">
 
         {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
           <KpiCard
             label="Total de Clientes"
             value={stats.total_clients}
@@ -399,15 +411,6 @@ export function Dashboard() {
             icon={TrendingUp}
             iconBg="bg-emerald-50"
             iconColor="text-emerald-600"
-          />
-          <KpiCard
-            label="Conteúdos"
-            value={stats.contents_this_week}
-            subtitle="gerados esta semana"
-            href="/history"
-            icon={Sparkles}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
           />
           <KpiCard
             label="Tarefas Pendentes"
@@ -429,13 +432,22 @@ export function Dashboard() {
             warning
           />
           <KpiCard
-            label="Em Produção"
-            value={stats.contents_in_production}
-            subtitle="no planejamento"
+            label="Ag. aprovação"
+            value={stats.week_pending_approval}
+            subtitle="esta semana"
             href="/planner"
-            icon={Layers}
+            icon={Clock}
             iconBg="bg-amber-50"
             iconColor="text-amber-600"
+          />
+          <KpiCard
+            label="Aprovados"
+            value={stats.week_approved}
+            subtitle="esta semana"
+            href="/planner"
+            icon={CheckCircle2}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-600"
           />
         </div>
 
@@ -448,7 +460,8 @@ export function Dashboard() {
               weeklyData={weeklyData}
               assetTypes={assetTypes}
               plannerStatuses={plannerStatuses}
-              contentsThisWeek={stats.contents_this_week}
+              plannerChartData={plannerChartData}
+              contentsThisWeek={weeklyData.reduce((s, d) => s + d.conteudos, 0)}
               totalAssets={assetTypes.reduce((s, t) => s + t.count, 0)}
               totalPlanner={plannerStatuses.reduce((s, p) => s + p.count, 0)}
             />
@@ -474,14 +487,10 @@ export function Dashboard() {
                 </Link>
               </div>
 
-              <MiniPlannerPreview
-                items={plannerWeekItems}
-                onDayClick={handleDayClick}
-              />
+              <MiniPlannerPreview items={plannerWeekItems} onDayClick={handleDayClick} />
 
-              {/* Today's items list */}
               {(() => {
-                const todayStr = format(new Date(), 'yyyy-MM-dd')
+                const todayStr   = format(new Date(), 'yyyy-MM-dd')
                 const todayItems = plannerWeekItems.filter(i => i.scheduled_date === todayStr)
                 if (todayItems.length === 0) return (
                   <p className="text-[11px] text-[#a0a0a0] text-center mt-4">
