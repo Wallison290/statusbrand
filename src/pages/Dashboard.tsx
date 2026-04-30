@@ -57,19 +57,15 @@ function KpiCard({
   iconColor: string
   warning?: boolean
 }) {
-  const isWarning = warning && value > 0
+  const showWarning = warning && value > 0
 
   const inner = (
-    <div className={`group rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all duration-200 h-full flex flex-col gap-3 ${
-      isWarning
-        ? 'border-red-200/60 bg-red-50/60 hover:border-red-300/60'
-        : 'border-white/10 bg-white hover:border-white/20'
-    }`}>
+    <div className="group rounded-2xl border border-white/10 bg-white p-5 shadow-sm hover:shadow-md hover:border-white/20 transition-all duration-200 h-full flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg}`}>
           <Icon className={`w-4 h-4 ${iconColor}`} />
         </div>
-        {isWarning && (
+        {showWarning && (
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-500 uppercase tracking-wide">
             Atenção
           </span>
@@ -79,9 +75,9 @@ function KpiCard({
         <p className="text-[30px] font-bold text-[#0f0f0f] tabular-nums leading-none">
           {value}
         </p>
-        <p className="text-[12px] font-medium text-[#737373] mt-1">{label}</p>
+        <p className="text-[12px] font-semibold text-[#0f0f0f] mt-1">{label}</p>
         {subtitle && (
-          <p className="text-[11px] text-[#a0a0a0] mt-0.5">{subtitle}</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p>
         )}
       </div>
     </div>
@@ -438,8 +434,8 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={Clock}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
+            iconBg="bg-orange-100"
+            iconColor="text-orange-600"
           />
           <KpiCard
             label="Aprovados"
@@ -447,8 +443,8 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
+            iconBg="bg-emerald-100"
+            iconColor="text-emerald-700"
           />
         </div>
 
