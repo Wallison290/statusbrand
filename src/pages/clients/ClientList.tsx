@@ -108,69 +108,77 @@ export function ClientList() {
                   transition={{ delay: i * 0.04 }}
                   whileHover={{ y: -2 }}
                 >
-                  <Card className="group">
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                  <Card className="group rounded-2xl shadow-sm border-gray-200">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {/* Header: avatar + info + badge */}
+                        <div className="flex items-start gap-4">
                           {client.logo_url ? (
                             <img
                               src={client.logo_url}
                               alt={client.company_name}
-                              className="w-10 h-10 rounded-xl object-cover border border-gray-200 flex-shrink-0"
+                              className="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm flex-shrink-0">
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-base flex-shrink-0">
                               {client.company_name[0].toUpperCase()}
                             </div>
                           )}
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{client.company_name}</p>
-                            <p className="text-xs text-gray-500 truncate">{client.responsible_name}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{client.company_name}</p>
+                                <p className="text-xs text-gray-500 truncate mt-0.5">{client.responsible_name}</p>
+                              </div>
+                              <Badge status={client.status} className="flex-shrink-0 mt-0.5" />
+                            </div>
+                            <span className="inline-block mt-2 text-xs text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full truncate max-w-full">
+                              {client.niche}
+                            </span>
                           </div>
                         </div>
-                        <Badge status={client.status} />
-                      </div>
 
-                      <div className="mb-3">
-                        <span className="text-xs text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
-                          {client.niche}
-                        </span>
-                      </div>
-
-                      <div className="space-y-1.5 mb-4">
-                        {client.instagram && (
-                          <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <Instagram className="w-3 h-3 text-gray-400" /> @{client.instagram.replace('@', '')}
+                        {/* Contacts */}
+                        {(client.instagram || client.email || client.website) && (
+                          <div className="space-y-2">
+                            {client.instagram && (
+                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
+                                <Instagram className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <span className="truncate">@{client.instagram.replace('@', '')}</span>
+                              </div>
+                            )}
+                            {client.email && (
+                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
+                                <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <span className="truncate">{client.email}</span>
+                              </div>
+                            )}
+                            {client.website && (
+                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
+                                <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <span className="truncate">{client.website}</span>
+                              </div>
+                            )}
                           </div>
                         )}
-                        {client.email && (
-                          <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <Mail className="w-3 h-3 text-gray-400" /> {client.email}
-                          </div>
-                        )}
-                        {client.website && (
-                          <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <Globe className="w-3 h-3 text-gray-400" /> {client.website}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="flex items-center gap-2">
-                        <Button asChild size="sm" variant="secondary" className="flex-1">
-                          <Link to={`/clients/${client.id}`}>
-                            <ExternalLink className="w-3 h-3" /> Ver perfil
-                          </Link>
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(client.id, client.company_name)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {/* Footer: buttons + date */}
+                        <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
+                          <Button asChild size="sm" variant="secondary" className="flex-1">
+                            <Link to={`/clients/${client.id}`}>
+                              <ExternalLink className="w-3 h-3" /> Ver perfil
+                            </Link>
+                          </Button>
+                          <Button
+                            size="icon-sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(client.id, client.company_name)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                        <p className="text-[11px] text-gray-400 -mt-2">Cliente desde {formatDate(client.entry_date)}</p>
                       </div>
-
-                      <p className="text-xs text-gray-500 mt-2">Desde {formatDate(client.entry_date)}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
