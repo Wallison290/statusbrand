@@ -656,10 +656,10 @@ function DroppableDay({
         ${isCurrentMonth
           ? `cursor-pointer ${isOver
               ? 'border-blue-400/60 bg-blue-500/10 scale-[1.02]'
-              : 'border-white/8 hover:border-white/20 hover:bg-white/3'}`
+              : 'border-black/10 hover:border-black/20 hover:bg-gray-50'}`
           : 'border-transparent opacity-30 cursor-default'}
-        ${isCurrentDay && !isOver ? 'border-blue-500/40 bg-blue-500/5' : ''}
-        ${hasItems && isCurrentMonth && !isOver ? 'hover:border-white/25' : ''}
+        ${isCurrentDay && !isOver ? 'border-blue-500/40 bg-blue-50' : ''}
+        ${hasItems && isCurrentMonth && !isOver ? 'hover:border-black/20' : ''}
       `}
     >
       {children}
@@ -1139,7 +1139,7 @@ export function Planner() {
             <div className="w-full max-w-full min-w-0">
             <div className="grid grid-cols-7 mb-1 sm:mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-[9px] sm:text-xs font-medium text-gray-500 py-1 sm:py-2 truncate">{d}</div>
+                <div key={d} className="text-center text-[9px] sm:text-xs font-semibold text-[#0f0f0f] py-1 sm:py-2 truncate">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
@@ -1162,8 +1162,8 @@ export function Planner() {
                     onMouseLeave={() => setHover(null)}
                   >
                     <div className={`
-                      text-[10px] sm:text-xs font-medium mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
-                      ${isCurrentDay ? 'bg-blue-600 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
+                      text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
+                      ${isCurrentDay ? 'bg-blue-600 text-white' : isCurrentMonth ? 'text-[#0f0f0f]' : 'text-gray-400'}
                     `}>
                       {format(day, 'd')}
                     </div>
@@ -1172,7 +1172,7 @@ export function Planner() {
                         <DraggableChip key={item.id} item={item} disabled={isMobile} />
                       ))}
                       {dayItems.length > 2 && (
-                        <p className="text-[8px] sm:text-[10px] text-gray-600">+{dayItems.length - 2}</p>
+                        <p className="text-[8px] sm:text-[10px] text-gray-500 font-medium">+{dayItems.length - 2}</p>
                       )}
                     </div>
                   </DroppableDay>
