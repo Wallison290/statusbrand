@@ -108,63 +108,69 @@ export function ClientList() {
                   transition={{ delay: i * 0.04 }}
                   whileHover={{ y: -2 }}
                 >
-                  <Card className="group rounded-2xl shadow-sm border-gray-200">
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        {/* Header: avatar + info + badge */}
-                        <div className="flex items-start gap-4">
-                          {client.logo_url ? (
-                            <img
-                              src={client.logo_url}
-                              alt={client.company_name}
-                              className="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-base flex-shrink-0">
-                              {client.company_name[0].toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{client.company_name}</p>
-                                <p className="text-xs text-gray-500 truncate mt-0.5">{client.responsible_name}</p>
-                              </div>
-                              <Badge status={client.status} className="flex-shrink-0 mt-0.5" />
-                            </div>
-                            <span className="inline-block mt-2 text-xs text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full truncate max-w-full">
-                              {client.niche}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Contacts */}
-                        {(client.instagram || client.email || client.website) && (
-                          <div className="space-y-2">
-                            {client.instagram && (
-                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
-                                <Instagram className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                <span className="truncate">@{client.instagram.replace('@', '')}</span>
-                              </div>
-                            )}
-                            {client.email && (
-                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
-                                <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                <span className="truncate">{client.email}</span>
-                              </div>
-                            )}
-                            {client.website && (
-                              <div className="flex items-center gap-2 text-xs text-gray-600 min-w-0">
-                                <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                <span className="truncate">{client.website}</span>
-                              </div>
-                            )}
+                  <Card className="group overflow-hidden rounded-2xl border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    {/* Topo colorido com avatar centralizado */}
+                    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 px-6 pt-6 pb-10 flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {client.logo_url ? (
+                          <img
+                            src={client.logo_url}
+                            alt={client.company_name}
+                            className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 rounded-2xl bg-white border-2 border-white shadow-sm flex items-center justify-center text-gray-700 font-bold text-xl flex-shrink-0">
+                            {client.company_name[0].toUpperCase()}
                           </div>
                         )}
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-[15px] leading-tight truncate max-w-[160px]">{client.company_name}</p>
+                          <p className="text-xs text-gray-500 truncate max-w-[160px] mt-0.5">{client.responsible_name}</p>
+                        </div>
+                      </div>
+                      <Badge status={client.status} />
+                    </div>
 
-                        {/* Footer: buttons + date */}
-                        <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
-                          <Button asChild size="sm" variant="secondary" className="flex-1">
+                    {/* Corpo do card, sobrepõe o topo */}
+                    <CardContent className="px-6 pt-0 pb-6 -mt-5">
+                      {/* Pill de nicho */}
+                      <div className="mb-5">
+                        <span className="inline-block text-xs text-gray-600 bg-white border border-gray-200 shadow-sm px-3 py-1 rounded-full truncate max-w-full">
+                          {client.niche}
+                        </span>
+                      </div>
+
+                      {/* Contatos */}
+                      {(client.instagram || client.email || client.website) ? (
+                        <div className="space-y-2.5 mb-5">
+                          {client.instagram && (
+                            <div className="flex items-center gap-2.5 text-xs text-gray-600 min-w-0">
+                              <Instagram className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
+                              <span className="truncate">@{client.instagram.replace('@', '')}</span>
+                            </div>
+                          )}
+                          {client.email && (
+                            <div className="flex items-center gap-2.5 text-xs text-gray-600 min-w-0">
+                              <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                              <span className="truncate">{client.email}</span>
+                            </div>
+                          )}
+                          {client.website && (
+                            <div className="flex items-center gap-2.5 text-xs text-gray-600 min-w-0">
+                              <Globe className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                              <span className="truncate">{client.website}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mb-5" />
+                      )}
+
+                      {/* Rodapé */}
+                      <div className="border-t border-gray-100 pt-4 flex items-center justify-between gap-3">
+                        <p className="text-[11px] text-gray-400 truncate">desde {formatDate(client.entry_date)}</p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Button asChild size="sm" variant="secondary">
                             <Link to={`/clients/${client.id}`}>
                               <ExternalLink className="w-3 h-3" /> Ver perfil
                             </Link>
@@ -177,7 +183,6 @@ export function ClientList() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
-                        <p className="text-[11px] text-gray-400 -mt-2">Cliente desde {formatDate(client.entry_date)}</p>
                       </div>
                     </CardContent>
                   </Card>
