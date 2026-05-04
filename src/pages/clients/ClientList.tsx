@@ -109,7 +109,7 @@ export function ClientList() {
                   whileHover={{ y: -2 }}
                 >
                   <Card className="group rounded-2xl border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6 flex flex-col gap-4">
+                    <CardContent className="pt-7 pb-6 px-6 flex flex-col gap-4">
 
                       {/* Header: avatar + nome + badge */}
                       <div className="flex items-center gap-4">
