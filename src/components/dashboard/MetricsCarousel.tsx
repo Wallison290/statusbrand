@@ -276,7 +276,7 @@ export function MetricsCarousel({
   const slide = slides[activeIdx]
 
   return (
-    <Card className="lg:col-span-2 h-full">
+    <Card className="lg:col-span-2 h-full rounded-3xl border-gray-100 shadow-sm">
       {/* ── Header with arrows ─────────────────────────────────────────────── */}
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">

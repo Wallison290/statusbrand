@@ -60,24 +60,24 @@ function KpiCard({
   const showWarning = warning && value > 0
 
   const inner = (
-    <div className="group rounded-2xl border border-white/10 bg-white p-5 shadow-sm hover:shadow-md hover:border-white/20 transition-all duration-200 h-full flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg}`}>
-          <Icon className={`w-4 h-4 ${iconColor}`} />
+    <div className="group rounded-3xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 h-full flex flex-col gap-4">
+      <div className="flex items-start justify-between">
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${iconBg}`}>
+          <Icon className={`w-[18px] h-[18px] ${iconColor}`} />
         </div>
         {showWarning && (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-500 uppercase tracking-wide">
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
             Atenção
           </span>
         )}
       </div>
       <div>
-        <p className="text-[30px] font-bold text-[#0f0f0f] tabular-nums leading-none">
+        <p className="text-3xl font-semibold text-gray-900 tabular-nums leading-none">
           {value}
         </p>
-        <p className="text-[12px] font-semibold text-[#0f0f0f] mt-1">{label}</p>
+        <p className="text-[13px] font-medium text-gray-700 mt-2 leading-tight">{label}</p>
         {subtitle && (
-          <p className="text-[11px] text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>
         )}
       </div>
     </div>
@@ -122,16 +122,16 @@ function MiniPlannerPreview({
               onClick={() => onDayClick(dayStr)}
               onMouseEnter={() => dayItems.length > 0 ? setHoveredDay(dayStr) : null}
               onMouseLeave={() => setHoveredDay(null)}
-              className={`relative flex-1 flex flex-col items-center py-2.5 px-1 rounded-xl cursor-pointer transition-all duration-150 select-none ${
+              className={`relative flex-1 flex flex-col items-center py-3 px-1 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
                 active
-                  ? 'bg-[#0f0f0f]'
-                  : 'hover:bg-[#f5f5f5] border border-transparent hover:border-[#e8e8e8]'
+                  ? 'bg-gray-900'
+                  : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
               }`}
             >
-              <span className={`text-[10px] font-medium mb-1 capitalize ${active ? 'text-white/60' : 'text-[#a0a0a0]'}`}>
+              <span className={`text-[10px] font-medium mb-1 capitalize ${active ? 'text-white/60' : 'text-gray-400'}`}>
                 {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
               </span>
-              <span className={`text-[15px] font-bold leading-none ${active ? 'text-white' : 'text-[#0f0f0f]'}`}>
+              <span className={`text-[15px] font-semibold leading-none ${active ? 'text-white' : 'text-gray-900'}`}>
                 {format(day, 'd')}
               </span>
 
@@ -141,12 +141,12 @@ function MiniPlannerPreview({
                     <div
                       key={item.id}
                       className={`w-1.5 h-1.5 rounded-full ${
-                        active ? 'bg-white/70' : (statusDotColor[item.status] ?? 'bg-[#0f0f0f]')
+                        active ? 'bg-white/70' : (statusDotColor[item.status] ?? 'bg-gray-400')
                       }`}
                     />
                   ))}
                   {dayItems.length > 3 && (
-                    <span className={`text-[8px] font-bold ${active ? 'text-white/60' : 'text-[#a0a0a0]'}`}>
+                    <span className={`text-[8px] font-bold ${active ? 'text-white/60' : 'text-gray-400'}`}>
                       +{dayItems.length - 3}
                     </span>
                   )}
@@ -160,7 +160,7 @@ function MiniPlannerPreview({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.97 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-[160px] bg-[#0f0f0f] rounded-xl shadow-xl p-2.5"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-[160px] bg-gray-900 rounded-2xl shadow-xl p-2.5"
                     onClick={e => e.stopPropagation()}
                   >
                     {dayItems.slice(0, 4).map(item => (
@@ -173,7 +173,7 @@ function MiniPlannerPreview({
                       <p className="text-[9px] text-white/40 mt-1 text-center">+{dayItems.length - 4} mais</p>
                     )}
                     <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
-                      <div className="w-2 h-2 bg-[#0f0f0f] rotate-45 mx-auto" />
+                      <div className="w-2 h-2 bg-gray-900 rotate-45 mx-auto" />
                     </div>
                   </motion.div>
                 )}
@@ -183,11 +183,11 @@ function MiniPlannerPreview({
         })}
       </div>
 
-      <div className="flex items-center gap-3 mt-3 flex-wrap">
+      <div className="flex items-center gap-3 mt-4 flex-wrap">
         {Object.entries(statusDotColor).map(([status, color]) => (
-          <div key={status} className="flex items-center gap-1">
+          <div key={status} className="flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
-            <span className="text-[10px] text-[#a0a0a0] capitalize">
+            <span className="text-[11px] text-gray-400 capitalize">
               {status === 'producao' ? 'Produção' : status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
           </div>
@@ -223,7 +223,7 @@ function SmartAlerts({
     alerts.push({
       icon: AlertTriangle,
       text: `${overdueTasks} tarefa${overdueTasks > 1 ? 's' : ''} atrasada${overdueTasks > 1 ? 's' : ''}`,
-      color: 'text-red-600',
+      color: 'text-red-500',
       bg: 'bg-red-50',
       href: '/tasks',
     })
@@ -241,11 +241,11 @@ function SmartAlerts({
   if (alerts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-4 gap-2 text-center">
-        <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-2xl bg-emerald-50 flex items-center justify-center">
           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
         </div>
-        <p className="text-[12px] text-[#737373]">Tudo em ordem!</p>
-        <p className="text-[11px] text-[#a0a0a0]">Nenhum alerta no momento</p>
+        <p className="text-[13px] font-medium text-gray-700">Tudo em ordem!</p>
+        <p className="text-[11px] text-gray-400">Nenhum alerta no momento</p>
       </div>
     )
   }
@@ -254,12 +254,12 @@ function SmartAlerts({
     <div className="space-y-2">
       {alerts.map((alert, i) => (
         <Link key={i} to={alert.href}>
-          <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border border-transparent hover:border-[#e8e8e8] transition-all ${alert.bg} group`}>
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/70">
+          <div className={`flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-gray-100 transition-all group cursor-pointer ${alert.bg}`}>
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 bg-white shadow-sm">
               <alert.icon className={`w-3.5 h-3.5 ${alert.color}`} />
             </div>
-            <p className={`text-[12px] font-medium flex-1 ${alert.color}`}>{alert.text}</p>
-            <ArrowRight className="w-3 h-3 text-[#c0c0c0] group-hover:text-[#a0a0a0] transition-colors" />
+            <p className={`text-[13px] font-medium flex-1 leading-snug ${alert.color}`}>{alert.text}</p>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
           </div>
         </Link>
       ))}
@@ -378,29 +378,30 @@ export function Dashboard() {
   }
 
   return (
-    <div>
+    <div className="min-h-full bg-[#f5f6fa]">
       <Header
         title="Dashboard"
         subtitle="Visão geral da operação"
+        dark={false}
         action={
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-xl border-0">
             <Link to="/content"><Plus className="w-3.5 h-3.5 mr-1" /> Gerar conteúdo</Link>
           </Button>
         }
       />
 
-      <div className="p-4 md:p-6 space-y-5">
+      <div className="p-5 md:p-8 space-y-6">
 
         {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
           <KpiCard
             label="Total de Clientes"
             value={stats.total_clients}
             subtitle="total cadastrado"
             href="/clients"
             icon={Users}
-            iconBg="bg-[#f5f5f5]"
-            iconColor="text-[#737373]"
+            iconBg="bg-gray-100"
+            iconColor="text-gray-500"
           />
           <KpiCard
             label="Clientes Ativos"
@@ -418,7 +419,7 @@ export function Dashboard() {
             href="/tasks"
             icon={CheckSquare}
             iconBg="bg-blue-50"
-            iconColor="text-blue-600"
+            iconColor="text-blue-500"
           />
           <KpiCard
             label="Tarefas Atrasadas"
@@ -427,7 +428,7 @@ export function Dashboard() {
             href="/tasks"
             icon={AlertTriangle}
             iconBg="bg-red-50"
-            iconColor="text-red-500"
+            iconColor="text-red-400"
             warning
           />
           <KpiCard
@@ -436,8 +437,8 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={Clock}
-            iconBg="bg-orange-100"
-            iconColor="text-orange-600"
+            iconBg="bg-orange-50"
+            iconColor="text-orange-500"
           />
           <KpiCard
             label="Aprovados"
@@ -445,13 +446,13 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={CheckCircle2}
-            iconBg="bg-emerald-100"
-            iconColor="text-emerald-700"
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-600"
           />
         </div>
 
         {/* ── Main Grid ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* LEFT: Métricas */}
           <div className="lg:col-span-2">
@@ -467,19 +468,19 @@ export function Dashboard() {
           </div>
 
           {/* RIGHT: Calendário + Alertas */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
 
             {/* Mini Planner Calendar */}
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h3 className="text-[13px] font-semibold text-[#0f0f0f]">Próximos dias</h3>
-                  <p className="text-[11px] text-[#a0a0a0] mt-0.5">
+                  <h3 className="text-[14px] font-semibold text-gray-900">Próximos dias</h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5 capitalize">
                     {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
                 </div>
                 <Link to="/planner">
-                  <div className="flex items-center gap-1 text-[11px] text-[#a0a0a0] hover:text-[#0f0f0f] transition-colors">
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-700 transition-colors">
                     <CalendarDays className="w-3.5 h-3.5" />
                     <span>Planejamento</span>
                   </div>
@@ -492,25 +493,25 @@ export function Dashboard() {
                 const todayStr   = format(new Date(), 'yyyy-MM-dd')
                 const todayItems = plannerWeekItems.filter(i => i.scheduled_date === todayStr)
                 if (todayItems.length === 0) return (
-                  <p className="text-[11px] text-[#a0a0a0] text-center mt-4">
+                  <p className="text-[11px] text-gray-400 text-center mt-5">
                     Nenhum post agendado para hoje
                   </p>
                 )
                 return (
-                  <div className="mt-3 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-[#a0a0a0] uppercase tracking-wide mb-2">Hoje</p>
+                  <div className="mt-5 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Hoje</p>
                     {todayItems.slice(0, 3).map(item => (
-                      <div key={item.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#f8f8f8]">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-[#a0a0a0]'}`} />
-                        <p className="text-[12px] text-[#0f0f0f] truncate flex-1">{item.title}</p>
-                        <span className="text-[10px] text-[#a0a0a0] flex-shrink-0">
+                      <div key={item.id} className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-gray-50">
+                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-gray-300'}`} />
+                        <p className="text-[12px] text-gray-800 truncate flex-1 font-medium">{item.title}</p>
+                        <span className="text-[10px] text-gray-400 flex-shrink-0">
                           {contentTypeLabels[item.content_type as any] ?? item.content_type}
                         </span>
                       </div>
                     ))}
                     {todayItems.length > 3 && (
                       <Link to="/planner">
-                        <p className="text-[11px] text-[#a0a0a0] hover:text-[#0f0f0f] text-center transition-colors">
+                        <p className="text-[11px] text-gray-400 hover:text-gray-700 text-center transition-colors mt-1">
                           +{todayItems.length - 3} mais →
                         </p>
                       </Link>
@@ -521,10 +522,12 @@ export function Dashboard() {
             </div>
 
             {/* Smart Alerts */}
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <BarChart2 className="w-3.5 h-3.5 text-[#737373]" />
-                <h3 className="text-[13px] font-semibold text-[#0f0f0f]">Atenção</h3>
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <BarChart2 className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+                <h3 className="text-[14px] font-semibold text-gray-900">Atenção</h3>
               </div>
               <SmartAlerts
                 pendingApproval={pendingApproval}
@@ -537,43 +540,43 @@ export function Dashboard() {
         </div>
 
         {/* ── Conteúdos Recentes ────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-50">
             <div>
-              <h3 className="text-[13px] font-semibold text-[#0f0f0f]">Conteúdos Recentes</h3>
-              <p className="text-[11px] text-[#a0a0a0] mt-0.5">Últimos conteúdos gerados</p>
+              <h3 className="text-[14px] font-semibold text-gray-900">Conteúdos Recentes</h3>
+              <p className="text-[11px] text-gray-400 mt-0.5">Últimos conteúdos gerados</p>
             </div>
             <Link to="/history">
-              <div className="flex items-center gap-1 text-[11px] text-[#a0a0a0] hover:text-[#0f0f0f] transition-colors">
-                Ver todos <ArrowRight className="w-3 h-3" />
+              <div className="flex items-center gap-1 text-[12px] text-gray-400 hover:text-gray-700 transition-colors font-medium">
+                Ver todos <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </Link>
           </div>
 
           {recentContents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-              <div className="w-10 h-10 rounded-2xl bg-[#f8f8f8] flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-[#d0d0d0]" />
+            <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+              <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-gray-300" />
               </div>
               <div>
-                <p className="text-[13px] font-medium text-[#737373]">Nenhum conteúdo gerado ainda</p>
-                <p className="text-[12px] text-[#a0a0a0] mt-0.5">Crie seu primeiro conteúdo agora</p>
+                <p className="text-[14px] font-medium text-gray-600">Nenhum conteúdo gerado ainda</p>
+                <p className="text-[12px] text-gray-400 mt-0.5">Crie seu primeiro conteúdo agora</p>
               </div>
-              <Button asChild size="sm" variant="outline" className="mt-1">
+              <Button asChild size="sm" variant="outline" className="mt-1 rounded-xl">
                 <Link to="/content">Gerar conteúdo</Link>
               </Button>
             </div>
           ) : (
-            <div className="divide-y divide-[#f5f5f5]">
+            <div className="divide-y divide-gray-50">
               {recentContents.map(c => (
-                <div key={c.id} className="flex items-center gap-3 px-5 py-3 hover:bg-[#fafafa] transition-colors">
+                <div key={c.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/70 transition-colors">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{c.term}</p>
-                    <p className="text-[11px] text-[#a0a0a0] mt-0.5">
+                    <p className="text-[13px] font-medium text-gray-900 truncate">{c.term}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
                       {(c.client as any)?.company_name || 'Sem cliente'} · {formatRelative(c.created_at)}
                     </p>
                   </div>
-                  <span className="text-[11px] text-[#a0a0a0] hidden sm:block flex-shrink-0">
+                  <span className="text-[11px] text-gray-400 hidden sm:block flex-shrink-0">
                     {contentTypeLabels[c.content_type]}
                   </span>
                   <Badge status={c.status} />

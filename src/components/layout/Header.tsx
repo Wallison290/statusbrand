@@ -34,7 +34,7 @@ export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
       <header className={`h-14 border-b flex items-center px-5 gap-4 sticky top-0 z-20 ${
         dark
           ? 'bg-[#0f0f0f] border-white/10'
-          : 'bg-white/95 backdrop-blur-sm border-[#e8e8e8]'
+          : 'bg-white border-gray-100'
       }`}>
         <div className="flex-1 min-w-0">
           <h1 className={`text-[13px] font-semibold leading-none ${dark ? 'text-white' : 'text-[#0f0f0f]'}`}>
