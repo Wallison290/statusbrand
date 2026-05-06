@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Sparkles, CheckSquare, ArrowRight, Plus, Clock,
   AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
@@ -13,21 +12,27 @@ import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { formatRelative, contentTypeLabels } from '@/utils/formatters'
 import {
-  startOfWeek, endOfWeek, eachDayOfInterval, format,
-  isToday, isSameDay, addDays, subDays, startOfToday,
+  startOfWeek, endOfWeek, startOfDay, endOfDay,
+  startOfMonth, endOfMonth, startOfYear, endOfYear,
+  eachDayOfInterval, eachMonthOfInterval,
+  format, isToday, addDays, subDays, startOfToday,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type PeriodMode = 'dia' | 'semana' | 'mes' | 'ano' | 'custom'
+
+interface DateRange { start: Date; end: Date }
+
 interface Stats {
   total_clients:         number
   active_clients:        number
   pending_tasks:         number
   overdue_tasks:         number
-  week_pending_approval: number
-  week_approved:         number
+  period_pending_approval: number
+  period_approved:         number
 }
 
 interface PlannerDay {
@@ -44,37 +49,164 @@ interface PlannerChartEntry {
   color: string
 }
 
-// ─── Period Filter Bar ────────────────────────────────────────────────────────
+// ─── Period helpers ───────────────────────────────────────────────────────────
 
-type Period = 'dia' | 'semana' | 'mes' | 'ano'
-
-function FilterBar() {
-  const [period, setPeriod] = useState<Period>('semana')
+function computeRange(mode: PeriodMode, custom: DateRange): DateRange {
   const now = new Date()
-  const weekStart = startOfWeek(now, { locale: ptBR })
-  const weekEnd   = endOfWeek(now, { locale: ptBR })
-  const dateLabel = `${format(weekStart, "d MMM", { locale: ptBR })} – ${format(weekEnd, "d MMM yyyy", { locale: ptBR })}`
+  switch (mode) {
+    case 'dia':    return { start: startOfDay(now),   end: endOfDay(now) }
+    case 'semana': return { start: startOfWeek(now, { locale: ptBR }), end: endOfWeek(now, { locale: ptBR }) }
+    case 'mes':    return { start: startOfMonth(now), end: endOfMonth(now) }
+    case 'ano':    return { start: startOfYear(now),  end: endOfYear(now) }
+    case 'custom': return custom
+  }
+}
+
+function buildBarData(
+  mode: PeriodMode,
+  range: DateRange,
+  contents: { created_at: string }[],
+): { day: string; conteudos: number }[] {
+  if (mode === 'ano') {
+    return eachMonthOfInterval(range).map(m => ({
+      day: format(m, 'MMM', { locale: ptBR }),
+      conteudos: contents.filter(c => c.created_at.startsWith(format(m, 'yyyy-MM'))).length,
+    }))
+  }
+  // dia / semana / mes / custom — daily buckets (capped at 60 days)
+  const days = eachDayOfInterval({
+    start: range.start,
+    end: range.end,
+  }).slice(0, 60)
+  return days.map(d => ({
+    day: format(d, mode === 'semana' ? 'EEE' : 'd/M', { locale: ptBR }),
+    conteudos: contents.filter(c => c.created_at.startsWith(format(d, 'yyyy-MM-dd'))).length,
+  }))
+}
+
+function rangeLabel(mode: PeriodMode, range: DateRange): string {
+  if (mode === 'dia')    return format(range.start, "d 'de' MMM", { locale: ptBR })
+  if (mode === 'ano')    return format(range.start, 'yyyy')
+  return `${format(range.start, 'd MMM', { locale: ptBR })} – ${format(range.end, 'd MMM yyyy', { locale: ptBR })}`
+}
+
+// ─── Filter Bar ───────────────────────────────────────────────────────────────
+
+interface FilterBarProps {
+  mode:          PeriodMode
+  range:         DateRange
+  customRange:   DateRange
+  onMode:        (m: PeriodMode) => void
+  onCustomRange: (r: DateRange) => void
+}
+
+function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBarProps) {
+  const [open, setOpen]         = useState(false)
+  const [tempS, setTempS]       = useState(format(customRange.start, 'yyyy-MM-dd'))
+  const [tempE, setTempE]       = useState(format(customRange.end,   'yyyy-MM-dd'))
+  const popoverRef              = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  function applyCustom() {
+    if (!tempS || !tempE) return
+    onCustomRange({ start: new Date(tempS + 'T00:00:00'), end: new Date(tempE + 'T23:59:59') })
+    onMode('custom')
+    setOpen(false)
+  }
+
+  const pills: { key: PeriodMode; label: string }[] = [
+    { key: 'dia',    label: 'Dia'    },
+    { key: 'semana', label: 'Semana' },
+    { key: 'mes',    label: 'Mês'    },
+    { key: 'ano',    label: 'Ano'    },
+  ]
 
   return (
-    <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div className="bg-white border-b border-gray-100 px-5 md:px-7 py-3 flex items-center justify-between gap-4 flex-wrap">
+      {/* Period pills */}
       <div className="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1">
-        {(['dia', 'semana', 'mes', 'ano'] as Period[]).map(p => (
+        {pills.map(({ key, label }) => (
           <button
-            key={p}
-            onClick={() => setPeriod(p)}
+            key={key}
+            onClick={() => onMode(key)}
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-              period === p
+              mode === key
                 ? 'bg-gray-900 text-white shadow-sm'
                 : 'text-gray-500 hover:text-gray-800'
             }`}
           >
-            {p === 'dia' ? 'Dia' : p === 'semana' ? 'Semana' : p === 'mes' ? 'Mês' : 'Ano'}
+            {label}
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 text-[12px] text-gray-400 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 select-none">
-        <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="capitalize whitespace-nowrap">{dateLabel}</span>
+
+      {/* Date range button + popover */}
+      <div className="relative" ref={popoverRef}>
+        <button
+          onClick={() => {
+            setTempS(format(customRange.start, 'yyyy-MM-dd'))
+            setTempE(format(customRange.end,   'yyyy-MM-dd'))
+            setOpen(v => !v)
+          }}
+          className={`flex items-center gap-2 text-[12px] border rounded-xl px-3 py-1.5 transition-colors ${
+            mode === 'custom'
+              ? 'text-gray-900 bg-gray-50 border-gray-300 font-medium'
+              : 'text-gray-400 bg-gray-50 border-gray-100 hover:border-gray-300 hover:text-gray-700'
+          }`}
+        >
+          <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="capitalize whitespace-nowrap">{rangeLabel(mode, range)}</span>
+        </button>
+
+        {open && (
+          <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl p-4 w-[260px]">
+            <p className="text-[12px] font-semibold text-gray-800 mb-3">Período personalizado</p>
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-[11px] text-gray-400 block mb-1">Data inicial</label>
+                <input
+                  type="date"
+                  value={tempS}
+                  onChange={e => setTempS(e.target.value)}
+                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 block mb-1">Data final</label>
+                <input
+                  type="date"
+                  value={tempE}
+                  min={tempS}
+                  onChange={e => setTempE(e.target.value)}
+                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setOpen(false)}
+                className="flex-1 h-8 rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 border border-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={applyCustom}
+                disabled={!tempS || !tempE || tempE < tempS}
+                className="flex-1 h-8 rounded-lg text-[12px] bg-gray-900 text-white hover:bg-gray-800 transition-colors font-medium disabled:opacity-40"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -83,25 +215,29 @@ function FilterBar() {
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, subtitle, href, icon: Icon, featured = false, warning = false,
+  label, value, subtitle, href, icon: Icon,
+  iconBg = 'bg-gray-100', iconColor = 'text-gray-500',
+  featured = false, warning = false,
 }: {
-  label: string
-  value: number
-  subtitle?: string
-  href?: string
-  icon: React.ElementType
-  featured?: boolean
-  warning?: boolean
+  label:      string
+  value:      number
+  subtitle?:  string
+  href?:      string
+  icon:       React.ElementType
+  iconBg?:    string
+  iconColor?: string
+  featured?:  boolean
+  warning?:   boolean
 }) {
   const showWarning = warning && value > 0
 
   const inner = featured ? (
-    <div className="h-full rounded-3xl bg-gray-900 p-5 flex flex-col gap-4 transition-all duration-200 hover:bg-gray-800">
+    <div className="h-full rounded-3xl bg-gray-900 p-5 flex flex-col gap-4 hover:bg-gray-800 transition-colors duration-200">
       <div className="flex items-start justify-between">
         <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
           <Icon className="w-[18px] h-[18px] text-white" />
         </div>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60 uppercase tracking-wide">
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/50 uppercase tracking-wide">
           Total
         </span>
       </div>
@@ -112,26 +248,12 @@ function KpiCard({
       </div>
     </div>
   ) : (
-    <div className={`h-full rounded-3xl border bg-white p-5 flex flex-col gap-4 transition-all duration-200 hover:shadow-md ${
+    <div className={`h-full rounded-3xl border bg-white p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-200 ${
       showWarning ? 'border-red-100' : 'border-gray-100'
-    } shadow-sm`}>
+    }`}>
       <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-          showWarning ? 'bg-red-50' :
-          label.includes('Ativo') ? 'bg-emerald-50' :
-          label.includes('Tarefas P') ? 'bg-blue-50' :
-          label.includes('aprovação') ? 'bg-orange-50' :
-          label.includes('Aprovado') ? 'bg-emerald-50' :
-          'bg-gray-100'
-        }`}>
-          <Icon className={`w-[18px] h-[18px] ${
-            showWarning ? 'text-red-400' :
-            label.includes('Ativo') ? 'text-emerald-600' :
-            label.includes('Tarefas P') ? 'text-blue-500' :
-            label.includes('aprovação') ? 'text-orange-500' :
-            label.includes('Aprovado') ? 'text-emerald-600' :
-            'text-gray-500'
-          }`} />
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
+          <Icon className={`w-[18px] h-[18px] ${showWarning ? 'text-red-400' : iconColor}`} />
         </div>
         {showWarning && (
           <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
@@ -168,20 +290,19 @@ function CalendarWidget({
   onDayClick,
 }: {
   items: PlannerDay[]
-  onDayClick: (date: string) => void
+  onDayClick: () => void
 }) {
-  const today = startOfToday()
+  const today  = startOfToday()
   const [offset, setOffset] = useState(0)
-  const center  = addDays(today, offset)
-  const days    = [-2, -1, 0, 1, 2].map(d => addDays(center, d))
-  const monthLabel = format(today, "MMMM yyyy", { locale: ptBR })
+  const center = addDays(today, offset)
+  const days   = [-2, -1, 0, 1, 2].map(d => addDays(center, d))
 
   const todayStr   = format(today, 'yyyy-MM-dd')
   const todayItems = items.filter(i => i.scheduled_date === todayStr)
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-      {/* Month + arrows */}
+      {/* Month + nav */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setOffset(o => o - 5)}
@@ -189,7 +310,9 @@ function CalendarWidget({
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-[13px] font-semibold text-gray-900 capitalize">{monthLabel}</h3>
+        <h3 className="text-[13px] font-semibold text-gray-900 capitalize">
+          {format(center, 'MMMM yyyy', { locale: ptBR })}
+        </h3>
         <button
           onClick={() => setOffset(o => o + 5)}
           className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
@@ -208,35 +331,28 @@ function CalendarWidget({
       </div>
 
       {/* Day numbers */}
-      <div className="grid grid-cols-5 gap-1 mb-5">
+      <div className="grid grid-cols-5 gap-1 mb-4">
         {days.map(day => {
-          const dayStr  = format(day, 'yyyy-MM-dd')
+          const dayStr   = format(day, 'yyyy-MM-dd')
           const dayItems = items.filter(i => i.scheduled_date === dayStr)
-          const active  = isSameDay(day, addDays(today, offset))
-            ? false
-            : false // Only today gets the dark pill
-          const isCurrentDay = isToday(day)
-
+          const isCurrent = isToday(day)
           return (
             <div
               key={dayStr}
-              onClick={() => onDayClick(dayStr)}
+              onClick={onDayClick}
               className={`flex flex-col items-center py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
-                isCurrentDay
+                isCurrent
                   ? 'bg-gray-900'
                   : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
               }`}
             >
-              <span className={`text-[15px] font-semibold leading-none ${isCurrentDay ? 'text-white' : 'text-gray-800'}`}>
+              <span className={`text-[15px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-gray-800'}`}>
                 {format(day, 'd')}
               </span>
               {dayItems.length > 0 && (
                 <div className="flex gap-0.5 mt-1.5 justify-center flex-wrap">
                   {dayItems.slice(0, 3).map(item => (
-                    <div
-                      key={item.id}
-                      className={`w-1 h-1 rounded-full ${isCurrentDay ? 'bg-white/60' : (statusDotColor[item.status] ?? 'bg-gray-400')}`}
-                    />
+                    <div key={item.id} className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-white/60' : (statusDotColor[item.status] ?? 'bg-gray-400')}`} />
                   ))}
                 </div>
               )}
@@ -245,9 +361,9 @@ function CalendarWidget({
         })}
       </div>
 
-      {/* Today's items */}
+      {/* Today's list */}
       {todayItems.length === 0 ? (
-        <p className="text-[11px] text-gray-400 text-center py-2">Nenhum post hoje</p>
+        <p className="text-[11px] text-gray-400 text-center py-1">Nenhum post hoje</p>
       ) : (
         <div className="space-y-1.5">
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Hoje</p>
@@ -288,54 +404,20 @@ function CalendarWidget({
 // ─── Alerts Widget ────────────────────────────────────────────────────────────
 
 function AlertsWidget({
-  pendingApproval,
-  overdueTasks,
-  pendingTasks,
-  weekApproved,
-  activeClients,
+  pendingApproval, overdueTasks, pendingTasks, periodApproved,
 }: {
   pendingApproval: number
-  overdueTasks: number
-  pendingTasks: number
-  weekApproved: number
-  activeClients: number
+  overdueTasks:    number
+  pendingTasks:    number
+  periodApproved:  number
 }) {
-  const total = pendingApproval + overdueTasks
-  const allGood = total === 0
+  const allGood = pendingApproval === 0 && overdueTasks === 0
 
-  const rows: { icon: React.ElementType; label: string; value: number | string; color: string; bg: string; href: string }[] = [
-    {
-      icon: CheckCircle2,
-      label: 'Aprovados esta semana',
-      value: weekApproved,
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
-      href: '/planner',
-    },
-    {
-      icon: Clock,
-      label: 'Aguardando aprovação',
-      value: pendingApproval,
-      color: pendingApproval > 0 ? 'text-amber-600' : 'text-gray-500',
-      bg: pendingApproval > 0 ? 'bg-amber-50' : 'bg-gray-50',
-      href: '/planner',
-    },
-    {
-      icon: CheckSquare,
-      label: 'Tarefas em aberto',
-      value: pendingTasks,
-      color: pendingTasks > 0 ? 'text-blue-600' : 'text-gray-500',
-      bg: pendingTasks > 0 ? 'bg-blue-50' : 'bg-gray-50',
-      href: '/tasks',
-    },
-    {
-      icon: AlertTriangle,
-      label: 'Tarefas atrasadas',
-      value: overdueTasks,
-      color: overdueTasks > 0 ? 'text-red-500' : 'text-gray-500',
-      bg: overdueTasks > 0 ? 'bg-red-50' : 'bg-gray-50',
-      href: '/tasks',
-    },
+  const rows = [
+    { icon: CheckCircle2, label: 'Aprovados no período',    value: periodApproved,  color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/planner' },
+    { icon: Clock,        label: 'Aguardando aprovação',    value: pendingApproval, color: pendingApproval > 0 ? 'text-amber-600'  : 'text-gray-400', bg: pendingApproval > 0 ? 'bg-amber-50'  : 'bg-gray-50', href: '/planner' },
+    { icon: CheckSquare,  label: 'Tarefas em aberto',       value: pendingTasks,    color: pendingTasks    > 0 ? 'text-blue-600'   : 'text-gray-400', bg: pendingTasks    > 0 ? 'bg-blue-50'   : 'bg-gray-50', href: '/tasks'   },
+    { icon: AlertTriangle,label: 'Tarefas atrasadas',       value: overdueTasks,    color: overdueTasks    > 0 ? 'text-red-500'    : 'text-gray-400', bg: overdueTasks    > 0 ? 'bg-red-50'    : 'bg-gray-50', href: '/tasks'   },
   ]
 
   return (
@@ -349,8 +431,7 @@ function AlertsWidget({
         </div>
         <h3 className="text-[14px] font-semibold text-gray-900">Resumo</h3>
       </div>
-
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {rows.map((row, i) => (
           <Link key={i} to={row.href}>
             <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer">
@@ -373,89 +454,158 @@ export function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [stats, setStats] = useState<Stats>({
-    total_clients: 0, active_clients: 0,
-    pending_tasks: 0, overdue_tasks: 0,
-    week_pending_approval: 0, week_approved: 0,
-  })
+  // ── Period state (single source of truth) ─────────────────────────────────
+  const defaultCustom: DateRange = {
+    start: startOfWeek(new Date(), { locale: ptBR }),
+    end:   endOfWeek(new Date(),   { locale: ptBR }),
+  }
+  const [periodMode, setPeriodMode]   = useState<PeriodMode>('semana')
+  const [customRange, setCustomRange] = useState<DateRange>(defaultCustom)
+
+  const range = useMemo(
+    () => computeRange(periodMode, customRange),
+    [periodMode, customRange],
+  )
+
+  // ── Data state ────────────────────────────────────────────────────────────
+  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0 })
   const [recentContents, setRecentContents]     = useState<any[]>([])
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
   const [plannerChartData, setPlannerChartData] = useState<PlannerChartEntry[]>([])
-  const [plannerWeekItems, setPlannerWeekItems] = useState<PlannerDay[]>([])
+  const [plannerCalItems, setPlannerCalItems]   = useState<PlannerDay[]>([])
   const [pendingApproval, setPendingApproval]   = useState(0)
 
+  // ── Re-fetch whenever user or range changes ───────────────────────────────
   useEffect(() => {
     if (!user) return
-    fetchStats()
-  }, [user])
+    fetchStats(range)
+  }, [user, range.start.toISOString(), range.end.toISOString()])
 
-  async function fetchStats() {
-    const now       = new Date()
-    const weekStart = startOfWeek(now, { locale: ptBR })
-    const weekEnd   = endOfWeek(now, { locale: ptBR })
-    const weekStartIso  = weekStart.toISOString()
-    const weekEndIso    = weekEnd.toISOString()
-    const weekStartDate = format(weekStart, 'yyyy-MM-dd')
-    const weekEndDate   = format(weekEnd,   'yyyy-MM-dd')
-    const calStart  = format(subDays(now, 2), 'yyyy-MM-dd')
-    const calEnd    = format(addDays(now, 2), 'yyyy-MM-dd')
+  // ── Fetch ─────────────────────────────────────────────────────────────────
+  async function fetchStats({ start, end }: DateRange) {
+    const now         = new Date()
+    const startIso    = start.toISOString()
+    const endIso      = end.toISOString()
+    const startDate   = format(start, 'yyyy-MM-dd')
+    const endDate     = format(end,   'yyyy-MM-dd')
 
-    const [
-      clientsRes, tasksRes,
-      recentRes, allContentsRes, assetsRes, plannerFullRes,
-      plannerCalRes, pendingApprovalRes,
-      weekPendingRes, weekApprovedRes,
-    ] = await Promise.all([
-      supabase.from('clients').select('id, status').eq('user_id', user!.id),
-      supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
-      supabase.from('contents').select('id, term, content_type, status, created_at, client:clients(company_name)').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('contents').select('created_at').eq('user_id', user!.id).gte('created_at', weekStartIso).lte('created_at', weekEndIso),
-      supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
-      supabase.from('planner').select('status, approval_status').eq('user_id', user!.id),
-      supabase.from('planner').select('id, title, content_type, status, scheduled_date').eq('user_id', user!.id).gte('scheduled_date', calStart).lte('scheduled_date', calEnd),
-      supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao'),
-      supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao').gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate),
-      supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'aprovado'),
-    ])
-
-    const clients  = clientsRes.data || []
-    const taskList = tasksRes.data   || []
-    const overdue  = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
+    // Calendar window: 2 days around today
+    const calStart = format(subDays(now, 2), 'yyyy-MM-dd')
+    const calEnd   = format(addDays(now, 2), 'yyyy-MM-dd')
 
     const NOT_AWAITING = ['aprovado', 'reprovado', 'ajuste_solicitado']
     const isAwaiting = (p: any) => !NOT_AWAITING.includes(p.approval_status)
 
+    const [
+      clientsRes,
+      tasksRes,
+      recentRes,
+      contentsRes,
+      assetsRes,
+      plannerRes,
+      plannerCalRes,
+      pendingApprovalRes,
+      periodApprovedRes,
+    ] = await Promise.all([
+      // Clients — always global (no reliable period date)
+      supabase.from('clients').select('id, status').eq('user_id', user!.id),
+
+      // Tasks — all non-completed (filtered client-side by due_date)
+      supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
+
+      // Recent contents — filtered by period
+      supabase.from('contents')
+        .select('id, term, content_type, status, created_at, client:clients(company_name)')
+        .eq('user_id', user!.id)
+        .gte('created_at', startIso)
+        .lte('created_at', endIso)
+        .order('created_at', { ascending: false })
+        .limit(5),
+
+      // All contents in period (for bar chart)
+      supabase.from('contents')
+        .select('created_at')
+        .eq('user_id', user!.id)
+        .gte('created_at', startIso)
+        .lte('created_at', endIso),
+
+      // Assets — always global (arsenal doesn't have a period concept)
+      supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
+
+      // Planner — filtered by period
+      supabase.from('planner')
+        .select('status, approval_status')
+        .eq('user_id', user!.id)
+        .gte('scheduled_date', startDate)
+        .lte('scheduled_date', endDate),
+
+      // Calendar items — always around today (independent of period)
+      supabase.from('planner')
+        .select('id, title, content_type, status, scheduled_date')
+        .eq('user_id', user!.id)
+        .gte('scheduled_date', calStart)
+        .lte('scheduled_date', calEnd),
+
+      // Pending approval in period
+      supabase.from('planner')
+        .select('id, approval_status')
+        .eq('user_id', user!.id)
+        .eq('status', 'revisao')
+        .gte('scheduled_date', startDate)
+        .lte('scheduled_date', endDate),
+
+      // Approved in period
+      supabase.from('planner')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('approval_status', 'aprovado')
+        .gte('scheduled_date', startDate)
+        .lte('scheduled_date', endDate),
+    ])
+
+    const clients  = clientsRes.data  || []
+    const taskList = tasksRes.data    || []
+
+    // Tasks filtered by period: include tasks with due_date in range OR no due_date
+    const periodTasks = taskList.filter(t => {
+      if (!t.due_date) return true
+      const d = new Date(t.due_date)
+      return d >= start && d <= end
+    })
+    // Overdue: global metric (due_date < today, any period)
+    const overdue = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
+
+    const pendingInPeriod = (pendingApprovalRes.data || []).filter(isAwaiting)
+
     setStats({
-      total_clients:         clients.length,
-      active_clients:        clients.filter(c => c.status === 'ativo').length,
-      pending_tasks:         taskList.length,
-      overdue_tasks:         overdue,
-      week_pending_approval: (weekPendingRes.data || []).filter(isAwaiting).length,
-      week_approved:         weekApprovedRes.data?.length || 0,
+      total_clients:           clients.length,
+      active_clients:          clients.filter(c => c.status === 'ativo').length,
+      pending_tasks:           periodTasks.length,
+      overdue_tasks:           overdue,
+      period_pending_approval: pendingInPeriod.length,
+      period_approved:         periodApprovedRes.data?.length || 0,
     })
 
     setRecentContents(recentRes.data || [])
-    setPlannerWeekItems((plannerCalRes.data || []) as PlannerDay[])
-    setPendingApproval((pendingApprovalRes.data || []).filter(isAwaiting).length)
+    setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
+    setPendingApproval(pendingInPeriod.length)
 
-    const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
-    const contents = allContentsRes.data || []
-    setWeeklyData(days.map(day => ({
-      day: format(day, 'EEE', { locale: ptBR }),
-      conteudos: contents.filter(c => c.created_at.startsWith(format(day, 'yyyy-MM-dd'))).length,
-    })))
+    // Bar chart
+    setWeeklyData(buildBarData(periodMode, { start, end }, contentsRes.data || []))
 
+    // Assets donut
     const typeMap: Record<string, number> = {}
     ;(assetsRes.data || []).forEach((a: any) => { typeMap[a.content_type] = (typeMap[a.content_type] || 0) + 1 })
     setAssetTypes(Object.entries(typeMap).map(([type, count]) => ({ type, count })))
 
+    // Planner status breakdown
     const statusMap: Record<string, number> = {}
-    ;(plannerFullRes.data || []).forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
+    ;(plannerRes.data || []).forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    const pList = plannerFullRes.data || []
+    const pList = plannerRes.data || []
     setPlannerChartData([
       { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,    color: '#8b5cf6' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length,  color: '#f59e0b' },
@@ -464,10 +614,12 @@ export function Dashboard() {
     ])
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-full bg-[#f2f2f2]">
 
-      {/* ── Top Header ─────────────────────────────────────────────────────── */}
+      {/* Header */}
       <Header
         title="Dashboard"
         subtitle="Visão geral da operação"
@@ -479,60 +631,28 @@ export function Dashboard() {
         }
       />
 
-      {/* ── Filter Bar ─────────────────────────────────────────────────────── */}
-      <FilterBar />
+      {/* Filter Bar — controlled */}
+      <FilterBar
+        mode={periodMode}
+        range={range}
+        customRange={customRange}
+        onMode={m => setPeriodMode(m)}
+        onCustomRange={r => setCustomRange(r)}
+      />
 
       <div className="p-5 md:p-7 space-y-5">
 
-        {/* ── KPI Row ──────────────────────────────────────────────────────── */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-          <KpiCard
-            label="Total de Clientes"
-            value={stats.total_clients}
-            subtitle="cadastrados"
-            href="/clients"
-            icon={Users}
-            featured
-          />
-          <KpiCard
-            label="Clientes Ativos"
-            value={stats.active_clients}
-            subtitle="em operação"
-            href="/clients"
-            icon={TrendingUp}
-          />
-          <KpiCard
-            label="Tarefas Pendentes"
-            value={stats.pending_tasks}
-            subtitle="em aberto"
-            href="/tasks"
-            icon={CheckSquare}
-          />
-          <KpiCard
-            label="Tarefas Atrasadas"
-            value={stats.overdue_tasks}
-            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'em dia'}
-            href="/tasks"
-            icon={AlertTriangle}
-            warning
-          />
-          <KpiCard
-            label="Ag. aprovação"
-            value={stats.week_pending_approval}
-            subtitle="esta semana"
-            href="/planner"
-            icon={Clock}
-          />
-          <KpiCard
-            label="Aprovados"
-            value={stats.week_approved}
-            subtitle="esta semana"
-            href="/planner"
-            icon={CheckCircle2}
-          />
+          <KpiCard label="Total de Clientes"  value={stats.total_clients}            subtitle="global"             href="/clients"  icon={Users}          featured />
+          <KpiCard label="Clientes Ativos"    value={stats.active_clients}           subtitle="em operação"        href="/clients"  icon={TrendingUp}     iconBg="bg-emerald-50"  iconColor="text-emerald-600" />
+          <KpiCard label="Tarefas Pendentes"  value={stats.pending_tasks}            subtitle="no período"         href="/tasks"    icon={CheckSquare}    iconBg="bg-blue-50"     iconColor="text-blue-500" />
+          <KpiCard label="Tarefas Atrasadas"  value={stats.overdue_tasks}            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'em dia'} href="/tasks"    icon={AlertTriangle}  warning />
+          <KpiCard label="Ag. aprovação"      value={stats.period_pending_approval}  subtitle="no período"         href="/planner"  icon={Clock}          iconBg="bg-orange-50"   iconColor="text-orange-500" />
+          <KpiCard label="Aprovados"          value={stats.period_approved}          subtitle="no período"         href="/planner"  icon={CheckCircle2}   iconBg="bg-emerald-50"  iconColor="text-emerald-600" />
         </div>
 
-        {/* ── Main Grid ────────────────────────────────────────────────────── */}
+        {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Charts — 2/3 */}
@@ -548,40 +668,30 @@ export function Dashboard() {
             />
           </div>
 
-          {/* Right column — 1/3 */}
+          {/* Right sidebar — 1/3 */}
           <div className="flex flex-col gap-5">
-
-            {/* Calendar widget */}
             <CalendarWidget
-              items={plannerWeekItems}
+              items={plannerCalItems}
               onDayClick={() => navigate('/planner')}
             />
-
-            {/* Alerts/Summary widget */}
             <AlertsWidget
               pendingApproval={pendingApproval}
               overdueTasks={stats.overdue_tasks}
               pendingTasks={stats.pending_tasks}
-              weekApproved={stats.week_approved}
-              activeClients={stats.active_clients}
+              periodApproved={stats.period_approved}
             />
-
           </div>
         </div>
 
-        {/* ── Recent Contents Table ─────────────────────────────────────────── */}
+        {/* Recent contents table */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-
-          {/* Table header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
             <div>
               <h3 className="text-[14px] font-semibold text-gray-900">Conteúdos Recentes</h3>
-              <p className="text-[11px] text-gray-400 mt-0.5">Últimos conteúdos gerados pelo sistema</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Últimos gerados no período selecionado</p>
             </div>
-            <Link to="/history">
-              <div className="flex items-center gap-1.5 text-[12px] font-medium text-gray-400 hover:text-gray-800 transition-colors">
-                Ver todos <ArrowRight className="w-3.5 h-3.5" />
-              </div>
+            <Link to="/history" className="flex items-center gap-1.5 text-[12px] font-medium text-gray-400 hover:text-gray-800 transition-colors">
+              Ver todos <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -591,8 +701,8 @@ export function Dashboard() {
                 <Sparkles className="w-5 h-5 text-gray-300" />
               </div>
               <div>
-                <p className="text-[14px] font-medium text-gray-600">Nenhum conteúdo gerado ainda</p>
-                <p className="text-[12px] text-gray-400 mt-0.5">Gere seu primeiro conteúdo agora</p>
+                <p className="text-[14px] font-medium text-gray-600">Nenhum conteúdo neste período</p>
+                <p className="text-[12px] text-gray-400 mt-0.5">Tente outro intervalo ou gere um conteúdo</p>
               </div>
               <Button asChild size="sm" variant="outline" className="mt-1 rounded-xl">
                 <Link to="/content">Gerar conteúdo</Link>
@@ -600,21 +710,15 @@ export function Dashboard() {
             </div>
           ) : (
             <>
-              {/* Column headers */}
-              <div className="hidden sm:grid grid-cols-[1fr_160px_120px_100px] gap-4 px-6 py-2.5 bg-gray-50/60 border-b border-gray-50">
+              <div className="hidden sm:grid grid-cols-[1fr_160px_120px_140px] gap-4 px-6 py-2.5 bg-gray-50/60 border-b border-gray-50">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Conteúdo</span>
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</span>
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</span>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Status</span>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Status / Data</span>
               </div>
-
-              {/* Rows */}
               <div className="divide-y divide-gray-50">
                 {recentContents.map(c => (
-                  <div
-                    key={c.id}
-                    className="grid grid-cols-1 sm:grid-cols-[1fr_160px_120px_100px] gap-1 sm:gap-4 items-center px-6 py-3.5 hover:bg-gray-50/70 transition-colors"
-                  >
+                  <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_160px_120px_140px] gap-1 sm:gap-4 items-center px-6 py-3.5 hover:bg-gray-50/70 transition-colors">
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-gray-900 truncate">{c.term}</p>
                       <p className="text-[11px] text-gray-400 mt-0.5 sm:hidden">
@@ -622,7 +726,7 @@ export function Dashboard() {
                       </p>
                     </div>
                     <p className="hidden sm:block text-[12px] text-gray-500 truncate">
-                      {(c.client as any)?.company_name || <span className="text-gray-300">—</span>}
+                      {(c.client as any)?.company_name || '—'}
                     </p>
                     <p className="hidden sm:block text-[12px] text-gray-500">
                       {contentTypeLabels[c.content_type]}
