@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Sparkles, CheckSquare, ArrowRight, Plus, Clock,
-  AlertTriangle, TrendingUp, CalendarDays, CheckCircle2, BarChart2,
+  AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
+  ChevronLeft, ChevronRight, BarChart3,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { formatRelative, contentTypeLabels } from '@/utils/formatters'
 import {
   startOfWeek, endOfWeek, eachDayOfInterval, format,
-  isToday, addDays, subDays, startOfToday,
+  isToday, isSameDay, addDays, subDays, startOfToday,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
@@ -43,27 +44,94 @@ interface PlannerChartEntry {
   color: string
 }
 
+// ─── Period Filter Bar ────────────────────────────────────────────────────────
+
+type Period = 'dia' | 'semana' | 'mes' | 'ano'
+
+function FilterBar() {
+  const [period, setPeriod] = useState<Period>('semana')
+  const now = new Date()
+  const weekStart = startOfWeek(now, { locale: ptBR })
+  const weekEnd   = endOfWeek(now, { locale: ptBR })
+  const dateLabel = `${format(weekStart, "d MMM", { locale: ptBR })} – ${format(weekEnd, "d MMM yyyy", { locale: ptBR })}`
+
+  return (
+    <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1">
+        {(['dia', 'semana', 'mes', 'ano'] as Period[]).map(p => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+              period === p
+                ? 'bg-gray-900 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            {p === 'dia' ? 'Dia' : p === 'semana' ? 'Semana' : p === 'mes' ? 'Mês' : 'Ano'}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 text-[12px] text-gray-400 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 select-none">
+        <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="capitalize whitespace-nowrap">{dateLabel}</span>
+      </div>
+    </div>
+  )
+}
+
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, subtitle, href, icon: Icon, iconBg, iconColor, warning = false,
+  label, value, subtitle, href, icon: Icon, featured = false, warning = false,
 }: {
   label: string
   value: number
   subtitle?: string
   href?: string
   icon: React.ElementType
-  iconBg: string
-  iconColor: string
+  featured?: boolean
   warning?: boolean
 }) {
   const showWarning = warning && value > 0
 
-  const inner = (
-    <div className="group rounded-3xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 h-full flex flex-col gap-4">
+  const inner = featured ? (
+    <div className="h-full rounded-3xl bg-gray-900 p-5 flex flex-col gap-4 transition-all duration-200 hover:bg-gray-800">
       <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${iconBg}`}>
-          <Icon className={`w-[18px] h-[18px] ${iconColor}`} />
+        <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+          <Icon className="w-[18px] h-[18px] text-white" />
+        </div>
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60 uppercase tracking-wide">
+          Total
+        </span>
+      </div>
+      <div>
+        <p className="text-3xl font-semibold text-white tabular-nums leading-none">{value}</p>
+        <p className="text-[13px] font-medium text-white/70 mt-2 leading-tight">{label}</p>
+        {subtitle && <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  ) : (
+    <div className={`h-full rounded-3xl border bg-white p-5 flex flex-col gap-4 transition-all duration-200 hover:shadow-md ${
+      showWarning ? 'border-red-100' : 'border-gray-100'
+    } shadow-sm`}>
+      <div className="flex items-start justify-between">
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+          showWarning ? 'bg-red-50' :
+          label.includes('Ativo') ? 'bg-emerald-50' :
+          label.includes('Tarefas P') ? 'bg-blue-50' :
+          label.includes('aprovação') ? 'bg-orange-50' :
+          label.includes('Aprovado') ? 'bg-emerald-50' :
+          'bg-gray-100'
+        }`}>
+          <Icon className={`w-[18px] h-[18px] ${
+            showWarning ? 'text-red-400' :
+            label.includes('Ativo') ? 'text-emerald-600' :
+            label.includes('Tarefas P') ? 'text-blue-500' :
+            label.includes('aprovação') ? 'text-orange-500' :
+            label.includes('Aprovado') ? 'text-emerald-600' :
+            'text-gray-500'
+          }`} />
         </div>
         {showWarning && (
           <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
@@ -72,13 +140,9 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className="text-3xl font-semibold text-gray-900 tabular-nums leading-none">
-          {value}
-        </p>
-        <p className="text-[13px] font-medium text-gray-700 mt-2 leading-tight">{label}</p>
-        {subtitle && (
-          <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>
-        )}
+        <p className="text-3xl font-semibold text-gray-900 tabular-nums leading-none">{value}</p>
+        <p className="text-[13px] font-medium text-gray-600 mt-2 leading-tight">{label}</p>
+        {subtitle && <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   )
@@ -87,7 +151,7 @@ function KpiCard({
   return inner
 }
 
-// ─── Mini Planner Preview ─────────────────────────────────────────────────────
+// ─── Status dot colours ───────────────────────────────────────────────────────
 
 const statusDotColor: Record<string, string> = {
   ideia:     'bg-purple-400',
@@ -97,7 +161,9 @@ const statusDotColor: Record<string, string> = {
   publicado: 'bg-green-400',
 }
 
-function MiniPlannerPreview({
+// ─── Calendar Widget ──────────────────────────────────────────────────────────
+
+function CalendarWidget({
   items,
   onDayClick,
 }: {
@@ -105,90 +171,112 @@ function MiniPlannerPreview({
   onDayClick: (date: string) => void
 }) {
   const today = startOfToday()
-  const days = [-2, -1, 0, 1, 2].map(d => addDays(today, d))
-  const [hoveredDay, setHoveredDay] = useState<string | null>(null)
+  const [offset, setOffset] = useState(0)
+  const center  = addDays(today, offset)
+  const days    = [-2, -1, 0, 1, 2].map(d => addDays(center, d))
+  const monthLabel = format(today, "MMMM yyyy", { locale: ptBR })
+
+  const todayStr   = format(today, 'yyyy-MM-dd')
+  const todayItems = items.filter(i => i.scheduled_date === todayStr)
 
   return (
-    <div>
-      <div className="flex gap-1.5">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+      {/* Month + arrows */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setOffset(o => o - 5)}
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+        <h3 className="text-[13px] font-semibold text-gray-900 capitalize">{monthLabel}</h3>
+        <button
+          onClick={() => setOffset(o => o + 5)}
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Day labels */}
+      <div className="grid grid-cols-5 mb-2">
+        {days.map(day => (
+          <div key={day.toISOString()} className="text-center text-[10px] font-medium text-gray-400 py-1 capitalize">
+            {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
+          </div>
+        ))}
+      </div>
+
+      {/* Day numbers */}
+      <div className="grid grid-cols-5 gap-1 mb-5">
         {days.map(day => {
-          const dayStr = format(day, 'yyyy-MM-dd')
+          const dayStr  = format(day, 'yyyy-MM-dd')
           const dayItems = items.filter(i => i.scheduled_date === dayStr)
-          const active = isToday(day)
+          const active  = isSameDay(day, addDays(today, offset))
+            ? false
+            : false // Only today gets the dark pill
+          const isCurrentDay = isToday(day)
 
           return (
             <div
               key={dayStr}
               onClick={() => onDayClick(dayStr)}
-              onMouseEnter={() => dayItems.length > 0 ? setHoveredDay(dayStr) : null}
-              onMouseLeave={() => setHoveredDay(null)}
-              className={`relative flex-1 flex flex-col items-center py-3 px-1 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
-                active
+              className={`flex flex-col items-center py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
+                isCurrentDay
                   ? 'bg-gray-900'
                   : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
               }`}
             >
-              <span className={`text-[10px] font-medium mb-1 capitalize ${active ? 'text-white/60' : 'text-gray-400'}`}>
-                {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
-              </span>
-              <span className={`text-[15px] font-semibold leading-none ${active ? 'text-white' : 'text-gray-900'}`}>
+              <span className={`text-[15px] font-semibold leading-none ${isCurrentDay ? 'text-white' : 'text-gray-800'}`}>
                 {format(day, 'd')}
               </span>
-
               {dayItems.length > 0 && (
-                <div className="flex gap-0.5 mt-2 flex-wrap justify-center">
+                <div className="flex gap-0.5 mt-1.5 justify-center flex-wrap">
                   {dayItems.slice(0, 3).map(item => (
                     <div
                       key={item.id}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        active ? 'bg-white/70' : (statusDotColor[item.status] ?? 'bg-gray-400')
-                      }`}
+                      className={`w-1 h-1 rounded-full ${isCurrentDay ? 'bg-white/60' : (statusDotColor[item.status] ?? 'bg-gray-400')}`}
                     />
                   ))}
-                  {dayItems.length > 3 && (
-                    <span className={`text-[8px] font-bold ${active ? 'text-white/60' : 'text-gray-400'}`}>
-                      +{dayItems.length - 3}
-                    </span>
-                  )}
                 </div>
               )}
-
-              <AnimatePresence>
-                {hoveredDay === dayStr && dayItems.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
-                    transition={{ duration: 0.12 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-[160px] bg-gray-900 rounded-2xl shadow-xl p-2.5"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {dayItems.slice(0, 4).map(item => (
-                      <div key={item.id} className="flex items-start gap-1.5 py-0.5">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-[4px] flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-white/50'}`} />
-                        <p className="text-[10px] text-white/90 leading-snug line-clamp-2">{item.title}</p>
-                      </div>
-                    ))}
-                    {dayItems.length > 4 && (
-                      <p className="text-[9px] text-white/40 mt-1 text-center">+{dayItems.length - 4} mais</p>
-                    )}
-                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
-                      <div className="w-2 h-2 bg-gray-900 rotate-45 mx-auto" />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )
         })}
       </div>
 
-      <div className="flex items-center gap-3 mt-4 flex-wrap">
+      {/* Today's items */}
+      {todayItems.length === 0 ? (
+        <p className="text-[11px] text-gray-400 text-center py-2">Nenhum post hoje</p>
+      ) : (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Hoje</p>
+          {todayItems.slice(0, 3).map(item => (
+            <div key={item.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-50">
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-gray-300'}`} />
+              <p className="text-[12px] text-gray-800 truncate flex-1 font-medium">{item.title}</p>
+              <span className="text-[10px] text-gray-400 flex-shrink-0">
+                {contentTypeLabels[item.content_type as any] ?? item.content_type}
+              </span>
+            </div>
+          ))}
+          {todayItems.length > 3 && (
+            <Link to="/planner">
+              <p className="text-[11px] text-gray-400 hover:text-gray-700 text-center transition-colors mt-1">
+                +{todayItems.length - 3} mais →
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 mt-4 flex-wrap pt-4 border-t border-gray-50">
         {Object.entries(statusDotColor).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
-            <span className="text-[11px] text-gray-400 capitalize">
-              {status === 'producao' ? 'Produção' : status.charAt(0).toUpperCase() + status.slice(1)}
+            <span className="text-[10px] text-gray-400 capitalize">
+              {status === 'producao' ? 'Prod.' : status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
           </div>
         ))}
@@ -197,72 +285,84 @@ function MiniPlannerPreview({
   )
 }
 
-// ─── Smart Alerts ─────────────────────────────────────────────────────────────
+// ─── Alerts Widget ────────────────────────────────────────────────────────────
 
-function SmartAlerts({
+function AlertsWidget({
   pendingApproval,
   overdueTasks,
   pendingTasks,
+  weekApproved,
+  activeClients,
 }: {
   pendingApproval: number
   overdueTasks: number
   pendingTasks: number
+  weekApproved: number
+  activeClients: number
 }) {
-  const alerts: { icon: React.ElementType; text: string; color: string; bg: string; href: string }[] = []
+  const total = pendingApproval + overdueTasks
+  const allGood = total === 0
 
-  if (pendingApproval > 0) {
-    alerts.push({
-      icon: Clock,
-      text: `${pendingApproval} conteúdo${pendingApproval > 1 ? 's' : ''} aguardando aprovação`,
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
+  const rows: { icon: React.ElementType; label: string; value: number | string; color: string; bg: string; href: string }[] = [
+    {
+      icon: CheckCircle2,
+      label: 'Aprovados esta semana',
+      value: weekApproved,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
       href: '/planner',
-    })
-  }
-  if (overdueTasks > 0) {
-    alerts.push({
-      icon: AlertTriangle,
-      text: `${overdueTasks} tarefa${overdueTasks > 1 ? 's' : ''} atrasada${overdueTasks > 1 ? 's' : ''}`,
-      color: 'text-red-500',
-      bg: 'bg-red-50',
-      href: '/tasks',
-    })
-  }
-  if (pendingTasks > 0 && overdueTasks === 0) {
-    alerts.push({
+    },
+    {
+      icon: Clock,
+      label: 'Aguardando aprovação',
+      value: pendingApproval,
+      color: pendingApproval > 0 ? 'text-amber-600' : 'text-gray-500',
+      bg: pendingApproval > 0 ? 'bg-amber-50' : 'bg-gray-50',
+      href: '/planner',
+    },
+    {
       icon: CheckSquare,
-      text: `${pendingTasks} tarefa${pendingTasks > 1 ? 's' : ''} em aberto`,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
+      label: 'Tarefas em aberto',
+      value: pendingTasks,
+      color: pendingTasks > 0 ? 'text-blue-600' : 'text-gray-500',
+      bg: pendingTasks > 0 ? 'bg-blue-50' : 'bg-gray-50',
       href: '/tasks',
-    })
-  }
-
-  if (alerts.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-4 gap-2 text-center">
-        <div className="w-9 h-9 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-        </div>
-        <p className="text-[13px] font-medium text-gray-700">Tudo em ordem!</p>
-        <p className="text-[11px] text-gray-400">Nenhum alerta no momento</p>
-      </div>
-    )
-  }
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Tarefas atrasadas',
+      value: overdueTasks,
+      color: overdueTasks > 0 ? 'text-red-500' : 'text-gray-500',
+      bg: overdueTasks > 0 ? 'bg-red-50' : 'bg-gray-50',
+      href: '/tasks',
+    },
+  ]
 
   return (
-    <div className="space-y-2">
-      {alerts.map((alert, i) => (
-        <Link key={i} to={alert.href}>
-          <div className={`flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-gray-100 transition-all group cursor-pointer ${alert.bg}`}>
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 bg-white shadow-sm">
-              <alert.icon className={`w-3.5 h-3.5 ${alert.color}`} />
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${allGood ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+          {allGood
+            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            : <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
+          }
+        </div>
+        <h3 className="text-[14px] font-semibold text-gray-900">Resumo</h3>
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <Link key={i} to={row.href}>
+            <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer">
+              <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${row.bg}`}>
+                <row.icon className={`w-3.5 h-3.5 ${row.color}`} />
+              </div>
+              <p className="text-[12px] text-gray-600 flex-1 leading-snug">{row.label}</p>
+              <span className={`text-[14px] font-semibold tabular-nums ${row.color}`}>{row.value}</span>
             </div>
-            <p className={`text-[13px] font-medium flex-1 leading-snug ${alert.color}`}>{alert.text}</p>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
-          </div>
-        </Link>
-      ))}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
@@ -313,15 +413,10 @@ export function Dashboard() {
       supabase.from('contents').select('id, term, content_type, status, created_at, client:clients(company_name)').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('contents').select('created_at').eq('user_id', user!.id).gte('created_at', weekStartIso).lte('created_at', weekEndIso),
       supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
-      // Planner full: status + approval_status for 4-category chart
       supabase.from('planner').select('status, approval_status').eq('user_id', user!.id),
-      // Mini calendar (5-day window)
       supabase.from('planner').select('id, title, content_type, status, scheduled_date').eq('user_id', user!.id).gte('scheduled_date', calStart).lte('scheduled_date', calEnd),
-      // All pending approvals (for smart alerts) — status revisao + not yet resolved
       supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao'),
-      // This week's items in revisao (KPI card — filtered client-side)
       supabase.from('planner').select('id, approval_status').eq('user_id', user!.id).eq('status', 'revisao').gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate),
-      // This week's approved (KPI card)
       supabase.from('planner').select('id').eq('user_id', user!.id).gte('scheduled_date', weekStartDate).lte('scheduled_date', weekEndDate).eq('approval_status', 'aprovado'),
     ])
 
@@ -345,7 +440,6 @@ export function Dashboard() {
     setPlannerWeekItems((plannerCalRes.data || []) as PlannerDay[])
     setPendingApproval((pendingApprovalRes.data || []).filter(isAwaiting).length)
 
-    // Weekly bar chart (contents)
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
     const contents = allContentsRes.data || []
     setWeeklyData(days.map(day => ({
@@ -353,55 +447,52 @@ export function Dashboard() {
       conteudos: contents.filter(c => c.created_at.startsWith(format(day, 'yyyy-MM-dd'))).length,
     })))
 
-    // Asset types donut
     const typeMap: Record<string, number> = {}
     ;(assetsRes.data || []).forEach((a: any) => { typeMap[a.content_type] = (typeMap[a.content_type] || 0) + 1 })
     setAssetTypes(Object.entries(typeMap).map(([type, count]) => ({ type, count })))
 
-    // Legacy planner status (kept for fallback)
     const statusMap: Record<string, number> = {}
     ;(plannerFullRes.data || []).forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    // New 4-category planner chart
     const pList = plannerFullRes.data || []
     setPlannerChartData([
-      { label: 'Ideia',          value: pList.filter((p: any) => p.status === 'ideia').length,                      color: '#8b5cf6' },
-      { label: 'Revisão',        value: pList.filter((p: any) => p.status === 'revisao').length,                    color: '#f59e0b' },
-      { label: 'Ag. aprovação',  value: pList.filter((p: any) => p.status === 'revisao' && !NOT_AWAITING.includes(p.approval_status)).length, color: '#f97316' },
-      { label: 'Aprovado',       value: pList.filter((p: any) => p.approval_status === 'aprovado').length,          color: '#10b981' },
+      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,    color: '#8b5cf6' },
+      { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length,  color: '#f59e0b' },
+      { label: 'Ag. aprovação', value: pList.filter((p: any) => p.status === 'revisao' && !NOT_AWAITING.includes(p.approval_status)).length, color: '#f97316' },
+      { label: 'Aprovado',      value: pList.filter((p: any) => p.approval_status === 'aprovado').length, color: '#10b981' },
     ])
   }
 
-  function handleDayClick(_dateStr: string) {
-    navigate('/planner')
-  }
-
   return (
-    <div className="min-h-full bg-[#f5f6fa]">
+    <div className="min-h-full bg-[#f2f2f2]">
+
+      {/* ── Top Header ─────────────────────────────────────────────────────── */}
       <Header
         title="Dashboard"
         subtitle="Visão geral da operação"
         dark={false}
         action={
-          <Button asChild size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-xl border-0">
-            <Link to="/content"><Plus className="w-3.5 h-3.5 mr-1" /> Gerar conteúdo</Link>
+          <Button asChild size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-xl border-0 text-xs font-medium">
+            <Link to="/content"><Plus className="w-3.5 h-3.5 mr-1" /> Novo conteúdo</Link>
           </Button>
         }
       />
 
-      <div className="p-5 md:p-8 space-y-6">
+      {/* ── Filter Bar ─────────────────────────────────────────────────────── */}
+      <FilterBar />
 
-        {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
+      <div className="p-5 md:p-7 space-y-5">
+
+        {/* ── KPI Row ──────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
           <KpiCard
             label="Total de Clientes"
             value={stats.total_clients}
-            subtitle="total cadastrado"
+            subtitle="cadastrados"
             href="/clients"
             icon={Users}
-            iconBg="bg-gray-100"
-            iconColor="text-gray-500"
+            featured
           />
           <KpiCard
             label="Clientes Ativos"
@@ -409,8 +500,6 @@ export function Dashboard() {
             subtitle="em operação"
             href="/clients"
             icon={TrendingUp}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
           />
           <KpiCard
             label="Tarefas Pendentes"
@@ -418,17 +507,13 @@ export function Dashboard() {
             subtitle="em aberto"
             href="/tasks"
             icon={CheckSquare}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-500"
           />
           <KpiCard
             label="Tarefas Atrasadas"
             value={stats.overdue_tasks}
-            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'nenhuma atrasada'}
+            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'em dia'}
             href="/tasks"
             icon={AlertTriangle}
-            iconBg="bg-red-50"
-            iconColor="text-red-400"
             warning
           />
           <KpiCard
@@ -437,8 +522,6 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={Clock}
-            iconBg="bg-orange-50"
-            iconColor="text-orange-500"
           />
           <KpiCard
             label="Aprovados"
@@ -446,15 +529,13 @@ export function Dashboard() {
             subtitle="esta semana"
             href="/planner"
             icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
           />
         </div>
 
-        {/* ── Main Grid ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Main Grid ────────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-          {/* LEFT: Métricas */}
+          {/* Charts — 2/3 */}
           <div className="lg:col-span-2">
             <MetricsCarousel
               weeklyData={weeklyData}
@@ -467,87 +548,38 @@ export function Dashboard() {
             />
           </div>
 
-          {/* RIGHT: Calendário + Alertas */}
+          {/* Right column — 1/3 */}
           <div className="flex flex-col gap-5">
 
-            {/* Mini Planner Calendar */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900">Próximos dias</h3>
-                  <p className="text-[11px] text-gray-400 mt-0.5 capitalize">
-                    {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
-                  </p>
-                </div>
-                <Link to="/planner">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-700 transition-colors">
-                    <CalendarDays className="w-3.5 h-3.5" />
-                    <span>Planejamento</span>
-                  </div>
-                </Link>
-              </div>
+            {/* Calendar widget */}
+            <CalendarWidget
+              items={plannerWeekItems}
+              onDayClick={() => navigate('/planner')}
+            />
 
-              <MiniPlannerPreview items={plannerWeekItems} onDayClick={handleDayClick} />
-
-              {(() => {
-                const todayStr   = format(new Date(), 'yyyy-MM-dd')
-                const todayItems = plannerWeekItems.filter(i => i.scheduled_date === todayStr)
-                if (todayItems.length === 0) return (
-                  <p className="text-[11px] text-gray-400 text-center mt-5">
-                    Nenhum post agendado para hoje
-                  </p>
-                )
-                return (
-                  <div className="mt-5 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Hoje</p>
-                    {todayItems.slice(0, 3).map(item => (
-                      <div key={item.id} className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-gray-50">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-gray-300'}`} />
-                        <p className="text-[12px] text-gray-800 truncate flex-1 font-medium">{item.title}</p>
-                        <span className="text-[10px] text-gray-400 flex-shrink-0">
-                          {contentTypeLabels[item.content_type as any] ?? item.content_type}
-                        </span>
-                      </div>
-                    ))}
-                    {todayItems.length > 3 && (
-                      <Link to="/planner">
-                        <p className="text-[11px] text-gray-400 hover:text-gray-700 text-center transition-colors mt-1">
-                          +{todayItems.length - 3} mais →
-                        </p>
-                      </Link>
-                    )}
-                  </div>
-                )
-              })()}
-            </div>
-
-            {/* Smart Alerts */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center">
-                  <BarChart2 className="w-3.5 h-3.5 text-gray-500" />
-                </div>
-                <h3 className="text-[14px] font-semibold text-gray-900">Atenção</h3>
-              </div>
-              <SmartAlerts
-                pendingApproval={pendingApproval}
-                overdueTasks={stats.overdue_tasks}
-                pendingTasks={stats.pending_tasks}
-              />
-            </div>
+            {/* Alerts/Summary widget */}
+            <AlertsWidget
+              pendingApproval={pendingApproval}
+              overdueTasks={stats.overdue_tasks}
+              pendingTasks={stats.pending_tasks}
+              weekApproved={stats.week_approved}
+              activeClients={stats.active_clients}
+            />
 
           </div>
         </div>
 
-        {/* ── Conteúdos Recentes ────────────────────────────────────────────── */}
+        {/* ── Recent Contents Table ─────────────────────────────────────────── */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-50">
+
+          {/* Table header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
             <div>
               <h3 className="text-[14px] font-semibold text-gray-900">Conteúdos Recentes</h3>
-              <p className="text-[11px] text-gray-400 mt-0.5">Últimos conteúdos gerados</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Últimos conteúdos gerados pelo sistema</p>
             </div>
             <Link to="/history">
-              <div className="flex items-center gap-1 text-[12px] text-gray-400 hover:text-gray-700 transition-colors font-medium">
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-gray-400 hover:text-gray-800 transition-colors">
                 Ver todos <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </Link>
@@ -560,29 +592,51 @@ export function Dashboard() {
               </div>
               <div>
                 <p className="text-[14px] font-medium text-gray-600">Nenhum conteúdo gerado ainda</p>
-                <p className="text-[12px] text-gray-400 mt-0.5">Crie seu primeiro conteúdo agora</p>
+                <p className="text-[12px] text-gray-400 mt-0.5">Gere seu primeiro conteúdo agora</p>
               </div>
               <Button asChild size="sm" variant="outline" className="mt-1 rounded-xl">
                 <Link to="/content">Gerar conteúdo</Link>
               </Button>
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
-              {recentContents.map(c => (
-                <div key={c.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/70 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-gray-900 truncate">{c.term}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      {(c.client as any)?.company_name || 'Sem cliente'} · {formatRelative(c.created_at)}
+            <>
+              {/* Column headers */}
+              <div className="hidden sm:grid grid-cols-[1fr_160px_120px_100px] gap-4 px-6 py-2.5 bg-gray-50/60 border-b border-gray-50">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Conteúdo</span>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</span>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</span>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Status</span>
+              </div>
+
+              {/* Rows */}
+              <div className="divide-y divide-gray-50">
+                {recentContents.map(c => (
+                  <div
+                    key={c.id}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr_160px_120px_100px] gap-1 sm:gap-4 items-center px-6 py-3.5 hover:bg-gray-50/70 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-gray-900 truncate">{c.term}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 sm:hidden">
+                        {(c.client as any)?.company_name || 'Sem cliente'} · {formatRelative(c.created_at)}
+                      </p>
+                    </div>
+                    <p className="hidden sm:block text-[12px] text-gray-500 truncate">
+                      {(c.client as any)?.company_name || <span className="text-gray-300">—</span>}
                     </p>
+                    <p className="hidden sm:block text-[12px] text-gray-500">
+                      {contentTypeLabels[c.content_type]}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge status={c.status} />
+                      <span className="hidden sm:block text-[10px] text-gray-400 whitespace-nowrap">
+                        {formatRelative(c.created_at)}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] text-gray-400 hidden sm:block flex-shrink-0">
-                    {contentTypeLabels[c.content_type]}
-                  </span>
-                  <Badge status={c.status} />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
