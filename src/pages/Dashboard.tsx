@@ -22,19 +22,17 @@ import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
 
 // ─── Approval helpers (única fonte de verdade) ───────────────────────────────
 //
-// Regra alinhada com o filtro "Pendentes" do Planejamento:
-//   status === 'revisao'
-//   E approval_status NÃO é um estado concluído
+// Regra EXATAMENTE alinhada com o filtro "Pendentes" do Planejamento:
+//   (i.approval_status || 'pendente_aprovacao') === 'pendente_aprovacao'
 //
-// 'ajuste_realizado' conta como aguardando: o ajuste foi feito e voltou pro cliente revisar.
-// 'ajuste_solicitado' NÃO conta: a bola está com a agência, não com o cliente.
-const CONCLUDED_APPROVAL_STATUSES = ['aprovado', 'reprovado', 'ajuste_solicitado'] as const
-
-function isAwaitingApproval(item: { status: string; approval_status: string | null }): boolean {
-  return (
-    item.status === 'revisao' &&
-    !CONCLUDED_APPROVAL_STATUSES.includes(item.approval_status as typeof CONCLUDED_APPROVAL_STATUSES[number])
-  )
+// O Planejamento NÃO filtra por status de produção (ideia/producao/revisao/etc.).
+// Qualquer item cujo approval_status seja null, vazio ou 'pendente_aprovacao' é "pendente".
+// Também contamos 'ajuste_realizado': o ajuste foi feito e voltou para o cliente revisar.
+//
+// NÃO contam: 'aprovado', 'reprovado', 'ajuste_solicitado'
+function isAwaitingApproval(item: { approval_status: string | null }): boolean {
+  const as = item.approval_status
+  return as !== 'aprovado' && as !== 'reprovado' && as !== 'ajuste_solicitado'
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
