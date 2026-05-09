@@ -20,6 +20,23 @@ import {
 import { ptBR } from 'date-fns/locale'
 import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
 
+// ─── Approval helpers (única fonte de verdade) ───────────────────────────────
+//
+// Regra alinhada com o filtro "Pendentes" do Planejamento:
+//   status === 'revisao'
+//   E approval_status NÃO é um estado concluído
+//
+// 'ajuste_realizado' conta como aguardando: o ajuste foi feito e voltou pro cliente revisar.
+// 'ajuste_solicitado' NÃO conta: a bola está com a agência, não com o cliente.
+const CONCLUDED_APPROVAL_STATUSES = ['aprovado', 'reprovado', 'ajuste_solicitado'] as const
+
+function isAwaitingApproval(item: { status: string; approval_status: string | null }): boolean {
+  return (
+    item.status === 'revisao' &&
+    !CONCLUDED_APPROVAL_STATUSES.includes(item.approval_status as typeof CONCLUDED_APPROVAL_STATUSES[number])
+  )
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PeriodMode = 'dia' | 'semana' | 'mes' | 'ano' | 'custom'
@@ -475,7 +492,6 @@ export function Dashboard() {
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
   const [plannerChartData, setPlannerChartData] = useState<PlannerChartEntry[]>([])
   const [plannerCalItems, setPlannerCalItems]   = useState<PlannerDay[]>([])
-  const [pendingApproval, setPendingApproval]   = useState(0)
 
   // ── Re-fetch whenever user or range changes ───────────────────────────────
   useEffect(() => {
@@ -485,18 +501,15 @@ export function Dashboard() {
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   async function fetchStats({ start, end }: DateRange) {
-    const now         = new Date()
-    const startIso    = start.toISOString()
-    const endIso      = end.toISOString()
-    const startDate   = format(start, 'yyyy-MM-dd')
-    const endDate     = format(end,   'yyyy-MM-dd')
+    const now       = new Date()
+    const startIso  = start.toISOString()
+    const endIso    = end.toISOString()
+    const startDate = format(start, 'yyyy-MM-dd')
+    const endDate   = format(end,   'yyyy-MM-dd')
 
-    // Calendar window: 2 days around today
+    // Calendar widget: janela fixa de ±2 dias em torno de hoje
     const calStart = format(subDays(now, 2), 'yyyy-MM-dd')
     const calEnd   = format(addDays(now, 2), 'yyyy-MM-dd')
-
-    const NOT_AWAITING = ['aprovado', 'reprovado', 'ajuste_solicitado']
-    const isAwaiting = (p: any) => !NOT_AWAITING.includes(p.approval_status)
 
     const [
       clientsRes,
@@ -506,16 +519,14 @@ export function Dashboard() {
       assetsRes,
       plannerRes,
       plannerCalRes,
-      pendingApprovalRes,
-      periodApprovedRes,
     ] = await Promise.all([
-      // Clients — always global (no reliable period date)
+      // Clientes — sempre global
       supabase.from('clients').select('id, status').eq('user_id', user!.id),
 
-      // Tasks — all non-completed (filtered client-side by due_date)
+      // Tarefas — todas não concluídas (filtro de período no cliente)
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
 
-      // Recent contents — filtered by period
+      // Conteúdos recentes — filtrados pelo período
       supabase.from('contents')
         .select('id, term, content_type, status, created_at, client:clients(company_name)')
         .eq('user_id', user!.id)
@@ -524,93 +535,82 @@ export function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(5),
 
-      // All contents in period (for bar chart)
+      // Todos os conteúdos do período (para gráfico de barras)
       supabase.from('contents')
         .select('created_at')
         .eq('user_id', user!.id)
         .gte('created_at', startIso)
         .lte('created_at', endIso),
 
-      // Assets — always global (arsenal doesn't have a period concept)
+      // Arsenal — sempre global
       supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
 
-      // Planner — filtered by period
+      // Planner — itens do período (todas as colunas necessárias para todos os cálculos)
+      // Derivamos pendentes, aprovados e gráfico a partir deste único resultado
+      // usando isAwaitingApproval() — mesma regra do filtro "Pendentes" do Planejamento
       supabase.from('planner')
         .select('status, approval_status')
         .eq('user_id', user!.id)
         .gte('scheduled_date', startDate)
         .lte('scheduled_date', endDate),
 
-      // Calendar items — always around today (independent of period)
+      // Calendário — janela ao redor de hoje (independe do período selecionado)
       supabase.from('planner')
         .select('id, title, content_type, status, scheduled_date')
         .eq('user_id', user!.id)
         .gte('scheduled_date', calStart)
         .lte('scheduled_date', calEnd),
-
-      // Pending approval in period
-      supabase.from('planner')
-        .select('id, approval_status')
-        .eq('user_id', user!.id)
-        .eq('status', 'revisao')
-        .gte('scheduled_date', startDate)
-        .lte('scheduled_date', endDate),
-
-      // Approved in period
-      supabase.from('planner')
-        .select('id')
-        .eq('user_id', user!.id)
-        .eq('approval_status', 'aprovado')
-        .gte('scheduled_date', startDate)
-        .lte('scheduled_date', endDate),
     ])
 
     const clients  = clientsRes.data  || []
     const taskList = tasksRes.data    || []
 
-    // Tasks filtered by period: include tasks with due_date in range OR no due_date
+    // Tarefas do período: inclui tarefas sem prazo (due_date null = sempre pendente)
     const periodTasks = taskList.filter(t => {
       if (!t.due_date) return true
       const d = new Date(t.due_date)
       return d >= start && d <= end
     })
-    // Overdue: global metric (due_date < today, any period)
+    // Atrasadas: métrica global (independe do período)
     const overdue = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
 
-    const pendingInPeriod = (pendingApprovalRes.data || []).filter(isAwaiting)
+    // ── Derivar TODOS os contadores de aprovação a partir de plannerRes ────────
+    // Usa isAwaitingApproval() — única fonte de verdade, alinhada com o Planner
+    const pList = plannerRes.data || []
+    const period_pending_approval = pList.filter(isAwaitingApproval).length
+    const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
 
     setStats({
-      total_clients:           clients.length,
-      active_clients:          clients.filter(c => c.status === 'ativo').length,
-      pending_tasks:           periodTasks.length,
-      overdue_tasks:           overdue,
-      period_pending_approval: pendingInPeriod.length,
-      period_approved:         periodApprovedRes.data?.length || 0,
+      total_clients:  clients.length,
+      active_clients: clients.filter(c => c.status === 'ativo').length,
+      pending_tasks:  periodTasks.length,
+      overdue_tasks:  overdue,
+      period_pending_approval,
+      period_approved,
     })
 
     setRecentContents(recentRes.data || [])
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
-    setPendingApproval(pendingInPeriod.length)
 
-    // Bar chart
+    // Gráfico de barras de conteúdos
     setWeeklyData(buildBarData(periodMode, { start, end }, contentsRes.data || []))
 
-    // Assets donut
+    // Donut do arsenal
     const typeMap: Record<string, number> = {}
     ;(assetsRes.data || []).forEach((a: any) => { typeMap[a.content_type] = (typeMap[a.content_type] || 0) + 1 })
     setAssetTypes(Object.entries(typeMap).map(([type, count]) => ({ type, count })))
 
-    // Planner status breakdown
+    // Status breakdown do planner
     const statusMap: Record<string, number> = {}
-    ;(plannerRes.data || []).forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
+    pList.forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    const pList = plannerRes.data || []
+    // Gráfico de planejamento — "Ag. aprovação" usa isAwaitingApproval()
     setPlannerChartData([
-      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,    color: '#8b5cf6' },
-      { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length,  color: '#f59e0b' },
-      { label: 'Ag. aprovação', value: pList.filter((p: any) => p.status === 'revisao' && !NOT_AWAITING.includes(p.approval_status)).length, color: '#f97316' },
-      { label: 'Aprovado',      value: pList.filter((p: any) => p.approval_status === 'aprovado').length, color: '#10b981' },
+      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#8b5cf6' },
+      { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
+      { label: 'Ag. aprovação', value: pList.filter(isAwaitingApproval).length,                 color: '#f97316' },
+      { label: 'Aprovado',      value: period_approved,                                          color: '#10b981' },
     ])
   }
 
@@ -675,7 +675,7 @@ export function Dashboard() {
               onDayClick={() => navigate('/planner')}
             />
             <AlertsWidget
-              pendingApproval={pendingApproval}
+              pendingApproval={stats.period_pending_approval}
               overdueTasks={stats.overdue_tasks}
               pendingTasks={stats.pending_tasks}
               periodApproved={stats.period_approved}
