@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
-import { useClients, useDeleteClient, useUpdateClient } from '@/hooks/useClients'
+import { useClients, useDeleteClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
+import { useQueryClient } from '@tanstack/react-query'
 
 // ─── Gradientes disponíveis ───────────────────────────────────────────────────
 
@@ -65,10 +66,10 @@ interface ClientStats {
 
 export function ClientList() {
   const { data: clients = [], isLoading } = useClients()
-  const deleteClient  = useDeleteClient()
-  const updateClient  = useUpdateClient()
-  const { toast }     = useToast()
-  const navigate      = useNavigate()
+  const deleteClient = useDeleteClient()
+  const { toast }    = useToast()
+  const navigate     = useNavigate()
+  const queryClient  = useQueryClient()
 
   const [search, setSearch]         = useState('')
   const [filter, setFilter]         = useState<'all' | 'ativo' | 'pausado' | 'encerrado'>('all')
@@ -116,8 +117,15 @@ export function ClientList() {
     setPickerOpen(null)
     setSaving(clientId)
     try {
-      await updateClient.mutateAsync({ id: clientId, card_gradient: gradientId } as any)
-    } catch {
+      const { error } = await supabase
+        .from('clients')
+        .update({ card_gradient: gradientId } as any)
+        .eq('id', clientId)
+      if (error) throw error
+      // Atualiza o cache local sem precisar de refetch completo
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+    } catch (err) {
+      console.error('[changeBanner]', err)
       toast('Erro ao salvar cor do banner.', 'error')
     } finally {
       setSaving(null)
