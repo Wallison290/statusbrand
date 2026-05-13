@@ -435,37 +435,57 @@ export function ClientList() {
                         {/* ── Divider ── */}
                         <div className="border-t border-[#f1f5f9] mb-3" />
 
-                        {/* ── Métricas coloridas 2×2 ── */}
+                        {/* ── Métricas coloridas sólidas 2×2 ── */}
                         <div className="grid grid-cols-2 gap-2">
 
-                          {/* Pendentes */}
-                          <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-100">
-                            <span className="text-[11px] font-medium text-amber-700 leading-tight">Pendentes</span>
-                            <span className="text-[14px] font-bold text-amber-500 ml-1 flex-shrink-0">
+                          {/* Pendentes — âmbar sólido */}
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                            style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' }}
+                          >
+                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                              Pendentes
+                            </span>
+                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
                               {clientStats.pendentes}
                             </span>
                           </div>
 
-                          {/* Aprovados */}
-                          <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                            <span className="text-[11px] font-medium text-emerald-700 leading-tight">Aprovados</span>
-                            <span className="text-[14px] font-bold text-emerald-500 ml-1 flex-shrink-0">
+                          {/* Aprovados — verde sólido */}
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                            style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
+                          >
+                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                              Aprovados
+                            </span>
+                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
                               {clientStats.aprovados}
                             </span>
                           </div>
 
-                          {/* Ajustes solicitados */}
-                          <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-100">
-                            <span className="text-[11px] font-medium text-orange-700 leading-tight">Ajustes solicitados</span>
-                            <span className="text-[14px] font-bold text-orange-500 ml-1 flex-shrink-0">
+                          {/* Ajustes solicitados — laranja sólido */}
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
+                          >
+                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                              Ajustes solicitados
+                            </span>
+                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
                               {clientStats.ajuste_solicitado}
                             </span>
                           </div>
 
-                          {/* Reprovados */}
-                          <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-red-50 border border-red-100">
-                            <span className="text-[11px] font-medium text-red-600 leading-tight">Reprovados</span>
-                            <span className="text-[14px] font-bold text-red-400 ml-1 flex-shrink-0">
+                          {/* Reprovados — vermelho sólido */}
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                            style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
+                          >
+                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                              Reprovados
+                            </span>
+                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
                               {clientStats.reprovado}
                             </span>
                           </div>
