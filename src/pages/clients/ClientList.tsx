@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
-import { useClients, useDeleteClient } from '@/hooks/useClients'
+import { useClients, useDeleteClient, useUpdateClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
 
-// ─── Gradientes disponíveis para o banner ────────────────────────────────────
+// ─── Gradientes disponíveis ───────────────────────────────────────────────────
 
 const GRADIENTS = [
   { id: 'sunset',       value: 'linear-gradient(135deg, #f97316 0%, #fbbf24 100%)',   preview: ['#f97316', '#fbbf24'] },
@@ -27,23 +27,10 @@ const GRADIENTS = [
 
 const DEFAULT_GRADIENT_ID = 'sunset'
 
-function loadBannerGradient(clientId: string): string {
-  try {
-    const saved = localStorage.getItem(`banner_${clientId}`)
-    const found = GRADIENTS.find(g => g.id === saved)
-    return found ? found.value : GRADIENTS[0].value
-  } catch { return GRADIENTS[0].value }
-}
-
-function saveBannerGradient(clientId: string, gradientId: string) {
-  try { localStorage.setItem(`banner_${clientId}`, gradientId) } catch {}
-}
-
-function getDefaultGradientId(clientId: string): string {
-  try {
-    const saved = localStorage.getItem(`banner_${clientId}`)
-    return GRADIENTS.find(g => g.id === saved) ? saved! : DEFAULT_GRADIENT_ID
-  } catch { return DEFAULT_GRADIENT_ID }
+/** Converte ID → valor CSS do gradiente */
+function gradientById(id: string | null | undefined): string {
+  const found = GRADIENTS.find(g => g.id === id)
+  return found ? found.value : GRADIENTS[0].value
 }
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -78,25 +65,18 @@ interface ClientStats {
 
 export function ClientList() {
   const { data: clients = [], isLoading } = useClients()
-  const deleteClient = useDeleteClient()
-  const { toast }    = useToast()
-  const navigate     = useNavigate()
+  const deleteClient  = useDeleteClient()
+  const updateClient  = useUpdateClient()
+  const { toast }     = useToast()
+  const navigate      = useNavigate()
 
   const [search, setSearch]         = useState('')
   const [filter, setFilter]         = useState<'all' | 'ativo' | 'pausado' | 'encerrado'>('all')
   const [sort, setSort]             = useState('nome_az')
   const [showSort, setShowSort]     = useState(false)
   const [stats, setStats]           = useState<Record<string, ClientStats>>({})
-  const [banners, setBanners]       = useState<Record<string, string>>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
-
-  // ── Carrega gradientes salvos quando clients chegam ───────────────────────
-  useEffect(() => {
-    if (!clients.length) return
-    const map: Record<string, string> = {}
-    clients.forEach(c => { map[c.id] = loadBannerGradient(c.id) })
-    setBanners(map)
-  }, [clients.map(c => c.id).join()])
+  const [saving, setSaving]         = useState<string | null>(null) // clientId sendo salvo
 
   // ── Carrega stats do planner por cliente ──────────────────────────────────
   useEffect(() => {
@@ -130,13 +110,18 @@ export function ClientList() {
     fetchStats()
   }, [clients.map(c => c.id).join()])
 
-  // ── Troca gradiente ───────────────────────────────────────────────────────
-  function changeBanner(clientId: string, gradientId: string) {
-    const found = GRADIENTS.find(g => g.id === gradientId)
-    if (!found) return
-    saveBannerGradient(clientId, gradientId)
-    setBanners(prev => ({ ...prev, [clientId]: found.value }))
+  // ── Troca gradiente — persiste no Supabase ────────────────────────────────
+  async function changeBanner(clientId: string, gradientId: string) {
+    if (saving === clientId) return
     setPickerOpen(null)
+    setSaving(clientId)
+    try {
+      await updateClient.mutateAsync({ id: clientId, card_gradient: gradientId } as any)
+    } catch {
+      toast('Erro ao salvar cor do banner.', 'error')
+    } finally {
+      setSaving(null)
+    }
   }
 
   // ── Filtragem e ordenação ─────────────────────────────────────────────────
@@ -172,7 +157,7 @@ export function ClientList() {
   return (
     <div className="min-h-full flex flex-col">
 
-      {/* ── Header da página ──────────────────────────────────────────────────── */}
+      {/* ── Header ───────────────────────────────────────────────────────────── */}
       <Header
         title="Clientes"
         subtitle={`${clients.length} cliente${clients.length === 1 ? '' : 's'} cadastrado${clients.length === 1 ? '' : 's'}`}
@@ -185,11 +170,11 @@ export function ClientList() {
         }
       />
 
-      {/* ── Conteúdo ──────────────────────────────────────────────────────────── */}
+      {/* ── Conteúdo ─────────────────────────────────────────────────────────── */}
       <div className="flex-1" style={{ background: '#f5f7fb' }}>
         <div className="px-4 sm:px-6 pt-6 pb-12 space-y-5">
 
-          {/* ── Toolbar: busca + sort ────────────────────────────────────────── */}
+          {/* ── Toolbar ───────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
@@ -202,7 +187,6 @@ export function ClientList() {
               />
             </div>
 
-            {/* Sort */}
             <div className="relative">
               <button
                 onClick={() => setShowSort(o => !o)}
@@ -229,7 +213,7 @@ export function ClientList() {
             </div>
           </div>
 
-          {/* ── Filter pills ────────────────────────────────────────────────── */}
+          {/* ── Filtros ───────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-2 flex-wrap">
             {([
               { value: 'all',       label: 'Todos'      },
@@ -252,7 +236,7 @@ export function ClientList() {
             ))}
           </div>
 
-          {/* ── Skeleton loading ──────────────────────────────────────────────── */}
+          {/* ── Skeleton ─────────────────────────────────────────────────────── */}
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {[...Array(6)].map((_, i) => (
@@ -302,12 +286,14 @@ export function ClientList() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               <AnimatePresence>
                 {filtered.map((client, i) => {
-                  const cfg             = STATUS_CFG[client.status] || STATUS_CFG.ativo
-                  const initials        = client.company_name.slice(0, 2).toUpperCase()
-                  const banner          = banners[client.id] || GRADIENTS[0].value
-                  const clientStats     = stats[client.id] || { pendentes: 0, aprovados: 0, ajuste_solicitado: 0, reprovado: 0 }
-                  const isPickerOpen    = pickerOpen === client.id
-                  const savedGradientId = getDefaultGradientId(client.id)
+                  const cfg          = STATUS_CFG[client.status] || STATUS_CFG.ativo
+                  const initials     = client.company_name.slice(0, 2).toUpperCase()
+                  // ← fonte de verdade única: campo do banco (card_gradient)
+                  const gradientId   = client.card_gradient || DEFAULT_GRADIENT_ID
+                  const banner       = gradientById(gradientId)
+                  const clientStats  = stats[client.id] || { pendentes: 0, aprovados: 0, ajuste_solicitado: 0, reprovado: 0 }
+                  const isPickerOpen = pickerOpen === client.id
+                  const isSaving     = saving === client.id
 
                   return (
                     <motion.div
@@ -321,24 +307,25 @@ export function ClientList() {
                       className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm hover:shadow-xl hover:border-[#d0d8e8] transition-all cursor-pointer overflow-hidden group relative"
                     >
 
-                      {/* ── Banner gradiente ────────────────────────────────── */}
+                      {/* ── Banner gradiente ──────────────────────────────────── */}
                       <div
                         className="relative h-28 flex-shrink-0"
                         style={{ background: banner }}
                       >
-                        {/* Overlay sutil para profundidade */}
                         <div className="absolute inset-0 bg-black/5 rounded-t-2xl" />
 
-                        {/* Botão paleta — aparece no hover */}
+                        {/* Botão paleta */}
                         <button
                           onClick={e => { e.stopPropagation(); setPickerOpen(isPickerOpen ? null : client.id) }}
                           className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-white/25 hover:bg-white/55 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                           title="Mudar cor do banner"
                         >
-                          <Palette className="w-3.5 h-3.5 text-white drop-shadow" />
+                          {isSaving
+                            ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            : <Palette className="w-3.5 h-3.5 text-white drop-shadow" />}
                         </button>
 
-                        {/* Botão deletar — aparece no hover */}
+                        {/* Botão deletar */}
                         <button
                           onClick={e => handleDelete(e, client.id, client.company_name)}
                           className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/25 hover:bg-red-500/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
@@ -347,7 +334,7 @@ export function ClientList() {
                           <Trash2 className="w-3.5 h-3.5 text-white drop-shadow" />
                         </button>
 
-                        {/* ── Gradient picker dropdown ──────────────────────── */}
+                        {/* ── Gradient picker ────────────────────────────────── */}
                         {isPickerOpen && (
                           <>
                             <div
@@ -370,7 +357,7 @@ export function ClientList() {
                                     style={{ background: `linear-gradient(135deg, ${g.preview[0]} 0%, ${g.preview[1]} 100%)` }}
                                     title={g.id}
                                   >
-                                    {savedGradientId === g.id && (
+                                    {gradientId === g.id && (
                                       <span className="absolute inset-0 rounded-full ring-2 ring-white ring-offset-[2px] ring-offset-[#0f0f0f]" />
                                     )}
                                   </button>
@@ -380,7 +367,7 @@ export function ClientList() {
                           </>
                         )}
 
-                        {/* ── Avatar sobreposto ──────────────────────────────── */}
+                        {/* ── Avatar ────────────────────────────────────────── */}
                         <div className="absolute -bottom-7 left-5 z-10">
                           {client.logo_url ? (
                             <img
@@ -399,10 +386,10 @@ export function ClientList() {
                         </div>
                       </div>
 
-                      {/* ── Body do card ────────────────────────────────────── */}
+                      {/* ── Body ──────────────────────────────────────────────── */}
                       <div className="pt-10 px-5 pb-5">
 
-                        {/* ── Nome + badge status ── */}
+                        {/* Nome + status */}
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
@@ -415,7 +402,7 @@ export function ClientList() {
                           </span>
                         </div>
 
-                        {/* ── Handle Instagram ── */}
+                        {/* Handle */}
                         {client.instagram && (
                           <div className="flex items-center gap-1.5 ml-4 mb-2.5">
                             <Instagram className="w-3 h-3 text-pink-400 flex-shrink-0" />
@@ -425,20 +412,18 @@ export function ClientList() {
                           </div>
                         )}
 
-                        {/* ── Nicho badge ── */}
+                        {/* Nicho */}
                         <div className="ml-4 mb-4">
                           <span className="inline-flex items-center text-[11px] font-medium text-[#555] bg-[#f1f5f9] border border-[#e2e8f0] px-2.5 py-1 rounded-full max-w-full truncate">
                             {client.niche}
                           </span>
                         </div>
 
-                        {/* ── Divider ── */}
                         <div className="border-t border-[#f1f5f9] mb-3" />
 
-                        {/* ── Métricas coloridas sólidas 2×2 ── */}
+                        {/* ── Métricas sólidas 2×2 ── */}
                         <div className="grid grid-cols-2 gap-2">
 
-                          {/* Pendentes — âmbar sólido */}
                           <div
                             className="flex items-center justify-between px-3 py-2.5 rounded-xl"
                             style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' }}
@@ -451,7 +436,6 @@ export function ClientList() {
                             </span>
                           </div>
 
-                          {/* Aprovados — verde sólido */}
                           <div
                             className="flex items-center justify-between px-3 py-2.5 rounded-xl"
                             style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
@@ -464,7 +448,6 @@ export function ClientList() {
                             </span>
                           </div>
 
-                          {/* Ajustes solicitados — laranja sólido */}
                           <div
                             className="flex items-center justify-between px-3 py-2.5 rounded-xl"
                             style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
@@ -477,7 +460,6 @@ export function ClientList() {
                             </span>
                           </div>
 
-                          {/* Reprovados — vermelho sólido */}
                           <div
                             className="flex items-center justify-between px-3 py-2.5 rounded-xl"
                             style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}

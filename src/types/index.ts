@@ -48,6 +48,7 @@ export interface Client {
   financial_status: FinancialStatus | null
   last_payment_date: string | null
   manual_status_override: boolean | null
+  card_gradient?: string | null
   created_at: string
   updated_at: string
 }
