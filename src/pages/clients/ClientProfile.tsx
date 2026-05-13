@@ -50,10 +50,10 @@ function AssetCard({
   const isImage = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
 
   return (
-    <div className="group relative rounded-lg border border-white/[0.06] overflow-hidden bg-[#111113]">
+    <div className="group relative rounded-xl border border-[#e2e8f0] overflow-hidden bg-white shadow-sm">
       {/* Preview */}
       <div
-        className="aspect-square overflow-hidden bg-white/[0.03] cursor-pointer"
+        className="aspect-square overflow-hidden bg-[#f8fafc] cursor-pointer"
         onClick={onView}
       >
         {isImage ? (
@@ -64,35 +64,35 @@ function AssetCard({
           />
         ) : asset.media_url ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
-            <ImageIcon className="w-7 h-7 text-zinc-600" />
-            <span className="text-[10px] text-zinc-600">
+            <ImageIcon className="w-7 h-7 text-[#c8d4e4]" />
+            <span className="text-[10px] text-[#9ca3af]">
               {asset.media_url.split('.').pop()?.split('?')[0]?.toUpperCase() || 'ARQUIVO'}
             </span>
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-7 h-7 text-zinc-700" />
+            <ImageIcon className="w-7 h-7 text-[#c8d4e4]" />
           </div>
         )}
       </div>
 
       {/* Info */}
       <div className="px-2.5 pt-2 pb-1.5">
-        <p className="text-[12px] font-normal text-zinc-200 truncate">{asset.title}</p>
-        <p className="text-[11px] text-zinc-600 mt-0.5">{contentTypeLabels[asset.content_type]}</p>
+        <p className="text-[12px] font-normal text-[#0f0f0f] truncate">{asset.title}</p>
+        <p className="text-[11px] text-[#9ca3af] mt-0.5">{contentTypeLabels[asset.content_type]}</p>
       </div>
 
       {/* Actions */}
       {confirming ? (
         <div className="px-2 pb-2 flex items-center gap-1.5">
-          <span className="text-[10px] text-zinc-500 flex-1">Excluir?</span>
+          <span className="text-[10px] text-[#9ca3af] flex-1">Excluir?</span>
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setConfirming(false)}>
             Não
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 px-2 text-[10px] text-red-400 hover:text-red-300"
+            className="h-6 px-2 text-[10px] text-red-500 hover:text-red-600"
             onClick={() => { setConfirming(false); onDelete() }}
           >
             Sim
@@ -103,7 +103,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-zinc-500 hover:text-zinc-200"
+            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-[#374151]"
             onClick={onView}
           >
             <Eye className="w-3 h-3" />
@@ -111,7 +111,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-zinc-500 hover:text-zinc-200"
+            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-[#374151]"
             onClick={onEdit}
           >
             <Pencil className="w-3 h-3" />
@@ -119,7 +119,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-zinc-500 hover:text-red-400 ml-auto"
+            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-red-500 ml-auto"
             onClick={() => setConfirming(true)}
           >
             <Trash2 className="w-3 h-3" />
@@ -151,7 +151,7 @@ function AssetViewDialog({
       <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-[14px] break-words">{asset.title}</DialogTitle>
-          <p className="text-[11px] text-zinc-500 mt-0.5">
+          <p className="text-[11px] text-[#9ca3af] mt-0.5">
             {contentTypeLabels[asset.content_type]} · {formatDate(asset.created_at)}
           </p>
         </DialogHeader>
@@ -162,7 +162,7 @@ function AssetViewDialog({
                 <img
                   src={asset.media_url}
                   alt={asset.title}
-                  className="w-full max-w-full max-h-[60vh] rounded-lg border border-white/[0.06] object-contain"
+                  className="w-full max-w-full max-h-[60vh] rounded-lg border border-[#e2e8f0] object-contain"
                 />
               </a>
             ) : (
@@ -170,23 +170,23 @@ function AssetViewDialog({
                 href={asset.media_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+                className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f0f4ff] transition-colors"
               >
-                <ImageIcon className="w-4 h-4 text-zinc-500" />
-                <span className="text-[12px] text-zinc-300 flex-1 truncate">Abrir arquivo</span>
+                <ImageIcon className="w-4 h-4 text-[#9ca3af]" />
+                <span className="text-[12px] text-[#374151] flex-1 truncate">Abrir arquivo</span>
               </a>
             )
           )}
           {asset.caption && (
-            <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5">Legenda</p>
-              <p className="text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
+            <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1.5">Legenda</p>
+              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
             </div>
           )}
           {asset.observations && (
-            <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1.5">Observações</p>
-              <p className="text-[13px] text-zinc-400 leading-relaxed break-words">{asset.observations}</p>
+            <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1.5">Observações</p>
+              <p className="text-[13px] text-[#6b7280] leading-relaxed break-words">{asset.observations}</p>
             </div>
           )}
           {asset.link_url && (
@@ -194,11 +194,11 @@ function AssetViewDialog({
               href={asset.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 p-3 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors min-w-0 max-w-full overflow-hidden"
+              className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f0f4ff] transition-colors min-w-0 max-w-full overflow-hidden"
             >
-              <Link2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <span className="text-[12px] text-blue-300 flex-1 min-w-0 break-all">{asset.link_url}</span>
-              <ExternalLink className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
+              <Link2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <span className="text-[12px] text-blue-600 flex-1 min-w-0 break-all">{asset.link_url}</span>
+              <ExternalLink className="w-3.5 h-3.5 text-[#9ca3af] flex-shrink-0" />
             </a>
           )}
         </div>
@@ -214,10 +214,10 @@ function AssetViewDialog({
 // ─── Financial Status Card ────────────────────────────────────────────────────
 
 const financialBadgeStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:         { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve:{ bg: 'bg-amber-500/10 border-amber-500/20',    text: 'text-amber-400',   dot: 'bg-amber-400',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:      { bg: 'bg-red-500/10 border-red-500/20',         text: 'text-red-400',     dot: 'bg-red-400',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:     { bg: 'bg-zinc-500/10 border-zinc-500/20',       text: 'text-zinc-400',    dot: 'bg-zinc-500',    icon: <Ban className="w-3 h-3" /> },
+  ativo:          { bg: 'bg-emerald-50 border-emerald-200',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-red-50 border-red-200',          text: 'text-red-700',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-gray-100 border-gray-200',       text: 'text-gray-600',    dot: 'bg-gray-400',    icon: <Ban className="w-3 h-3" /> },
 }
 
 function FinancialCard({ client }: { client: import('@/types').Client }) {
@@ -267,20 +267,19 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.08 }}
-      className="flex flex-col gap-3 mb-6 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02] sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+      className="flex flex-col gap-3 mb-6 p-4 rounded-xl border border-[#e2e8f0] bg-white shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
     >
-      {/* Ícone + dados — ficam na mesma linha no mobile */}
+      {/* Ícone + dados */}
       <div className="flex items-start gap-3 flex-1 min-w-0">
-        <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 mt-0.5">
-          <DollarSign className="w-4 h-4 text-zinc-400" />
+        <div className="w-9 h-9 rounded-lg bg-[#f0f4ff] border border-[#c7d4f5] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <DollarSign className="w-4 h-4 text-[#4464c4]" />
         </div>
 
-        {/* Main info */}
         <div className="flex flex-wrap items-start gap-x-5 gap-y-3 flex-1 min-w-0">
           {client.valor_mensal != null && (
             <div className="min-w-0">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Mensalidade</p>
-              <p className="text-[14px] font-semibold text-zinc-100 break-words whitespace-normal">
+              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Mensalidade</p>
+              <p className="text-[14px] font-semibold text-[#0f0f0f] break-words whitespace-normal">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.valor_mensal)}
               </p>
             </div>
@@ -288,37 +287,35 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
 
           {client.dia_vencimento != null && (
             <div className="min-w-0">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Vencimento</p>
-              <p className="text-[13px] font-medium text-zinc-300 flex items-center gap-1.5">
-                <CalendarDays className="w-3 h-3 text-zinc-500 flex-shrink-0" />
+              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Vencimento</p>
+              <p className="text-[13px] font-medium text-[#374151] flex items-center gap-1.5">
+                <CalendarDays className="w-3 h-3 text-[#9ca3af] flex-shrink-0" />
                 Dia {client.dia_vencimento}
               </p>
             </div>
           )}
 
-          {/* Status badge */}
           <div className="min-w-0">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-wide mb-1">Status financeiro</p>
+            <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1">Status financeiro</p>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ${styles.bg} ${styles.text}`}>
               {styles.icon}
               {financialStatusLabel(computedStatus)}
             </span>
           </div>
 
-          {/* Aux text */}
           {auxText && (
             <div className="min-w-0 hidden sm:block">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Info</p>
+              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Info</p>
               <p className={`text-[12px] font-medium break-words whitespace-normal ${
-                computedStatus === 'atrasado' ? 'text-red-400' :
-                computedStatus === 'vence_em_breve' ? 'text-amber-400' : 'text-zinc-400'
+                computedStatus === 'atrasado' ? 'text-red-600' :
+                computedStatus === 'vence_em_breve' ? 'text-amber-600' : 'text-[#6b7280]'
               }`}>{auxText}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Actions — coluna no mobile, linha no desktop */}
+      {/* Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-shrink-0">
         {computedStatus !== 'cancelado' && (
           <Button
@@ -333,20 +330,19 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
           </Button>
         )}
 
-        {/* Manual override dropdown */}
         <div className="relative w-full sm:w-auto">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setOverrideOpen(o => !o)}
-            className="text-[11px] h-7 px-2.5 text-zinc-500 hover:text-zinc-200 w-full sm:w-auto justify-center"
+            className="text-[11px] h-7 px-2.5 text-[#9ca3af] hover:text-[#374151] w-full sm:w-auto justify-center"
           >
             <ChevronDown className="w-3 h-3" /> Alterar
           </Button>
           {overrideOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setOverrideOpen(false)} />
-              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-white/[0.08] bg-[#111113] shadow-xl overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-[#e2e8f0] bg-white shadow-lg overflow-hidden">
                 {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
                   const st = financialBadgeStyles[s]
                   return (
@@ -354,7 +350,7 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
                       key={s}
                       disabled={saving}
                       onClick={() => handleManualStatus(s)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-white/[0.05] ${st.text}`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#f5f7fb] ${st.text}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
                       {financialStatusLabel(s)}
@@ -389,11 +385,9 @@ export function ClientProfile() {
 
   const assetFileRef = useRef<HTMLInputElement>(null)
 
-  // ── Planner item view ────────────────────────────────────────────────────────
   const [selectedPlannerItem, setSelectedPlannerItem] = useState<PlannerItem | null>(null)
   const [plannerItemOpen, setPlannerItemOpen] = useState(false)
 
-  // ── DNA form ────────────────────────────────────────────────────────────────
   const [dnaForm, setDnaForm] = useState({
     how_brand_speaks: '', how_brand_not_speaks: '', positioning: '',
     ideal_language: '', mental_triggers: '', communication_style: '',
@@ -412,7 +406,6 @@ export function ClientProfile() {
     }
   }
 
-  // ── Asset modal state ───────────────────────────────────────────────────────
   const [assetModalOpen, setAssetModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<ContentAsset | null>(null)
   const [viewingAsset, setViewingAsset] = useState<ContentAsset | null>(null)
@@ -529,12 +522,12 @@ export function ClientProfile() {
 
   if (!client) return (
     <div className="flex items-center justify-center h-full">
-      <p className="text-zinc-500 text-sm">Cliente não encontrado.</p>
+      <p className="text-[#9ca3af] text-sm">Cliente não encontrado.</p>
     </div>
   )
 
   return (
-    <div>
+    <div className="min-h-full flex flex-col">
       <Header
         title={client.company_name}
         subtitle={client.niche}
@@ -553,46 +546,64 @@ export function ClientProfile() {
         }
       />
 
-      <div className="p-4 md:p-6">
-        {/* Profile header */}
+      <div className="flex-1 p-4 md:p-6" style={{ background: '#f5f7fb' }}>
+
+        {/* ── Profile header ───────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-4 mb-6 p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]"
+          className="flex items-start gap-4 mb-5 p-5 rounded-xl border border-[#e2e8f0] bg-white shadow-sm"
         >
           {client.logo_url ? (
             <img
               src={client.logo_url}
               alt={client.company_name}
-              className="w-14 h-14 rounded-lg object-cover border border-white/[0.08] flex-shrink-0"
+              className="w-14 h-14 rounded-xl object-cover border border-[#e2e8f0] flex-shrink-0"
             />
           ) : (
-            <div className="w-14 h-14 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-xl font-medium text-zinc-300 flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-[#f5f7fb] border border-[#e2e8f0] flex items-center justify-center text-xl font-semibold text-[#6b7280] flex-shrink-0">
               {client.company_name[0].toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-[15px] font-medium text-zinc-100">{client.company_name}</h2>
+              <h2 className="text-[15px] font-semibold text-[#0f0f0f]">{client.company_name}</h2>
               <Badge status={client.status} />
             </div>
-            <p className="text-zinc-500 text-[12px] mt-0.5">{client.responsible_name} · {client.niche}</p>
+            <p className="text-[#6b7280] text-[12px] mt-0.5">{client.responsible_name} · {client.niche}</p>
             <div className="flex flex-wrap gap-3 mt-1.5">
-              {client.instagram && <span className="flex items-center gap-1 text-[11px] text-zinc-500"><Instagram className="w-3 h-3" /> @{client.instagram.replace('@', '')}</span>}
-              {client.email && <span className="flex items-center gap-1 text-[11px] text-zinc-500"><Mail className="w-3 h-3" /> {client.email}</span>}
-              {client.whatsapp && <span className="flex items-center gap-1 text-[11px] text-zinc-500"><Phone className="w-3 h-3" /> {client.whatsapp}</span>}
-              {client.website && <span className="flex items-center gap-1 text-[11px] text-zinc-500"><Globe className="w-3 h-3" /> {client.website}</span>}
+              {client.instagram && (
+                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                  <Instagram className="w-3 h-3" /> @{client.instagram.replace('@', '')}
+                </span>
+              )}
+              {client.email && (
+                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                  <Mail className="w-3 h-3" /> {client.email}
+                </span>
+              )}
+              {client.whatsapp && (
+                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                  <Phone className="w-3 h-3" /> {client.whatsapp}
+                </span>
+              )}
+              {client.website && (
+                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                  <Globe className="w-3 h-3" /> {client.website}
+                </span>
+              )}
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[10px] text-zinc-600">Desde</p>
-            <p className="text-[12px] font-medium text-zinc-400">{formatDate(client.entry_date)}</p>
+            <p className="text-[10px] text-[#9ca3af]">Desde</p>
+            <p className="text-[12px] font-medium text-[#374151]">{formatDate(client.entry_date)}</p>
           </div>
         </motion.div>
 
-        {/* Financial card — only renders when financial data exists */}
+        {/* ── Financial card ───────────────────────────────────────────────── */}
         <FinancialCard client={client} />
 
+        {/* ── Tabs ─────────────────────────────────────────────────────────── */}
         <Tabs defaultValue="overview">
           <TabsList className="flex-wrap h-auto gap-1 overflow-x-auto max-w-full">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -606,7 +617,7 @@ export function ClientProfile() {
             <TabsTrigger value="results">Resultados</TabsTrigger>
           </TabsList>
 
-          {/* Overview */}
+          {/* ── Visão Geral ───────────────────────────────────────────────── */}
           <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
@@ -620,19 +631,23 @@ export function ClientProfile() {
                 { label: 'Observações', value: client.observations },
               ].map(({ label, value }) => value && (
                 <Card key={label}>
-                  <CardHeader className="pb-2"><CardTitle className="text-[11px] text-zinc-500 uppercase tracking-wide">{label}</CardTitle></CardHeader>
-                  <CardContent className="pt-0"><p className="text-[13px] text-zinc-300">{value}</p></CardContent>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[11px] text-[#9ca3af] uppercase tracking-wide">{label}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-[13px] text-[#374151]">{value}</p>
+                  </CardContent>
                 </Card>
               ))}
             </div>
           </TabsContent>
 
-          {/* DNA */}
+          {/* ── DNA ──────────────────────────────────────────────────────── */}
           <TabsContent value="dna">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Brain className="w-3.5 h-3.5 text-zinc-400" />
+                  <Brain className="w-3.5 h-3.5 text-[#6b7280]" />
                   <CardTitle>DNA da Marca</CardTitle>
                 </div>
                 <Button onClick={handleSaveDNA} size="sm" disabled={upsertDNA.isPending}>
@@ -650,21 +665,21 @@ export function ClientProfile() {
             </Card>
           </TabsContent>
 
-          {/* Onboarding */}
+          {/* ── Onboarding ───────────────────────────────────────────────── */}
           <TabsContent value="onboarding">
             <OnboardingTab client={client} />
           </TabsContent>
 
-          {/* Contents — AI + Arsenal */}
+          {/* ── Conteúdos ────────────────────────────────────────────────── */}
           <TabsContent value="contents">
             <div className="space-y-8">
 
-              {/* ── Gerados com IA ── */}
+              {/* Gerados com IA */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-[13px] font-medium text-zinc-200">Gerados com IA</p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">{contents?.length || 0} conteúdos</p>
+                    <p className="text-[13px] font-medium text-[#0f0f0f]">Gerados com IA</p>
+                    <p className="text-[11px] text-[#9ca3af] mt-0.5">{contents?.length || 0} conteúdos</p>
                   </div>
                   <Button asChild size="sm">
                     <Link to={`/content?client=${id}`}><Sparkles className="w-3 h-3" /> Gerar conteúdo</Link>
@@ -673,36 +688,35 @@ export function ClientProfile() {
                 <div className="space-y-2">
                   {(contents || []).map(c => (
                     <Link key={c.id} to={`/history/${c.id}`}>
-                      <Card className="hover:border-white/[0.10] transition-colors">
+                      <Card className="hover:border-[#d0d8e8] transition-colors">
                         <CardContent className="p-3.5 flex items-center gap-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-normal text-zinc-200 truncate">{c.title || c.term}</p>
-                            <p className="text-[11px] text-zinc-600">{formatRelative(c.created_at)}</p>
+                            <p className="text-[13px] font-normal text-[#0f0f0f] truncate">{c.title || c.term}</p>
+                            <p className="text-[11px] text-[#9ca3af]">{formatRelative(c.created_at)}</p>
                           </div>
                           <Badge status={c.status} />
-                          <span className="text-[11px] text-zinc-600">{contentTypeLabels[c.content_type]}</span>
+                          <span className="text-[11px] text-[#9ca3af]">{contentTypeLabels[c.content_type]}</span>
                         </CardContent>
                       </Card>
                     </Link>
                   ))}
                   {(!contents || contents.length === 0) && (
-                    <div className="text-center py-8 border border-dashed border-white/[0.06] rounded-lg">
-                      <Sparkles className="w-6 h-6 text-zinc-700 mx-auto mb-1.5" />
-                      <p className="text-[12px] text-zinc-600">Nenhum conteúdo gerado ainda.</p>
+                    <div className="text-center py-8 border border-dashed border-[#e2e8f0] rounded-xl">
+                      <Sparkles className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
+                      <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo gerado ainda.</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-white/[0.06]" />
+              <div className="border-t border-[#e2e8f0]" />
 
-              {/* ── Arsenal Manual ── */}
+              {/* Arsenal Manual */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-[13px] font-medium text-zinc-200">Arsenal Manual</p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
+                    <p className="text-[13px] font-medium text-[#0f0f0f]">Arsenal Manual</p>
+                    <p className="text-[11px] text-[#9ca3af] mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
                   </div>
                   <Button size="sm" onClick={openCreateAsset}>
                     <Plus className="w-3 h-3" /> Adicionar conteúdo
@@ -710,10 +724,10 @@ export function ClientProfile() {
                 </div>
 
                 {(!assets || assets.length === 0) ? (
-                  <div className="text-center py-10 border border-dashed border-white/[0.06] rounded-lg">
-                    <ImageIcon className="w-6 h-6 text-zinc-700 mx-auto mb-1.5" />
-                    <p className="text-[12px] text-zinc-600">Nenhum conteúdo no arsenal ainda.</p>
-                    <p className="text-[11px] text-zinc-700 mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
+                  <div className="text-center py-10 border border-dashed border-[#e2e8f0] rounded-xl">
+                    <ImageIcon className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
+                    <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo no arsenal ainda.</p>
+                    <p className="text-[11px] text-[#c8d4e4] mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -732,7 +746,7 @@ export function ClientProfile() {
             </div>
           </TabsContent>
 
-          {/* Planner */}
+          {/* ── Planejamento ─────────────────────────────────────────────── */}
           <TabsContent value="planner">
             <div className="space-y-1.5">
               {(planner || []).map(p => {
@@ -741,29 +755,29 @@ export function ClientProfile() {
                   <button
                     key={p.id}
                     onClick={() => { setSelectedPlannerItem(p); setPlannerItemOpen(true) }}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all text-left group cursor-pointer"
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] hover:border-[#d0d8e8] transition-all text-left group cursor-pointer shadow-sm"
                   >
                     {thumb ? (
                       <img
                         src={thumb.file_url}
                         alt=""
-                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/[0.08]"
+                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-[#e2e8f0]"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-[#f5f7fb] border border-[#e2e8f0] flex items-center justify-center flex-shrink-0">
                         <div className={`w-2 h-2 rounded-full ${
-                          p.status === 'ideia' ? 'bg-purple-500' :
-                          p.status === 'producao' ? 'bg-blue-500' :
-                          p.status === 'revisao' ? 'bg-yellow-500' :
-                          p.status === 'aprovado' ? 'bg-green-500' : 'bg-emerald-500'
+                          p.status === 'ideia' ? 'bg-purple-400' :
+                          p.status === 'producao' ? 'bg-blue-400' :
+                          p.status === 'revisao' ? 'bg-amber-400' :
+                          p.status === 'aprovado' ? 'bg-green-400' : 'bg-emerald-400'
                         }`} />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-zinc-200 truncate">{p.title}</p>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                      <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{p.title}</p>
+                      <p className="text-[11px] text-[#9ca3af] mt-0.5">
                         {formatDate(p.scheduled_date)}
-                        <span className="mx-1.5 text-zinc-700">·</span>
+                        <span className="mx-1.5 text-[#d1d5db]">·</span>
                         {contentTypeLabels[p.content_type]}
                       </p>
                     </div>
@@ -775,13 +789,13 @@ export function ClientProfile() {
                           p.approval_status === 'reprovado' ? 'bg-red-400' : 'bg-orange-400'
                         }`} />
                       )}
-                      <Eye className="w-3.5 h-3.5 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Eye className="w-3.5 h-3.5 text-[#9ca3af] opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </button>
                 )
               })}
               {(!planner || planner.length === 0) && (
-                <div className="text-center py-10 text-[12px] text-zinc-600">
+                <div className="text-center py-10 text-[12px] text-[#9ca3af]">
                   Nenhum planejamento ainda.
                 </div>
               )}
@@ -797,30 +811,30 @@ export function ClientProfile() {
             )}
           </TabsContent>
 
-          {/* Materials */}
+          {/* ── Materiais ────────────────────────────────────────────────── */}
           <TabsContent value="materials">
             <MaterialsTab clientId={id!} />
           </TabsContent>
 
-          {/* Support */}
+          {/* ── Suporte ──────────────────────────────────────────────────── */}
           <TabsContent value="support">
             <SupportTab clientId={id!} />
           </TabsContent>
 
-          {/* Results */}
+          {/* ── Resultados ───────────────────────────────────────────────── */}
           <TabsContent value="results">
             <ReportsTab clientId={id!} />
           </TabsContent>
 
-          {/* Tasks */}
+          {/* ── Tarefas ──────────────────────────────────────────────────── */}
           <TabsContent value="tasks">
             <div className="space-y-2">
               {(tasks || []).map(t => (
                 <Card key={t.id}>
                   <CardContent className="p-3.5 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-normal text-zinc-200 truncate">{t.title}</p>
-                      {t.description && <p className="text-[11px] text-zinc-600 truncate">{t.description}</p>}
+                      <p className="text-[13px] font-normal text-[#0f0f0f] truncate">{t.title}</p>
+                      {t.description && <p className="text-[11px] text-[#9ca3af] truncate">{t.description}</p>}
                     </div>
                     <Badge status={t.priority} />
                     <Badge status={t.status} />
@@ -828,7 +842,7 @@ export function ClientProfile() {
                 </Card>
               ))}
               {(!tasks || tasks.length === 0) && (
-                <div className="text-center py-10 text-[12px] text-zinc-600">
+                <div className="text-center py-10 text-[12px] text-[#9ca3af]">
                   Nenhuma tarefa ainda.
                 </div>
               )}
@@ -837,7 +851,7 @@ export function ClientProfile() {
         </Tabs>
       </div>
 
-      {/* ── Asset View Dialog ── */}
+      {/* ── Asset View Dialog ─────────────────────────────────────────────── */}
       <AssetViewDialog
         asset={viewingAsset}
         open={viewOpen}
@@ -845,7 +859,7 @@ export function ClientProfile() {
         onEdit={() => viewingAsset && openEditAsset(viewingAsset)}
       />
 
-      {/* ── Asset Create / Edit Modal ── */}
+      {/* ── Asset Create / Edit Modal ─────────────────────────────────────── */}
       <Dialog open={assetModalOpen} onOpenChange={v => { setAssetModalOpen(v); if (!v) resetAssetForm() }}>
         <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
@@ -861,7 +875,7 @@ export function ClientProfile() {
             />
 
             <div>
-              <label className="block text-[12px] font-normal text-zinc-500 mb-1.5">Tipo</label>
+              <label className="block text-[12px] font-normal text-[#6b7280] mb-1.5">Tipo</label>
               <Select
                 value={assetForm.content_type}
                 onValueChange={v => setAssetForm(p => ({ ...p, content_type: v as ContentType }))}
@@ -885,9 +899,8 @@ export function ClientProfile() {
 
             {/* Mídia */}
             <div>
-              <label className="block text-[12px] font-normal text-zinc-500 mb-1.5">Mídia</label>
+              <label className="block text-[12px] font-normal text-[#6b7280] mb-1.5">Mídia</label>
 
-              {/* Preview da mídia existente (edição) */}
               {editingAsset?.media_url && !assetFile && (() => {
                 const isImg = /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(editingAsset.media_url!)
                 return (
@@ -896,17 +909,17 @@ export function ClientProfile() {
                       <img
                         src={editingAsset.media_url!}
                         alt=""
-                        className="w-full max-h-32 object-cover rounded-md border border-white/[0.06]"
+                        className="w-full max-h-32 object-cover rounded-md border border-[#e2e8f0]"
                       />
                     ) : (
-                      <div className="flex items-center gap-2 p-2.5 rounded-md border border-white/[0.06] bg-white/[0.03]">
-                        <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
-                        <span className="text-[12px] text-zinc-400 truncate flex-1">Arquivo atual</span>
+                      <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#e2e8f0] bg-[#f8fafc]">
+                        <ImageIcon className="w-3.5 h-3.5 text-[#9ca3af]" />
+                        <span className="text-[12px] text-[#6b7280] truncate flex-1">Arquivo atual</span>
                       </div>
                     )}
                     <button
                       type="button"
-                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-zinc-300 hover:text-white"
+                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50"
                       onClick={() => setEditingAsset(prev => prev ? { ...prev, media_url: null } : prev)}
                     >
                       <X className="w-3 h-3" />
@@ -915,15 +928,14 @@ export function ClientProfile() {
                 )
               })()}
 
-              {/* Arquivo selecionado novo */}
               {assetFile ? (
-                <div className="flex items-center gap-2 p-2.5 rounded-md border border-white/[0.08] bg-white/[0.03]">
-                  <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
-                  <span className="text-[12px] text-zinc-300 truncate flex-1">{assetFile.name}</span>
+                <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#e2e8f0] bg-[#f8fafc]">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#9ca3af]" />
+                  <span className="text-[12px] text-[#374151] truncate flex-1">{assetFile.name}</span>
                   <button
                     type="button"
                     onClick={() => setAssetFile(null)}
-                    className="text-zinc-500 hover:text-red-400 flex-shrink-0"
+                    className="text-[#9ca3af] hover:text-red-500 flex-shrink-0"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -932,7 +944,7 @@ export function ClientProfile() {
                 <button
                   type="button"
                   onClick={() => assetFileRef.current?.click()}
-                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-white/[0.12] bg-white/[0.02] text-zinc-500 text-[12px] hover:border-white/[0.22] hover:bg-white/[0.04] transition-colors"
+                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-[#e2e8f0] bg-white text-[#9ca3af] text-[12px] hover:border-[#c7d4f5] hover:bg-[#f8fafc] transition-colors"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   Clique para selecionar imagem ou vídeo
