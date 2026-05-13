@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Edit, Sparkles, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
+  Edit, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
   Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
 } from 'lucide-react'
@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useClient, useBrandDNA, useUpsertBrandDNA, useUpdateClient, useRegisterPayment } from '@/hooks/useClients'
-import { useContents } from '@/hooks/useContents'
 import { useTasks } from '@/hooks/useTasks'
 import { usePlanner } from '@/hooks/usePlanner'
 import { useContentAssets, useCreateContentAsset, useUpdateContentAsset, useDeleteContentAsset } from '@/hooks/useContentAssets'
@@ -26,7 +25,7 @@ import { SupportTab } from './tabs/SupportTab'
 import { PlannerItemViewModal } from '@/components/PlannerItemViewModal'
 import { ReportsTab } from './tabs/ReportsTab'
 import { useToast } from '@/components/ui/toast'
-import { formatDate, formatRelative, contentTypeLabels } from '@/utils/formatters'
+import { formatDate, contentTypeLabels } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
@@ -496,7 +495,6 @@ export function ClientProfile() {
   const { user } = useAuth()
   const { data: client, isLoading } = useClient(id!)
   const { data: dna } = useBrandDNA(id!)
-  const { data: contents } = useContents(id)
   const { data: tasks } = useTasks(id)
   const { data: planner } = usePlanner(id)
   const { data: assets } = useContentAssets(id)
@@ -681,9 +679,6 @@ export function ClientProfile() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/clients"><ArrowLeft className="w-3.5 h-3.5" /></Link>
             </Button>
-            <Button asChild size="sm">
-              <Link to={`/content?client=${id}`}><Sparkles className="w-3.5 h-3.5" /> Gerar conteúdo</Link>
-            </Button>
             <Button asChild variant="outline" size="sm">
               <Link to={`/clients/${id}/edit`}><Edit className="w-3.5 h-3.5" /> Editar</Link>
             </Button>
@@ -754,7 +749,7 @@ export function ClientProfile() {
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
             <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
-            <TabsTrigger value="contents">Conteúdos ({(contents?.length || 0) + (assets?.length || 0)})</TabsTrigger>
+            <TabsTrigger value="contents">Arsenal ({assets?.length || 0})</TabsTrigger>
             <TabsTrigger value="planner">Planejamento ({planner?.length || 0})</TabsTrigger>
             <TabsTrigger value="tasks">Tarefas ({tasks?.length || 0})</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>
@@ -815,79 +810,38 @@ export function ClientProfile() {
             <OnboardingTab client={client} />
           </TabsContent>
 
-          {/* ── Conteúdos ────────────────────────────────────────────────── */}
+          {/* ── Arsenal ──────────────────────────────────────────────────── */}
           <TabsContent value="contents">
-            <div className="space-y-8">
-
-              {/* Gerados com IA */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-[13px] font-medium text-[#0f0f0f]">Gerados com IA</p>
-                    <p className="text-[11px] text-[#9ca3af] mt-0.5">{contents?.length || 0} conteúdos</p>
-                  </div>
-                  <Button asChild size="sm">
-                    <Link to={`/content?client=${id}`}><Sparkles className="w-3 h-3" /> Gerar conteúdo</Link>
-                  </Button>
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-[13px] font-medium text-[#0f0f0f]">Arsenal Manual</p>
+                  <p className="text-[11px] text-[#9ca3af] mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
                 </div>
-                <div className="space-y-2">
-                  {(contents || []).map(c => (
-                    <Link key={c.id} to={`/history/${c.id}`}>
-                      <Card className="hover:border-[#d0d8e8] transition-colors">
-                        <CardContent className="p-3.5 flex items-center gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-normal text-[#0f0f0f] truncate">{c.title || c.term}</p>
-                            <p className="text-[11px] text-[#9ca3af]">{formatRelative(c.created_at)}</p>
-                          </div>
-                          <Badge status={c.status} />
-                          <span className="text-[11px] text-[#9ca3af]">{contentTypeLabels[c.content_type]}</span>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                <Button size="sm" onClick={openCreateAsset}>
+                  <Plus className="w-3 h-3" /> Adicionar conteúdo
+                </Button>
+              </div>
+
+              {(!assets || assets.length === 0) ? (
+                <div className="text-center py-10 border border-dashed border-[#e2e8f0] rounded-xl">
+                  <ImageIcon className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
+                  <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo no arsenal ainda.</p>
+                  <p className="text-[11px] text-[#c8d4e4] mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {assets.map(asset => (
+                    <AssetCard
+                      key={asset.id}
+                      asset={asset}
+                      onView={() => openViewAsset(asset)}
+                      onEdit={() => openEditAsset(asset)}
+                      onDelete={() => handleDeleteAsset(asset)}
+                    />
                   ))}
-                  {(!contents || contents.length === 0) && (
-                    <div className="text-center py-8 border border-dashed border-[#e2e8f0] rounded-xl">
-                      <Sparkles className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
-                      <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo gerado ainda.</p>
-                    </div>
-                  )}
                 </div>
-              </div>
-
-              <div className="border-t border-[#e2e8f0]" />
-
-              {/* Arsenal Manual */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-[13px] font-medium text-[#0f0f0f]">Arsenal Manual</p>
-                    <p className="text-[11px] text-[#9ca3af] mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
-                  </div>
-                  <Button size="sm" onClick={openCreateAsset}>
-                    <Plus className="w-3 h-3" /> Adicionar conteúdo
-                  </Button>
-                </div>
-
-                {(!assets || assets.length === 0) ? (
-                  <div className="text-center py-10 border border-dashed border-[#e2e8f0] rounded-xl">
-                    <ImageIcon className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
-                    <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo no arsenal ainda.</p>
-                    <p className="text-[11px] text-[#c8d4e4] mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {assets.map(asset => (
-                      <AssetCard
-                        key={asset.id}
-                        asset={asset}
-                        onView={() => openViewAsset(asset)}
-                        onEdit={() => openEditAsset(asset)}
-                        onDelete={() => handleDeleteAsset(asset)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </TabsContent>
 

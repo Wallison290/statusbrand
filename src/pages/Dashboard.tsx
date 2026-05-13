@@ -1,16 +1,14 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Users, Sparkles, CheckSquare, ArrowRight, Plus, Clock,
+  Users, CheckSquare, Clock,
   AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, BarChart3,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { formatRelative, contentTypeLabels } from '@/utils/formatters'
+import { contentTypeLabels } from '@/utils/formatters'
 import {
   startOfWeek, endOfWeek, startOfDay, endOfDay,
   startOfMonth, endOfMonth, startOfYear, endOfYear,
@@ -484,7 +482,6 @@ export function Dashboard() {
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0 })
-  const [recentContents, setRecentContents]     = useState<any[]>([])
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
@@ -512,7 +509,6 @@ export function Dashboard() {
     const [
       clientsRes,
       tasksRes,
-      recentRes,
       contentsRes,
       assetsRes,
       plannerRes,
@@ -524,16 +520,7 @@ export function Dashboard() {
       // Tarefas — todas não concluídas (filtro de período no cliente)
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
 
-      // Conteúdos recentes — filtrados pelo período
-      supabase.from('contents')
-        .select('id, term, content_type, status, created_at, client:clients(company_name)')
-        .eq('user_id', user!.id)
-        .gte('created_at', startIso)
-        .lte('created_at', endIso)
-        .order('created_at', { ascending: false })
-        .limit(5),
-
-      // Todos os conteúdos do período (para gráfico de barras)
+      // Conteúdos do período (para gráfico de barras no MetricsCarousel)
       supabase.from('contents')
         .select('created_at')
         .eq('user_id', user!.id)
@@ -543,9 +530,7 @@ export function Dashboard() {
       // Arsenal — sempre global
       supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
 
-      // Planner — itens do período (todas as colunas necessárias para todos os cálculos)
-      // Derivamos pendentes, aprovados e gráfico a partir deste único resultado
-      // usando isAwaitingApproval() — mesma regra do filtro "Pendentes" do Planejamento
+      // Planner — itens do período
       supabase.from('planner')
         .select('status, approval_status')
         .eq('user_id', user!.id)
@@ -587,7 +572,6 @@ export function Dashboard() {
       period_approved,
     })
 
-    setRecentContents(recentRes.data || [])
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
 
     // Gráfico de barras de conteúdos
@@ -622,11 +606,6 @@ export function Dashboard() {
         title="Dashboard"
         subtitle="Visão geral da operação"
         dark={false}
-        action={
-          <Button asChild size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-xl border-0 text-xs font-medium">
-            <Link to="/content"><Plus className="w-3.5 h-3.5 mr-1" /> Novo conteúdo</Link>
-          </Button>
-        }
       />
 
       {/* Filter Bar — controlled */}
@@ -681,66 +660,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Recent contents table */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
-            <div>
-              <h3 className="text-[14px] font-semibold text-gray-900">Conteúdos Recentes</h3>
-              <p className="text-[11px] text-gray-400 mt-0.5">Últimos gerados no período selecionado</p>
-            </div>
-            <Link to="/history" className="flex items-center gap-1.5 text-[12px] font-medium text-gray-400 hover:text-gray-800 transition-colors">
-              Ver todos <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {recentContents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
-              <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-gray-300" />
-              </div>
-              <div>
-                <p className="text-[14px] font-medium text-gray-600">Nenhum conteúdo neste período</p>
-                <p className="text-[12px] text-gray-400 mt-0.5">Tente outro intervalo ou gere um conteúdo</p>
-              </div>
-              <Button asChild size="sm" variant="outline" className="mt-1 rounded-xl">
-                <Link to="/content">Gerar conteúdo</Link>
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="hidden sm:grid grid-cols-[1fr_160px_120px_140px] gap-4 px-6 py-2.5 bg-gray-50/60 border-b border-gray-50">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Conteúdo</span>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</span>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</span>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Status / Data</span>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {recentContents.map(c => (
-                  <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_160px_120px_140px] gap-1 sm:gap-4 items-center px-6 py-3.5 hover:bg-gray-50/70 transition-colors">
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-gray-900 truncate">{c.term}</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5 sm:hidden">
-                        {(c.client as any)?.company_name || 'Sem cliente'} · {formatRelative(c.created_at)}
-                      </p>
-                    </div>
-                    <p className="hidden sm:block text-[12px] text-gray-500 truncate">
-                      {(c.client as any)?.company_name || '—'}
-                    </p>
-                    <p className="hidden sm:block text-[12px] text-gray-500">
-                      {contentTypeLabels[c.content_type]}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge status={c.status} />
-                      <span className="hidden sm:block text-[10px] text-gray-400 whitespace-nowrap">
-                        {formatRelative(c.created_at)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
 
       </div>
     </div>

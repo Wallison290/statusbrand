@@ -13,8 +13,6 @@ import { Dashboard } from '@/pages/Dashboard'
 import { ClientList } from '@/pages/clients/ClientList'
 import { ClientForm } from '@/pages/clients/ClientForm'
 import { ClientProfile } from '@/pages/clients/ClientProfile'
-import { ContentGenerator } from '@/pages/content/ContentGenerator'
-import { ContentHistory, ContentDetail } from '@/pages/content/ContentHistory'
 import { Planner } from '@/pages/planner/Planner'
 import { Tasks } from '@/pages/tasks/Tasks'
 import { Library } from '@/pages/library/Library'
@@ -90,9 +88,9 @@ function AppRoutes() {
         <Route path="/clients/new" element={<ClientForm />} />
         <Route path="/clients/:id" element={<ClientProfile />} />
         <Route path="/clients/:id/edit" element={<ClientForm />} />
-        <Route path="/content" element={<ContentGenerator />} />
-        <Route path="/history" element={<ContentHistory />} />
-        <Route path="/history/:id" element={<ContentDetail />} />
+        <Route path="/content" element={<Navigate to="/" replace />} />
+        <Route path="/history" element={<Navigate to="/" replace />} />
+        <Route path="/history/:id" element={<Navigate to="/" replace />} />
         <Route path="/planner" element={<Planner />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/notes" element={<Notes />} />
