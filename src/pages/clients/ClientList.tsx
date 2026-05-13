@@ -111,18 +111,17 @@ export function ClientList() {
     fetchStats()
   }, [clients.map(c => c.id).join()])
 
-  // ── Troca gradiente — persiste no Supabase ────────────────────────────────
+  // ── Troca gradiente — persiste via RPC (bypassa schema cache do PostgREST) ──
   async function changeBanner(clientId: string, gradientId: string) {
     if (saving === clientId) return
     setPickerOpen(null)
     setSaving(clientId)
     try {
-      const { error } = await supabase
-        .from('clients')
-        .update({ card_gradient: gradientId } as any)
-        .eq('id', clientId)
+      const { error } = await (supabase.rpc as any)('update_client_gradient', {
+        p_client_id:   clientId,
+        p_gradient_id: gradientId,
+      })
       if (error) throw error
-      // Atualiza o cache local sem precisar de refetch completo
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
     } catch (err) {
       console.error('[changeBanner]', err)
