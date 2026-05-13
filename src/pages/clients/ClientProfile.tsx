@@ -27,12 +27,12 @@ import { PlannerItemViewModal } from '@/components/PlannerItemViewModal'
 import { ReportsTab } from './tabs/ReportsTab'
 import { useToast } from '@/components/ui/toast'
 import { formatDate, formatRelative, contentTypeLabels } from '@/utils/formatters'
-import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns'
+import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
 import type { FinancialStatus } from '@/types'
 import { supabase } from '@/integrations/supabase/client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import type { ContentAsset, ContentType, PlannerItem } from '@/types'
 
 // ─── Asset Card ───────────────────────────────────────────────────────────────
@@ -368,6 +368,62 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
   )
 }
 
+// ─── Planner Filter ───────────────────────────────────────────────────────────
+
+type PlannerFilterType =
+  | 'todos'
+  | 'este_mes'
+  | 'proximo_mes'
+  | 'ultimos_3'
+  | 'proximos_3'
+  | 'mes_especifico'
+  | 'personalizado'
+
+function filterPlannerItems(
+  items: PlannerItem[],
+  filter: PlannerFilterType,
+  month: string,
+  dateStart: string,
+  dateEnd: string,
+): PlannerItem[] {
+  if (filter === 'todos') return items
+
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  let start: Date, end: Date
+
+  if (filter === 'este_mes') {
+    start = startOfMonth(today); end = endOfMonth(today)
+  } else if (filter === 'proximo_mes') {
+    const next = addMonths(today, 1)
+    start = startOfMonth(next); end = endOfMonth(next)
+  } else if (filter === 'ultimos_3') {
+    start = startOfMonth(addMonths(today, -3)); end = endOfMonth(today)
+  } else if (filter === 'proximos_3') {
+    start = startOfMonth(today); end = endOfMonth(addMonths(today, 3))
+  } else if (filter === 'mes_especifico' && month) {
+    const [y, m] = month.split('-').map(Number)
+    const d = new Date(y, m - 1, 1)
+    start = startOfMonth(d); end = endOfMonth(d)
+  } else if (filter === 'personalizado') {
+    if (!dateStart && !dateEnd) return items
+    start = dateStart ? parseISO(dateStart) : new Date(0)
+    end   = dateEnd   ? parseISO(dateEnd)   : new Date(9999, 11, 31)
+  } else {
+    return items
+  }
+
+  return items.filter(item => {
+    const d = parseISO(item.scheduled_date)
+    return d >= start && d <= end
+  })
+}
+
+function monthLabel(yearMonth: string): string {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const label = format(new Date(y, m - 1, 1), 'MMMM yyyy', { locale: ptBR })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 // ─── Planner Week View Helpers ────────────────────────────────────────────────
 
 type WeekGroup = {
@@ -454,6 +510,28 @@ export function ClientProfile() {
 
   const [selectedPlannerItem, setSelectedPlannerItem] = useState<PlannerItem | null>(null)
   const [plannerItemOpen, setPlannerItemOpen] = useState(false)
+
+  // ── Planner filter ────────────────────────────────────────────────────────
+  const [plannerFilter, setPlannerFilter]       = useState<PlannerFilterType>('este_mes')
+  const [plannerMonth, setPlannerMonth]         = useState(() => format(new Date(), 'yyyy-MM'))
+  const [plannerDateStart, setPlannerDateStart] = useState('')
+  const [plannerDateEnd, setPlannerDateEnd]     = useState('')
+
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>()
+    ;(planner || []).forEach(item => {
+      set.add(format(parseISO(item.scheduled_date), 'yyyy-MM'))
+    })
+    for (let i = -3; i <= 6; i++) {
+      set.add(format(addMonths(new Date(), i), 'yyyy-MM'))
+    }
+    return Array.from(set).sort()
+  }, [planner])
+
+  const filteredPlanner = useMemo(
+    () => filterPlannerItems(planner || [], plannerFilter, plannerMonth, plannerDateStart, plannerDateEnd),
+    [planner, plannerFilter, plannerMonth, plannerDateStart, plannerDateEnd],
+  )
 
   const [dnaForm, setDnaForm] = useState({
     how_brand_speaks: '', how_brand_not_speaks: '', positioning: '',
@@ -815,9 +893,76 @@ export function ClientProfile() {
 
           {/* ── Planejamento ─────────────────────────────────────────────── */}
           <TabsContent value="planner">
+
+            {/* ── Filter bar ─────────────────────────────────────────────── */}
+            <div className="mb-4 space-y-2.5">
+
+              {/* Quick filter chips */}
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden">
+                {([
+                  { key: 'este_mes',       label: 'Este mês' },
+                  { key: 'proximo_mes',    label: 'Próximo mês' },
+                  { key: 'ultimos_3',      label: 'Últimos 3 meses' },
+                  { key: 'proximos_3',     label: 'Próximos 3 meses' },
+                  { key: 'mes_especifico', label: 'Mês específico' },
+                  { key: 'personalizado',  label: 'Período personalizado' },
+                  { key: 'todos',          label: 'Todos' },
+                ] as { key: PlannerFilterType; label: string }[]).map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setPlannerFilter(opt.key)}
+                    className={`flex-shrink-0 text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${
+                      plannerFilter === opt.key
+                        ? 'bg-[#4464c4] text-white border-[#4464c4] shadow-sm'
+                        : 'bg-white text-[#6b7280] border-[#e2e8f0] hover:border-[#c7d4f5] hover:text-[#4464c4]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Month selector */}
+              {plannerFilter === 'mes_especifico' && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={plannerMonth}
+                    onChange={e => setPlannerMonth(e.target.value)}
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all cursor-pointer"
+                  >
+                    {availableMonths.map(m => (
+                      <option key={m} value={m}>{monthLabel(m)}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Custom date range */}
+              {plannerFilter === 'personalizado' && (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    type="date"
+                    value={plannerDateStart}
+                    onChange={e => setPlannerDateStart(e.target.value)}
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all flex-1 min-w-[140px]"
+                  />
+                  <span className="text-[11px] text-[#9ca3af] flex-shrink-0">até</span>
+                  <input
+                    type="date"
+                    value={plannerDateEnd}
+                    onChange={e => setPlannerDateEnd(e.target.value)}
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all flex-1 min-w-[140px]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* ── Kanban ─────────────────────────────────────────────────── */}
             {(() => {
-              const weeks = groupPlannerByWeek(planner || [])
-              if (weeks.length === 0) {
+              const weeks = groupPlannerByWeek(filteredPlanner)
+
+              // Sem nenhum post cadastrado
+              if ((planner || []).length === 0) {
                 return (
                   <div className="text-center py-14 border border-dashed border-[#e2e8f0] rounded-xl">
                     <CalendarDays className="w-7 h-7 text-[#d1d5db] mx-auto mb-2" />
@@ -825,6 +970,23 @@ export function ClientProfile() {
                   </div>
                 )
               }
+
+              // Sem posts no período filtrado
+              if (weeks.length === 0) {
+                return (
+                  <div className="text-center py-14 border border-dashed border-[#e2e8f0] rounded-xl">
+                    <CalendarDays className="w-7 h-7 text-[#d1d5db] mx-auto mb-2" />
+                    <p className="text-[12px] text-[#9ca3af] mb-2">Nenhum post neste período.</p>
+                    <button
+                      onClick={() => setPlannerFilter('todos')}
+                      className="text-[11px] font-medium text-[#4464c4] hover:underline"
+                    >
+                      Ver todos os planejamentos →
+                    </button>
+                  </div>
+                )
+              }
+
               return (
                 <div className="overflow-x-auto pb-2">
                   <div className="flex" style={{ minWidth: `${Math.max(weeks.length * 272, 544)}px` }}>
@@ -851,9 +1013,9 @@ export function ClientProfile() {
                           {/* Cards column */}
                           <div className="space-y-2">
                             {week.items.map(item => {
-                              const badge = getPlannerBadge(item)
+                              const badge  = getPlannerBadge(item)
                               const accent = getCardAccentColor(item)
-                              const thumb = item.attachments?.find(a => a.file_type.startsWith('image/'))
+                              const thumb  = item.attachments?.find(a => a.file_type.startsWith('image/'))
                               return (
                                 <button
                                   key={item.id}
@@ -866,7 +1028,7 @@ export function ClientProfile() {
 
                                     {/* Card content */}
                                     <div className="flex-1 min-w-0 p-3">
-                                      {/* Thumb (se houver) */}
+                                      {/* Thumb */}
                                       {thumb && (
                                         <img
                                           src={thumb.file_url}
@@ -886,22 +1048,17 @@ export function ClientProfile() {
                                         {item.title}
                                       </p>
 
-                                      {/* Bottom row: platform + type + status */}
+                                      {/* Bottom row */}
                                       <div className="flex items-center gap-1.5">
-                                        {/* Instagram icon */}
                                         <div
                                           className="w-[18px] h-[18px] rounded-[5px] flex items-center justify-center flex-shrink-0"
                                           style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
                                         >
                                           <Instagram className="w-2.5 h-2.5 text-white" />
                                         </div>
-
-                                        {/* Content type */}
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: '#f0f4ff', color: '#4464c4' }}>
                                           {contentTypeLabels[item.content_type] || item.content_type}
                                         </span>
-
-                                        {/* Status badge — pushed right */}
                                         <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${badge.cls}`}>
                                           {badge.label}
                                         </span>
