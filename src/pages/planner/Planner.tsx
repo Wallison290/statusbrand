@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
-  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check,
+  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -219,23 +219,23 @@ function DayTooltip({ state }: { state: HoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[260px] p-3 text-xs text-white"
+        className="bg-white border border-[#e2e8f0] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[#0f0f0f]"
       >
         {state.items.map((item, i) => (
-          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-white/8' : ''}>
+          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[#f0f0f0]' : ''}>
             <div className="flex items-start gap-2 mb-1">
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-gray-300 mt-0.5">
+                <p className="font-medium text-[#0f0f0f] text-[11px] leading-snug">{item.title}</p>
+                <p className="text-[10px] text-[#737373] mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.client && (
               <div className="flex items-center gap-1 mb-1">
-                <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                <span className="text-[10px] text-gray-300 truncate">{item.client.company_name}</span>
+                <Building2 className="w-3 h-3 text-[#9ca3af] flex-shrink-0" />
+                <span className="text-[10px] text-[#737373] truncate">{item.client.company_name}</span>
               </div>
             )}
             {/* Approval badge no tooltip */}
@@ -243,11 +243,11 @@ function DayTooltip({ state }: { state: HoverState }) {
               const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
               return (
                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md mb-1.5 ${
-                  as_ === 'aprovado' ? 'bg-green-500/15 text-green-400' :
-                  as_ === 'ajuste_solicitado' ? 'bg-orange-500/15 text-orange-400' :
-                  as_ === 'ajuste_realizado' ? 'bg-blue-500/15 text-blue-400' :
-                  as_ === 'reprovado' ? 'bg-red-500/15 text-red-400' :
-                  'bg-yellow-500/10 text-yellow-400'
+                  as_ === 'aprovado' ? 'bg-green-50 text-green-700' :
+                  as_ === 'ajuste_solicitado' ? 'bg-orange-50 text-orange-700' :
+                  as_ === 'ajuste_realizado' ? 'bg-blue-50 text-blue-700' :
+                  as_ === 'reprovado' ? 'bg-red-50 text-red-700' :
+                  'bg-amber-50 text-amber-700'
                 }`}>
                   <div className={`w-1 h-1 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
                   <span className="text-[9px] font-medium">{approvalLabel[as_]}</span>
@@ -255,10 +255,10 @@ function DayTooltip({ state }: { state: HoverState }) {
               )
             })()}
             {item.notes && (
-              <p className="text-[10px] text-gray-300 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-[#737373] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {item.client_feedback && (
-              <p className="text-[10px] text-gray-300 italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
+              <p className="text-[10px] text-[#9ca3af] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
@@ -267,16 +267,16 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-gray-400" />
-                  <span className="text-[10px] text-gray-300">
+                  <Paperclip className="w-3 h-3 text-[#9ca3af]" />
+                  <span className="text-[10px] text-[#737373]">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
               )}
               {item.links && item.links.length > 0 && (
                 <div className="flex items-center gap-1 min-w-0">
-                  <Link2 className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                  <span className="text-[10px] text-blue-400 truncate">
+                  <Link2 className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                  <span className="text-[10px] text-blue-500 truncate">
                     {item.links.length === 1 ? item.links[0].url : `${item.links.length} links`}
                   </span>
                 </div>
@@ -637,10 +637,18 @@ function DayPreviewChip({
         ${isDragging ? 'opacity-0' : 'hover:brightness-95'}
         ${disabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
     >
-      <p className="text-[8px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
-      {typeLabel && (
-        <p className="text-[7px] sm:text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
-      )}
+      <div className="flex items-start gap-0.5 min-w-0">
+        <div className="flex-1 min-w-0">
+          <p className="text-[8px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
+          {typeLabel && (
+            <p className="text-[7px] sm:text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
+          )}
+        </div>
+        <Instagram
+          className="w-2 h-2 sm:w-2.5 sm:h-2.5 flex-shrink-0 mt-px opacity-50"
+          strokeWidth={1.5}
+        />
+      </div>
     </div>
   )
 }
@@ -1077,8 +1085,8 @@ export function Planner() {
             onClick={() => setSelectedClientFilter(null)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               selectedClientFilter === null
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/8'
+                ? 'bg-[#0f0f0f] text-white'
+                : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
             }`}
           >
             Geral
@@ -1089,14 +1097,14 @@ export function Planner() {
               onClick={() => setSelectedClientFilter(c.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 selectedClientFilter === c.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/8'
+                  ? 'bg-[#0f0f0f] text-white'
+                  : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
               }`}
             >
               {c.logo_url ? (
                 <img src={c.logo_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" />
               ) : (
-                <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-blue-500/40 to-purple-500/40 flex items-center justify-center text-[8px] font-bold flex-shrink-0">
+                <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-[8px] font-bold flex-shrink-0 text-blue-700">
                   {c.company_name[0].toUpperCase()}
                 </span>
               )}
@@ -1108,7 +1116,7 @@ export function Planner() {
         {/* Filtro por status de aprovação */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           {([
-            { key: 'todos',              label: 'Todos',             dot: 'bg-gray-500' },
+            { key: 'todos',              label: 'Todos',             dot: 'bg-gray-400' },
             { key: 'pendente_aprovacao', label: 'Pendentes',          dot: 'bg-yellow-400' },
             { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
             { key: 'ajuste_solicitado',  label: 'Ajuste solicitado',  dot: 'bg-orange-400' },
@@ -1120,8 +1128,8 @@ export function Planner() {
               onClick={() => setSelectedApprovalFilter(key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 selectedApprovalFilter === key
-                  ? 'bg-white/15 text-white border border-white/20'
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/8'
+                  ? 'bg-[#0f0f0f] text-white border border-transparent'
+                  : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
               }`}
             >
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
@@ -1132,7 +1140,7 @@ export function Planner() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white capitalize">
+          <h2 className="text-lg font-semibold text-[#0f0f0f] capitalize">
             {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
           <div className="flex gap-2">
@@ -1209,7 +1217,7 @@ export function Planner() {
         {/* Overlay visual durante o drag */}
         <DragOverlay dropAnimation={null}>
           {draggingItem ? (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#13131f] border border-white/20 shadow-xl text-[10px] text-white max-w-[160px]">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-[#e2e8f0] shadow-lg text-[10px] text-[#0f0f0f] max-w-[160px]">
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[draggingItem.status as PlannerStatus]}`} />
               <span className="truncate">{draggingItem.title}</span>
             </div>
@@ -1220,7 +1228,7 @@ export function Planner() {
         {/* Legend */}
         <div className="flex gap-3 mt-4 flex-wrap">
           {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([status, color]) => (
-            <div key={status} className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
               <div className={`w-2 h-2 rounded-full ${color}`} />
               {statusLabels[status]}
             </div>
