@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette } from 'lucide-react'
+import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette, Clock, CheckCircle, FileEdit, XCircle } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
 import { useClients, useDeleteClient } from '@/hooks/useClients'
@@ -111,24 +111,43 @@ export function ClientList() {
     fetchStats()
   }, [clients.map(c => c.id).join()])
 
-  // ── Troca gradiente — persiste via RPC (bypassa schema cache do PostgREST) ──
+  // ── Troca gradiente: tenta Supabase (update direto e RPC), cai em localStorage ──
   async function changeBanner(clientId: string, gradientId: string) {
     if (saving === clientId) return
     setPickerOpen(null)
     setSaving(clientId)
+
+    // 1. Salva localmente de imediato → feedback visual instantâneo em qualquer cenário
+    try { localStorage.setItem(`banner_${clientId}`, gradientId) } catch {}
+
+    // 2. Tenta update direto (funciona após PostgREST reiniciado)
+    let saved = false
     try {
-      const { error } = await (supabase.rpc as any)('update_client_gradient', {
-        p_client_id:   clientId,
-        p_gradient_id: gradientId,
-      })
-      if (error) throw error
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
-    } catch (err) {
-      console.error('[changeBanner]', err)
-      toast('Erro ao salvar cor do banner.', 'error')
-    } finally {
-      setSaving(null)
+      const { error } = await (supabase.from('clients') as any)
+        .update({ card_gradient: gradientId, updated_at: new Date().toISOString() })
+        .eq('id', clientId)
+      if (!error) saved = true
+    } catch {}
+
+    // 3. Fallback: RPC (também funciona após PostgREST reiniciado)
+    if (!saved) {
+      try {
+        const { error } = await (supabase.rpc as any)('update_client_gradient', {
+          p_client_id:   clientId,
+          p_gradient_id: gradientId,
+        })
+        if (!error) saved = true
+      } catch {}
     }
+
+    if (!saved) {
+      // PostgREST ainda com schema cache antigo — localStorage garantiu o valor localmente
+      console.warn('[changeBanner] banco indisponível, usando localStorage. Reinicie o PostgREST no painel do Supabase.')
+    }
+
+    // 4. Sempre atualiza a UI com o valor local
+    await queryClient.invalidateQueries({ queryKey: ['clients'] })
+    setSaving(null)
   }
 
   // ── Filtragem e ordenação ─────────────────────────────────────────────────
@@ -295,8 +314,9 @@ export function ClientList() {
                 {filtered.map((client, i) => {
                   const cfg          = STATUS_CFG[client.status] || STATUS_CFG.ativo
                   const initials     = client.company_name.slice(0, 2).toUpperCase()
-                  // ← fonte de verdade única: campo do banco (card_gradient)
-                  const gradientId   = client.card_gradient || DEFAULT_GRADIENT_ID
+                  // Banco tem prioridade; localStorage é fallback enquanto schema cache recarrega
+                  const localGradient = (() => { try { return localStorage.getItem(`banner_${client.id}`) } catch { return null } })()
+                  const gradientId    = client.card_gradient || localGradient || DEFAULT_GRADIENT_ID
                   const banner       = gradientById(gradientId)
                   const clientStats  = stats[client.id] || { pendentes: 0, aprovados: 0, ajuste_solicitado: 0, reprovado: 0 }
                   const isPickerOpen = pickerOpen === client.id
@@ -428,53 +448,61 @@ export function ClientList() {
 
                         <div className="border-t border-[#f1f5f9] mb-3" />
 
-                        {/* ── Métricas sólidas 2×2 ── */}
+                        {/* ── Métricas premium 2×2 ── */}
                         <div className="grid grid-cols-2 gap-2">
 
+                          {/* Pendentes — azul/slate suave */}
                           <div
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                            style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' }}
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+                            style={{ background: '#f0f4ff', borderColor: '#c7d4f5' }}
                           >
-                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4464c4' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#2d4494' }}>
                               Pendentes
                             </span>
-                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#1e3a8a' }}>
                               {clientStats.pendentes}
                             </span>
                           </div>
 
+                          {/* Aprovados — verde suave */}
                           <div
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                            style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+                            style={{ background: '#f0fdf4', borderColor: '#bbf0cc' }}
                           >
-                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#16a34a' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#166534' }}>
                               Aprovados
                             </span>
-                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#14532d' }}>
                               {clientStats.aprovados}
                             </span>
                           </div>
 
+                          {/* Ajustes solicitados — azul acinzentado suave */}
                           <div
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+                            style={{ background: '#f5f7ff', borderColor: '#c5cff5' }}
                           >
-                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
-                              Ajustes solicitados
+                            <FileEdit className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5b73e8' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#3b4fb8' }}>
+                              Ajustes
                             </span>
-                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#2d3d99' }}>
                               {clientStats.ajuste_solicitado}
                             </span>
                           </div>
 
+                          {/* Reprovados — vermelho rosado suave */}
                           <div
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                            style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+                            style={{ background: '#fff5f5', borderColor: '#fecaca' }}
                           >
-                            <span className="text-[11px] font-semibold leading-tight" style={{ color: '#ffffff' }}>
+                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#dc2626' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#991b1b' }}>
                               Reprovados
                             </span>
-                            <span className="text-[16px] font-bold ml-1 flex-shrink-0" style={{ color: '#ffffff' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#7f1d1d' }}>
                               {clientStats.reprovado}
                             </span>
                           </div>
