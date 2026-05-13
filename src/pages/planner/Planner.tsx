@@ -606,23 +606,41 @@ function DayItemCard({
 
 // ─── Drag & Drop primitives ───────────────────────────────────────────────────
 
-function DraggableChip({ item, disabled }: { item: PlannerItem; disabled: boolean }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, disabled })
+function getChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
+  const s = item.status as PlannerStatus
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+  if (s === 'publicado') return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+  if (s === 'aprovado')  return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
+  if (as_ === 'reprovado')         return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
+  if (as_ === 'ajuste_solicitado') return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
+  if (as_ === 'ajuste_realizado')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  if (s === 'revisao')   return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
+  if (s === 'producao')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  return { bg: '#faf5ff', border: '#c4b5fd', text: '#5b21b6' }
+}
+
+function DayPreviewChip({
+  item, disabled, onItemClick,
+}: { item: PlannerItem; disabled: boolean; onItemClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, disabled })
+  const { bg, border, text } = getChipStyle(item)
+  const typeLabel = contentTypeLabels[item.content_type as ContentType] ?? item.content_type ?? ''
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={e => e.stopPropagation()}
-      style={{ touchAction: 'none' }}
-      className={`flex items-center gap-0.5 min-w-0 rounded transition-opacity select-none
-        ${isDragging ? 'opacity-0' : ''}
-        ${disabled ? '' : 'cursor-grab active:cursor-grabbing'}`}
+      onClick={e => { e.stopPropagation(); onItemClick() }}
+      style={{ touchAction: 'none', backgroundColor: bg, borderColor: border, color: text }}
+      className={`w-full rounded border px-1 py-0.5 min-w-0 transition-opacity select-none
+        ${isDragging ? 'opacity-0' : 'hover:brightness-95'}
+        ${disabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
     >
-      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-      <span className="text-gray-400 truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden sm:block">{item.title}</span>
-      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} title={approvalLabel[as_]} />
+      <p className="text-[8px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
+      {typeLabel && (
+        <p className="text-[7px] sm:text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
+      )}
     </div>
   )
 }
@@ -1169,10 +1187,15 @@ export function Planner() {
                     </div>
                     <div className="space-y-0.5">
                       {dayItems.slice(0, 2).map(item => (
-                        <DraggableChip key={item.id} item={item} disabled={isMobile} />
+                        <DayPreviewChip
+                          key={item.id}
+                          item={item}
+                          disabled={isMobile}
+                          onItemClick={() => openItemView(item)}
+                        />
                       ))}
                       {dayItems.length > 2 && (
-                        <p className="text-[8px] sm:text-[10px] text-gray-500 font-medium">+{dayItems.length - 2}</p>
+                        <p className="text-[7px] sm:text-[9px] text-gray-400 font-medium pl-0.5">+{dayItems.length - 2} mais</p>
                       )}
                     </div>
                   </DroppableDay>
