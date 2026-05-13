@@ -1055,10 +1055,11 @@ export function Planner() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div>
+    <div className="min-h-full bg-[#f5f7fb]">
       <Header
         title="Planejamento"
         subtitle="Calendário editorial"
+        dark={false}
         action={
           <Button
             onClick={() => {
