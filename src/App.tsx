@@ -13,6 +13,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { ClientList } from '@/pages/clients/ClientList'
 import { ClientForm } from '@/pages/clients/ClientForm'
 import { ClientProfile } from '@/pages/clients/ClientProfile'
+import { FeedOrganizer } from '@/pages/feed/FeedOrganizer'
 import { Planner } from '@/pages/planner/Planner'
 import { Tasks } from '@/pages/tasks/Tasks'
 import { Library } from '@/pages/library/Library'
@@ -88,6 +89,7 @@ function AppRoutes() {
         <Route path="/clients/new" element={<ClientForm />} />
         <Route path="/clients/:id" element={<ClientProfile />} />
         <Route path="/clients/:id/edit" element={<ClientForm />} />
+        <Route path="/feed" element={<FeedOrganizer />} />
         <Route path="/content" element={<Navigate to="/" replace />} />
         <Route path="/history" element={<Navigate to="/" replace />} />
         <Route path="/history/:id" element={<Navigate to="/" replace />} />

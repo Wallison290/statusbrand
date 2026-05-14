@@ -3,19 +3,20 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
 
 const navItems = [
-  { href: '/',          icon: LayoutDashboard, label: 'Dashboard'    },
-  { href: '/clients',   icon: Users,            label: 'Clientes'     },
-  { href: '/planner',   icon: Calendar,         label: 'Planejamento' },
-  { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'      },
-  { href: '/notes',     icon: NotebookPen,      label: 'Notas'        },
-  { href: '/library',   icon: BookOpen,         label: 'Biblioteca'   },
-  { href: '/financial', icon: Wallet,           label: 'Financeiro'   },
+  { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
+  { href: '/clients',   icon: Users,            label: 'Clientes'       },
+  { href: '/feed',      icon: LayoutGrid,       label: 'Feed do Perfil' },
+  { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },
+  { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'        },
+  { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
+  { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
+  { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
 ]
 
 // ── StatusBrand logo mark ─────────────────────────────────────────────────────
