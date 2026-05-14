@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, UserCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
@@ -161,6 +161,23 @@ export function Login() {
                 Criar conta
               </Link>
             </p>
+          </div>
+
+          {/* Client access separator */}
+          <div className="mt-4 bg-white rounded-2xl border border-[#e8e8e8] shadow-sm px-6 py-4 flex items-center gap-4">
+            <div className="w-9 h-9 rounded-xl bg-[#f5f5f5] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
+              <UserCircle2 className="w-4.5 h-4.5 text-[#737373]" style={{ width: 18, height: 18 }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium text-[#0f0f0f] leading-tight">É cliente da agência?</p>
+              <p className="text-[11px] text-[#a0a0a0] mt-0.5 leading-tight">Crie seu acesso ao portal do cliente</p>
+            </div>
+            <Link
+              to="/client-register"
+              className="flex-shrink-0 text-[12px] font-medium text-[#0f0f0f] border border-[#d4d4d4] rounded-lg px-3 py-1.5 hover:bg-[#0f0f0f] hover:text-white hover:border-[#0f0f0f] transition-all"
+            >
+              Criar acesso
+            </Link>
           </div>
 
           {/* Footer note */}
