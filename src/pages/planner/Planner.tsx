@@ -109,6 +109,46 @@ function extractStoragePath(url: string): string | null {
   return decodeURIComponent(url.slice(idx + marker.length))
 }
 
+// ─── Video Preview (pending file — objectURL gerenciado) ─────────────────────
+
+function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const [src, setSrc] = useState<string>('')
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file)
+    setSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  if (!src) return null
+
+  return (
+    <div className="border border-white/8 rounded-xl overflow-hidden bg-black">
+      <video
+        src={src}
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls
+        className="w-full max-h-[220px] object-contain bg-black"
+      />
+      <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/[0.04]">
+        <Video className="w-3 h-3 text-purple-400 flex-shrink-0" />
+        <span className="text-xs text-gray-300 truncate flex-1">{file.name}</span>
+        <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(file.size)}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Helpers de mídia ────────────────────────────────────────────────────────
 
 function guessMediaType(url: string): string {
@@ -262,7 +302,17 @@ function DayTooltip({ state }: { state: HoverState }) {
             )}
             {(() => {
               const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
-              return img ? <img src={img.file_url} alt="" className="w-full h-20 object-cover rounded-lg mb-1.5" /> : null
+              const vid = item.attachments?.find(a => a.file_type.startsWith('video/'))
+              if (img) return <img src={img.file_url} alt="" className="w-full h-20 object-cover rounded-lg mb-1.5" />
+              if (vid) return (
+                <div className="w-full h-20 rounded-lg mb-1.5 bg-black overflow-hidden relative">
+                  <video src={vid.file_url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <Video className="w-5 h-5 text-white drop-shadow" />
+                  </div>
+                </div>
+              )
+              return null
             })()}
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
@@ -302,8 +352,9 @@ function PlannerItemView({
   onClose: () => void
   onEdit: () => void
 }) {
-  const images = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
-  const otherAttachments = item.attachments?.filter(a => !a.file_type.startsWith('image/')) || []
+  const images          = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
+  const videos          = item.attachments?.filter(a => a.file_type.startsWith('video/')) || []
+  const otherAttachments = item.attachments?.filter(a => !a.file_type.startsWith('image/') && !a.file_type.startsWith('video/')) || []
 
   const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
     item.approval_status as ApprovalStatus | null
@@ -392,6 +443,43 @@ function PlannerItemView({
             </div>
           )}
 
+          {/* Vídeos com player autoPlay inline */}
+          {videos.length > 0 && (
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Vídeos</p>
+              <div className="space-y-3">
+                {videos.map(vid => (
+                  <div key={vid.id} className="rounded-xl border border-white/8 overflow-hidden bg-black">
+                    <video
+                      src={vid.file_url}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      controls
+                      className="w-full max-h-[55vh] object-contain bg-black"
+                    />
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/[0.04]">
+                      <Video className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                      <span className="text-[10px] text-gray-400 truncate flex-1">{vid.file_name}</span>
+                      {vid.file_size && (
+                        <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(vid.file_size)}</span>
+                      )}
+                      <a
+                        href={vid.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0"
+                      >
+                        <ExternalLink className="w-3 h-3 text-gray-600 hover:text-gray-400 transition-colors" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Outros anexos */}
           {otherAttachments.length > 0 && (
             <div>
@@ -440,7 +528,7 @@ function PlannerItemView({
           )}
 
           {/* Nenhum conteúdo extra */}
-          {!item.client && !item.notes && images.length === 0 && otherAttachments.length === 0 && (!item.links || item.links.length === 0) && (
+          {!item.client && !item.notes && images.length === 0 && videos.length === 0 && otherAttachments.length === 0 && (!item.links || item.links.length === 0) && (
             <p className="text-xs text-gray-600 text-center py-4">Nenhuma informação adicional cadastrada.</p>
           )}
 
@@ -508,7 +596,8 @@ function DayItemCard({
   onDelete: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
-  const thumbnail = item.attachments?.find(a => a.file_type.startsWith('image/'))
+  const imageThumbnail = item.attachments?.find(a => a.file_type.startsWith('image/'))
+  const videoThumbnail = item.attachments?.find(a => a.file_type.startsWith('video/'))
 
   return (
     <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden w-full max-w-full min-w-0">
@@ -517,8 +606,22 @@ function DayItemCard({
         onClick={onView}
         className="flex items-start gap-3 p-3 cursor-pointer hover:bg-white/5 transition-colors group/view min-w-0 w-full max-w-full"
       >
-        {thumbnail && (
-          <img src={thumbnail.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+        {imageThumbnail && (
+          <img src={imageThumbnail.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+        )}
+        {!imageThumbnail && videoThumbnail && (
+          <div className="w-14 h-14 rounded-lg flex-shrink-0 bg-black overflow-hidden relative">
+            <video
+              src={videoThumbnail.file_url}
+              muted
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <Video className="w-4 h-4 text-white drop-shadow" />
+            </div>
+          </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
@@ -1441,17 +1544,40 @@ export function Planner() {
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Anexos</label>
               {existingAttachments.length > 0 && (
-                <div className="mb-2 space-y-1">
-                  {existingAttachments.map(att => (
-                    <div key={att.id} className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 border border-white/8 rounded-md px-2.5 py-1.5">
-                      <FileTypeIcon type={att.file_type} />
-                      <span className="truncate flex-1">{att.file_name}</span>
-                      {att.file_size && <span className="text-gray-600 flex-shrink-0 text-[10px]">{formatFileSize(att.file_size)}</span>}
-                      <button type="button" onClick={() => markAttachmentForDeletion(att)} className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="mb-2 space-y-2">
+                  {existingAttachments.map(att => {
+                    const isVideo = att.file_type.startsWith('video/')
+                    return isVideo ? (
+                      <div key={att.id} className="border border-white/8 rounded-xl overflow-hidden bg-black">
+                        <video
+                          src={att.file_url}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          controls
+                          className="w-full max-h-[200px] object-contain bg-black"
+                        />
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/[0.04]">
+                          <Video className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                          <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
+                          {att.file_size && <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                          <button type="button" onClick={() => markAttachmentForDeletion(att)} className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={att.id} className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 border border-white/8 rounded-md px-2.5 py-1.5">
+                        <FileTypeIcon type={att.file_type} />
+                        <span className="truncate flex-1">{att.file_name}</span>
+                        {att.file_size && <span className="text-gray-600 flex-shrink-0 text-[10px]">{formatFileSize(att.file_size)}</span>}
+                        <button type="button" onClick={() => markAttachmentForDeletion(att)} className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <button type="button" onClick={() => fileInputRef.current?.click()}
@@ -1460,17 +1586,23 @@ export function Planner() {
               </button>
               <input ref={fileInputRef} type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileSelect} />
               {pendingFiles.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {pendingFiles.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 border border-white/8 rounded-md px-2.5 py-1.5">
-                      <FileTypeIcon type={f.type} />
-                      <span className="truncate flex-1">{f.name}</span>
-                      <span className="text-gray-600 flex-shrink-0 text-[10px]">{formatFileSize(f.size)}</span>
-                      <button type="button" onClick={() => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="mt-2 space-y-2">
+                  {pendingFiles.map((f, i) => {
+                    const isVideo = f.type.startsWith('video/')
+                    const remove = () => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))
+                    return isVideo ? (
+                      <VideoPreview key={i} file={f} onRemove={remove} />
+                    ) : (
+                      <div key={i} className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 border border-white/8 rounded-md px-2.5 py-1.5">
+                        <FileTypeIcon type={f.type} />
+                        <span className="truncate flex-1">{f.name}</span>
+                        <span className="text-gray-600 flex-shrink-0 text-[10px]">{formatFileSize(f.size)}</span>
+                        <button type="button" onClick={remove} className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
