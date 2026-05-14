@@ -1067,6 +1067,15 @@ export function Planner() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !user) return
+
+    // FIX: captura qualquer URL digitada mas não adicionada com o botão "+"
+    // Evita que o usuário perca o link ao clicar em Salvar sem clicar em Adicionar
+    const allLinks = [...pendingLinks]
+    const rawInput = linkInput.trim()
+    if (rawInput && !allLinks.includes(rawInput)) {
+      allLinks.push(rawInput)
+    }
+
     setIsUploading(true)
     try {
       if (editingItem) {
@@ -1101,9 +1110,9 @@ export function Planner() {
             })
           }
         }
-        if (pendingLinks.length > 0) {
+        if (allLinks.length > 0) {
           await supabase.from('planner_links').insert(
-            pendingLinks.map(url => ({ planner_id: editingItem.id, user_id: user.id, url, label: null }))
+            allLinks.map(url => ({ planner_id: editingItem.id, user_id: user.id, url, label: null }))
           )
         }
         toast('Post atualizado!', 'success')
@@ -1149,14 +1158,18 @@ export function Planner() {
             })
           }
         }
-        if (pendingLinks.length > 0) {
+        if (allLinks.length > 0) {
           await supabase.from('planner_links').insert(
-            pendingLinks.map(url => ({ planner_id: created.id, user_id: user.id, url, label: null }))
+            allLinks.map(url => ({ planner_id: created.id, user_id: user.id, url, label: null }))
           )
         }
         toast('Item adicionado ao planejamento!', 'success')
       }
-      qc.invalidateQueries({ queryKey: ['planner'] })
+
+      // FIX: força refetch DEPOIS que todos os dados (incluindo links) foram salvos.
+      // Sem isso, o onSuccess do mutation dispara um refetch prematuro (antes dos links
+      // estarem no banco) e o modal pode abrir com dados incompletos.
+      await qc.refetchQueries({ queryKey: ['planner'] })
       setOpen(false)
       resetForm()
     } catch (err: any) {
