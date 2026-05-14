@@ -237,7 +237,11 @@ function DayColumn({
 
   return (
     <div
-      className="flex flex-col flex-1 min-w-[170px]"
+      className={`flex flex-col flex-1 min-w-[170px] rounded-2xl border shadow-sm transition-all duration-150 overflow-hidden
+        ${isDragOver
+          ? 'border-[#94a3b8] bg-[#f0f4f8]'
+          : 'border-[#e2e8f0] bg-white'}
+      `}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -251,49 +255,44 @@ function DayColumn({
     >
       {/* Column header */}
       <div className={`
-        rounded-xl border px-3 py-2.5 mb-2 transition-all
-        ${today ? 'bg-[#0f0f0f] border-[#0f0f0f]' : 'bg-white border-[#e8e8e8]'}
+        px-3 py-3 border-b flex items-center justify-between flex-shrink-0
+        ${today ? 'bg-[#0f0f0f] border-[#0f0f0f]' : 'bg-white border-[#f0f4f8]'}
       `}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className={`text-[10px] font-semibold uppercase tracking-wider ${today ? 'text-white/60' : 'text-[#a0a0a0]'}`}>
-              {dayLabel}
-            </p>
-            <p className={`text-[20px] font-bold leading-tight tabular-nums ${today ? 'text-white' : 'text-[#0f0f0f]'}`}>
-              {dayNum}
-              <span className={`text-[10px] font-normal ml-1 ${today ? 'text-white/50' : 'text-[#b0b0b0]'}`}>
-                {monthAbbr}
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            {tasks.length > 0 && (
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
-                today ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#737373]'
-              }`}>
-                {tasks.length}
-              </span>
-            )}
-            <button
-              onClick={() => onAddTask(day)}
-              className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                today
-                  ? 'bg-white/20 hover:bg-white/30 text-white'
-                  : 'bg-[#f0f0f0] hover:bg-[#e0e0e0] text-[#737373] hover:text-[#0f0f0f]'
-              }`}
-              title={`Nova tarefa para ${format(day, 'dd/MM')}`}
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-          </div>
+        <div>
+          <p className={`text-[10px] font-semibold uppercase tracking-wider ${today ? 'text-white/60' : 'text-[#9ca3af]'}`}>
+            {dayLabel}
+          </p>
+          <p className={`text-[22px] font-bold leading-tight tabular-nums ${today ? 'text-white' : 'text-[#0f0f0f]'}`}>
+            {dayNum}
+            <span className={`text-[10px] font-normal ml-1 ${today ? 'text-white/50' : 'text-[#c7d2e0]'}`}>
+              {monthAbbr}
+            </span>
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          {tasks.length > 0 && (
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+              today ? 'bg-white/20 text-white' : 'bg-[#f0f4f8] text-[#6b7280]'
+            }`}>
+              {tasks.length}
+            </span>
+          )}
+          <button
+            onClick={() => onAddTask(day)}
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+              today
+                ? 'bg-white/20 hover:bg-white/30 text-white'
+                : 'bg-[#f0f4f8] hover:bg-[#e2e8f0] text-[#6b7280] hover:text-[#0f0f0f]'
+            }`}
+            title={`Nova tarefa para ${format(day, 'dd/MM')}`}
+          >
+            <Plus className="w-3 h-3" />
+          </button>
         </div>
       </div>
 
-      {/* Drop zone */}
-      <div className={`
-        flex-1 rounded-xl border-2 border-dashed min-h-[420px] p-2 transition-all duration-150
-        ${isDragOver ? 'border-[#0f0f0f] bg-[#f5f5f5]' : 'border-transparent bg-transparent'}
-      `}>
+      {/* Task list */}
+      <div className="flex-1 p-2.5 min-h-[380px] overflow-y-auto">
         <div className="space-y-2">
           <AnimatePresence>
             {tasks.map(task => (
@@ -312,15 +311,19 @@ function DayColumn({
         </div>
 
         {tasks.length === 0 && !isDragOver && (
-          <div className="flex items-center justify-center h-20 mt-2">
-            <p className="text-[10px] text-[#d8d8d8] text-center leading-relaxed">
-              Arraste tarefas<br />para cá
+          <div className="flex flex-col items-center justify-center py-8 mt-2">
+            <div className="w-7 h-7 rounded-full bg-[#f0f4f8] flex items-center justify-center mb-2">
+              <Plus className="w-3.5 h-3.5 text-[#c7d2e0]" />
+            </div>
+            <p className="text-[10px] text-[#c7d2e0] text-center leading-relaxed">
+              Sem tarefas
             </p>
           </div>
         )}
+
         {isDragOver && (
-          <div className="flex items-center justify-center h-16 mt-2 rounded-lg border border-dashed border-[#0f0f0f]/20">
-            <p className="text-[11px] text-[#737373] font-medium">Soltar aqui</p>
+          <div className="flex items-center justify-center h-16 mt-2 rounded-xl border-2 border-dashed border-[#94a3b8] bg-[#f0f4f8]/50">
+            <p className="text-[11px] text-[#6b7280] font-medium">Soltar aqui</p>
           </div>
         )}
       </div>
@@ -731,14 +734,19 @@ export function Tasks() {
   ).length
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#f5f7fb]">
       <Header
         title="Tarefas"
         subtitle="Calendário semanal"
+        dark={false}
         action={
-          <Button size="sm" onClick={handleNewTask}>
+          <button
+            onClick={handleNewTask}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+            style={{ background: '#0f0f0f', color: '#ffffff' }}
+          >
             <Plus className="w-3.5 h-3.5" /> Nova tarefa
-          </Button>
+          </button>
         }
       />
 
@@ -747,21 +755,21 @@ export function Tasks() {
         <div className="flex items-center gap-3 mb-5 flex-shrink-0">
           <button
             onClick={() => setWeekBase(d => subWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center text-white/50 hover:border-white/20 hover:text-white transition-all"
+            className="w-8 h-8 rounded-lg border border-[#e2e8f0] bg-white flex items-center justify-center text-[#6b7280] hover:border-[#c7d2e0] hover:text-[#0f0f0f] transition-all shadow-sm"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           <div className="flex items-center gap-2">
-            <CalendarDays className="w-3.5 h-3.5 text-white/40" />
-            <span className="text-[13px] font-semibold text-white capitalize">
+            <CalendarDays className="w-3.5 h-3.5 text-[#9ca3af]" />
+            <span className="text-[13px] font-semibold text-[#0f0f0f] capitalize">
               {weekLabel}
             </span>
           </div>
 
           <button
             onClick={() => setWeekBase(d => addWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center text-white/50 hover:border-white/20 hover:text-white transition-all"
+            className="w-8 h-8 rounded-lg border border-[#e2e8f0] bg-white flex items-center justify-center text-[#6b7280] hover:border-[#c7d2e0] hover:text-[#0f0f0f] transition-all shadow-sm"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -770,17 +778,17 @@ export function Tasks() {
           {!days.some(d => isToday(d)) && (
             <button
               onClick={() => setWeekBase(new Date())}
-              className="px-2.5 py-1 text-[11px] font-medium text-white/70 border border-white/10 bg-white/10 rounded-lg hover:bg-white/15 transition-colors"
+              className="px-2.5 py-1 text-[11px] font-medium text-[#6b7280] border border-[#e2e8f0] bg-white rounded-lg hover:bg-[#f0f4f8] hover:text-[#0f0f0f] transition-colors shadow-sm"
             >
               Hoje
             </button>
           )}
 
           {/* Summary */}
-          <div className="ml-auto flex items-center gap-4 text-[11px] text-white/40">
+          <div className="ml-auto flex items-center gap-4 text-[11px] text-[#9ca3af]">
             <span>{tasks.length} tarefa{tasks.length !== 1 ? 's' : ''}</span>
             {overdueCount > 0 && (
-              <span className="flex items-center gap-1 text-red-400 font-medium">
+              <span className="flex items-center gap-1 text-red-500 font-medium">
                 <AlertCircle className="w-3 h-3" />
                 {overdueCount} atrasada{overdueCount !== 1 ? 's' : ''}
               </span>
