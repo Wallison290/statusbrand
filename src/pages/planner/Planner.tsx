@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable,
@@ -154,9 +154,36 @@ function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) 
 function guessMediaType(url: string): string {
   const lower = url.toLowerCase().split('?')[0]
   if (/\.(jpg|jpeg|png|gif|webp|avif|svg)$/.test(lower)) return 'image/jpeg'
-  if (/\.(mp4|mov|webm|avi)$/.test(lower)) return 'video/mp4'
+  if (/\.(mp4|mov|webm|avi|mkv|m4v|ogv)$/.test(lower)) return 'video/mp4'
   if (/\.(pdf)$/.test(lower)) return 'application/pdf'
   return 'application/octet-stream'
+}
+
+// MIME type com fallback por extensão (para File objects que retornam '' em alguns browsers)
+function getMimeType(file: File): string {
+  if (file.type && file.type !== 'application/octet-stream') return file.type
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  const map: Record<string, string> = {
+    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
+    avi: 'video/x-msvideo', mkv: 'video/x-matroska', m4v: 'video/mp4', ogv: 'video/ogg',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+    gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml',
+    pdf: 'application/pdf',
+  }
+  return map[ext] || file.type || 'application/octet-stream'
+}
+
+// Detecção de vídeo/imagem com fallback por extensão da URL (cobre file_type salvo incorretamente)
+function isVideoAttachment(att: { file_type: string; file_url: string }): boolean {
+  if (att.file_type.startsWith('video/')) return true
+  const url = att.file_url.toLowerCase().split('?')[0]
+  return /\.(mp4|mov|webm|avi|mkv|m4v|ogv)$/.test(url)
+}
+
+function isImageAttachment(att: { file_type: string; file_url: string }): boolean {
+  if (att.file_type.startsWith('image/')) return true
+  const url = att.file_url.toLowerCase().split('?')[0]
+  return /\.(jpg|jpeg|png|gif|webp|avif|svg)$/.test(url)
 }
 
 // ─── Content Picker Dialog ────────────────────────────────────────────────────
@@ -301,15 +328,19 @@ function DayTooltip({ state }: { state: HoverState }) {
               <p className="text-[10px] text-[#9ca3af] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
             )}
             {(() => {
-              const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
-              const vid = item.attachments?.find(a => a.file_type.startsWith('video/'))
+              const img = item.attachments?.find(a => isImageAttachment(a))
+              const vid = item.attachments?.find(a => isVideoAttachment(a))
               if (img) return <img src={img.file_url} alt="" className="w-full h-20 object-cover rounded-lg mb-1.5" />
               if (vid) return (
-                <div className="w-full h-20 rounded-lg mb-1.5 bg-black overflow-hidden relative">
-                  <video src={vid.file_url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <Video className="w-5 h-5 text-white drop-shadow" />
-                  </div>
+                <div className="w-full h-20 rounded-lg mb-1.5 bg-black overflow-hidden">
+                  <video
+                    src={vid.file_url}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )
               return null
@@ -352,9 +383,9 @@ function PlannerItemView({
   onClose: () => void
   onEdit: () => void
 }) {
-  const images          = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
-  const videos          = item.attachments?.filter(a => a.file_type.startsWith('video/')) || []
-  const otherAttachments = item.attachments?.filter(a => !a.file_type.startsWith('image/') && !a.file_type.startsWith('video/')) || []
+  const images           = item.attachments?.filter(a => isImageAttachment(a)) || []
+  const videos           = item.attachments?.filter(a => isVideoAttachment(a)) || []
+  const otherAttachments = item.attachments?.filter(a => !isImageAttachment(a) && !isVideoAttachment(a)) || []
 
   const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
     item.approval_status as ApprovalStatus | null
@@ -596,8 +627,8 @@ function DayItemCard({
   onDelete: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
-  const imageThumbnail = item.attachments?.find(a => a.file_type.startsWith('image/'))
-  const videoThumbnail = item.attachments?.find(a => a.file_type.startsWith('video/'))
+  const imageThumbnail = item.attachments?.find(a => isImageAttachment(a))
+  const videoThumbnail = item.attachments?.find(a => isVideoAttachment(a))
 
   return (
     <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden w-full max-w-full min-w-0">
@@ -610,17 +641,15 @@ function DayItemCard({
           <img src={imageThumbnail.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
         )}
         {!imageThumbnail && videoThumbnail && (
-          <div className="w-14 h-14 rounded-lg flex-shrink-0 bg-black overflow-hidden relative">
+          <div className="w-14 h-14 rounded-lg flex-shrink-0 bg-black overflow-hidden">
             <video
               src={videoThumbnail.file_url}
+              autoPlay
               muted
+              loop
               playsInline
-              preload="metadata"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <Video className="w-4 h-4 text-white drop-shadow" />
-            </div>
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -861,6 +890,15 @@ export function Planner() {
   const { data: items } = usePlanner()
   const { data: clients } = useClients()
 
+  // Sempre usa a versão mais recente do item do cache React Query.
+  // Resolve o problema de selectedPlannerItem ficar stale após save/invalidação.
+  const liveSelectedItem = useMemo(
+    () => selectedPlannerItem
+      ? ((items || []).find(i => i.id === selectedPlannerItem.id) ?? selectedPlannerItem)
+      : null,
+    [selectedPlannerItem, items]
+  )
+
   // Auto-abrir item via query param ?item=UUID (vindo de notificação)
   useEffect(() => {
     const itemId = searchParams.get('item')
@@ -1058,7 +1096,7 @@ export function Planner() {
             const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
             await supabase.from('planner_attachments').insert({
               planner_id: editingItem.id, user_id: user.id,
-              file_name: file.name, file_type: file.type || 'application/octet-stream',
+              file_name: file.name, file_type: getMimeType(file),
               file_url: publicUrl, file_size: file.size,
             })
           }
@@ -1106,7 +1144,7 @@ export function Planner() {
             const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
             await supabase.from('planner_attachments').insert({
               planner_id: created.id, user_id: user.id,
-              file_name: file.name, file_type: file.type || 'application/octet-stream',
+              file_name: file.name, file_type: getMimeType(file),
               file_url: publicUrl, file_size: file.size,
             })
           }
@@ -1414,12 +1452,12 @@ export function Planner() {
       )}
 
       {/* ── Modal: Visualização Completa do Evento ── */}
-      {selectedPlannerItem && (
+      {liveSelectedItem && (
         <PlannerItemView
-          item={selectedPlannerItem}
+          item={liveSelectedItem}
           open={itemViewOpen}
           onClose={closeItemView}
-          onEdit={() => openEdit(selectedPlannerItem)}
+          onEdit={() => openEdit(liveSelectedItem)}
         />
       )}
 
@@ -1546,7 +1584,7 @@ export function Planner() {
               {existingAttachments.length > 0 && (
                 <div className="mb-2 space-y-2">
                   {existingAttachments.map(att => {
-                    const isVideo = att.file_type.startsWith('video/')
+                    const isVideo = isVideoAttachment(att)
                     return isVideo ? (
                       <div key={att.id} className="border border-white/8 rounded-xl overflow-hidden bg-black">
                         <video
