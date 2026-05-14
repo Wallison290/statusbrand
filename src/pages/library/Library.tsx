@@ -885,9 +885,13 @@ function ConteudosTab() {
           </div>
           <p className="text-[14px] font-medium text-[#737373]">Nenhum conteúdo encontrado</p>
           <p className="text-[12px] text-[#b0b0b0] mt-1">Adicione conteúdos à biblioteca ou ajuste os filtros.</p>
-          <Button size="sm" className="mt-4" onClick={() => setAddOpen(true)}>
+          <button
+            className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+            style={{ background: '#0f0f0f', color: '#ffffff' }}
+            onClick={() => setAddOpen(true)}
+          >
             <Plus className="w-3.5 h-3.5" /> Adicionar conteúdo
-          </Button>
+          </button>
         </div>
       ) : (
         <>
@@ -1015,9 +1019,13 @@ function SnippetsTab() {
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <BookOpen className="w-10 h-10 text-[#c0c0c0] mb-3" />
           <p className="text-[13px] text-[#a0a0a0]">Biblioteca de snippets vazia.</p>
-          <Button size="sm" className="mt-4" onClick={() => setOpen(true)}>
+          <button
+            className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+            style={{ background: '#0f0f0f', color: '#ffffff' }}
+            onClick={() => setOpen(true)}
+          >
             <Plus className="w-3.5 h-3.5" /> Adicionar snippet
-          </Button>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -1562,22 +1570,39 @@ export function Library() {
   const [matAddOpen, setMatAddOpen] = useState(false)
 
   const headerAction = tab === 'conteudos'
-    ? <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="w-3.5 h-3.5" /> Novo conteúdo</Button>
+    ? (
+      <button
+        onClick={() => setAddOpen(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+        style={{ background: '#0f0f0f', color: '#ffffff' }}
+      >
+        <Plus className="w-3.5 h-3.5" /> Novo conteúdo
+      </button>
+    )
     : tab === 'materiais'
-      ? <Button size="sm" onClick={() => setMatAddOpen(true)}><Plus className="w-3.5 h-3.5" /> Novo material</Button>
+      ? (
+        <button
+          onClick={() => setMatAddOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+          style={{ background: '#0f0f0f', color: '#ffffff' }}
+        >
+          <Plus className="w-3.5 h-3.5" /> Novo material
+        </button>
+      )
       : undefined
 
   return (
-    <div>
+    <div className="min-h-full bg-[#f5f7fb]">
       <Header
         title="Biblioteca"
         subtitle="Conteúdos e recursos da sua agência"
         action={headerAction}
+        dark={false}
       />
 
       <div className="p-4 md:p-6 space-y-5">
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-white/10 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-1 w-fit">
           {([
             ['conteudos', 'Conteúdos'],
             ['materiais', 'Materiais'],
@@ -1588,8 +1613,8 @@ export function Library() {
               onClick={() => setTab(key)}
               className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                 tab === key
-                  ? 'bg-white text-[#0f0f0f] shadow-sm border border-white/20'
-                  : 'text-white/50 hover:text-white'
+                  ? 'bg-[#0f0f0f] text-white shadow-sm border border-transparent'
+                  : 'text-[#6b7280] hover:text-[#0f0f0f] hover:bg-[#f0f4f8]'
               }`}
             >
               {label}
