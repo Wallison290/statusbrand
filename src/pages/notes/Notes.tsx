@@ -479,9 +479,9 @@ export function Notes() {
   const clients = allClients.map(c => ({ id: c.id, company_name: c.company_name }))
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[#f5f7fb]">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f0f0] bg-white gap-4 flex-wrap">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] bg-white gap-4 flex-wrap">
         <div>
           <h1 className="text-[18px] font-bold text-[#0f0f0f]">Notas</h1>
           <p className="text-[12px] text-[#a0a0a0] mt-0.5">
@@ -512,16 +512,16 @@ export function Notes() {
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh] gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
-              <StickyNote className="w-8 h-8 text-white/30" />
+            <div className="w-16 h-16 rounded-2xl bg-white border border-[#e2e8f0] shadow-sm flex items-center justify-center">
+              <StickyNote className="w-8 h-8 text-[#c7d2e0]" />
             </div>
             <div>
-              <p className="text-[15px] font-semibold text-white mb-1">
+              <p className="text-[15px] font-semibold text-[#0f0f0f] mb-1">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Nenhuma nota encontrada com esses filtros'
                   : 'Nenhuma nota ainda'}
               </p>
-              <p className="text-[13px] text-white/50">
+              <p className="text-[13px] text-[#9ca3af]">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Tente alterar ou limpar os filtros'
                   : 'Crie sua primeira nota clicando em "Nova nota"'}
@@ -530,10 +530,10 @@ export function Notes() {
             {!(filter.client_id || filter.type || filter.origin) && (
               <button
                 onClick={() => setSelected('new')}
-                className="flex items-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-xl bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors mt-2"
-                style={{ color: '#ffffff' }}
+                className="flex items-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-xl hover:opacity-90 transition-colors mt-2"
+                style={{ background: '#0f0f0f', color: '#ffffff' }}
               >
-                <Plus className="w-4 h-4" style={{ color: '#ffffff' }} />
+                <Plus className="w-4 h-4" />
                 Criar nota
               </button>
             )}
