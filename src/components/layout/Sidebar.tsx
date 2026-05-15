@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
+  { href: '/ai',        icon: Sparkles,         label: 'IA Copilot',  highlight: true },
 ]
 
 // ── StatusBrand logo mark ─────────────────────────────────────────────────────
@@ -79,6 +80,33 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           const active =
             location.pathname === item.href ||
             (item.href !== '/' && location.pathname.startsWith(item.href))
+          const isAI = 'highlight' in item && item.highlight
+
+          // Estilo especial para o item de IA
+          if (isAI && !active) {
+            return (
+              <Link key={item.href} to={item.href}>
+                <div
+                  title={collapsed ? item.label : undefined}
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group bg-gradient-to-r from-[#f5f3ff] to-[#ede9fe] border border-[#ddd6fe] hover:from-[#ede9fe] hover:to-[#ddd6fe]"
+                >
+                  <item.icon
+                    className="w-[15px] h-[15px] flex-shrink-0 text-[#6366f1]"
+                  />
+                  {!collapsed && (
+                    <span className="whitespace-nowrap text-[#4f46e5] font-medium">
+                      {item.label}
+                    </span>
+                  )}
+                  {!collapsed && (
+                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#6366f1] leading-none" style={{ color: '#ffffff' }}>
+                      novo
+                    </span>
+                  )}
+                </div>
+              </Link>
+            )
+          }
 
           return (
             <Link key={item.href} to={item.href}>

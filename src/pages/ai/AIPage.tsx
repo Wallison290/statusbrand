@@ -1,0 +1,548 @@
+import { useState, useRef, useEffect, useCallback } from 'react'
+import {
+  Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
+  MessageSquare, ChevronLeft, ChevronRight, Square,
+  Sparkles, TrendingUp, FileText, Lightbulb,
+} from 'lucide-react'
+import { cn } from '@/utils/formatters'
+import {
+  useAISessions,
+  useAIMessages,
+  useCreateSession,
+  useDeleteSession,
+  useAIChat,
+  type AISession,
+  type AIMessage,
+} from '@/hooks/useAI'
+
+// ── Formata markdown simples ────────────────────────────────────────────────────
+function formatMessage(text: string) {
+  const lines = text.split('\n')
+  const result: JSX.Element[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Bloco de código
+    if (line.startsWith('```')) {
+      const lang = line.slice(3).trim()
+      const codeLines: string[] = []
+      i++
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i])
+        i++
+      }
+      result.push(
+        <div key={i} className="my-2 rounded-lg overflow-hidden border border-[#e2e8f0]">
+          {lang && (
+            <div className="px-3 py-1 text-[10px] font-mono bg-[#f1f5f9] text-[#64748b] border-b border-[#e2e8f0]">
+              {lang}
+            </div>
+          )}
+          <pre className="p-3 text-[12px] font-mono bg-[#f8fafc] overflow-x-auto text-[#0f172a] leading-relaxed">
+            <code>{codeLines.join('\n')}</code>
+          </pre>
+        </div>
+      )
+      i++
+      continue
+    }
+
+    // Cabeçalhos
+    if (line.startsWith('### ')) {
+      result.push(<h3 key={i} className="font-semibold text-[14px] mt-3 mb-1 text-[#0f0f0f]">{parseInline(line.slice(4))}</h3>)
+      i++; continue
+    }
+    if (line.startsWith('## ')) {
+      result.push(<h2 key={i} className="font-bold text-[15px] mt-4 mb-1.5 text-[#0f0f0f]">{parseInline(line.slice(3))}</h2>)
+      i++; continue
+    }
+    if (line.startsWith('# ')) {
+      result.push(<h1 key={i} className="font-bold text-[16px] mt-4 mb-2 text-[#0f0f0f]">{parseInline(line.slice(2))}</h1>)
+      i++; continue
+    }
+
+    // Lista com marcador
+    if (/^[-•*] /.test(line)) {
+      const items: string[] = []
+      while (i < lines.length && /^[-•*] /.test(lines[i])) {
+        items.push(lines[i].replace(/^[-•*] /, ''))
+        i++
+      }
+      result.push(
+        <ul key={i} className="my-2 space-y-1">
+          {items.map((item, idx) => (
+            <li key={idx} className="flex gap-2 text-[13px] leading-relaxed text-[#374151]">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#94a3b8] flex-shrink-0" />
+              <span>{parseInline(item)}</span>
+            </li>
+          ))}
+        </ul>
+      )
+      continue
+    }
+
+    // Lista numerada
+    if (/^\d+\. /.test(line)) {
+      const items: string[] = []
+      let num = 1
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(lines[i].replace(/^\d+\. /, ''))
+        i++; num++
+      }
+      result.push(
+        <ol key={i} className="my-2 space-y-1">
+          {items.map((item, idx) => (
+            <li key={idx} className="flex gap-2.5 text-[13px] leading-relaxed text-[#374151]">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#f1f5f9] text-[#64748b] text-[11px] font-semibold flex items-center justify-center mt-0.5">
+                {idx + 1}
+              </span>
+              <span>{parseInline(item)}</span>
+            </li>
+          ))}
+        </ol>
+      )
+      continue
+    }
+
+    // Separador
+    if (line === '---' || line === '***') {
+      result.push(<hr key={i} className="my-3 border-[#e2e8f0]" />)
+      i++; continue
+    }
+
+    // Linha em branco
+    if (line.trim() === '') {
+      if (result.length > 0) {
+        result.push(<div key={i} className="h-2" />)
+      }
+      i++; continue
+    }
+
+    // Parágrafo normal
+    result.push(
+      <p key={i} className="text-[13px] leading-relaxed text-[#374151]">
+        {parseInline(line)}
+      </p>
+    )
+    i++
+  }
+
+  return result
+}
+
+function parseInline(text: string): React.ReactNode {
+  // Negrito
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-semibold text-[#0f0f0f]">{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={i} className="px-1 py-0.5 rounded text-[11px] font-mono bg-[#f1f5f9] text-[#e11d48] border border-[#e2e8f0]">{part.slice(1, -1)}</code>
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i} className="italic">{part.slice(1, -1)}</em>
+    }
+    return part
+  })
+}
+
+// ── Bubble de mensagem ──────────────────────────────────────────────────────────
+function MessageBubble({
+  message,
+  isStreaming = false,
+  streamContent = '',
+}: {
+  message?: AIMessage
+  isStreaming?: boolean
+  streamContent?: string
+}) {
+  const isUser = message?.role === 'user'
+  const content = isStreaming ? streamContent : (message?.content ?? '')
+
+  if (isUser) {
+    return (
+      <div className="flex justify-end mb-4">
+        <div className="max-w-[75%]">
+          <div className="bg-[#0f0f0f] text-white rounded-2xl rounded-tr-sm px-4 py-3 text-[13px] leading-relaxed shadow-sm">
+            {content}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex gap-3 mb-4">
+      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center shadow-sm mt-0.5">
+        <Bot className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        {message?.web_search && (
+          <div className="flex items-center gap-1.5 mb-1.5 text-[11px] text-[#64748b]">
+            <Globe className="w-3 h-3" />
+            <span>Busca web ativa</span>
+          </div>
+        )}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+          {isStreaming && !content ? (
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#94a3b8] animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#94a3b8] animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#94a3b8] animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="text-[12px] text-[#94a3b8]">Pensando…</span>
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {formatMessage(content)}
+              {isStreaming && <span className="inline-block w-0.5 h-4 bg-[#6366f1] animate-pulse ml-0.5 align-middle" />}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Sugestões iniciais ──────────────────────────────────────────────────────────
+const SUGGESTIONS = [
+  { icon: TrendingUp, text: 'Quais são as tendências do Instagram para este mês?', web: true },
+  { icon: FileText, text: 'Crie um calendário editorial para uma clínica de estética', web: false },
+  { icon: Lightbulb, text: 'Como precificar meus serviços de social media em 2025?', web: false },
+  { icon: Sparkles, text: 'Escreva 5 hooks virais para Reels de um pet shop', web: false },
+]
+
+// ── Componente principal ────────────────────────────────────────────────────────
+export function AIPage() {
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen]         = useState(true)
+  const [input, setInput]                     = useState('')
+  const [webSearch, setWebSearch]             = useState(false)
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
+  const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
+  const createSession = useCreateSession()
+  const deleteSession = useDeleteSession()
+
+  const effectiveSessionId = activeSessionId ?? pendingSessionId
+
+  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration } = useAIChat(effectiveSessionId)
+
+  // Scroll para o final quando mensagens mudam
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages.length, streamingContent])
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+  }, [input])
+
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || isStreaming || isLoading) return
+    const text = input.trim()
+    setInput('')
+
+    await sendMessage(text, messages, webSearch, (session) => {
+      setActiveSessionId(session.id)
+      setPendingSessionId(null)
+    })
+  }, [input, isStreaming, isLoading, sendMessage, messages, webSearch])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleNewChat = () => {
+    setActiveSessionId(null)
+    setPendingSessionId(null)
+    setInput('')
+    setWebSearch(false)
+  }
+
+  const handleSuggestion = async (text: string, web: boolean) => {
+    setWebSearch(web)
+    setInput(text)
+    setTimeout(() => textareaRef.current?.focus(), 50)
+  }
+
+  const handleDeleteSession = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteSession.mutate(id)
+    if (activeSessionId === id) handleNewChat()
+  }
+
+  const isEmpty = !activeSessionId && !pendingSessionId
+  const hasMessages = messages.length > 0
+
+  return (
+    <div className="flex h-screen bg-[#f5f7fb] overflow-hidden">
+
+      {/* ── Sidebar de sessões ──────────────────────────────────────────────── */}
+      <div
+        className={cn(
+          'flex flex-col bg-white border-r border-[#e2e8f0] flex-shrink-0 transition-all duration-200 overflow-hidden',
+          sidebarOpen ? 'w-64' : 'w-0'
+        )}
+      >
+        {/* Header sidebar */}
+        <div className="flex items-center justify-between h-14 px-4 border-b border-[#e2e8f0] flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
+              <Sparkles className="w-3 h-3" style={{ color: '#ffffff' }} />
+            </div>
+            <span className="text-[13px] font-semibold text-[#0f0f0f]">IA StatusBrand</span>
+          </div>
+        </div>
+
+        {/* Nova conversa */}
+        <div className="px-3 py-3 border-b border-[#f0f0f0]">
+          <button
+            onClick={handleNewChat}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0f0f0f] text-[13px] font-medium transition-all hover:bg-[#1a1a1a]"
+            style={{ color: '#ffffff' }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nova conversa
+          </button>
+        </div>
+
+        {/* Lista de sessões */}
+        <div className="flex-1 overflow-y-auto py-2 px-2">
+          {sessionsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-4 h-4 animate-spin text-[#94a3b8]" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="px-3 py-4 text-center">
+              <MessageSquare className="w-8 h-8 text-[#cbd5e1] mx-auto mb-2" />
+              <p className="text-[11px] text-[#94a3b8]">Nenhuma conversa ainda</p>
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {sessions.map(session => (
+                <button
+                  key={session.id}
+                  onClick={() => setActiveSessionId(session.id)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-[12px] transition-all group',
+                    activeSessionId === session.id
+                      ? 'bg-[#f0f0f0] text-[#0f0f0f]'
+                      : 'text-[#374151] hover:bg-[#f5f5f5]'
+                  )}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 text-[#94a3b8]" />
+                  <span className="flex-1 truncate">{session.title}</span>
+                  <button
+                    onClick={(e) => handleDeleteSession(session.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-500 transition-all flex-shrink-0"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="px-4 py-3 border-t border-[#f0f0f0]">
+          <p className="text-[10px] text-[#94a3b8] leading-relaxed">
+            Powered by GPT-4o · Respostas com IA podem conter imprecisões
+          </p>
+        </div>
+      </div>
+
+      {/* ── Área principal ──────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Topbar */}
+        <div className="h-14 flex items-center gap-3 px-4 bg-white border-b border-[#e2e8f0] flex-shrink-0">
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#f5f5f5] transition-colors flex-shrink-0 text-[#374151]"
+          >
+            {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
+              <Bot className="w-3 h-3" style={{ color: '#ffffff' }} />
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-[#0f0f0f] leading-none">
+                {activeSessionId
+                  ? (sessions.find(s => s.id === activeSessionId)?.title ?? 'Conversa')
+                  : 'Nova conversa'}
+              </p>
+            </div>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            {/* Badge de modelo */}
+            <div className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
+              webSearch
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#64748b]'
+            )}>
+              {webSearch ? <Globe className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+              {webSearch ? 'gpt-4o-search' : 'gpt-4o'}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Área de mensagens ─────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto">
+          {isEmpty && !hasMessages ? (
+            /* Tela de boas-vindas */
+            <div className="flex flex-col items-center justify-center min-h-full px-6 py-12">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mb-5 shadow-lg">
+                <Sparkles className="w-8 h-8" style={{ color: '#ffffff' }} />
+              </div>
+              <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2 text-center">
+                Como posso ajudar?
+              </h1>
+              <p className="text-[13px] text-[#64748b] text-center max-w-sm mb-10">
+                Sou especialista em Social Media e Marketing Digital. Pergunte sobre estratégias, conteúdo, tendências ou qualquer desafio da sua agência.
+              </p>
+
+              {/* Sugestões */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+                {SUGGESTIONS.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSuggestion(s.text, s.web)}
+                    className="flex items-start gap-3 p-4 bg-white border border-[#e2e8f0] rounded-xl text-left hover:border-[#6366f1]/40 hover:bg-[#f5f3ff] transition-all group shadow-sm"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-[#f5f3ff] border border-[#e0d9ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#ede9ff]">
+                      <s.icon className="w-3.5 h-3.5 text-[#6366f1]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-[#374151] leading-relaxed">{s.text}</p>
+                      {s.web && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <Globe className="w-2.5 h-2.5 text-blue-500" />
+                          <span className="text-[10px] text-blue-500 font-medium">Busca web</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Mensagens */
+            <div className="max-w-3xl mx-auto px-4 py-6">
+              {messagesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-5 h-5 animate-spin text-[#94a3b8]" />
+                </div>
+              ) : (
+                <>
+                  {messages.map(msg => (
+                    <MessageBubble key={msg.id} message={msg} />
+                  ))}
+
+                  {/* Mensagem em streaming */}
+                  {(isLoading || isStreaming) && (
+                    <MessageBubble
+                      isStreaming
+                      streamContent={streamingContent}
+                    />
+                  )}
+                </>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Input ──────────────────────────────────────────────────────────── */}
+        <div className="flex-shrink-0 bg-white border-t border-[#e2e8f0] px-4 py-3">
+          <div className="max-w-3xl mx-auto">
+
+            {/* Aviso de busca web */}
+            {webSearch && (
+              <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                <Globe className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                <p className="text-[11px] text-blue-700">
+                  Busca web ativa — o agente vai pesquisar informações atualizadas antes de responder.
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-end gap-2 bg-[#f5f7fb] border border-[#e2e8f0] rounded-2xl px-3 py-2 focus-within:border-[#6366f1]/50 focus-within:ring-2 focus-within:ring-[#6366f1]/10 transition-all">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Pergunte sobre estratégias, tendências, conteúdo…"
+                rows={1}
+                disabled={isLoading || isStreaming}
+                className="flex-1 bg-transparent text-[13px] text-[#0f0f0f] placeholder:text-[#94a3b8] resize-none outline-none py-1.5 min-h-[38px] max-h-[160px] leading-relaxed disabled:opacity-50"
+                style={{ scrollbarWidth: 'none' }}
+              />
+
+              {/* Controles */}
+              <div className="flex items-center gap-1 flex-shrink-0 pb-1">
+                {/* Toggle busca web */}
+                <button
+                  onClick={() => setWebSearch(w => !w)}
+                  title={webSearch ? 'Desativar busca web' : 'Ativar busca web (tendências atuais)'}
+                  disabled={isLoading || isStreaming}
+                  className={cn(
+                    'w-8 h-8 flex items-center justify-center rounded-xl transition-all disabled:opacity-40',
+                    webSearch
+                      ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                      : 'text-[#94a3b8] hover:bg-[#e8e8e8] hover:text-[#374151]'
+                  )}
+                >
+                  {webSearch ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
+                </button>
+
+                {/* Parar / Enviar */}
+                {(isStreaming || isLoading) ? (
+                  <button
+                    onClick={stopGeneration}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                    title="Parar geração"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#0f0f0f] text-white hover:bg-[#1a1a1a] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <p className="text-[10px] text-[#94a3b8] text-center mt-2">
+              Enter para enviar · Shift+Enter para nova linha · 🌐 ativa busca web em tempo real
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -20,6 +20,7 @@ import { Tasks } from '@/pages/tasks/Tasks'
 import { Library } from '@/pages/library/Library'
 import { Financial } from '@/pages/financial/Financial'
 import { Notes } from '@/pages/notes/Notes'
+import { AIPage } from '@/pages/ai/AIPage'
 import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 
 const qc = new QueryClient({
@@ -100,6 +101,7 @@ function AppRoutes() {
         <Route path="/notes" element={<Notes />} />
         <Route path="/library" element={<Library />} />
         <Route path="/financial" element={<Financial />} />
+        <Route path="/ai" element={<AIPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
