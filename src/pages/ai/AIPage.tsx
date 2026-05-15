@@ -3,8 +3,11 @@ import {
   Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
   MessageSquare, ChevronLeft, ChevronRight, Square,
   Sparkles, TrendingUp, FileText, Lightbulb,
+  Users, X, Building2, ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
+import { useClients } from '@/hooks/useClients'
+import { useClientContext } from '@/hooks/useAIContext'
 import {
   useAISessions,
   useAIMessages,
@@ -218,23 +221,39 @@ const SUGGESTIONS = [
 
 // ── Componente principal ────────────────────────────────────────────────────────
 export function AIPage() {
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
-  const [sidebarOpen, setSidebarOpen]         = useState(true)
-  const [input, setInput]                     = useState('')
-  const [webSearch, setWebSearch]             = useState(false)
+  const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen]           = useState(true)
+  const [input, setInput]                       = useState('')
+  const [webSearch, setWebSearch]               = useState(false)
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
+  const [activeClientId, setActiveClientId]     = useState<string | null>(null)
+  const [clientPickerOpen, setClientPickerOpen] = useState(false)
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const pickerRef      = useRef<HTMLDivElement>(null)
 
   const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
+  const { data: clients  = [] }                             = useClients()
+  const { data: clientCtx }                                 = useClientContext(activeClientId)
   const createSession = useCreateSession()
   const deleteSession = useDeleteSession()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
 
   const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration } = useAIChat(effectiveSessionId)
+
+  // Fecha o picker ao clicar fora
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setClientPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
 
   // Scroll para o final quando mensagens mudam
   useEffect(() => {
@@ -257,8 +276,8 @@ export function AIPage() {
     await sendMessage(text, messages, webSearch, (session) => {
       setActiveSessionId(session.id)
       setPendingSessionId(null)
-    })
-  }, [input, isStreaming, isLoading, sendMessage, messages, webSearch])
+    }, clientCtx?.contextString ?? null)
+  }, [input, isStreaming, isLoading, sendMessage, messages, webSearch, clientCtx])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -383,16 +402,101 @@ export function AIPage() {
             <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
               <Bot className="w-3 h-3" style={{ color: '#ffffff' }} />
             </div>
-            <div>
-              <p className="text-[13px] font-semibold text-[#0f0f0f] leading-none">
-                {activeSessionId
-                  ? (sessions.find(s => s.id === activeSessionId)?.title ?? 'Conversa')
-                  : 'Nova conversa'}
-              </p>
-            </div>
+            <p className="text-[13px] font-semibold text-[#0f0f0f] leading-none">
+              {activeSessionId
+                ? (sessions.find(s => s.id === activeSessionId)?.title ?? 'Conversa')
+                : 'Nova conversa'}
+            </p>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+
+            {/* ── Seletor de contexto de cliente ────────────────────── */}
+            <div className="relative" ref={pickerRef}>
+              <button
+                onClick={() => setClientPickerOpen(o => !o)}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12px] font-medium border transition-all',
+                  activeClientId && clientCtx
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#64748b] hover:border-[#d0d0d0]'
+                )}
+              >
+                {activeClientId && clientCtx ? (
+                  <>
+                    <Building2 className="w-3 h-3" />
+                    <span className="max-w-[140px] truncate">{clientCtx.client.company_name}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setActiveClientId(null) }}
+                      className="ml-0.5 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-3 h-3" />
+                    <span>Contexto do cliente</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </>
+                )}
+              </button>
+
+              {/* Dropdown de clientes */}
+              {clientPickerOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-[#e2e8f0] rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[#f0f0f0]">
+                    <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">
+                      Selecionar cliente
+                    </p>
+                    <p className="text-[10px] text-[#94a3b8] mt-0.5">
+                      A IA vai usar os dados do cliente selecionado
+                    </p>
+                  </div>
+                  <div className="max-h-56 overflow-y-auto py-1">
+                    {clients.length === 0 ? (
+                      <p className="px-3 py-3 text-[12px] text-[#94a3b8]">Nenhum cliente cadastrado</p>
+                    ) : (
+                      clients.map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => { setActiveClientId(c.id); setClientPickerOpen(false) }}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#f5f5f5] transition-colors',
+                            activeClientId === c.id && 'bg-emerald-50'
+                          )}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] flex items-center justify-center flex-shrink-0">
+                            <span className="text-[11px] font-semibold text-[#374151]">
+                              {c.company_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{c.company_name}</p>
+                            <p className="text-[10px] text-[#94a3b8] truncate">{c.niche}</p>
+                          </div>
+                          {activeClientId === c.id && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  {activeClientId && (
+                    <div className="border-t border-[#f0f0f0] px-3 py-2">
+                      <button
+                        onClick={() => { setActiveClientId(null); setClientPickerOpen(false) }}
+                        className="text-[11px] text-red-500 hover:text-red-600 flex items-center gap-1.5"
+                      >
+                        <X className="w-3 h-3" />
+                        Remover contexto
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Badge de modelo */}
             <div className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
@@ -405,6 +509,26 @@ export function AIPage() {
             </div>
           </div>
         </div>
+
+        {/* Banner de contexto ativo */}
+        {activeClientId && clientCtx && (
+          <div className="flex items-center gap-2.5 px-4 py-2 bg-emerald-50 border-b border-emerald-100 flex-shrink-0">
+            <div className="w-5 h-5 rounded-md bg-emerald-500 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-2.5 h-2.5" style={{ color: '#ffffff' }} />
+            </div>
+            <p className="text-[12px] text-emerald-800 flex-1">
+              <span className="font-semibold">{clientCtx.client.company_name}</span>
+              {' '}— contexto ativo · nicho: {clientCtx.client.niche}
+              {clientCtx.client.instagram && ` · @${clientCtx.client.instagram.replace('@', '')}`}
+            </p>
+            <button
+              onClick={() => setActiveClientId(null)}
+              className="text-emerald-600 hover:text-emerald-800 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* ── Área de mensagens ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto">

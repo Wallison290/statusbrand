@@ -127,6 +127,7 @@ export function useAIChat(sessionId: string | null) {
     history: AIMessage[],
     useWebSearch = false,
     onSessionCreated?: (session: AISession) => void,
+    clientContext?: string | null,
   ) => {
     if (!content.trim()) return
     if (isStreaming || isLoading) return
@@ -183,10 +184,14 @@ export function useAIChat(sessionId: string | null) {
     try {
       if (useWebSearch) {
         // Modelo de busca web NÃO suporta streaming — usa chamada normal
+        const systemContent = clientContext
+          ? `${SYSTEM_PROMPT}\n\n${clientContext}`
+          : SYSTEM_PROMPT
+
         const response = await openai.chat.completions.create({
           model,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemContent },
             ...chatHistory,
           ],
           stream: false,
@@ -199,10 +204,14 @@ export function useAIChat(sessionId: string | null) {
         setStreamingContent(fullContent)
       } else {
         // Modelo normal com streaming real
+        const systemContent = clientContext
+          ? `${SYSTEM_PROMPT}\n\n${clientContext}`
+          : SYSTEM_PROMPT
+
         const stream = await openai.chat.completions.create({
           model,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemContent },
             ...chatHistory,
           ],
           stream: true,
