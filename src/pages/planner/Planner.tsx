@@ -1718,14 +1718,6 @@ export function Planner() {
             </div>
           </div>
 
-      {/* ── IA Copilot Drawer ───────────────────────────────────────────────── */}
-      {aiDrawerItem && (
-        <PlannerAIDrawer
-          item={aiDrawerItem}
-          onClose={() => setAiDrawerItem(null)}
-        />
-      )}
-
           <DialogFooter>
             <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>Cancelar</Button>
             <Button variant="premium" onClick={handleSave} disabled={createItem.isPending || updateItem.isPending || isUploading || !form.title.trim()}>
@@ -1740,6 +1732,14 @@ export function Planner() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── IA Copilot Drawer ───────────────────────────────────────────────── */}
+      {aiDrawerItem && (
+        <PlannerAIDrawer
+          item={aiDrawerItem}
+          onClose={() => setAiDrawerItem(null)}
+        />
+      )}
     </div>
   )
 }
