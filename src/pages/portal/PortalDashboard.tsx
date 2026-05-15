@@ -113,21 +113,21 @@ function DayTooltip({ state }: { state: HoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[260px] p-3 text-xs text-white"
+        className="bg-white border border-[#e2e8f0] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[#0f0f0f]"
       >
         {state.items.map((item, i) => (
-          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-white/8' : ''}>
+          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[#e2e8f0]' : ''}>
             <div className="flex items-start gap-2 mb-1">
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-gray-300 mt-0.5">
+                <p className="font-medium text-[#0f0f0f] text-[11px] leading-snug">{item.title}</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.notes && (
-              <p className="text-[10px] text-gray-300 line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-[#64748b] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => a.file_type.startsWith('image/'))
@@ -136,16 +136,16 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-gray-400" />
-                  <span className="text-[10px] text-gray-300">
+                  <Paperclip className="w-3 h-3 text-[#94a3b8]" />
+                  <span className="text-[10px] text-[#64748b]">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
               )}
               {item.links && item.links.length > 0 && (
                 <div className="flex items-center gap-1 min-w-0">
-                  <Link2 className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                  <span className="text-[10px] text-blue-400 truncate">
+                  <Link2 className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                  <span className="text-[10px] text-blue-600 truncate">
                     {item.links.length === 1 ? item.links[0].url : `${item.links.length} links`}
                   </span>
                 </div>
@@ -443,7 +443,7 @@ function PortalPlannerView({
     <div>
       {/* Nav */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-white capitalize">
+        <h3 className="text-base font-semibold text-[#0f0f0f] capitalize">
           {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
         </h3>
         <div className="flex gap-2">
@@ -611,12 +611,12 @@ function humanizeActivity(status: ApprovalStatus, _item: PlannerItem): string {
 
 type CardColor = 'amber' | 'green' | 'blue' | 'purple' | 'default'
 
-const cardColorMap: Record<CardColor, { icon: string; label: string; value: string; ring: string; dot: string }> = {
-  amber:   { icon: 'text-amber-600',  label: 'text-amber-700',  value: 'text-amber-800',  ring: 'border-amber-200  bg-amber-50',   dot: 'bg-amber-400' },
-  green:   { icon: 'text-green-600',  label: 'text-green-700',  value: 'text-green-800',  ring: 'border-green-200  bg-green-50',   dot: 'bg-green-500' },
-  blue:    { icon: 'text-blue-600',   label: 'text-blue-700',   value: 'text-blue-800',   ring: 'border-blue-200   bg-blue-50',    dot: 'bg-blue-500' },
-  purple:  { icon: 'text-purple-600', label: 'text-purple-700', value: 'text-purple-800', ring: 'border-purple-200 bg-purple-50',  dot: 'bg-purple-500' },
-  default: { icon: 'text-gray-500',   label: 'text-[#737373]',  value: 'text-[#0f0f0f]',  ring: 'border-[#e8e8e8]  bg-white',     dot: 'bg-gray-400' },
+const cardColorMap: Record<CardColor, { icon: string; label: string; value: string; ring: string; dot: string; bar: string }> = {
+  amber:   { icon: 'text-orange-600',  label: 'text-orange-700',  value: 'text-orange-900',  ring: 'border-orange-200  bg-orange-50',   dot: 'bg-orange-400',  bar: 'bg-[#f97316]' },
+  green:   { icon: 'text-green-600',   label: 'text-green-700',   value: 'text-green-900',   ring: 'border-green-200   bg-green-50',    dot: 'bg-green-500',   bar: 'bg-[#22c55e]' },
+  blue:    { icon: 'text-blue-600',    label: 'text-blue-700',    value: 'text-blue-900',    ring: 'border-blue-200    bg-blue-50',     dot: 'bg-blue-500',    bar: 'bg-[#3b82f6]' },
+  purple:  { icon: 'text-purple-600',  label: 'text-purple-700',  value: 'text-purple-900',  ring: 'border-purple-200  bg-purple-50',   dot: 'bg-purple-500',  bar: 'bg-[#8b5cf6]' },
+  default: { icon: 'text-gray-500',    label: 'text-[#737373]',   value: 'text-[#0f0f0f]',   ring: 'border-[#e8e8e8]   bg-white',      dot: 'bg-gray-400',    bar: 'bg-[#e2e8f0]' },
 }
 
 function StatusCard({
@@ -632,16 +632,19 @@ function StatusCard({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border p-4 flex flex-col gap-3 transition-all ${c.ring} ${onClick ? 'cursor-pointer hover:brightness-110' : ''}`}
+      className={`rounded-2xl border overflow-hidden flex flex-col transition-all shadow-sm ${c.ring} ${onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.01]' : ''}`}
     >
-      <div className="flex items-center justify-between">
-        <span className={c.icon}>{icon}</span>
-        <div className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <div className="flex items-center justify-between">
+          <span className={c.icon}>{icon}</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+        </div>
+        <div>
+          <p className={`text-[11px] leading-snug ${c.label}`}>{label}</p>
+          <p className={`text-[13px] font-semibold mt-1 leading-tight ${c.value}`}>{value}</p>
+        </div>
       </div>
-      <div>
-        <p className={`text-[11px] leading-snug ${c.label}`}>{label}</p>
-        <p className={`text-[13px] font-semibold mt-1 leading-tight ${c.value}`}>{value}</p>
-      </div>
+      <div className={`h-1 w-full ${c.bar}`} />
     </div>
   )
 }
@@ -784,7 +787,7 @@ function ClientDashboardTab({
           {pendingItems.length > 0 && (
             <button
               onClick={() => { setSelectedItem(pendingItems[0]); setItemOpen(true) }}
-              className="hidden sm:flex items-center gap-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-amber-100 border border-amber-200 text-amber-700 text-[12px] font-semibold hover:bg-amber-200 transition-all"
+              className="hidden sm:flex items-center gap-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-[#f97316] border border-[#ea580c] text-white text-[12px] font-semibold hover:bg-[#ea580c] transition-all"
             >
               Revisar agora <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -793,7 +796,7 @@ function ClientDashboardTab({
         {pendingItems.length > 0 && (
           <button
             onClick={() => { setSelectedItem(pendingItems[0]); setItemOpen(true) }}
-            className="sm:hidden mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-100 border border-amber-200 text-amber-700 text-[12px] font-semibold hover:bg-amber-200 transition-all"
+            className="sm:hidden mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#f97316] border border-[#ea580c] text-white text-[12px] font-semibold hover:bg-[#ea580c] transition-all"
           >
             Revisar agora <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -855,41 +858,41 @@ function ClientDashboardTab({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.1 }}
-              className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.12] overflow-hidden"
+              className="rounded-2xl border border-orange-200 bg-orange-50 overflow-hidden"
             >
-              <div className="flex items-center gap-2.5 px-5 py-4 border-b border-amber-500/20">
-                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
-                <p className="text-[13px] font-semibold text-amber-100">
+              <div className="flex items-center gap-2.5 px-5 py-4 border-b border-orange-200">
+                <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+                <p className="text-[13px] font-semibold text-orange-800">
                   {pendingItems.length === 1
                     ? '1 conteúdo precisa da sua aprovação'
                     : `${pendingItems.length} conteúdos precisam da sua aprovação`}
                 </p>
               </div>
-              <div className="divide-y divide-white/10">
+              <div className="divide-y divide-orange-100">
                 {pendingItems.map(item => {
                   const thumb = item.attachments?.find(a => a.file_type.startsWith('image/'))
                   return (
                     <button
                       key={item.id}
                       onClick={() => { setSelectedItem(item); setItemOpen(true) }}
-                      className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-amber-500/20 transition-colors text-left group"
+                      className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-orange-100 transition-colors text-left group"
                     >
                       {thumb ? (
-                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/10 flex-shrink-0" />
+                        <img src={thumb.file_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-orange-200 flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-white border border-orange-200 flex items-center justify-center flex-shrink-0">
                           <div className={`w-2 h-2 rounded-full ${statusColors[item.status as PlannerStatus]}`} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-white truncate">{item.title}</p>
-                        <p className="text-[11px] text-white/50 mt-0.5">
+                        <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{item.title}</p>
+                        <p className="text-[11px] text-[#64748b] mt-0.5">
                           {format(parseISO(item.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
-                          <span className="mx-1.5 text-white/30">·</span>
+                          <span className="mx-1.5 text-orange-300">·</span>
                           {contentTypeLabels[item.content_type as ContentType]}
                         </p>
                       </div>
-                      <span className="text-[11px] text-amber-400 font-semibold px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 flex-shrink-0 group-hover:bg-amber-500/18 transition-colors">
+                      <span className="text-[11px] text-orange-700 font-semibold px-2.5 py-1 rounded-lg bg-white border border-orange-200 flex-shrink-0 group-hover:bg-orange-200 transition-colors">
                         Revisar
                       </span>
                     </button>
@@ -980,9 +983,9 @@ function ClientDashboardTab({
                         <p className="text-[12px] text-[#737373] leading-relaxed">
                           {humanizeActivity(status, item)}
                         </p>
-                        <p className="text-[11px] text-gray-600 truncate mt-0.5">{item.title}</p>
+                        <p className="text-[11px] text-[#374151] truncate mt-0.5">{item.title}</p>
                         {item.reviewed_at && (
-                          <p className="text-[10px] text-gray-700 mt-0.5">{formatRelative(item.reviewed_at)}</p>
+                          <p className="text-[10px] text-[#94a3b8] mt-0.5">{formatRelative(item.reviewed_at)}</p>
                         )}
                       </div>
                     </div>
@@ -1007,7 +1010,7 @@ function ClientDashboardTab({
               <p className="text-[12px] font-semibold text-[#0f0f0f]">Próximos conteúdos</p>
               <button
                 onClick={() => onNavigate('planejamento')}
-                className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-500 transition-colors"
+                className="flex items-center gap-1 text-[11px] text-[#3b82f6] hover:text-blue-700 transition-colors"
               >
                 Ver todos <ArrowRight className="w-3 h-3" />
               </button>
@@ -1015,9 +1018,9 @@ function ClientDashboardTab({
 
             {upcomingItems.length === 0 ? (
               <div className="py-8 px-4 text-center">
-                <CalendarDays className="w-6 h-6 text-gray-700 mx-auto mb-2" />
-                <p className="text-[12px] text-gray-600">Nenhum conteúdo agendado.</p>
-                <p className="text-[11px] text-gray-700 mt-0.5">A agência está preparando o calendário.</p>
+                <CalendarDays className="w-6 h-6 text-[#94a3b8] mx-auto mb-2" />
+                <p className="text-[12px] text-[#64748b]">Nenhum conteúdo agendado.</p>
+                <p className="text-[11px] text-[#94a3b8] mt-0.5">A agência está preparando o calendário.</p>
               </div>
             ) : (
               <div className="divide-y divide-[#e8e8e8]">
@@ -1120,7 +1123,7 @@ function ClientDashboardTab({
             )}
             <button
               onClick={() => onNavigate('empresa')}
-              className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+              className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 transition-colors"
             >
               Ver perfil completo <ArrowRight className="w-3 h-3" />
             </button>
@@ -1187,7 +1190,7 @@ function MaterialHoverCard({ state }: { state: MatHoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#13131f] border border-white/10 rounded-xl shadow-2xl w-[220px] overflow-hidden text-white"
+        className="bg-white border border-[#e2e8f0] rounded-xl shadow-xl w-[220px] overflow-hidden text-[#0f0f0f]"
       >
         {isImg && mat.file_url ? (
           <img
@@ -1196,21 +1199,21 @@ function MaterialHoverCard({ state }: { state: MatHoverState }) {
             className="w-full h-32 object-cover"
           />
         ) : (
-          <div className="w-full h-24 bg-white/[0.04] flex items-center justify-center">
+          <div className="w-full h-24 bg-[#f5f7fb] flex items-center justify-center">
             <PortalMaterialIcon type={mat.type} size="lg" />
           </div>
         )}
         <div className="p-3">
-          <p className="text-[12px] font-medium text-white leading-snug">{mat.title}</p>
+          <p className="text-[12px] font-medium text-[#0f0f0f] leading-snug">{mat.title}</p>
           {mat.description && (
-            <p className="text-[10px] text-gray-300 mt-0.5 line-clamp-2 leading-relaxed">{mat.description}</p>
+            <p className="text-[10px] text-[#64748b] mt-0.5 line-clamp-2 leading-relaxed">{mat.description}</p>
           )}
           <div className="flex items-center gap-1.5 mt-1.5">
-            <span className="text-[10px] text-gray-400">{MATERIAL_TYPE_LABELS[mat.type]}</span>
-            <span className="text-gray-500 text-[10px]">·</span>
-            <span className="text-[10px] text-gray-400">{formatDate(mat.created_at)}</span>
+            <span className="text-[10px] text-[#94a3b8]">{MATERIAL_TYPE_LABELS[mat.type]}</span>
+            <span className="text-[#94a3b8] text-[10px]">·</span>
+            <span className="text-[10px] text-[#94a3b8]">{formatDate(mat.created_at)}</span>
           </div>
-          <p className="text-[10px] text-blue-400 mt-1.5 flex items-center gap-1">
+          <p className="text-[10px] text-blue-600 mt-1.5 flex items-center gap-1">
             <Eye className="w-2.5 h-2.5" /> Clique para visualizar
           </p>
         </div>
@@ -1246,15 +1249,15 @@ function MaterialDetailModal({
 
         <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
           {mat.description && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Descrição</p>
-              <p className="text-sm text-gray-300 leading-relaxed break-words">{mat.description}</p>
+            <div className="p-3 bg-[#f5f7fb] rounded-xl border border-[#e2e8f0]">
+              <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-1.5">Descrição</p>
+              <p className="text-sm text-[#374151] leading-relaxed break-words">{mat.description}</p>
             </div>
           )}
 
           {/* Preview: imagem */}
           {isImg && mat.file_url && (
-            <div className="w-full max-w-full overflow-hidden rounded-xl border border-white/8">
+            <div className="w-full max-w-full overflow-hidden rounded-xl border border-[#e2e8f0]">
               <img
                 src={mat.file_url}
                 alt={mat.title}
@@ -1268,13 +1271,13 @@ function MaterialDetailModal({
             <video
               src={mat.file_url}
               controls
-              className="w-full max-w-full rounded-xl border border-white/8"
+              className="w-full max-w-full rounded-xl border border-[#e2e8f0]"
             />
           )}
 
           {/* Preview: PDF (iframe) */}
           {isPdf && mat.file_url && (
-            <div className="rounded-xl overflow-hidden border border-white/8">
+            <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
               <iframe
                 src={mat.file_url}
                 title={mat.title}
@@ -1289,19 +1292,19 @@ function MaterialDetailModal({
               href={mat.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 p-3 bg-white/3 border border-white/8 rounded-xl hover:bg-white/5 hover:border-white/15 transition-colors"
+              className="flex items-center gap-2.5 p-3 bg-[#f5f7fb] border border-[#e2e8f0] rounded-xl hover:bg-[#eef2ff] hover:border-[#c7d2fe] transition-colors"
             >
-              <Link2 className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              <span className="text-sm text-sky-300 flex-1 min-w-0 break-all">{mat.link_url}</span>
-              <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
+              <Link2 className="w-4 h-4 text-sky-500 flex-shrink-0" />
+              <span className="text-sm text-sky-600 flex-1 min-w-0 break-all">{mat.link_url}</span>
+              <ExternalLink className="w-3 h-3 text-[#94a3b8] flex-shrink-0" />
             </a>
           )}
 
           {/* Fallback: nenhum preview disponível */}
           {!isImg && !isVid && !isPdf && !isLink && (
-            <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-white/8 bg-white/3">
+            <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-[#e2e8f0] bg-[#f5f7fb]">
               <PortalMaterialIcon type={mat.type} size="lg" />
-              <p className="text-xs text-gray-500 mt-2">Sem visualização disponível</p>
+              <p className="text-xs text-[#94a3b8] mt-2">Sem visualização disponível</p>
             </div>
           )}
         </div>
@@ -1587,10 +1590,10 @@ const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
 
 function PortalContactIcon({ type }: { type: ContactType }) {
   switch (type) {
-    case 'whatsapp': return <MessageCircle className="w-4 h-4 text-green-400" />
-    case 'email':    return <Mail          className="w-4 h-4 text-blue-400" />
-    case 'telefone': return <Phone         className="w-4 h-4 text-gray-400" />
-    default:         return <Phone         className="w-4 h-4 text-gray-500" />
+    case 'whatsapp': return <MessageCircle className="w-4 h-4 text-green-500" />
+    case 'email':    return <Mail          className="w-4 h-4 text-blue-500" />
+    case 'telefone': return <Phone         className="w-4 h-4 text-[#64748b]" />
+    default:         return <Phone         className="w-4 h-4 text-[#94a3b8]" />
   }
 }
 
@@ -1809,8 +1812,8 @@ export function PortalDashboard() {
       <PortalLayout>
         <div className="flex items-center justify-center h-full py-32">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-500 text-sm">Carregando...</p>
+            <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[#64748b] text-sm">Carregando...</p>
           </div>
         </div>
       </PortalLayout>
@@ -1822,7 +1825,7 @@ export function PortalDashboard() {
       <PortalLayout>
         <div className="flex items-center justify-center h-full py-32">
           <div className="text-center">
-            <Building2 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+            <Building2 className="w-10 h-10 text-[#94a3b8] mx-auto mb-3" />
             <p className="text-[#737373] font-medium">Conta não vinculada</p>
             <p className="text-gray-500 text-sm mt-1">Entre em contato com sua agência.</p>
           </div>
@@ -1849,13 +1852,13 @@ export function PortalDashboard() {
       pendingCount={pendingCount}
       onBellClick={() => setShowNotifications(true)}
     >
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* Cabeçalho da empresa */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-4 mb-8 p-5 rounded-2xl border border-[#e8e8e8] bg-white"
+          className="flex items-start gap-4 mb-6 p-5 rounded-2xl border border-[#e2e8f0] bg-white shadow-sm"
         >
           {client.logo_url ? (
             <img src={client.logo_url} alt={client.company_name}
@@ -1936,7 +1939,7 @@ export function PortalDashboard() {
           <TabsContent value="planejamento">
             {plannerItems && plannerItems.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-gray-500 text-sm">Nenhum conteúdo planejado ainda.</p>
+                <p className="text-[#64748b] text-sm">Nenhum conteúdo planejado ainda.</p>
               </div>
             ) : (
               <PortalPlannerView
@@ -2029,8 +2032,8 @@ export function PortalDashboard() {
               {/* Empty state */}
               {(!contents || contents.length === 0) && contentAssets.length === 0 && (
                 <div className="text-center py-16">
-                  <Sparkles className="w-8 h-8 text-[#c0c0c0] mx-auto mb-2" />
-                  <p className="text-[#737373] text-sm">Nenhum conteúdo disponível ainda.</p>
+                  <Sparkles className="w-8 h-8 text-[#94a3b8] mx-auto mb-2" />
+                  <p className="text-[#64748b] text-sm">Nenhum conteúdo disponível ainda.</p>
                 </div>
               )}
             </div>

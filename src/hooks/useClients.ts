@@ -48,6 +48,7 @@ export function useUpdateClient() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Client> & { id: string }) => {
+      // 1. Atualiza a tabela clients (todos os campos, incluindo email)
       const { data, error } = await supabase
         .from('clients')
         .update({ ...updates, updated_at: new Date().toISOString() } as any)
@@ -55,6 +56,19 @@ export function useUpdateClient() {
         .select()
         .single()
       if (error) throw error
+
+      // 2. Se o e-mail foi alterado, sincroniza com profiles e auth.users
+      //    (cliente pode não ter acesso criado ainda — RPC ignora silenciosamente)
+      if (updates.email) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).rpc('sync_client_auth_email', {
+          p_client_id: id,
+          p_new_email:  updates.email,
+        })
+        // Não lançamos erro aqui: se não há usuário vinculado, o RPC retorna
+        // normalmente sem alterar nada além de clients.email (já atualizado acima)
+      }
+
       return data as Client
     },
     onSuccess: (data) => {
