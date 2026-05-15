@@ -377,6 +377,21 @@ function ItemDetailView({
   )
 }
 
+// ─── Chip style helper (mesmo sistema de cores da agência) ───────────────────
+
+function getPortalChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
+  const s = item.status as PlannerStatus
+  const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+  if (s === 'publicado') return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+  if (s === 'aprovado')  return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
+  if (as_ === 'reprovado')         return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
+  if (as_ === 'ajuste_solicitado') return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
+  if (as_ === 'ajuste_realizado')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  if (s === 'revisao')   return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
+  if (s === 'producao')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  return { bg: '#faf5ff', border: '#c4b5fd', text: '#5b21b6' }
+}
+
 // ─── Portal Planner (read-only) ───────────────────────────────────────────────
 
 function PortalPlannerView({
@@ -489,13 +504,29 @@ function PortalPlannerView({
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-0.5">
-                    {di.slice(0, 2).map(item => (
-                      <div key={item.id} className="flex items-center gap-0.5 min-w-0">
-                        <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                        <span className="text-[#737373] truncate text-[9px] sm:text-[10px] flex-1 min-w-0 hidden xs:block sm:block">{item.title}</span>
-                      </div>
-                    ))}
-                    {di.length > 2 && <p className="text-[8px] sm:text-[10px] text-gray-600">+{di.length - 2}</p>}
+                    {di.slice(0, 2).map(item => {
+                      const { bg, border, text } = getPortalChipStyle(item)
+                      const typeLabel = contentTypeLabels[item.content_type as ContentType] ?? ''
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={e => { e.stopPropagation(); setSelectedItem(item); setItemOpen(true) }}
+                          style={{ backgroundColor: bg, borderColor: border, color: text }}
+                          className="w-full rounded border px-1 py-0.5 min-w-0 cursor-pointer hover:brightness-95 transition-opacity"
+                        >
+                          <div className="flex items-start gap-0.5 min-w-0">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[8px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
+                              {typeLabel && (
+                                <p className="text-[7px] sm:text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
+                              )}
+                            </div>
+                            <Instagram className="w-2 h-2 sm:w-2.5 sm:h-2.5 flex-shrink-0 mt-px opacity-50" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {di.length > 2 && <p className="text-[8px] sm:text-[10px] text-[#64748b]">+{di.length - 2}</p>}
                   </div>
                 </div>
               )
