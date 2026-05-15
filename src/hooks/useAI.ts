@@ -203,6 +203,7 @@ export function useAIChat(sessionId: string | null) {
     onSessionCreated?: (session: AISession) => void,
     clientContext?: string | null,
     clientId?: string | null,
+    squadPrompt?: string | null,
   ) => {
     if (!content.trim()) return
     if (isStreaming || isLoading) return
@@ -257,12 +258,14 @@ export function useAIChat(sessionId: string | null) {
     let fullContent = ''
 
     try {
+      // Monta system prompt composto
+      const systemParts = [SYSTEM_PROMPT]
+      if (clientContext) systemParts.push(clientContext)
+      if (squadPrompt)   systemParts.push(squadPrompt)
+      const systemContent = systemParts.join('\n\n')
+
       if (useWebSearch) {
         // Modelo de busca web NÃO suporta streaming — usa chamada normal
-        const systemContent = clientContext
-          ? `${SYSTEM_PROMPT}\n\n${clientContext}`
-          : SYSTEM_PROMPT
-
         const response = await openai.chat.completions.create({
           model,
           messages: [
@@ -279,9 +282,6 @@ export function useAIChat(sessionId: string | null) {
         setStreamingContent(fullContent)
       } else {
         // Modelo normal com streaming real
-        const systemContent = clientContext
-          ? `${SYSTEM_PROMPT}\n\n${clientContext}`
-          : SYSTEM_PROMPT
 
         const stream = await openai.chat.completions.create({
           model,

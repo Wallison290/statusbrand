@@ -3,16 +3,16 @@ import {
   Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
   MessageSquare, ChevronLeft, ChevronRight, Square,
   Sparkles, TrendingUp, FileText, Lightbulb,
-  Users, X, Building2, ChevronDown, Brain,
+  Users, X, Building2, ChevronDown, Brain, ChevronUp,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
+import { AI_SQUADS, type AISquad } from '@/data/aiSquads'
 import {
   useAISessions,
   useAIMessages,
-  useCreateSession,
   useDeleteSession,
   useAIChat,
   type AISession,
@@ -231,27 +231,32 @@ export function AIPage() {
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
   const [memoryPanelOpen, setMemoryPanelOpen]   = useState(false)
   const [memoryToast, setMemoryToast]           = useState<string[]>([])
+  const [activeSquad, setActiveSquad]           = useState<AISquad | null>(null)
+  const [squadPickerOpen, setSquadPickerOpen]   = useState(false)
 
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pickerRef      = useRef<HTMLDivElement>(null)
+  const squadPickerRef = useRef<HTMLDivElement>(null)
 
   const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
   const { data: clients  = [] }                             = useClients()
   const { data: clientCtx }                                 = useClientContext(activeClientId)
-  const createSession = useCreateSession()
   const deleteSession = useDeleteSession()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
 
   const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved } = useAIChat(effectiveSessionId)
 
-  // Fecha o picker ao clicar fora
+  // Fecha os pickers ao clicar fora
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setClientPickerOpen(false)
+      }
+      if (squadPickerRef.current && !squadPickerRef.current.contains(e.target as Node)) {
+        setSquadPickerOpen(false)
       }
     }
     document.addEventListener('mousedown', onClick)
@@ -288,8 +293,8 @@ export function AIPage() {
     await sendMessage(text, messages, webSearch, (session) => {
       setActiveSessionId(session.id)
       setPendingSessionId(null)
-    }, clientCtx?.contextString ?? null, activeClientId)
-  }, [input, isStreaming, isLoading, sendMessage, messages, webSearch, clientCtx])
+    }, clientCtx?.contextString ?? null, activeClientId, activeSquad?.systemPrompt ?? null)
+  }, [input, isStreaming, isLoading, sendMessage, messages, webSearch, clientCtx, activeSquad])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -303,6 +308,7 @@ export function AIPage() {
     setPendingSessionId(null)
     setInput('')
     setWebSearch(false)
+    setActiveSquad(null)
   }
 
   const handleSuggestion = async (text: string, web: boolean) => {
@@ -526,6 +532,87 @@ export function AIPage() {
               </button>
             )}
 
+            {/* Seletor de squad */}
+            <div className="relative" ref={squadPickerRef}>
+              <button
+                onClick={() => setSquadPickerOpen(o => !o)}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12px] font-medium border transition-all',
+                  activeSquad
+                    ? 'border-[#c4b5fd] text-[#5b21b6]'
+                    : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#64748b] hover:border-[#d0d0d0]'
+                )}
+                style={activeSquad ? { backgroundColor: activeSquad.color.bg } : {}}
+              >
+                {activeSquad ? (
+                  <>
+                    <span>{activeSquad.emoji}</span>
+                    <span className="max-w-[120px] truncate">{activeSquad.name}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setActiveSquad(null) }}
+                      className="ml-0.5 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3" />
+                    <span>Squad</span>
+                    {squadPickerOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </>
+                )}
+              </button>
+
+              {/* Dropdown de squads */}
+              {squadPickerOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-[#e2e8f0] rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="px-3 py-2.5 border-b border-[#f0f0f0]">
+                    <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">Times especializados</p>
+                    <p className="text-[10px] text-[#94a3b8] mt-0.5">Ativa um squad para respostas especializadas</p>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1.5 px-1.5 space-y-0.5">
+                    {AI_SQUADS.map(squad => (
+                      <button
+                        key={squad.id}
+                        onClick={() => { setActiveSquad(squad); setSquadPickerOpen(false) }}
+                        className={cn(
+                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all',
+                          activeSquad?.id === squad.id
+                            ? 'ring-1'
+                            : 'hover:bg-[#f5f5f5]'
+                        )}
+                        style={activeSquad?.id === squad.id ? {
+                          backgroundColor: squad.color.bg,
+                          ringColor: squad.color.border,
+                        } : {}}
+                      >
+                        <span className="text-[16px] flex-shrink-0">{squad.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-semibold text-[#0f0f0f] leading-none mb-0.5">{squad.name}</p>
+                          <p className="text-[10px] text-[#64748b] truncate">{squad.description}</p>
+                        </div>
+                        {activeSquad?.id === squad.id && (
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: squad.color.dot }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {activeSquad && (
+                    <div className="border-t border-[#f0f0f0] px-3 py-2">
+                      <button
+                        onClick={() => { setActiveSquad(null); setSquadPickerOpen(false) }}
+                        className="text-[11px] text-red-500 hover:text-red-600 flex items-center gap-1.5"
+                      >
+                        <X className="w-3 h-3" />
+                        Remover squad
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Badge de modelo */}
             <div className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
@@ -559,43 +646,126 @@ export function AIPage() {
           </div>
         )}
 
+        {/* Banner de squad ativo */}
+        {activeSquad && (
+          <div
+            className="flex items-center gap-2.5 px-4 py-2 border-b flex-shrink-0"
+            style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border }}
+          >
+            <span className="text-[14px]">{activeSquad.emoji}</span>
+            <p className="text-[12px] flex-1" style={{ color: activeSquad.color.text }}>
+              <span className="font-semibold">{activeSquad.name}</span>
+              {' '}· {activeSquad.agents}
+            </p>
+            <button
+              onClick={() => setActiveSquad(null)}
+              style={{ color: activeSquad.color.text, opacity: 0.6 }}
+              className="hover:opacity-100 transition-opacity"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* ── Área de mensagens ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto">
           {isEmpty && !hasMessages ? (
             /* Tela de boas-vindas */
-            <div className="flex flex-col items-center justify-center min-h-full px-6 py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mb-5 shadow-lg">
-                <Sparkles className="w-8 h-8" style={{ color: '#ffffff' }} />
+            <div className="flex flex-col items-center min-h-full px-6 py-10 overflow-y-auto">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mb-4 shadow-lg">
+                <Sparkles className="w-7 h-7" style={{ color: '#ffffff' }} />
               </div>
-              <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2 text-center">
+              <h1 className="text-[20px] font-bold text-[#0f0f0f] mb-1 text-center">
                 Como posso ajudar?
               </h1>
-              <p className="text-[13px] text-[#64748b] text-center max-w-sm mb-10">
-                Sou especialista em Social Media e Marketing Digital. Pergunte sobre estratégias, conteúdo, tendências ou qualquer desafio da sua agência.
+              <p className="text-[13px] text-[#64748b] text-center max-w-md mb-8">
+                Sou especialista em Social Media e Marketing Digital. Ative um squad especializado ou escreva diretamente.
               </p>
 
-              {/* Sugestões */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
-                {SUGGESTIONS.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSuggestion(s.text, s.web)}
-                    className="flex items-start gap-3 p-4 bg-white border border-[#e2e8f0] rounded-xl text-left hover:border-[#6366f1]/40 hover:bg-[#f5f3ff] transition-all group shadow-sm"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-[#f5f3ff] border border-[#e0d9ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#ede9ff]">
-                      <s.icon className="w-3.5 h-3.5 text-[#6366f1]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#374151] leading-relaxed">{s.text}</p>
-                      {s.web && (
-                        <div className="flex items-center gap-1 mt-1.5">
-                          <Globe className="w-2.5 h-2.5 text-blue-500" />
-                          <span className="text-[10px] text-blue-500 font-medium">Busca web</span>
-                        </div>
+              {/* Grid de squads */}
+              <div className="w-full max-w-3xl mb-8">
+                <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-3">
+                  Times especializados — clique para ativar
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                  {AI_SQUADS.map(squad => (
+                    <button
+                      key={squad.id}
+                      onClick={() => setActiveSquad(s => s?.id === squad.id ? null : squad)}
+                      className={cn(
+                        'flex flex-col items-start gap-1.5 p-3.5 rounded-xl text-left border transition-all',
+                        activeSquad?.id === squad.id
+                          ? 'shadow-sm ring-1'
+                          : 'bg-white border-[#e2e8f0] hover:border-[#c4b5fd] hover:shadow-sm'
                       )}
+                      style={activeSquad?.id === squad.id ? {
+                        backgroundColor: squad.color.bg,
+                        borderColor: squad.color.border,
+                      } : {}}
+                    >
+                      <span className="text-[18px]">{squad.emoji}</span>
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#0f0f0f] leading-tight">{squad.name}</p>
+                        <p className="text-[10px] text-[#94a3b8] leading-tight mt-0.5 line-clamp-2">{squad.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Banner do squad selecionado */}
+              {activeSquad && (
+                <div
+                  className="w-full max-w-3xl rounded-xl p-4 mb-6 border"
+                  style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[13px] font-semibold mb-0.5" style={{ color: activeSquad.color.text }}>
+                        {activeSquad.emoji} {activeSquad.name} ativado
+                      </p>
+                      <p className="text-[11px]" style={{ color: activeSquad.color.text, opacity: 0.8 }}>
+                        {activeSquad.agents}
+                      </p>
                     </div>
-                  </button>
-                ))}
+                    <button
+                      onClick={() => setActiveSquad(null)}
+                      style={{ color: activeSquad.color.text, opacity: 0.5 }}
+                      className="hover:opacity-100 transition-opacity flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Sugestões rápidas */}
+              <div className="w-full max-w-3xl">
+                <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-3">
+                  Sugestões rápidas
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {SUGGESTIONS.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSuggestion(s.text, s.web)}
+                      className="flex items-start gap-3 p-4 bg-white border border-[#e2e8f0] rounded-xl text-left hover:border-[#6366f1]/40 hover:bg-[#f5f3ff] transition-all group shadow-sm"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#f5f3ff] border border-[#e0d9ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#ede9ff]">
+                        <s.icon className="w-3.5 h-3.5 text-[#6366f1]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] text-[#374151] leading-relaxed">{s.text}</p>
+                        {s.web && (
+                          <div className="flex items-center gap-1 mt-1.5">
+                            <Globe className="w-2.5 h-2.5 text-blue-500" />
+                            <span className="text-[10px] text-blue-500 font-medium">Busca web</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
