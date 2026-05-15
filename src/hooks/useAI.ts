@@ -171,7 +171,8 @@ export function useAIChat(sessionId: string | null) {
       ...(userMsg ? [userMsg as AIMessage] : []),
     ].map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
 
-    // Modelo: usa gpt-4o-search-preview quando busca web está ativa
+    // Modelo: gpt-4o-search-preview para busca web, gpt-4o para respostas normais
+    // Nota: gpt-4o-search-preview não suporta streaming — retorna resposta completa
     const model = useWebSearch ? 'gpt-4o-search-preview' : 'gpt-4o'
 
     setIsLoading(true)
@@ -180,32 +181,55 @@ export function useAIChat(sessionId: string | null) {
     let fullContent = ''
 
     try {
-      const stream = await openai.chat.completions.create({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...chatHistory,
-        ],
-        stream: true,
-        max_tokens: 2048,
-      })
+      if (useWebSearch) {
+        // Modelo de busca web NÃO suporta streaming — usa chamada normal
+        const response = await openai.chat.completions.create({
+          model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...chatHistory,
+          ],
+          stream: false,
+          max_tokens: 2048,
+        })
+        setIsLoading(false)
+        setIsStreaming(true)
+        fullContent = response.choices[0]?.message?.content ?? ''
+        // Simula streaming exibindo o conteúdo de uma vez
+        setStreamingContent(fullContent)
+      } else {
+        // Modelo normal com streaming real
+        const stream = await openai.chat.completions.create({
+          model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...chatHistory,
+          ],
+          stream: true,
+          max_tokens: 2048,
+        })
 
-      streamRef.current = stream as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>
-      setIsLoading(false)
-      setIsStreaming(true)
+        streamRef.current = stream as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>
+        setIsLoading(false)
+        setIsStreaming(true)
 
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content ?? ''
-        if (delta) {
-          fullContent += delta
-          setStreamingContent(prev => prev + delta)
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta?.content ?? ''
+          if (delta) {
+            fullContent += delta
+            setStreamingContent(prev => prev + delta)
+          }
         }
       }
     } catch (err) {
       setIsLoading(false)
       setIsStreaming(false)
       setStreamingContent('')
-      fullContent = '❌ Erro ao processar a mensagem. Verifique a chave da API e tente novamente.'
+      // Extrai mensagem de erro real para facilitar debug
+      const errMsg = err instanceof Error ? err.message : String(err)
+      // eslint-disable-next-line no-console
+      console.error('[useAI] OpenAI error:', errMsg, err)
+      fullContent = `❌ Erro: ${errMsg}`
     }
 
     // Salva resposta do assistente no Supabase
