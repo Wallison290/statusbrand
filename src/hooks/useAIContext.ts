@@ -110,27 +110,14 @@ export function buildClientContext(
   memories: AIClientMemory[],
 ): string {
   const today = new Date()
-  const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
-  // Posts do mês atual
-  const monthItems = plannerItems.filter(p =>
-    p.scheduled_date?.startsWith(thisMonth)
-  )
-  const published  = monthItems.filter(p => p.status === 'publicado').length
-  const approved   = monthItems.filter(p => p.status === 'aprovado').length
-  const inProd     = monthItems.filter(p => p.status === 'producao').length
-  const pending    = monthItems.filter(p => p.approval_status === 'pendente_aprovacao').length
-  const needsAdj   = monthItems.filter(p => p.approval_status === 'ajuste_solicitado').length
-
-  // Próximos posts agendados (até 7 dias)
-  const in7days = new Date()
-  in7days.setDate(in7days.getDate() + 7)
-  const upcoming = plannerItems
-    .filter(p => {
-      const d = new Date(p.scheduled_date)
-      return d >= today && d <= in7days && p.status !== 'publicado'
-    })
-    .slice(0, 5)
+  // Agrupa todos os posts por mês (YYYY-MM)
+  const byMonth: Record<string, typeof plannerItems> = {}
+  plannerItems.forEach(p => {
+    const ym = p.scheduled_date?.slice(0, 7) ?? 'sem-data'
+    if (!byMonth[ym]) byMonth[ym] = []
+    byMonth[ym].push(p)
+  })
 
   const lines: string[] = []
 
@@ -170,28 +157,32 @@ export function buildClientContext(
     lines.push('')
   }
 
-  // Planejamento do mês
-  if (monthItems.length > 0) {
-    lines.push(`**Planejamento de ${today.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}:**`)
-    lines.push(`  • Total planejado: ${monthItems.length} posts`)
-    if (published > 0)  lines.push(`  • Publicados: ${published}`)
-    if (approved > 0)   lines.push(`  • Aprovados (aguardando publicação): ${approved}`)
-    if (inProd > 0)     lines.push(`  • Em produção: ${inProd}`)
-    if (pending > 0)    lines.push(`  • Aguardando aprovação do cliente: ${pending}`)
-    if (needsAdj > 0)   lines.push(`  • Com ajuste solicitado: ${needsAdj}`)
+  // Planejamento completo por mês
+  if (plannerItems.length > 0) {
+    lines.push('**Conteúdos já planejados (NÃO repita nem sugira duplicatas destes temas/títulos):**')
     lines.push('')
-  }
 
-  // Próximos posts
-  if (upcoming.length > 0) {
-    lines.push('**Próximos posts agendados (7 dias):**')
-    upcoming.forEach(p => {
-      const date = new Date(p.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
-      const type = contentTypeLabels[p.content_type] ?? p.content_type
-      const status = plannerStatusLabels[p.status] ?? p.status
-      lines.push(`  • ${date} — ${type}: "${p.title}" (${status})`)
-    })
-    lines.push('')
+    Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([ym, items]) => {
+        const [year, month] = ym.split('-')
+        const monthLabel = new Date(Number(year), Number(month) - 1, 1)
+          .toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
+        const pub  = items.filter(p => p.status === 'publicado').length
+        const apv  = items.filter(p => p.status === 'aprovado').length
+        const prod = items.filter(p => p.status === 'producao').length
+        const pend = items.filter(p => p.approval_status === 'pendente_aprovacao').length
+        const adj  = items.filter(p => p.approval_status === 'ajuste_solicitado').length
+
+        lines.push(`  📅 ${monthLabel} — ${items.length} posts (${pub} publicados · ${apv} aprovados · ${prod} em prod. · ${pend} aguardando · ${adj} com ajuste)`)
+        items.forEach(p => {
+          const date = new Date(p.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+          const type = contentTypeLabels[p.content_type] ?? p.content_type
+          const status = plannerStatusLabels[p.status] ?? p.status
+          lines.push(`    • ${date} [${type}] "${p.title}" — ${status}`)
+        })
+        lines.push('')
+      })
   }
 
   // Memórias aprendidas
@@ -217,10 +208,11 @@ export function useClientContext(clientId: string | null) {
     queryFn: async () => {
       if (!clientId) return null
 
-      // Busca em paralelo: cliente, planner do mês, brand DNA, memórias
+      // Busca em paralelo: cliente, planner (mês atual + próximo), brand DNA, memórias
       const now = new Date()
       const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      const endOfMonth   = new Date(now.getFullYear(), now.getMonth() + 2, 0)
+      // Inclui o mês atual e o próximo mês (para planejamentos adiantados)
+      const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 3, 0)
         .toISOString().split('T')[0]
 
       const [clientRes, plannerRes, dnaRes, memRes] = await Promise.all([
@@ -230,7 +222,7 @@ export function useClientContext(clientId: string | null) {
           .select('*')
           .eq('client_id', clientId)
           .gte('scheduled_date', startOfMonth)
-          .lte('scheduled_date', endOfMonth)
+          .lte('scheduled_date', endOfNextMonth)
           .order('scheduled_date', { ascending: true }),
         supabase.from('brand_dna').select('*').eq('client_id', clientId).maybeSingle(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
