@@ -241,9 +241,18 @@ export function useClientContext(clientId: string | null) {
       const brandDna    = (dnaRes.data ?? null) as BrandDNA | null
       const memories    = (memRes.data ?? []) as AIClientMemory[]
 
+      // eslint-disable-next-line no-console
+      console.log('[AI Context] clientId:', clientId, '| planner items:', planner.length, '| range:', startOfMonth, '→', endOfNextMonth, '| error:', plannerRes.error)
+      // eslint-disable-next-line no-console
+      if (planner.length > 0) console.log('[AI Context] planner sample:', planner[0])
+
+      const contextString = buildClientContext(client, planner, brandDna, memories)
+      // eslint-disable-next-line no-console
+      console.log('[AI Context] contextString preview (first 500 chars):', contextString.slice(0, 500))
+
       return {
         client,
-        contextString: buildClientContext(client, planner, brandDna, memories),
+        contextString,
       }
     },
     enabled: !!clientId,
