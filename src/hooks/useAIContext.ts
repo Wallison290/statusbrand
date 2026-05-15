@@ -218,7 +218,7 @@ export function useClientContext(clientId: string | null) {
       const [clientRes, plannerRes, dnaRes, memRes] = await Promise.all([
         supabase.from('clients').select('*').eq('id', clientId).single(),
         supabase
-          .from('planner_items')
+          .from('planner')
           .select('*')
           .eq('client_id', clientId)
           .gte('scheduled_date', startOfMonth)
