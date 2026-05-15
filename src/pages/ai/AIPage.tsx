@@ -584,7 +584,6 @@ export function AIPage() {
                         )}
                         style={activeSquad?.id === squad.id ? {
                           backgroundColor: squad.color.bg,
-                          ringColor: squad.color.border,
                         } : {}}
                       >
                         <span className="text-[16px] flex-shrink-0">{squad.emoji}</span>
