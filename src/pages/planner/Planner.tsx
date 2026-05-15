@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
-  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram,
+  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Sparkles,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -33,6 +33,7 @@ import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { useContentAssets } from '@/hooks/useContentAssets'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
+import { PlannerAIDrawer } from '@/components/ai/PlannerAIDrawer'
 import type { PlannerStatus, PlannerItem, PlannerAttachment, PlannerLink, ContentType, ApprovalStatus, ContentAsset } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -620,11 +621,13 @@ function DayItemCard({
   onView,
   onEdit,
   onDelete,
+  onAI,
 }: {
   item: PlannerItem
   onView: () => void
   onEdit: () => void
   onDelete: () => void
+  onAI: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
   const imageThumbnail = item.attachments?.find(a => isImageAttachment(a))
@@ -729,6 +732,14 @@ function DayItemCard({
           </Button>
           <Button size="sm" variant="outline" onClick={onEdit}>
             <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-[#8b5cf6] hover:text-[#7c3aed] hover:bg-[#8b5cf6]/10 border border-[#8b5cf6]/30"
+            onClick={onAI}
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1" /> IA
           </Button>
         </div>
       )}
@@ -870,6 +881,9 @@ export function Planner() {
   // Arsenal: picker de conteúdo
   const [pickerOpen, setPickerOpen] = useState(false)
   const [linkedAsset, setLinkedAsset] = useState<ContentAsset | null>(null)
+
+  // IA Copilot no planner
+  const [aiDrawerItem, setAiDrawerItem] = useState<PlannerItem | null>(null)
 
   // Filtro por cliente
   const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null)
@@ -1430,6 +1444,7 @@ export function Planner() {
                   onView={() => openItemView(item)}
                   onEdit={() => openEdit(item)}
                   onDelete={() => deleteItem.mutateAsync(item.id)}
+                  onAI={() => { setDayDetailsOpen(false); setAiDrawerItem(item) }}
                 />
               ))
             )}
@@ -1702,6 +1717,14 @@ export function Planner() {
               )}
             </div>
           </div>
+
+      {/* ── IA Copilot Drawer ───────────────────────────────────────────────── */}
+      {aiDrawerItem && (
+        <PlannerAIDrawer
+          item={aiDrawerItem}
+          onClose={() => setAiDrawerItem(null)}
+        />
+      )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>Cancelar</Button>
