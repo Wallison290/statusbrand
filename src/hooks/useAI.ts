@@ -114,13 +114,87 @@ export function useDeleteSession() {
   })
 }
 
+// ── Extrator de memória (background, gpt-4o-mini) ─────────────────────────────
+const MEMORY_EXTRACTION_PROMPT = `Você é um extrator de memórias para um sistema de gestão de social media.
+
+Analise o par de mensagens abaixo e extraia APENAS decisões importantes, preferências confirmadas ou aprendizados específicos sobre o cliente que devam ser lembrados em conversas futuras.
+
+Retorne JSON: { "memories": [{ "key": string, "value": string }] }
+Retorne array vazio se não houver nada relevante.
+
+Exemplos de memórias VÁLIDAS (específicas e acionáveis):
+- { "key": "frequencia_posts", "value": "3 posts por semana no Instagram" }
+- { "key": "melhor_horario", "value": "publicações às 18h-20h performam melhor" }
+- { "key": "formato_preferido", "value": "cliente prefere carrosséis a posts simples" }
+- { "key": "tom_ajustado", "value": "tom mais descontraído aprovado pelo cliente" }
+- { "key": "restricao_conteudo", "value": "não mencionar concorrente X" }
+- { "key": "campanha_ativa", "value": "promoção de julho para consultas particulares" }
+
+NÃO extraia informações genéricas ou já presentes no cadastro do cliente.
+Seja específico e conciso. Máximo 5 memórias por resposta.`
+
+async function extractMemoriesBackground(
+  userMessage: string,
+  assistantResponse: string,
+  clientId: string,
+  userId: string,
+  onMemoriesSaved: (keys: string[]) => void,
+): Promise<void> {
+  try {
+    const result = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: MEMORY_EXTRACTION_PROMPT },
+        {
+          role: 'user',
+          content: `Usuário: "${userMessage.slice(0, 300)}"\n\nAssistente: "${assistantResponse.slice(0, 600)}"`,
+        },
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 400,
+    })
+
+    const raw = result.choices[0]?.message?.content ?? '{}'
+    const parsed = JSON.parse(raw) as { memories?: { key: string; value: string }[] }
+    const memories = parsed.memories ?? []
+
+    if (memories.length === 0) return
+
+    const savedKeys: string[] = []
+    for (const mem of memories) {
+      if (!mem.key || !mem.value) continue
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('ai_client_memory')
+        .upsert(
+          {
+            client_id: clientId,
+            user_id: userId,
+            key: mem.key,
+            value: mem.value,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'client_id,user_id,key' }
+        )
+      if (!error) savedKeys.push(mem.key)
+    }
+
+    if (savedKeys.length > 0) onMemoriesSaved(savedKeys)
+  } catch {
+    // extração em background — falha silenciosa
+  }
+}
+
 // ── Hook principal de chat ─────────────────────────────────────────────────────
 export function useAIChat(sessionId: string | null) {
   const qc = useQueryClient()
   const [streamingContent, setStreamingContent] = useState('')
   const [isStreaming, setIsStreaming]   = useState(false)
   const [isLoading, setIsLoading]       = useState(false)
+  const [memoriesSaved, setMemoriesSaved] = useState<string[]>([])
   const streamRef = useRef<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> | null>(null)
+
+  const clearMemoriesSaved = useCallback(() => setMemoriesSaved([]), [])
 
   const sendMessage = useCallback(async (
     content: string,
@@ -128,6 +202,7 @@ export function useAIChat(sessionId: string | null) {
     useWebSearch = false,
     onSessionCreated?: (session: AISession) => void,
     clientContext?: string | null,
+    clientId?: string | null,
   ) => {
     if (!content.trim()) return
     if (isStreaming || isLoading) return
@@ -272,6 +347,18 @@ export function useAIChat(sessionId: string | null) {
       qc.invalidateQueries({ queryKey: ['ai_sessions'] })
     }
 
+    // Extração de memória em background (só se houver cliente e resposta válida)
+    if (clientId && fullContent && !fullContent.startsWith('❌')) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        extractMemoriesBackground(content, fullContent, clientId, user.id, (keys) => {
+          setMemoriesSaved(keys)
+          qc.invalidateQueries({ queryKey: ['ai_client_memory', clientId] })
+          qc.invalidateQueries({ queryKey: ['ai_client_context', clientId] })
+        })
+      }
+    }
+
     setIsStreaming(false)
     setStreamingContent('')
   }, [sessionId, isStreaming, isLoading, qc])
@@ -281,5 +368,5 @@ export function useAIChat(sessionId: string | null) {
     setStreamingContent('')
   }, [])
 
-  return { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration }
+  return { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved }
 }

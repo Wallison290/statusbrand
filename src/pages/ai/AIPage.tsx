@@ -3,11 +3,12 @@ import {
   Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
   MessageSquare, ChevronLeft, ChevronRight, Square,
   Sparkles, TrendingUp, FileText, Lightbulb,
-  Users, X, Building2, ChevronDown,
+  Users, X, Building2, ChevronDown, Brain,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
+import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import {
   useAISessions,
   useAIMessages,
@@ -228,6 +229,8 @@ export function AIPage() {
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
+  const [memoryPanelOpen, setMemoryPanelOpen]   = useState(false)
+  const [memoryToast, setMemoryToast]           = useState<string[]>([])
 
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -242,7 +245,7 @@ export function AIPage() {
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
 
-  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration } = useAIChat(effectiveSessionId)
+  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved } = useAIChat(effectiveSessionId)
 
   // Fecha o picker ao clicar fora
   useEffect(() => {
@@ -254,6 +257,15 @@ export function AIPage() {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
+
+  // Toast quando memórias são salvas
+  useEffect(() => {
+    if (memoriesSaved.length === 0) return
+    setMemoryToast(memoriesSaved)
+    clearMemoriesSaved()
+    const t = setTimeout(() => setMemoryToast([]), 4000)
+    return () => clearTimeout(t)
+  }, [memoriesSaved, clearMemoriesSaved])
 
   // Scroll para o final quando mensagens mudam
   useEffect(() => {
@@ -276,7 +288,7 @@ export function AIPage() {
     await sendMessage(text, messages, webSearch, (session) => {
       setActiveSessionId(session.id)
       setPendingSessionId(null)
-    }, clientCtx?.contextString ?? null)
+    }, clientCtx?.contextString ?? null, activeClientId)
   }, [input, isStreaming, isLoading, sendMessage, messages, webSearch, clientCtx])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -497,6 +509,23 @@ export function AIPage() {
               )}
             </div>
 
+            {/* Botão de memórias (só quando cliente ativo) */}
+            {activeClientId && clientCtx && (
+              <button
+                onClick={() => setMemoryPanelOpen(o => !o)}
+                title="Ver memórias do cliente"
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[12px] font-medium border transition-all',
+                  memoryPanelOpen
+                    ? 'bg-[#6d28d9] border-[#5b21b6] text-white'
+                    : 'bg-[#faf5ff] border-[#ddd6fe] text-[#7c3aed] hover:bg-[#ede9fe]'
+                )}
+              >
+                <Brain className="w-3.5 h-3.5" />
+                <span>Memórias</span>
+              </button>
+            )}
+
             {/* Badge de modelo */}
             <div className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
@@ -667,6 +696,38 @@ export function AIPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Painel de memórias ──────────────────────────────────────────────── */}
+      {memoryPanelOpen && activeClientId && clientCtx && (
+        <AIMemoryPanel
+          client={clientCtx.client}
+          onClose={() => setMemoryPanelOpen(false)}
+        />
+      )}
+
+      {/* ── Toast de memória salva ──────────────────────────────────────────── */}
+      {memoryToast.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="flex items-start gap-3 bg-[#1e1b4b] rounded-2xl px-4 py-3 shadow-xl max-w-xs">
+            <div className="w-7 h-7 rounded-xl bg-[#6d28d9] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Brain className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold leading-none mb-1" style={{ color: '#ffffff' }}>
+                Memória salva!
+              </p>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {memoryToast.length === 1
+                  ? `Aprendi: "${memoryToast[0].replace(/_/g, ' ')}"`
+                  : `${memoryToast.length} novos aprendizados sobre este cliente`}
+              </p>
+            </div>
+            <button onClick={() => setMemoryToast([])} style={{ color: 'rgba(255,255,255,0.5)' }} className="flex-shrink-0 mt-0.5">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
