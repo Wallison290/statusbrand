@@ -139,6 +139,10 @@
   /* Self: when bg-[#0f0f0f] is the item itself (nav active state) */
   .bg-\[\#0f0f0f\].text-white { color: #ffffff !important; }
 
+  /* ── Radix UI Tabs: tab ativo com fundo preto — texto SEMPRE branco ─── */
+  [role="tab"][data-state="active"] { color: #ffffff !important; }
+  [role="tab"][data-state="active"] svg { color: #ffffff !important; }
+
   /* Gradient text clips that were white-on-dark → now dark-on-light */
   .bg-clip-text.text-transparent { color: transparent !important; }
 
