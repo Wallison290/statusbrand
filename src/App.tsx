@@ -73,16 +73,24 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 /** Exige assinatura ativa. Redireciona para /planos se não pago. */
 function SubscriptionGuard({ children }: { children: React.ReactNode }) {
-  const { data: subData, isLoading } = useSubscription()
+  const { data: subData, isLoading, isFetched } = useSubscription()
 
-  // Enquanto carrega, não faz nada (AuthGuard já mostrou o loader)
-  if (isLoading) return null
+  // Aguarda até ter uma resposta real do servidor antes de decidir qualquer coisa
+  if (isLoading || !isFetched) return null
 
-  // Sem assinatura ou assinatura inativa → paywall
+  // Só redireciona depois de ter certeza que a assinatura está inativa
   if (!subData || !subData.isActive) {
     return <Navigate to="/planos" replace />
   }
 
+  return <>{children}</>
+}
+
+/** Se já tem assinatura ativa, vai direto para o app em vez de mostrar /planos */
+function ActivePlanRedirect({ children }: { children: React.ReactNode }) {
+  const { data: subData, isLoading, isFetched } = useSubscription()
+  if (isLoading || !isFetched) return null
+  if (subData?.isActive) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -109,8 +117,8 @@ function AppRoutes() {
       {/* Portal do cliente */}
       <Route path="/portal" element={<PortalGuard><PortalDashboard /></PortalGuard>} />
 
-      {/* Página de planos — auth obrigatória, assinatura não obrigatória */}
-      <Route path="/planos" element={<AuthGuard><Pricing /></AuthGuard>} />
+      {/* Página de planos — auth obrigatória; se já tem plano ativo, redireciona */}
+      <Route path="/planos" element={<AuthGuard><ActivePlanRedirect><Pricing /></ActivePlanRedirect></AuthGuard>} />
 
       {/* App da agência — auth + assinatura ativa obrigatórias */}
       <Route element={<AuthGuard><SubscriptionGuard><Layout /></SubscriptionGuard></AuthGuard>}>
