@@ -628,6 +628,7 @@ export function Dashboard() {
       <div className="px-5 pt-5 md:px-7 md:pt-7">
         <DashboardHero
           greeting={greeting}
+          userName={userName}
           message={message}
           pills={pills}
           isLoading={greetingLoading}
