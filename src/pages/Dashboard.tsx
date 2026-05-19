@@ -625,7 +625,7 @@ export function Dashboard() {
       />
 
       {/* ── Hero Banner inteligente ── */}
-      <div className="px-5 pt-5 md:px-7 md:pt-7">
+      <div className="px-3 pt-2 md:px-4 md:pt-3">
         <DashboardHero
           greeting={greeting}
           userName={userName}
