@@ -3,10 +3,12 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useAIUsage } from '@/hooks/useAIUsage'
 
 const navItems = [
   { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
@@ -55,8 +57,16 @@ interface SidebarProps {
 
 export function Sidebar({ onMobileClose }: SidebarProps) {
   const location  = useLocation()
-  const { signOut, profile } = useAuth()
-  const [collapsed, setCollapsed] = useState(false)
+  const { signOut, profile, user } = useAuth()
+  const [collapsed, setCollapsed]  = useState(false)
+  const { data: subData }          = useSubscription()
+  const { data: usage }            = useAIUsage(user?.id)
+
+  const planName   = subData?.plan.name ?? 'Free'
+  const aiUsed     = usage?.requests ?? 0
+  const aiLimit    = usage?.limit    ?? 50
+  const aiPct      = Math.min(100, Math.round((aiUsed / aiLimit) * 100))
+  const aiWarning  = aiPct >= 80
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -137,6 +147,41 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* Assinatura + uso da IA */}
+      <div className="px-2 pb-1">
+        <Link to="/assinatura">
+          <div className={`rounded-xl px-2.5 py-2.5 transition-colors ${
+            aiWarning ? 'bg-amber-50 border border-amber-200' : 'bg-[#fafafa] hover:bg-[#f5f5f5]'
+          }`}>
+            {!collapsed ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-500' : 'text-[#94a3b8]'}`} />
+                    <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-700' : 'text-[#0f0f0f]'}`}>
+                      {planName}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] ${aiWarning ? 'text-amber-600' : 'text-[#a0a0a0]'}`}>
+                    {aiUsed}/{aiLimit} IA
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-[#e8e8e8] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-400' : 'bg-[#0f0f0f]'
+                    }`}
+                    style={{ width: `${aiPct}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <Zap className={`w-[15px] h-[15px] mx-auto ${aiWarning ? 'text-amber-500' : 'text-[#c0c0c0]'}`} />
+            )}
+          </div>
+        </Link>
+      </div>
 
       {/* Profile + sign out */}
       <div className="p-2 border-t border-[#f0f0f0] space-y-1">

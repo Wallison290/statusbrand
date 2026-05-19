@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '@/components/ui/toast'
 import { Layout } from '@/components/layout/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useSubscription } from '@/hooks/useSubscription'
 import { isConfigured } from '@/integrations/supabase/client'
 import { Setup } from '@/pages/Setup'
 
@@ -21,6 +22,8 @@ import { Library } from '@/pages/library/Library'
 import { Financial } from '@/pages/financial/Financial'
 import { Notes } from '@/pages/notes/Notes'
 import { AIPage } from '@/pages/ai/AIPage'
+import { Subscription } from '@/pages/Subscription'
+import { Pricing } from '@/pages/Pricing'
 import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 
 const qc = new QueryClient({
@@ -29,22 +32,26 @@ const qc = new QueryClient({
   },
 })
 
+// ── Loading screen ────────────────────────────────────────────────────────────
+
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-[#0a0c11] flex items-center justify-center">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-pulse">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center animate-pulse">
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
             <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <p className="text-gray-500 text-sm">Carregando...</p>
+        <p className="text-[#94a3b8] text-sm">Carregando...</p>
       </div>
     </div>
   )
 }
 
-// Redireciona usuários autenticados para a área correta conforme role
+// ── Guards ────────────────────────────────────────────────────────────────────
+
+/** Redireciona usuários já autenticados para a área correta */
 function GuestGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth()
   if (loading) return null
@@ -55,7 +62,7 @@ function GuestGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Protege rotas da agência — client role é redirecionado para /portal
+/** Exige autenticação. Redireciona client-role para o portal. */
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth()
   if (loading) return <LoadingScreen />
@@ -64,7 +71,22 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Protege rotas do portal — agency role é redirecionado para /
+/** Exige assinatura ativa. Redireciona para /planos se não pago. */
+function SubscriptionGuard({ children }: { children: React.ReactNode }) {
+  const { data: subData, isLoading } = useSubscription()
+
+  // Enquanto carrega, não faz nada (AuthGuard já mostrou o loader)
+  if (isLoading) return null
+
+  // Sem assinatura ou assinatura inativa → paywall
+  if (!subData || !subData.isActive) {
+    return <Navigate to="/planos" replace />
+  }
+
+  return <>{children}</>
+}
+
+/** Protege rotas do portal — agency role é redirecionado para / */
 function PortalGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth()
   if (loading) return <LoadingScreen />
@@ -73,35 +95,41 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// ── Rotas ─────────────────────────────────────────────────────────────────────
+
 function AppRoutes() {
   return (
     <Routes>
-      {/* Auth */}
-      <Route path="/login" element={<GuestGuard><Login /></GuestGuard>} />
-      <Route path="/register" element={<GuestGuard><Register /></GuestGuard>} />
+      {/* Públicas */}
+      <Route path="/login"           element={<GuestGuard><Login /></GuestGuard>} />
+      <Route path="/register"        element={<GuestGuard><Register /></GuestGuard>} />
       <Route path="/forgot-password" element={<GuestGuard><ForgotPassword /></GuestGuard>} />
       <Route path="/client-register" element={<GuestGuard><ClientRegister /></GuestGuard>} />
 
-      {/* Portal do Cliente */}
+      {/* Portal do cliente */}
       <Route path="/portal" element={<PortalGuard><PortalDashboard /></PortalGuard>} />
 
-      {/* App da Agência */}
-      <Route element={<AuthGuard><Layout /></AuthGuard>}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/clients" element={<ClientList />} />
-        <Route path="/clients/new" element={<ClientForm />} />
-        <Route path="/clients/:id" element={<ClientProfile />} />
+      {/* Página de planos — auth obrigatória, assinatura não obrigatória */}
+      <Route path="/planos" element={<AuthGuard><Pricing /></AuthGuard>} />
+
+      {/* App da agência — auth + assinatura ativa obrigatórias */}
+      <Route element={<AuthGuard><SubscriptionGuard><Layout /></SubscriptionGuard></AuthGuard>}>
+        <Route path="/"              element={<Dashboard />} />
+        <Route path="/clients"       element={<ClientList />} />
+        <Route path="/clients/new"   element={<ClientForm />} />
+        <Route path="/clients/:id"   element={<ClientProfile />} />
         <Route path="/clients/:id/edit" element={<ClientForm />} />
-        <Route path="/feed" element={<FeedOrganizer />} />
-        <Route path="/content" element={<Navigate to="/" replace />} />
-        <Route path="/history" element={<Navigate to="/" replace />} />
-        <Route path="/history/:id" element={<Navigate to="/" replace />} />
-        <Route path="/planner" element={<Planner />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/notes" element={<Notes />} />
-        <Route path="/library" element={<Library />} />
-        <Route path="/financial" element={<Financial />} />
-        <Route path="/ai" element={<AIPage />} />
+        <Route path="/feed"          element={<FeedOrganizer />} />
+        <Route path="/content"       element={<Navigate to="/" replace />} />
+        <Route path="/history"       element={<Navigate to="/" replace />} />
+        <Route path="/history/:id"   element={<Navigate to="/" replace />} />
+        <Route path="/planner"       element={<Planner />} />
+        <Route path="/tasks"         element={<Tasks />} />
+        <Route path="/notes"         element={<Notes />} />
+        <Route path="/library"       element={<Library />} />
+        <Route path="/financial"     element={<Financial />} />
+        <Route path="/ai"            element={<AIPage />} />
+        <Route path="/assinatura"    element={<Subscription />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -110,9 +138,7 @@ function AppRoutes() {
 }
 
 export default function App() {
-  if (!isConfigured) {
-    return <Setup />
-  }
+  if (!isConfigured) return <Setup />
 
   return (
     <QueryClientProvider client={qc}>

@@ -26,7 +26,7 @@ const steps = [
     color: 'text-purple-400',
     bg: 'bg-purple-500/10 border-purple-500/20',
     desc: 'Na pasta do projeto, crie um arquivo .env com as variáveis abaixo:',
-    code: `VITE_SUPABASE_URL=https://seu-projeto.supabase.co\nVITE_SUPABASE_ANON_KEY=sua-chave-anon\nVITE_OPENAI_API_KEY=sk-sua-chave-openai`,
+    code: `VITE_SUPABASE_URL=https://seu-projeto.supabase.co\nVITE_SUPABASE_ANON_KEY=sua-chave-anon`,
   },
   {
     icon: Terminal,

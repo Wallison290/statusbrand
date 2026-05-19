@@ -1,13 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import OpenAI from 'openai'
 import { supabase } from '@/integrations/supabase/client'
-
-// ── Cliente OpenAI ─────────────────────────────────────────────────────────────
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY ?? '',
-  dangerouslyAllowBrowser: true,
-})
+import { callProxy, streamChat } from '@/lib/aiProxy'
 
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema StatusBrand — uma plataforma de gestão para agências de social media.
@@ -114,7 +108,7 @@ export function useDeleteSession() {
   })
 }
 
-// ── Extrator de memória (background, gpt-4o-mini) ─────────────────────────────
+// ── Extração de memória (background, via Edge Function) ───────────────────────
 const MEMORY_EXTRACTION_PROMPT = `Você é um extrator de memórias para um sistema de gestão de social media.
 
 Analise o par de mensagens abaixo e extraia APENAS decisões importantes, preferências confirmadas ou aprendizados específicos sobre o cliente que devam ser lembrados em conversas futuras.
@@ -141,23 +135,14 @@ async function extractMemoriesBackground(
   onMemoriesSaved: (keys: string[]) => void,
 ): Promise<void> {
   try {
-    const result = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: MEMORY_EXTRACTION_PROMPT },
-        {
-          role: 'user',
-          content: `Usuário: "${userMessage.slice(0, 300)}"\n\nAssistente: "${assistantResponse.slice(0, 600)}"`,
-        },
-      ],
-      response_format: { type: 'json_object' },
-      max_tokens: 400,
+    const { content } = await callProxy<{ content: string }>('memory-extract', {
+      systemPrompt: MEMORY_EXTRACTION_PROMPT,
+      userMessage,
+      assistantResponse,
     })
 
-    const raw = result.choices[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(raw) as { memories?: { key: string; value: string }[] }
+    const parsed = JSON.parse(content ?? '{}') as { memories?: { key: string; value: string }[] }
     const memories = parsed.memories ?? []
-
     if (memories.length === 0) return
 
     const savedKeys: string[] = []
@@ -189,10 +174,10 @@ async function extractMemoriesBackground(
 export function useAIChat(sessionId: string | null) {
   const qc = useQueryClient()
   const [streamingContent, setStreamingContent] = useState('')
-  const [isStreaming, setIsStreaming]   = useState(false)
-  const [isLoading, setIsLoading]       = useState(false)
-  const [memoriesSaved, setMemoriesSaved] = useState<string[]>([])
-  const streamRef = useRef<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> | null>(null)
+  const [isStreaming, setIsStreaming]             = useState(false)
+  const [isLoading, setIsLoading]                 = useState(false)
+  const [memoriesSaved, setMemoriesSaved]         = useState<string[]>([])
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const clearMemoriesSaved = useCallback(() => setMemoriesSaved([]), [])
 
@@ -235,85 +220,54 @@ export function useAIChat(sessionId: string | null) {
       .select()
       .single()
 
-    // Atualiza cache local imediatamente
     if (userMsg) {
       qc.setQueryData<AIMessage[]>(['ai_messages', activeSessionId], prev =>
         [...(prev ?? []), userMsg as AIMessage]
       )
     }
 
-    // Prepara histórico para OpenAI
+    // Prepara histórico de chat
     const chatHistory = [
       ...history,
       ...(userMsg ? [userMsg as AIMessage] : []),
     ].map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
 
-    // Modelo: gpt-4o-search-preview para busca web, gpt-4o para respostas normais
-    // Nota: gpt-4o-search-preview não suporta streaming — retorna resposta completa
-    const model = useWebSearch ? 'gpt-4o-search-preview' : 'gpt-4o'
+    // Monta system prompt composto
+    const systemParts = [SYSTEM_PROMPT]
+    if (clientContext) systemParts.push(clientContext)
+    if (squadPrompt)   systemParts.push(squadPrompt)
+    const systemContent = systemParts.join('\n\n')
 
     setIsLoading(true)
     setStreamingContent('')
 
     let fullContent = ''
 
+    // Cria AbortController para poder cancelar
+    const abort = new AbortController()
+    abortControllerRef.current = abort
+
+    setIsLoading(false)
+    setIsStreaming(true)
+
     try {
-      // Monta system prompt composto
-      const systemParts = [SYSTEM_PROMPT]
-      if (clientContext) systemParts.push(clientContext)
-      if (squadPrompt)   systemParts.push(squadPrompt)
-      const systemContent = systemParts.join('\n\n')
-
-      if (useWebSearch) {
-        // Modelo de busca web NÃO suporta streaming — usa chamada normal
-        const response = await openai.chat.completions.create({
-          model,
-          messages: [
-            { role: 'system', content: systemContent },
-            ...chatHistory,
-          ],
-          stream: false,
-          max_tokens: 2048,
-        })
-        setIsLoading(false)
-        setIsStreaming(true)
-        fullContent = response.choices[0]?.message?.content ?? ''
-        // Simula streaming exibindo o conteúdo de uma vez
-        setStreamingContent(fullContent)
-      } else {
-        // Modelo normal com streaming real
-
-        const stream = await openai.chat.completions.create({
-          model,
-          messages: [
-            { role: 'system', content: systemContent },
-            ...chatHistory,
-          ],
-          stream: true,
-          max_tokens: 2048,
-        })
-
-        streamRef.current = stream as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>
-        setIsLoading(false)
-        setIsStreaming(true)
-
-        for await (const chunk of stream) {
-          const delta = chunk.choices[0]?.delta?.content ?? ''
-          if (delta) {
-            fullContent += delta
-            setStreamingContent(prev => prev + delta)
-          }
-        }
-      }
+      fullContent = await streamChat(
+        chatHistory,
+        systemContent,
+        useWebSearch,
+        (chunk) => setStreamingContent(prev => prev + chunk),
+        abort.signal,
+      )
     } catch (err) {
-      setIsLoading(false)
-      setIsStreaming(false)
-      setStreamingContent('')
-      // Extrai mensagem de erro real para facilitar debug
-      const errMsg = err instanceof Error ? err.message : String(err)
-      // eslint-disable-next-line no-console
-      console.error('[useAI] OpenAI error:', errMsg, err)
-      fullContent = `❌ Erro: ${errMsg}`
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Cancelado pelo usuário — mantém o que foi gerado até aqui
+        fullContent = streamingContent
+      } else {
+        const errMsg = err instanceof Error ? err.message : String(err)
+        // eslint-disable-next-line no-console
+        console.error('[useAI] chat error:', errMsg, err)
+        fullContent = `❌ Erro: ${errMsg}`
+      }
     }
 
     // Salva resposta do assistente no Supabase
@@ -329,7 +283,6 @@ export function useAIChat(sessionId: string | null) {
       .select()
       .single()
 
-    // Atualiza cache com mensagem final
     if (aiMsg) {
       qc.setQueryData<AIMessage[]>(['ai_messages', activeSessionId], prev => [
         ...(prev ?? []).filter(m => m.id !== 'streaming'),
@@ -361,9 +314,10 @@ export function useAIChat(sessionId: string | null) {
 
     setIsStreaming(false)
     setStreamingContent('')
-  }, [sessionId, isStreaming, isLoading, qc])
+  }, [sessionId, isStreaming, isLoading, qc, streamingContent])
 
   const stopGeneration = useCallback(() => {
+    abortControllerRef.current?.abort()
     setIsStreaming(false)
     setStreamingContent('')
   }, [])

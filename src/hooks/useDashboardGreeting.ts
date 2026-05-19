@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import OpenAI from 'openai'
+import { callProxy } from '@/lib/aiProxy'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -25,13 +25,6 @@ export interface GreetingResult {
   isLoading: boolean
   refresh: () => void
 }
-
-// ── OpenAI client ──────────────────────────────────────────────────────────────
-
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY ?? '',
-  dangerouslyAllowBrowser: true,
-})
 
 // ── Cache TTL: 30 minutos ──────────────────────────────────────────────────────
 
@@ -108,7 +101,7 @@ export function useDashboardGreeting(
 
   const cacheKey = userId ? `dash_greeting_v2_${userId}` : null
 
-  // ── Fetch (com cache localStorage) ──────────────────────────────────────────
+  // ── Fetch via Edge Function (com cache localStorage) ──────────────────────
   const fetchGreeting = useCallback(async (forceRefresh = false) => {
     if (!userId || !cacheKey) return
 
@@ -134,45 +127,8 @@ export function useDashboardGreeting(
     const dayName = new Date().toLocaleDateString('pt-BR', { weekday: 'long' })
 
     try {
-      const res = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'Você é um assistente de dashboard para uma agência de social media. ' +
-              'Responda APENAS com JSON válido, sem markdown, sem code block.',
-          },
-          {
-            role: 'user',
-            content: `Situação atual da agência (${dayName}, ${hour}h):
-- Clientes ativos: ${stats.active_clients} de ${stats.total_clients}
-- Conteúdos aguardando aprovação: ${stats.period_pending_approval}
-- Aprovados no período: ${stats.period_approved}
-- Tarefas pendentes: ${stats.pending_tasks}
-- Tarefas atrasadas: ${stats.overdue_tasks}
-
-Retorne APENAS este JSON:
-{
-  "message": "frase curta e inteligente (máx. 12 palavras) sobre o momento atual da agência",
-  "pills": [
-    { "icon": "emoji", "label": "texto curto", "variant": "success|warning|default" }
-  ]
-}
-
-Regras:
-- 2 a 4 pills, mostrando os dados mais relevantes
-- "warning" APENAS se há atrasos ou problemas reais
-- "success" para conquistas positivas
-- Tom profissional, direto e encorajador
-- NÃO repita o mesmo dado em frase e pill`,
-          },
-        ],
-        max_tokens: 220,
-      })
-
-      const raw  = res.choices[0].message.content?.trim() ?? '{}'
-      const json = JSON.parse(raw)
+      const { content } = await callProxy<{ content: string }>('greeting', { stats, hour, dayName })
+      const json = JSON.parse(content ?? '{}')
 
       const newMsg   = typeof json.message === 'string' ? json.message : getFallbackMessage(stats)
       const newPills = Array.isArray(json.pills) ? (json.pills as HeroPill[]).slice(0, 4) : getFallbackPills(stats)

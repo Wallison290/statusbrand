@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import OpenAI from 'openai'
+import { streamChat } from '@/lib/aiProxy'
 import { Sparkles, X, Copy, Save, Loader2, ChevronDown, Check } from 'lucide-react'
 import { AI_SQUADS } from '@/data/aiSquads'
 import { useClientContext } from '@/hooks/useAIContext'
@@ -7,13 +7,7 @@ import { useUpdatePlannerItem } from '@/hooks/usePlanner'
 import { useToast } from '@/components/ui/toast'
 import type { PlannerItem, ContentType } from '@/types'
 
-// ── Cliente OpenAI (mesma instância do useAI.ts) ───────────────────────────────
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY ?? '',
-  dangerouslyAllowBrowser: true,
-})
-
-// ── System prompt base (mesma do useAI.ts) ────────────────────────────────────
+// ── System prompt base ────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema StatusBrand.
 Responda sempre em português brasileiro. Seja direto, objetivo e orientado a resultados práticos.
 Data atual: ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
@@ -95,7 +89,7 @@ export function PlannerAIDrawer({ item, onClose }: PlannerAIDrawerProps) {
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
   const [modeOpen, setModeOpen] = useState(false)
-  const abortRef = useRef(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Gera automaticamente ao abrir
   useEffect(() => {
@@ -108,7 +102,9 @@ export function PlannerAIDrawer({ item, onClose }: PlannerAIDrawerProps) {
     setResult('')
     setIsGenerating(true)
     setSaved(false)
-    abortRef.current = false
+    abortControllerRef.current?.abort()
+    const abort = new AbortController()
+    abortControllerRef.current = abort
 
     // Monta system prompt: base + Fábrica de Conteúdo + contexto do cliente
     const systemParts = [SYSTEM_PROMPT]
@@ -135,28 +131,18 @@ export function PlannerAIDrawer({ item, onClose }: PlannerAIDrawerProps) {
     ].filter(Boolean).join('\n')
 
     try {
-      const stream = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemContent },
-          { role: 'user', content: userMessage },
-        ],
-        stream: true,
-        max_tokens: 1500,
-      })
-
-      let full = ''
-      for await (const chunk of stream) {
-        if (abortRef.current) break
-        const delta = chunk.choices[0]?.delta?.content ?? ''
-        if (delta) {
-          full += delta
-          setResult(full)
-        }
-      }
+      await streamChat(
+        [{ role: 'user', content: userMessage }],
+        systemContent,
+        false,
+        (chunk) => setResult(prev => prev + chunk),
+        abort.signal,
+      )
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setResult(`❌ Erro: ${msg}`)
+      if (!(err instanceof Error && err.name === 'AbortError')) {
+        const msg = err instanceof Error ? err.message : String(err)
+        setResult(`❌ Erro: ${msg}`)
+      }
     } finally {
       setIsGenerating(false)
     }
@@ -181,7 +167,7 @@ export function PlannerAIDrawer({ item, onClose }: PlannerAIDrawerProps) {
   }
 
   const handleStop = () => {
-    abortRef.current = true
+    abortControllerRef.current?.abort()
     setIsGenerating(false)
   }
 
