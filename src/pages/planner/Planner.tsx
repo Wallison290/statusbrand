@@ -981,9 +981,28 @@ export function Planner() {
     setLinkedAsset(null)
   }
 
+  const FILE_SIZE_LIMIT = 50 * 1024 * 1024 // 50MB — limite do Supabase free tier
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length > 0) setPendingFiles(prev => [...prev, ...files])
+    const ok: File[] = []
+    const big: string[] = []
+
+    for (const f of files) {
+      if (f.size > FILE_SIZE_LIMIT) {
+        big.push(`${f.name} (${formatFileSize(f.size)})`)
+      } else {
+        ok.push(f)
+      }
+    }
+
+    if (big.length > 0) {
+      toast(
+        `Arquivo(s) acima de 50MB não suportados: ${big.join(', ')}. Comprima o vídeo antes de enviar.`,
+        'error'
+      )
+    }
+    if (ok.length > 0) setPendingFiles(prev => [...prev, ...ok])
     e.target.value = ''
   }
 
@@ -1666,7 +1685,9 @@ export function Planner() {
               )}
               <button type="button" onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-white/15 bg-white/3 text-gray-400 text-xs hover:border-white/30 hover:bg-white/5 transition-colors">
-                <Paperclip className="w-3.5 h-3.5" /> Clique para anexar arquivos
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>Clique para anexar arquivos</span>
+                <span className="ml-auto text-[10px] text-gray-600">máx. 50MB por arquivo</span>
               </button>
               <input ref={fileInputRef} type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileSelect} />
               {pendingFiles.length > 0 && (
