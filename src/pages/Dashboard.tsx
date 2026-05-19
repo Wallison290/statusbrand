@@ -145,17 +145,17 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
   ]
 
   return (
-    <div className="bg-white border-b border-gray-100 px-5 md:px-7 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div className="bg-white border-b border-[#f1f5f9] px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap">
       {/* Period pills */}
-      <div className="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1">
+      <div className="flex items-center gap-0.5 bg-[#f1f5f9] rounded-xl p-1">
         {pills.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onMode(key)}
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               mode === key
-                ? 'bg-gray-900 text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-800'
+                ? 'bg-[#0f172a] text-white shadow-sm'
+                : 'text-[#64748b] hover:text-[#0f172a]'
             }`}
           >
             {label}
@@ -173,8 +173,8 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
           }}
           className={`flex items-center gap-2 text-[12px] border rounded-xl px-3 py-1.5 transition-colors ${
             mode === 'custom'
-              ? 'text-gray-900 bg-gray-50 border-gray-300 font-medium'
-              : 'text-gray-400 bg-gray-50 border-gray-100 hover:border-gray-300 hover:text-gray-700'
+              ? 'text-[#0f172a] bg-white border-[#cbd5e1] font-medium'
+              : 'text-[#94a3b8] bg-white border-[#f1f5f9] hover:border-[#cbd5e1] hover:text-[#475569]'
           }`}
         >
           <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
@@ -247,39 +247,45 @@ function KpiCard({
   const showWarning = warning && value > 0
 
   const inner = featured ? (
-    <div className="h-full rounded-3xl bg-gray-900 p-5 flex flex-col gap-4 hover:bg-gray-800 transition-colors duration-200">
+    <div
+      className="h-full rounded-2xl bg-[#0f172a] p-5 flex flex-col gap-3 hover:bg-[#1e293b] transition-colors duration-200"
+      style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.18)' }}
+    >
       <div className="flex items-start justify-between">
-        <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
-          <Icon className="w-[18px] h-[18px] text-white" />
+        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white/75" />
         </div>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/50 uppercase tracking-wide">
+        <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-white/8 text-white/35 uppercase tracking-widest">
           Total
         </span>
       </div>
-      <div>
-        <p className="text-3xl font-semibold text-white tabular-nums leading-none">{value}</p>
-        <p className="text-[13px] font-medium text-white/70 mt-2 leading-tight">{label}</p>
-        {subtitle && <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>}
+      <div className="mt-auto">
+        <p className="text-[28px] font-semibold text-white tabular-nums leading-none">{value}</p>
+        <p className="text-[12px] text-white/60 mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-white/30 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   ) : (
-    <div className={`h-full rounded-3xl border bg-white p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-200 ${
-      showWarning ? 'border-red-100' : 'border-gray-100'
-    }`}>
+    <div
+      className={`h-full rounded-2xl bg-white p-4 flex flex-col gap-3 transition-all duration-200 hover:shadow-md ${
+        showWarning ? 'border border-red-100' : 'border border-[#f1f5f9]'
+      }`}
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+    >
       <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
-          <Icon className={`w-[18px] h-[18px] ${showWarning ? 'text-red-400' : iconColor}`} />
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
+          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-400' : iconColor}`} />
         </div>
         {showWarning && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
+          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
             Atenção
           </span>
         )}
       </div>
       <div>
-        <p className="text-3xl font-semibold text-gray-900 tabular-nums leading-none">{value}</p>
-        <p className="text-[13px] font-medium text-gray-600 mt-2 leading-tight">{label}</p>
-        {subtitle && <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>}
+        <p className="text-[26px] font-semibold text-[#0f172a] tabular-nums leading-none">{value}</p>
+        <p className="text-[12px] text-[#64748b] mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-[#94a3b8] mt-0.5">{subtitle}</p>}
       </div>
     </div>
   )
@@ -316,58 +322,61 @@ function CalendarWidget({
   const todayItems = items.filter(i => i.scheduled_date === todayStr)
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+    <div
+      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+    >
       {/* Month + nav */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setOffset(o => o - 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-[13px] font-semibold text-gray-900 capitalize">
+        <h3 className="text-[13px] font-semibold text-[#0f172a] capitalize">
           {format(center, 'MMMM yyyy', { locale: ptBR })}
         </h3>
         <button
           onClick={() => setOffset(o => o + 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Day labels */}
-      <div className="grid grid-cols-5 mb-2">
+      <div className="grid grid-cols-5 mb-1.5">
         {days.map(day => (
-          <div key={day.toISOString()} className="text-center text-[10px] font-medium text-gray-400 py-1 capitalize">
+          <div key={day.toISOString()} className="text-center text-[9.5px] font-semibold text-[#94a3b8] py-1 uppercase tracking-wide capitalize">
             {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
           </div>
         ))}
       </div>
 
       {/* Day numbers */}
-      <div className="grid grid-cols-5 gap-1 mb-4">
+      <div className="grid grid-cols-5 gap-0.5 mb-5">
         {days.map(day => {
-          const dayStr   = format(day, 'yyyy-MM-dd')
-          const dayItems = items.filter(i => i.scheduled_date === dayStr)
+          const dayStr    = format(day, 'yyyy-MM-dd')
+          const dayItems  = items.filter(i => i.scheduled_date === dayStr)
           const isCurrent = isToday(day)
           return (
             <div
               key={dayStr}
               onClick={onDayClick}
-              className={`flex flex-col items-center py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
+              className={`flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none ${
                 isCurrent
-                  ? 'bg-gray-900'
-                  : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
+                  ? 'bg-[#0f172a]'
+                  : 'hover:bg-[#f8fafc]'
               }`}
             >
-              <span className={`text-[15px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-gray-800'}`}>
+              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#1e293b]'}`}>
                 {format(day, 'd')}
               </span>
               {dayItems.length > 0 && (
-                <div className="flex gap-0.5 mt-1.5 justify-center flex-wrap">
+                <div className="flex gap-0.5 mt-1.5 justify-center">
                   {dayItems.slice(0, 3).map(item => (
-                    <div key={item.id} className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-white/60' : (statusDotColor[item.status] ?? 'bg-gray-400')}`} />
+                    <div key={item.id} className={`w-1 h-1 rounded-full ${isCurrent ? 'bg-white/50' : (statusDotColor[item.status] ?? 'bg-[#94a3b8]')}`} />
                   ))}
                 </div>
               )}
@@ -378,22 +387,22 @@ function CalendarWidget({
 
       {/* Today's list */}
       {todayItems.length === 0 ? (
-        <p className="text-[11px] text-gray-400 text-center py-1">Nenhum post hoje</p>
+        <p className="text-[11px] text-[#94a3b8] text-center py-1">Nenhum post hoje</p>
       ) : (
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Hoje</p>
+        <div className="space-y-1">
+          <p className="text-[9.5px] font-semibold text-[#94a3b8] uppercase tracking-widest mb-2.5">Hoje</p>
           {todayItems.slice(0, 3).map(item => (
-            <div key={item.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-50">
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-gray-300'}`} />
-              <p className="text-[12px] text-gray-800 truncate flex-1 font-medium">{item.title}</p>
-              <span className="text-[10px] text-gray-400 flex-shrink-0">
+            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-[#f8fafc]">
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-[#94a3b8]'}`} />
+              <p className="text-[11.5px] text-[#0f172a] truncate flex-1 font-medium">{item.title}</p>
+              <span className="text-[9.5px] text-[#94a3b8] flex-shrink-0">
                 {contentTypeLabels[item.content_type as any] ?? item.content_type}
               </span>
             </div>
           ))}
           {todayItems.length > 3 && (
             <Link to="/planner">
-              <p className="text-[11px] text-gray-400 hover:text-gray-700 text-center transition-colors mt-1">
+              <p className="text-[10.5px] text-[#94a3b8] hover:text-[#475569] text-center transition-colors mt-1">
                 +{todayItems.length - 3} mais →
               </p>
             </Link>
@@ -402,11 +411,11 @@ function CalendarWidget({
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-3 mt-4 flex-wrap pt-4 border-t border-gray-50">
+      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#f8fafc]">
         {Object.entries(statusDotColor).map(([status, color]) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
-            <span className="text-[10px] text-gray-400 capitalize">
+          <div key={status} className="flex items-center gap-1">
+            <div className={`w-1 h-1 rounded-full ${color}`} />
+            <span className="text-[9.5px] text-[#94a3b8] capitalize">
               {status === 'producao' ? 'Prod.' : status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
           </div>
@@ -436,24 +445,21 @@ function AlertsWidget({
   ]
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-center gap-2.5 mb-4">
-        <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${allGood ? 'bg-emerald-50' : 'bg-amber-50'}`}>
-          {allGood
-            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            : <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
-          }
-        </div>
-        <h3 className="text-[14px] font-semibold text-gray-900">Resumo</h3>
+    <div
+      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo operacional</h3>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-0.5">
         {rows.map((row, i) => (
           <Link key={i} to={row.href}>
-            <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer">
+            <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#f8fafc] transition-colors cursor-pointer">
               <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${row.bg}`}>
                 <row.icon className={`w-3.5 h-3.5 ${row.color}`} />
               </div>
-              <p className="text-[12px] text-gray-600 flex-1 leading-snug">{row.label}</p>
+              <p className="text-[11.5px] text-[#475569] flex-1 leading-snug">{row.label}</p>
               <span className={`text-[14px] font-semibold tabular-nums ${row.color}`}>{row.value}</span>
             </div>
           </Link>
@@ -615,7 +621,7 @@ export function Dashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#f2f2f2]">
+    <div className="min-h-full bg-[#f8fafc]">
 
       {/* Header */}
       <Header
@@ -643,7 +649,7 @@ export function Dashboard() {
         onCustomRange={r => setCustomRange(r)}
       />
 
-      <div className="p-5 md:p-7 space-y-5">
+      <div className="px-6 py-6 md:px-8 md:py-7 space-y-6">
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -656,7 +662,7 @@ export function Dashboard() {
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Charts — 2/3 */}
           <div className="lg:col-span-2">
@@ -672,7 +678,7 @@ export function Dashboard() {
           </div>
 
           {/* Right sidebar — 1/3 */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
             <CalendarWidget
               items={plannerCalItems}
               onDayClick={() => navigate('/planner')}
