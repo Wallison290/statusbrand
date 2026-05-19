@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, Loader2, LogOut, Zap, Crown, Building2, Shield, RefreshCw, ArrowRight } from 'lucide-react'
@@ -193,6 +193,11 @@ export function Pricing() {
   const currentPlanId = subData?.subscription.plan as PlanId | null
   const isActive      = subData?.isActive ?? false
   const hasStripe     = !!subData?.subscription.stripe_subscription_id
+
+  // Redireciona automaticamente quem já tem plano ativo
+  useEffect(() => {
+    if (isActive) navigate('/', { replace: true })
+  }, [isActive, navigate])
 
   const handleSelect = async (planId: PlanId) => {
     const priceId = PLANS[planId].stripePriceId
