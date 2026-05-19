@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
-  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram,
+  Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -112,11 +112,15 @@ function extractStoragePath(url: string): string | null {
 // ─── Video Preview (pending file — objectURL gerenciado) ─────────────────────
 
 function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) {
-  const [src, setSrc] = useState<string>('')
+  const [src, setSrc]           = useState<string>('')
+  const [loading, setLoading]   = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     const url = URL.createObjectURL(file)
     setSrc(url)
+    setLoading(true)
+    setHasError(false)
     return () => URL.revokeObjectURL(url)
   }, [file])
 
@@ -124,15 +128,33 @@ function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) 
 
   return (
     <div className="border border-white/8 rounded-xl overflow-hidden bg-black">
-      <video
-        src={src}
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls
-        className="w-full max-h-[220px] object-contain bg-black"
-      />
+      {hasError ? (
+        // Codec não suportado pelo browser (ex: HEVC/MOV do iOS) — arquivo ainda sobe normalmente
+        <div className="flex flex-col items-center justify-center py-5 gap-2 text-gray-400">
+          <Video className="w-7 h-7 text-purple-400" />
+          <p className="text-[11px] text-center leading-relaxed">
+            Preview indisponível neste browser<br />
+            <span className="text-gray-600">O arquivo será enviado normalmente ao salvar</span>
+          </p>
+        </div>
+      ) : (
+        <div className="relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+              <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+            </div>
+          )}
+          <video
+            src={src}
+            muted
+            playsInline
+            controls
+            className="w-full max-h-[220px] object-contain bg-black"
+            onCanPlay={() => setLoading(false)}
+            onError={() => { setHasError(true); setLoading(false) }}
+          />
+        </div>
+      )}
       <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/[0.04]">
         <Video className="w-3 h-3 text-purple-400 flex-shrink-0" />
         <span className="text-xs text-gray-300 truncate flex-1">{file.name}</span>
@@ -849,6 +871,7 @@ export function Planner() {
   const [linkInput, setLinkInput] = useState('')
   const [pendingLinks, setPendingLinks] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null)
 
   // Modo edição
   const [editingItem, setEditingItem] = useState<PlannerItem | null>(null)
@@ -1097,19 +1120,24 @@ export function Planner() {
         if (linksToDelete.length > 0) {
           await supabase.from('planner_links').delete().in('id', linksToDelete.map(l => l.id))
         }
-        for (const file of pendingFiles) {
+        for (let fi = 0; fi < pendingFiles.length; fi++) {
+          const file = pendingFiles[fi]
+          setUploadProgress({ current: fi + 1, total: pendingFiles.length })
           const ext = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${editingItem.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file)
-          if (!upErr) {
-            const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
-            await supabase.from('planner_attachments').insert({
-              planner_id: editingItem.id, user_id: user.id,
-              file_name: file.name, file_type: getMimeType(file),
-              file_url: publicUrl, file_size: file.size,
-            })
+          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
+          if (upErr) {
+            toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error')
+            continue
           }
+          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          await supabase.from('planner_attachments').insert({
+            planner_id: editingItem.id, user_id: user.id,
+            file_name: file.name, file_type: getMimeType(file),
+            file_url: publicUrl, file_size: file.size,
+          })
         }
+        setUploadProgress(null)
         if (allLinks.length > 0) {
           await supabase.from('planner_links').insert(
             allLinks.map(url => ({ planner_id: editingItem.id, user_id: user.id, url, label: null }))
@@ -1145,19 +1173,24 @@ export function Planner() {
             file_size: null,
           })
         }
-        for (const file of pendingFiles) {
+        for (let fi = 0; fi < pendingFiles.length; fi++) {
+          const file = pendingFiles[fi]
+          setUploadProgress({ current: fi + 1, total: pendingFiles.length })
           const ext = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${created.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file)
-          if (!upErr) {
-            const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
-            await supabase.from('planner_attachments').insert({
-              planner_id: created.id, user_id: user.id,
-              file_name: file.name, file_type: getMimeType(file),
-              file_url: publicUrl, file_size: file.size,
-            })
+          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
+          if (upErr) {
+            toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error')
+            continue
           }
+          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          await supabase.from('planner_attachments').insert({
+            planner_id: created.id, user_id: user.id,
+            file_name: file.name, file_type: getMimeType(file),
+            file_url: publicUrl, file_size: file.size,
+          })
         }
+        setUploadProgress(null)
         if (allLinks.length > 0) {
           await supabase.from('planner_links').insert(
             allLinks.map(url => ({ planner_id: created.id, user_id: user.id, url, label: null }))
@@ -1639,7 +1672,7 @@ export function Planner() {
               {pendingFiles.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {pendingFiles.map((f, i) => {
-                    const isVideo = f.type.startsWith('video/')
+                    const isVideo = getMimeType(f).startsWith('video/')
                     const remove = () => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))
                     return isVideo ? (
                       <VideoPreview key={i} file={f} onRemove={remove} />
@@ -1707,7 +1740,9 @@ export function Planner() {
             <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>Cancelar</Button>
             <Button variant="premium" onClick={handleSave} disabled={createItem.isPending || updateItem.isPending || isUploading || !form.title.trim()}>
               {isUploading ? (
-                <><Upload className="w-4 h-4 animate-pulse" /> Enviando...</>
+                uploadProgress
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando {uploadProgress.current}/{uploadProgress.total}...</>
+                  : <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
               ) : editingItem ? (
                 <><Save className="w-4 h-4" /> Salvar alterações</>
               ) : (
