@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Users, CheckSquare, Clock,
   AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
-  ChevronLeft, ChevronRight, BarChart3,
+  ChevronLeft, ChevronRight, BarChart3, DollarSign,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { DashboardHero } from '@/components/dashboard/DashboardHero'
@@ -62,6 +62,23 @@ interface PlannerChartEntry {
   label: string
   value: number
   color: string
+}
+
+interface FinStats {
+  mrr:          number
+  received:     number
+  pending:      number
+  overdueAmt:   number
+  overdueCount: number
+  avgTicket:    number
+}
+
+function fmtBRL(n: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style:                 'currency',
+    currency:              'BRL',
+    maximumFractionDigits: 0,
+  }).format(n)
 }
 
 // ─── Period helpers ───────────────────────────────────────────────────────────
@@ -425,6 +442,95 @@ function CalendarWidget({
   )
 }
 
+// ─── Financial Summary Widget ─────────────────────────────────────────────────
+
+function FinancialSummary({ data }: { data: FinStats }) {
+  const items = [
+    {
+      icon:       <DollarSign className="w-4 h-4 text-[#0f172a]" />,
+      iconBg:     'bg-[#f1f5f9]',
+      label:      'MRR',
+      sub:        'receita mensal recorrente',
+      value:      fmtBRL(data.mrr),
+      valueColor: 'text-[#0f172a]',
+      show:       true,
+    },
+    {
+      icon:       <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
+      iconBg:     'bg-emerald-50',
+      label:      'Recebido',
+      sub:        'pago no ciclo atual',
+      value:      fmtBRL(data.received),
+      valueColor: 'text-emerald-700',
+      show:       true,
+    },
+    {
+      icon:       <Clock className="w-4 h-4 text-amber-500" />,
+      iconBg:     'bg-amber-50',
+      label:      'Pendente',
+      sub:        'a receber no ciclo',
+      value:      fmtBRL(data.pending),
+      valueColor: data.pending > 0 ? 'text-amber-600' : 'text-[#94a3b8]',
+      show:       true,
+    },
+    {
+      icon:       <AlertTriangle className="w-4 h-4 text-red-500" />,
+      iconBg:     'bg-red-50',
+      label:      'Inadimplência',
+      sub:        data.overdueCount > 0
+                    ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
+                    : 'nenhum em atraso',
+      value:      fmtBRL(data.overdueAmt),
+      valueColor: data.overdueCount > 0 ? 'text-red-600' : 'text-[#94a3b8]',
+      show:       true,
+    },
+    {
+      icon:       <TrendingUp className="w-4 h-4 text-blue-500" />,
+      iconBg:     'bg-blue-50',
+      label:      'Ticket médio',
+      sub:        'por cliente ativo',
+      value:      fmtBRL(data.avgTicket),
+      valueColor: 'text-[#0f172a]',
+      show:       true,
+    },
+  ]
+
+  return (
+    <div
+      className="bg-white rounded-2xl border border-[#ececec] overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+    >
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-[#f5f5f7] flex items-center">
+        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo financeiro</h3>
+        <Link to="/financeiro" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
+          Ver detalhes →
+        </Link>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-[#f5f5f7]">
+        {items.map((item, i) => (
+          <div key={i} className="px-6 py-5 flex flex-col gap-3">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
+              {item.icon}
+            </div>
+            <div>
+              <p className={`text-[20px] font-bold leading-tight tabular-nums ${item.valueColor}`}>
+                {item.value}
+              </p>
+              <p className="text-[10.5px] font-semibold text-[#94a3b8] mt-1 uppercase tracking-wide">
+                {item.label}
+              </p>
+              <p className="text-[10px] text-[#cbd5e1] mt-0.5">{item.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Alerts Widget ────────────────────────────────────────────────────────────
 
 function AlertsWidget({
@@ -504,6 +610,7 @@ export function Dashboard() {
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
   const [plannerChartData, setPlannerChartData] = useState<PlannerChartEntry[]>([])
   const [plannerCalItems, setPlannerCalItems]   = useState<PlannerDay[]>([])
+  const [finStats, setFinStats]                 = useState<FinStats>({ mrr: 0, received: 0, pending: 0, overdueAmt: 0, overdueCount: 0, avgTicket: 0 })
 
   // ── Re-fetch whenever user or range changes ───────────────────────────────
   useEffect(() => {
@@ -531,8 +638,8 @@ export function Dashboard() {
       plannerRes,
       plannerCalRes,
     ] = await Promise.all([
-      // Clientes — sempre global
-      supabase.from('clients').select('id, status').eq('user_id', user!.id),
+      // Clientes — sempre global (inclui campos financeiros para o resumo)
+      supabase.from('clients').select('id, status, valor_mensal, financial_status').eq('user_id', user!.id),
 
       // Tarefas — todas não concluídas (filtro de período no cliente)
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
@@ -592,6 +699,16 @@ export function Dashboard() {
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
 
+    // ── Métricas financeiras (a partir dos dados de clientes) ─────────────────
+    const activeC      = clients.filter((c: any) => c.status === 'ativo')
+    const mrr          = activeC.reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
+    const received     = activeC.filter((c: any) => c.financial_status === 'ativo').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
+    const pending      = activeC.filter((c: any) => c.financial_status === 'vence_em_breve').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
+    const overdueAmt   = activeC.filter((c: any) => c.financial_status === 'atrasado').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
+    const overdueCount = activeC.filter((c: any) => c.financial_status === 'atrasado').length
+    const avgTicket    = activeC.length > 0 ? mrr / activeC.length : 0
+    setFinStats({ mrr, received, pending, overdueAmt, overdueCount, avgTicket })
+
     // Gráfico de barras de conteúdos
     setWeeklyData(buildBarData(periodMode, { start, end }, contentsRes.data || []))
 
@@ -621,7 +738,7 @@ export function Dashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
+    <div className="min-h-full bg-[#f5f5f7]">
 
       {/* Header */}
       <Header
@@ -683,15 +800,11 @@ export function Dashboard() {
               items={plannerCalItems}
               onDayClick={() => navigate('/planner')}
             />
-            <AlertsWidget
-              pendingApproval={stats.period_pending_approval}
-              overdueTasks={stats.overdue_tasks}
-              pendingTasks={stats.pending_tasks}
-              periodApproved={stats.period_approved}
-            />
           </div>
         </div>
 
+        {/* ── Resumo Financeiro — full width ── */}
+        <FinancialSummary data={finStats} />
 
       </div>
     </div>
