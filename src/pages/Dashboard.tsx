@@ -6,6 +6,8 @@ import {
   ChevronLeft, ChevronRight, BarChart3,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
+import { DashboardHero } from '@/components/dashboard/DashboardHero'
+import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { contentTypeLabels } from '@/utils/formatters'
@@ -480,7 +482,16 @@ export function Dashboard() {
     [periodMode, customRange],
   )
 
+  // ── User name ─────────────────────────────────────────────────────────────
+  const userName = (
+    user?.user_metadata?.full_name?.split(' ')[0] ||
+    user?.user_metadata?.name?.split(' ')[0] ||
+    user?.email?.split('@')[0] ||
+    'você'
+  ) as string
+
   // ── Data state ────────────────────────────────────────────────────────────
+  const [statsReady, setStatsReady]             = useState(false)
   const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0 })
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
@@ -563,6 +574,7 @@ export function Dashboard() {
     const period_pending_approval = pList.filter(isAwaitingApproval).length
     const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
 
+    setStatsReady(true)
     setStats({
       total_clients:  clients.length,
       active_clients: clients.filter(c => c.status === 'ativo').length,
@@ -596,6 +608,10 @@ export function Dashboard() {
     ])
   }
 
+  // ── Greeting com IA ───────────────────────────────────────────────────────
+  const { greeting, message, pills, isLoading: greetingLoading, refresh: refreshGreeting } =
+    useDashboardGreeting(user?.id, userName, stats, statsReady)
+
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
@@ -607,6 +623,17 @@ export function Dashboard() {
         subtitle="Visão geral da operação"
         dark={false}
       />
+
+      {/* ── Hero Banner inteligente ── */}
+      <div className="px-5 pt-5 md:px-7 md:pt-7">
+        <DashboardHero
+          greeting={greeting}
+          message={message}
+          pills={pills}
+          isLoading={greetingLoading}
+          onRefresh={refreshGreeting}
+        />
+      </div>
 
       {/* Filter Bar — controlled */}
       <FilterBar
