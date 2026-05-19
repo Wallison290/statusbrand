@@ -625,16 +625,14 @@ export function Dashboard() {
       />
 
       {/* ── Hero Banner inteligente ── */}
-      <div className="px-3 pt-2 md:px-4 md:pt-3">
-        <DashboardHero
-          greeting={greeting}
-          userName={userName}
-          message={message}
-          pills={pills}
-          isLoading={greetingLoading}
-          onRefresh={refreshGreeting}
-        />
-      </div>
+      <DashboardHero
+        greeting={greeting}
+        userName={userName}
+        message={message}
+        pills={pills}
+        isLoading={greetingLoading}
+        onRefresh={refreshGreeting}
+      />
 
       {/* Filter Bar — controlled */}
       <FilterBar

@@ -306,10 +306,10 @@ export function DashboardHero({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-[28px] border border-[#e8dfff] min-h-[240px]"
+      className="relative overflow-hidden rounded-b-[28px] border-b border-x border-[#e8dfff] min-h-[240px]"
       style={{
         background: 'linear-gradient(135deg, #f2eaff 0%, #f7f2ff 45%, #fbf8ff 80%, #fefcff 100%)',
-        boxShadow: '0 10px 40px rgba(124,58,237,0.07), 0 2px 8px rgba(124,58,237,0.04)',
+        boxShadow: '0 8px 32px rgba(124,58,237,0.08), 0 2px 8px rgba(124,58,237,0.04)',
       }}
     >
       {/* Brilho radial decorativo */}
