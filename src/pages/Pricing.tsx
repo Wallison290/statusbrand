@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Check, Loader2, LogOut, Zap, Crown, Building2, Shield, RefreshCw } from 'lucide-react'
+import { Check, Loader2, LogOut, Zap, Crown, Building2, Shield, RefreshCw, ArrowRight } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -55,12 +56,14 @@ function PlanCard({
   planId,
   currentPlanId,
   isActive,
+  hasStripe,
   loading,
   onSelect,
 }: {
   planId: PlanId
   currentPlanId: PlanId | null
   isActive: boolean
+  hasStripe: boolean
   loading: boolean
   onSelect: () => void
 }) {
@@ -126,13 +129,19 @@ function PlanCard({
 
       {/* CTA */}
       {isCurrent ? (
-        <button
-          onClick={openPortal}
-          className="w-full py-3 rounded-xl border border-[#e2e8f0] text-[13.5px] font-medium text-[#475569] hover:bg-[#f8fafc] transition-colors flex items-center justify-center gap-2"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Gerenciar assinatura
-        </button>
+        hasStripe ? (
+          <button
+            onClick={openPortal}
+            className="w-full py-3 rounded-xl border border-[#e2e8f0] text-[13.5px] font-medium text-[#475569] hover:bg-[#f8fafc] transition-colors flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Gerenciar assinatura
+          </button>
+        ) : (
+          <div className="w-full py-3 rounded-xl bg-green-50 border border-green-200 text-center text-[13px] text-green-700 font-medium">
+            ✓ Plano ativo
+          </div>
+        )
       ) : (
         <button
           onClick={onSelect}
@@ -175,6 +184,7 @@ function ActiveBar({ used, limit, planName }: { used: number; limit: number; pla
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export function Pricing() {
+  const navigate                                     = useNavigate()
   const { signOut, user }                            = useAuth()
   const { data: subData }                            = useSubscription()
   const { data: usage }                              = useAIUsage(user?.id)
@@ -182,6 +192,7 @@ export function Pricing() {
 
   const currentPlanId = subData?.subscription.plan as PlanId | null
   const isActive      = subData?.isActive ?? false
+  const hasStripe     = !!subData?.subscription.stripe_subscription_id
 
   const handleSelect = async (planId: PlanId) => {
     const priceId = PLANS[planId].stripePriceId
@@ -205,13 +216,24 @@ export function Pricing() {
             StatusBrand
           </span>
         </div>
-        <button
-          onClick={() => signOut()}
-          className="flex items-center gap-1.5 text-[12.5px] text-[#94a3b8] hover:text-[#475569] transition-colors"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Sair
-        </button>
+        <div className="flex items-center gap-3">
+          {isActive && (
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-violet-600 hover:text-violet-700 transition-colors"
+            >
+              Acessar o sistema
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            onClick={() => signOut()}
+            className="flex items-center gap-1.5 text-[12.5px] text-[#94a3b8] hover:text-[#475569] transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sair
+          </button>
+        </div>
       </div>
 
       {/* Conteúdo */}
@@ -262,6 +284,7 @@ export function Pricing() {
               planId={id}
               currentPlanId={currentPlanId}
               isActive={isActive}
+              hasStripe={hasStripe}
               loading={loadingPlan === id}
               onSelect={() => handleSelect(id)}
             />
