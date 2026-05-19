@@ -4,25 +4,39 @@ import { Moon, Sun, SunMedium, RefreshCw } from 'lucide-react'
 import type { HeroPill } from '@/hooks/useDashboardGreeting'
 import { DashboardHeroArt } from './DashboardHeroArt'
 
-// ── Pill ──────────────────────────────────────────────────────────────────────
+// ── Pill (dark glassmorphism) ─────────────────────────────────────────────────
 
 function Pill({ icon, label, variant }: HeroPill) {
   const style = {
-    default: { bg: '#ffffff',  border: '#e5e7eb', color: '#374151' },
-    success: { bg: '#f0fdf4',  border: '#bbf7d0', color: '#15803d' },
-    warning: { bg: '#fffbeb',  border: '#fde68a', color: '#92400e' },
-  }[variant] ?? { bg: '#ffffff', border: '#e5e7eb', color: '#374151' }
+    default: {
+      bg:     'rgba(255,255,255,0.07)',
+      border: 'rgba(255,255,255,0.13)',
+      color:  '#94a3b8',
+    },
+    success: {
+      bg:     'rgba(16,185,129,0.10)',
+      border: 'rgba(16,185,129,0.22)',
+      color:  '#34d399',
+    },
+    warning: {
+      bg:     'rgba(245,158,11,0.10)',
+      border: 'rgba(245,158,11,0.22)',
+      color:  '#fbbf24',
+    },
+  }[variant] ?? {
+    bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.13)', color: '#94a3b8',
+  }
 
   return (
     <motion.div
       whileHover={{ scale: 1.03, y: -1 }}
       transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-      className="flex items-center gap-1.5 px-3 py-[5px] rounded-full cursor-default"
+      className="flex items-center gap-1.5 px-3 py-[5px] rounded-full cursor-default backdrop-blur-sm"
       style={{
         background:  style.bg,
         border:      `1px solid ${style.border}`,
         color:       style.color,
-        boxShadow:   '0 1px 3px rgba(0,0,0,0.05)',
+        boxShadow:   '0 1px 6px rgba(0,0,0,0.18)',
       }}
     >
       <span className="text-[12px] leading-none">{icon}</span>
@@ -31,19 +45,19 @@ function Pill({ icon, label, variant }: HeroPill) {
   )
 }
 
-// ── Context icon (manhã / tarde / noite) ──────────────────────────────────────
+// ── Context icon — dark glass ─────────────────────────────────────────────────
 
 function ContextIcon({ hour }: { hour: number }) {
   const cfg =
     hour < 12
-      ? { Icon: Sun,       bg: '#fffbeb', border: '#fde68a', color: '#d97706' }
+      ? { Icon: Sun,       bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.22)',  color: '#fbbf24' }
       : hour < 18
-        ? { Icon: SunMedium, bg: '#f0f9ff', border: '#bae6fd', color: '#0284c7' }
-        : { Icon: Moon,      bg: '#f5f3ff', border: '#ddd6fe', color: '#7c3aed' }
+        ? { Icon: SunMedium, bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.22)',  color: '#60a5fa' }
+        : { Icon: Moon,      bg: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.24)', color: '#a78bfa' }
 
   return (
     <div
-      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm"
       style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
     >
       <cfg.Icon style={{ width: 17, height: 17, color: cfg.color }} />
@@ -81,17 +95,14 @@ export function DashboardHero({
 
   const hour    = now.getHours()
   const dateStr = now.toLocaleDateString('pt-BR', {
-    day:     'numeric',
-    month:   'long',
-    weekday: 'long',
+    day: 'numeric', month: 'long', weekday: 'long',
   })
   const timeStr = now.toLocaleTimeString('pt-BR', {
-    hour:   '2-digit',
-    minute: '2-digit',
+    hour: '2-digit', minute: '2-digit',
   })
 
-  // Separa "Boa noite, " de "Larissa." para realce em roxo
-  const commaIdx    = greeting.indexOf(', ')
+  // Separa saudação base do nome
+  const commaIdx     = greeting.indexOf(', ')
   const greetingBase = commaIdx !== -1 ? greeting.slice(0, commaIdx + 2) : greeting + ' '
   const greetingName = commaIdx !== -1 ? greeting.slice(commaIdx + 2)    : ''
 
@@ -102,28 +113,45 @@ export function DashboardHero({
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-b-[28px] border-b border-x border-[#eaecf0] min-h-[240px]"
+      className="relative overflow-hidden rounded-b-[28px] border-b border-x border-[#1a2035] min-h-[240px]"
       style={{
-        background: 'linear-gradient(155deg, #ffffff 0%, #fafbff 40%, #f5f7fb 100%)',
-        boxShadow:  '0 1px 2px rgba(0,0,0,0.03), 0 14px 48px rgba(109,40,217,0.055)',
+        background: 'linear-gradient(135deg, #050816 0%, #0c1120 45%, #111827 100%)',
+        boxShadow:  '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
-      {/* Glow radial esquerdo — subtil */}
+      {/* ── Glow roxo — esquerda ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 45% 80% at 0% 55%, rgba(139,92,246,0.055) 0%, transparent 65%)',
+            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(109,40,217,0.16) 0%, transparent 65%)',
         }}
       />
-      {/* Glow radial direito-inferior */}
+
+      {/* ── Glow azul — direita-inferior (muito sutil) ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 40% 55% at 100% 100%, rgba(139,92,246,0.035) 0%, transparent 65%)',
+            'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(59,130,246,0.07) 0%, transparent 62%)',
         }}
       />
+
+      {/* ── Linha topo iluminada ── */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.5) 35%, rgba(99,102,241,0.4) 65%, transparent 100%)',
+        }}
+      />
+
+      {/* ── Partículas / dots decorativos ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-8  left-[12%] w-1 h-1 rounded-full bg-purple-400/20" />
+        <div className="absolute top-16 right-[30%] w-0.5 h-0.5 rounded-full bg-blue-400/15" />
+        <div className="absolute bottom-10 left-[25%] w-0.5 h-0.5 rounded-full bg-purple-300/15" />
+      </div>
 
       {/* ── Conteúdo principal ── */}
       <div className="relative flex items-center justify-between px-8 py-8 md:px-12 md:py-9 gap-6 min-h-[240px]">
@@ -131,26 +159,36 @@ export function DashboardHero({
         {/* Coluna esquerda */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
 
-          {/* Ícone + data/hora */}
+          {/* Ícone contextual + data/hora */}
           <div className="flex items-center gap-2.5 mb-4">
             <ContextIcon hour={hour} />
-            <p className="text-[12.5px] font-semibold text-[#8b5cf6] capitalize tracking-wide">
+            <p className="text-[12.5px] font-semibold capitalize tracking-wide"
+               style={{ color: '#8b7cf6' }}>
               {dateStr} • {timeStr}
             </p>
           </div>
 
           {/* Saudação */}
-          <h2 className="text-[30px] md:text-[32px] font-bold leading-tight mb-2.5 tracking-[-0.4px]">
-            <span className="text-[#0a0a0a]">{greetingBase}</span>
-            <span className="text-[#6d28d9]">{greetingName}</span>
+          <h2
+            className="text-[30px] md:text-[32px] font-bold leading-tight mb-2.5 tracking-[-0.4px]"
+          >
+            <span style={{ color: '#f1f5f9' }}>{greetingBase}</span>
+            <span
+              style={{
+                color:      '#a78bfa',
+                textShadow: '0 0 28px rgba(167,139,250,0.55)',
+              }}
+            >
+              {greetingName}
+            </span>
           </h2>
 
           {/* Mensagem da IA */}
           <div className="min-h-[38px] mb-5">
             {isLoading ? (
               <div className="space-y-2">
-                <div className="h-[13px] w-72 rounded-full bg-black/[0.04] animate-pulse" />
-                <div className="h-[13px] w-48 rounded-full bg-black/[0.03] animate-pulse" />
+                <div className="h-[13px] w-72 rounded-full bg-white/[0.07] animate-pulse" />
+                <div className="h-[13px] w-48 rounded-full bg-white/[0.05] animate-pulse" />
               </div>
             ) : (
               <motion.p
@@ -158,7 +196,8 @@ export function DashboardHero({
                 initial={{ opacity: 0, y: 2 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
-                className="text-[13.5px] text-[#6b7280] leading-relaxed"
+                className="text-[13.5px] leading-relaxed"
+                style={{ color: '#64748b' }}
               >
                 {message}
               </motion.p>
@@ -169,9 +208,9 @@ export function DashboardHero({
           <div className="flex flex-wrap gap-2 min-h-[32px]">
             {isLoading ? (
               <>
-                <div className="h-[28px] rounded-full bg-black/[0.04] animate-pulse" style={{ width: 142 }} />
-                <div className="h-[28px] rounded-full bg-black/[0.03] animate-pulse" style={{ width: 188 }} />
-                <div className="h-[28px] rounded-full bg-black/[0.03] animate-pulse" style={{ width: 130 }} />
+                <div className="h-[28px] rounded-full bg-white/[0.07] animate-pulse" style={{ width: 142 }} />
+                <div className="h-[28px] rounded-full bg-white/[0.05] animate-pulse" style={{ width: 188 }} />
+                <div className="h-[28px] rounded-full bg-white/[0.05] animate-pulse" style={{ width: 130 }} />
               </>
             ) : (
               pills.map((pill, i) => (
@@ -193,7 +232,7 @@ export function DashboardHero({
           className="hidden lg:flex flex-shrink-0 items-end self-end"
           style={{ width: 265, height: 225 }}
         >
-          <DashboardHeroArt />
+          <DashboardHeroArt dark />
         </div>
       </div>
 
@@ -207,9 +246,11 @@ export function DashboardHero({
           className="
             absolute top-4 right-4 w-7 h-7
             flex items-center justify-center rounded-full
-            text-[#c4b5fd] hover:text-[#7c3aed]
-            hover:bg-[#7c3aed]/[0.06] transition-all
+            transition-all
           "
+          style={{ color: 'rgba(167,139,250,0.5)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.5)')}
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </motion.button>

@@ -3,7 +3,11 @@ import { motion } from 'framer-motion'
 
 // ── Ilustração SVG premium ────────────────────────────────────────────────────
 
-export function DashboardHeroArt() {
+export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
+  // No modo dark, o glow ambiente fica mais intenso para contrastar com o fundo escuro
+  const glowOpacity = dark ? '0.42' : '0.13'
+  const mugShadowOpacity = dark ? '0.32' : '0.09'
+
   return (
     <svg
       viewBox="0 0 320 228"
@@ -46,14 +50,14 @@ export function DashboardHeroArt() {
 
         {/* Ambient glow */}
         <radialGradient id="art_ambient" cx="40%" cy="65%" r="52%">
-          <stop offset="0%"   stopColor="#c4b5fd" stopOpacity="0.13" />
-          <stop offset="100%" stopColor="#c4b5fd" stopOpacity="0"    />
+          <stop offset="0%"   stopColor="#c4b5fd" stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor="#c4b5fd" stopOpacity="0"           />
         </radialGradient>
 
         {/* Mug drop shadow */}
         <filter id="art_mug_f" x="-22%" y="-12%" width="144%" height="144%">
           <feDropShadow dx="0" dy="10" stdDeviation="14"
-            floodColor="#7c3aed" floodOpacity="0.09" />
+            floodColor="#7c3aed" floodOpacity={mugShadowOpacity} />
         </filter>
 
         {/* Saucer shadow */}
