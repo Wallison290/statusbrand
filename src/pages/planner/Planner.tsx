@@ -1130,7 +1130,7 @@ export function Planner() {
           client_id: form.client_id,
           scheduled_date: form.scheduled_date,
           scheduled_time: form.scheduled_time || null,
-          approval_status: form.status !== 'postado' && form.client_id ? 'pendente_aprovacao' : null,
+          approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
         })
         for (const att of attachmentsToDelete) {
           const path = extractStoragePath(att.file_url)
@@ -1176,7 +1176,7 @@ export function Planner() {
           scheduled_time: form.scheduled_time || null,
           content_id: null,
           asset_id: linkedAsset?.id ?? null,
-          approval_status: form.status !== 'postado' && form.client_id ? 'pendente_aprovacao' : null,
+          approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
           client_feedback: null,
           reviewed_at: null,
           reviewed_by: null,
