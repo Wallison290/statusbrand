@@ -11,6 +11,7 @@ import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { contentTypeLabels } from '@/utils/formatters'
+import { calcFinancialStatus } from '@/utils/financial'
 import {
   startOfWeek, endOfWeek, startOfDay, endOfDay,
   startOfMonth, endOfMonth, startOfYear, endOfYear,
@@ -503,7 +504,7 @@ function FinancialSummary({ data }: { data: FinStats }) {
       {/* Header */}
       <div className="px-6 py-4 border-b border-[#f5f5f7] flex items-center">
         <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo financeiro</h3>
-        <Link to="/financeiro" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
+        <Link to="/financial" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
           Ver detalhes →
         </Link>
       </div>
@@ -638,8 +639,8 @@ export function Dashboard() {
       plannerRes,
       plannerCalRes,
     ] = await Promise.all([
-      // Clientes — sempre global (inclui campos financeiros para o resumo)
-      supabase.from('clients').select('id, status, valor_mensal, financial_status').eq('user_id', user!.id),
+      // Clientes — sempre global (inclui todos os campos para calcFinancialStatus)
+      supabase.from('clients').select('id, status, valor_mensal, financial_status, last_payment_date, dia_vencimento, manual_status_override').eq('user_id', user!.id),
 
       // Tarefas — todas não concluídas (filtro de período no cliente)
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
@@ -699,14 +700,31 @@ export function Dashboard() {
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
 
-    // ── Métricas financeiras (a partir dos dados de clientes) ─────────────────
-    const activeC      = clients.filter((c: any) => c.status === 'ativo')
-    const mrr          = activeC.reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
-    const received     = activeC.filter((c: any) => c.financial_status === 'ativo').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
-    const pending      = activeC.filter((c: any) => c.financial_status === 'vence_em_breve').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
-    const overdueAmt   = activeC.filter((c: any) => c.financial_status === 'atrasado').reduce((s: number, c: any) => s + (Number(c.valor_mensal) || 0), 0)
-    const overdueCount = activeC.filter((c: any) => c.financial_status === 'atrasado').length
-    const avgTicket    = activeC.length > 0 ? mrr / activeC.length : 0
+    // ── Métricas financeiras — mesma lógica da página Financeiro ─────────────
+    const now2      = new Date()
+    const thisYear  = now2.getFullYear()
+    const thisMonth = now2.getMonth() + 1
+    // Clientes com dados financeiros (com valor_mensal ou dia_vencimento)
+    const finClients = clients.filter((c: any) => c.valor_mensal != null || c.dia_vencimento != null)
+    const withCalcStatus = finClients.map((c: any) => ({ client: c, status: calcFinancialStatus(c) }))
+    // MRR: todos exceto cancelados
+    const mrrClients = withCalcStatus.filter((x: any) => x.status !== 'cancelado')
+    const mrr        = mrrClients.reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
+    // Recebido: pagou no mês atual (last_payment_date no mês corrente)
+    const received = withCalcStatus
+      .filter((x: any) => {
+        if (!x.client.last_payment_date) return false
+        const [y, m] = x.client.last_payment_date.split('-').map(Number)
+        return y === thisYear && m === thisMonth
+      })
+      .reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
+    // Pendente: vence em breve
+    const pending      = withCalcStatus.filter((x: any) => x.status === 'vence_em_breve').reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
+    // Inadimplência: atrasados
+    const overdueAmt   = withCalcStatus.filter((x: any) => x.status === 'atrasado').reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
+    const overdueCount = withCalcStatus.filter((x: any) => x.status === 'atrasado').length
+    // Ticket médio por contrato ativo (não cancelado)
+    const avgTicket = mrrClients.length > 0 ? mrr / mrrClients.length : 0
     setFinStats({ mrr, received, pending, overdueAmt, overdueCount, avgTicket })
 
     // Gráfico de barras de conteúdos
