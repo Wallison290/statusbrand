@@ -25,19 +25,27 @@ async function getUser(req: Request) {
   return user
 }
 
-async function checkUsage(userId: string): Promise<{ allowed: boolean; plan: string; limit: number }> {
+async function checkUsage(userId: string): Promise<{ allowed: boolean; plan: string; limit: number; reason?: string }> {
   const sb    = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
   const month = new Date().toISOString().slice(0, 7)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: sub } = await (sb as any).from('subscriptions').select('plan').eq('user_id', userId).maybeSingle()
-  const plan  = sub?.plan ?? 'free'
+  const { data: sub } = await (sb as any).from('subscriptions').select('plan, status, trial_ends_at').eq('user_id', userId).maybeSingle()
+  const plan   = sub?.plan ?? 'starter'
+  const status = sub?.status ?? 'inactive'
+
+  // Verifica assinatura ativa (active ou trialing dentro do prazo)
+  const isActive = status === 'active'
+    || (status === 'trialing' && sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date())
+
+  if (!isActive) return { allowed: false, plan, limit: 0, reason: 'subscription_inactive' }
+
   const limit = AI_LIMITS[plan] ?? 50
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: usage } = await (sb as any).from('ai_usage').select('requests').eq('user_id', userId).eq('month', month).maybeSingle()
   const current = usage?.requests ?? 0
-  if (current >= limit) return { allowed: false, plan, limit }
+  if (current >= limit) return { allowed: false, plan, limit, reason: 'limit_reached' }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (sb as any).from('ai_usage').upsert(
@@ -57,11 +65,14 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { allowed, plan, limit } = await checkUsage(user.id)
+  const { allowed, plan, limit, reason } = await checkUsage(user.id)
   if (!allowed) {
-    return new Response(JSON.stringify({
-      error: `Limite do plano ${plan} atingido (${limit} requests/mês). Faça upgrade para continuar.`,
-    }), { status: 429, headers: { ...CORS, 'Content-Type': 'application/json' } })
+    const msg = reason === 'subscription_inactive'
+      ? 'Assinatura inativa. Assine um plano para usar a IA.'
+      : `Limite do plano ${plan} atingido (${limit} requests/mês). Faça upgrade para continuar.`
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 429, headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
   }
 
   const { messages, systemPrompt, useWebSearch } = await req.json()
@@ -81,7 +92,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  const stream   = await openai.chat.completions.create({ model: 'gpt-4o', messages: allMessages, stream: true, max_tokens: 2048 })
+  const stream   = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: allMessages, stream: true, max_tokens: 2048 })
   const readable = new ReadableStream({
     async start(controller) {
       try {

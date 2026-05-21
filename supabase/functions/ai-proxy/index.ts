@@ -31,32 +31,42 @@ async function getUser(req: Request) {
   return user
 }
 
-async function checkUsage(userId: string): Promise<{ allowed: boolean; current: number; limit: number; plan: string }> {
+async function checkUsage(userId: string): Promise<{ allowed: boolean; current: number; limit: number; plan: string; reason?: string }> {
   const sb    = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
   const month = new Date().toISOString().slice(0, 7)
 
-  // Busca plano atual
+  // Busca plano e status da assinatura
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: sub } = await (sb as any)
     .from('subscriptions')
-    .select('plan, status')
+    .select('plan, status, trial_ends_at')
     .eq('user_id', userId)
     .maybeSingle()
 
-  const plan  = sub?.plan ?? 'free'
+  const plan   = sub?.plan ?? 'starter'
+  const status = sub?.status ?? 'inactive'
+
+  // Verifica se assinatura está ativa (active, ou trialing dentro do prazo)
+  const isActive = status === 'active'
+    || (status === 'trialing' && sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date())
+
+  if (!isActive) {
+    return { allowed: false, current: 0, limit: 0, plan, reason: 'subscription_inactive' }
+  }
+
   const limit = AI_LIMITS[plan] ?? 50
 
-  // Busca uso atual
+  // Incremento atômico: só incrementa se ainda abaixo do limite
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: usage } = await (sb as any)
+  const { data: usageData } = await (sb as any)
     .from('ai_usage')
     .select('requests')
     .eq('user_id', userId)
     .eq('month', month)
     .maybeSingle()
 
-  const current = usage?.requests ?? 0
-  if (current >= limit) return { allowed: false, current, limit, plan }
+  const current = usageData?.requests ?? 0
+  if (current >= limit) return { allowed: false, current, limit, plan, reason: 'limit_reached' }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (sb as any).from('ai_usage').upsert(
@@ -73,12 +83,12 @@ Deno.serve(async (req) => {
   const user = await getUser(req)
   if (!user) return json({ error: 'Não autenticado' }, 401)
 
-  const { allowed, current, limit, plan } = await checkUsage(user.id)
+  const { allowed, current, limit, plan, reason } = await checkUsage(user.id)
   if (!allowed) {
-    return json({
-      error: `Limite do plano ${plan} atingido (${limit} requests/mês). Faça upgrade para continuar.`,
-      usage: { current, limit, plan },
-    }, 429)
+    const msg = reason === 'subscription_inactive'
+      ? 'Assinatura inativa. Assine um plano para usar a IA.'
+      : `Limite do plano ${plan} atingido (${limit} requests/mês). Faça upgrade para continuar.`
+    return json({ error: msg, usage: { current, limit, plan } }, 429)
   }
 
   const { type, payload } = await req.json()

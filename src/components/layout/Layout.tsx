@@ -1,7 +1,25 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Outlet, Link } from 'react-router-dom'
+import { Menu, Clock } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { useSubscription } from '@/hooks/useSubscription'
+
+function TrialBanner() {
+  const { data: sub } = useSubscription()
+  if (!sub?.isTrialing || sub.trialDaysLeft === null) return null
+  const days = sub.trialDaysLeft
+  return (
+    <div className="w-full bg-amber-500 text-white text-center py-2 px-4 text-[12.5px] font-medium flex items-center justify-center gap-2 flex-shrink-0">
+      <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+      {days === 0
+        ? 'Seu período de teste termina hoje. '
+        : `Período de teste: ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}. `}
+      <Link to="/planos" className="underline underline-offset-2 hover:no-underline font-semibold">
+        Assine agora →
+      </Link>
+    </div>
+  )
+}
 
 export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -51,6 +69,7 @@ export function Layout() {
           </div>
         </div>
 
+        <TrialBanner />
         <div className="flex-1 overflow-y-auto">
           <Outlet />
         </div>

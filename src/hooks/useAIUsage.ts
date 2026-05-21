@@ -3,9 +3,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
-
-// Limite padrão do plano starter (usado como fallback se não souber o plano)
-const MONTHLY_LIMIT = 100
+import { useSubscription } from '@/hooks/useSubscription'
 
 export interface AIUsageData {
   requests: number
@@ -15,6 +13,10 @@ export interface AIUsageData {
 }
 
 export function useAIUsage(userId: string | undefined) {
+  const { data: subData } = useSubscription()
+  // Usa o limite real do plano; fallback 100 se ainda carregando
+  const planLimit = subData?.aiLimit ?? 100
+
   return useQuery<AIUsageData | null>({
     queryKey: ['ai_usage', userId],
     enabled: !!userId,
@@ -36,8 +38,8 @@ export function useAIUsage(userId: string | undefined) {
       const requests = data?.requests ?? 0
       return {
         requests,
-        limit: MONTHLY_LIMIT,
-        percent: Math.min(100, Math.round((requests / MONTHLY_LIMIT) * 100)),
+        limit: planLimit,
+        percent: Math.min(100, Math.round((requests / planLimit) * 100)),
         month,
       }
     },

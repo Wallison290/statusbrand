@@ -12,12 +12,16 @@ export interface Subscription {
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   current_period_end: string | null
+  trial_ends_at: string | null
+  canceled_at: string | null
 }
 
 export interface SubscriptionData {
   subscription: Subscription
   plan: Plan
   isActive: boolean
+  isTrialing: boolean
+  trialDaysLeft: number | null
   isPro: boolean
   isAgency: boolean
   aiLimit: number
@@ -36,7 +40,7 @@ export function useSubscription() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('subscriptions')
-        .select('plan, status, stripe_customer_id, stripe_subscription_id, current_period_end')
+        .select('plan, status, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at, canceled_at')
         .eq('user_id', user.id)
         .maybeSingle()
 
@@ -49,16 +53,31 @@ export function useSubscription() {
         stripe_customer_id: null,
         stripe_subscription_id: null,
         current_period_end: null,
+        trial_ends_at: null,
+        canceled_at: null,
       }
 
       const planId = sub.plan as PlanId
       const plan   = getPlan(planId)
-      const isActive = sub.status === 'active' || sub.status === 'trialing'
+
+      // Trial ativo: status='trialing' E ainda dentro do prazo
+      const isTrialing = sub.status === 'trialing'
+        && !!sub.trial_ends_at
+        && new Date(sub.trial_ends_at) > new Date()
+
+      const isActive = sub.status === 'active' || isTrialing
+
+      // Dias restantes do trial
+      const trialDaysLeft = isTrialing && sub.trial_ends_at
+        ? Math.max(0, Math.ceil((new Date(sub.trial_ends_at).getTime() - Date.now()) / 86_400_000))
+        : null
 
       return {
         subscription: sub,
         plan,
         isActive,
+        isTrialing,
+        trialDaysLeft,
         isPro:    planId === 'pro',
         isAgency: planId === 'agency',
         aiLimit:  PLAN_AI_LIMITS[planId] ?? 50,

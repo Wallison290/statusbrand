@@ -118,8 +118,33 @@ Deno.serve(async (req) => {
       const stripeSub = event.data.object as Stripe.Subscription
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (sb as any).from('subscriptions')
-        .update({ plan: 'free', status: 'active', stripe_subscription_id: null, current_period_end: null, updated_at: new Date().toISOString() })
+        .update({
+          plan: 'starter',
+          status: 'inactive',
+          stripe_subscription_id: null,
+          current_period_end: null,
+          canceled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq('stripe_subscription_id', stripeSub.id)
+      break
+    }
+
+    // ── Troca de plano (upgrade/downgrade) ───────────────────────────────────
+    case 'customer.subscription.updated': {
+      const stripeSub = event.data.object as Stripe.Subscription
+      const subId     = stripeSub.id
+      const priceId   = stripeSub.items.data[0]?.price?.id ?? ''
+      const plan      = PRICE_TO_PLAN[priceId] ?? 'starter'
+      const periodEnd = new Date((stripeSub.current_period_end ?? 0) * 1000).toISOString()
+      const status    = stripeSub.status === 'active' ? 'active'
+                      : stripeSub.status === 'trialing' ? 'trialing'
+                      : stripeSub.status === 'past_due' ? 'past_due'
+                      : 'inactive'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (sb as any).from('subscriptions')
+        .update({ plan, status, current_period_end: periodEnd, updated_at: new Date().toISOString() })
+        .eq('stripe_subscription_id', subId)
       break
     }
   }
