@@ -88,6 +88,7 @@ export function ClientForm() {
             const { error: inviteError } = await supabase.functions.invoke('invite-client', {
               body: {
                 email: form.email,
+                clientId: created.id,
                 clientName: form.responsible_name,
                 companyName: form.company_name,
                 redirectTo: `${window.location.origin}/client-setup`,
