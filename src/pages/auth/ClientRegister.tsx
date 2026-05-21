@@ -108,6 +108,8 @@ export function ClientRegister() {
         email: normalizedEmail,
         password,
         options: {
+          // Após confirmar o email, o cliente cai na tela de login
+          emailRedirectTo: `${window.location.origin}/login`,
           // Metadados passados ao trigger caso ele seja atualizado futuramente
           data: {
             role: 'client',
