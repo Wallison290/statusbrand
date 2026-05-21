@@ -81,7 +81,28 @@ export function ClientForm() {
         toast('Cliente atualizado!', 'success')
       } else {
         const created = await createClient.mutateAsync({ ...form, user_id: user.id })
-        toast('Cliente cadastrado!', 'success')
+
+        // Envia convite de acesso ao portal se tiver email cadastrado
+        if (form.email) {
+          try {
+            const { error: inviteError } = await supabase.functions.invoke('invite-client', {
+              body: {
+                email: form.email,
+                clientName: form.responsible_name,
+                companyName: form.company_name,
+                redirectTo: `${window.location.origin}/client-setup`,
+              },
+            })
+            if (inviteError) throw inviteError
+            toast('Cliente cadastrado! Convite enviado para o e-mail.', 'success')
+          } catch {
+            // Não bloqueia o fluxo se o convite falhar
+            toast('Cliente cadastrado! (falha ao enviar convite — tente reenviar depois)', 'success')
+          }
+        } else {
+          toast('Cliente cadastrado!', 'success')
+        }
+
         navigate(`/clients/${created.id}`)
         return
       }

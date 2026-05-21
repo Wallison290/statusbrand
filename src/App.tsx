@@ -11,6 +11,7 @@ import { Login } from '@/pages/auth/Login'
 import { Register } from '@/pages/auth/Register'
 import { ForgotPassword } from '@/pages/auth/ForgotPassword'
 import { ClientRegister } from '@/pages/auth/ClientRegister'
+import { ClientSetup } from '@/pages/auth/ClientSetup'
 import { Dashboard } from '@/pages/Dashboard'
 import { ClientList } from '@/pages/clients/ClientList'
 import { ClientForm } from '@/pages/clients/ClientForm'
@@ -113,6 +114,8 @@ function AppRoutes() {
       <Route path="/register"        element={<GuestGuard><Register /></GuestGuard>} />
       <Route path="/forgot-password" element={<GuestGuard><ForgotPassword /></GuestGuard>} />
       <Route path="/client-register" element={<GuestGuard><ClientRegister /></GuestGuard>} />
+      {/* Sem GuestGuard: cliente chega aqui autenticado via link de convite */}
+      <Route path="/client-setup" element={<ClientSetup />} />
 
       {/* Portal do cliente */}
       <Route path="/portal" element={<PortalGuard><PortalDashboard /></PortalGuard>} />
