@@ -87,11 +87,13 @@ function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-/** Se já tem assinatura ativa, vai direto para o app em vez de mostrar /planos */
+/** Se já tem assinatura PAGA ativa, vai direto para o app em vez de mostrar /planos.
+ *  Usuários em trial podem acessar /planos para assinar. */
 function ActivePlanRedirect({ children }: { children: React.ReactNode }) {
   const { data: subData, isLoading, isFetched } = useSubscription()
   if (isLoading || !isFetched) return null
-  if (subData?.isActive) return <Navigate to="/" replace />
+  // Só redireciona quem já pagou (status=active). Trial não bloqueia.
+  if (subData?.subscription.status === 'active') return <Navigate to="/" replace />
   return <>{children}</>
 }
 

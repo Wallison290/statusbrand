@@ -14,7 +14,7 @@ function TrialBanner() {
       {days === 0
         ? 'Seu período de teste termina hoje. '
         : `Período de teste: ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}. `}
-      <Link to="/planos" className="underline underline-offset-2 hover:no-underline font-semibold">
+      <Link to="/assinatura" className="underline underline-offset-2 hover:no-underline font-semibold">
         Assine agora →
       </Link>
     </div>
