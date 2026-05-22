@@ -63,10 +63,19 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [name, setName]           = useState(profile?.full_name || '')
-  const [agencyName, setAgency]   = useState(profile?.agency_name || '')
+  const [agencyName, setAgency]   = useState((profile as any)?.agency_name || '')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving]       = useState(false)
+
+  // Sincroniza os campos quando o profile carrega (useState não reinicia após mount)
+  useEffect(() => {
+    if (profile) {
+      setName(profile.full_name || '')
+      setAgency((profile as any).agency_name || '')
+      setAvatarUrl(profile.avatar_url || '')
+    }
+  }, [profile?.full_name, (profile as any)?.agency_name, profile?.avatar_url])
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

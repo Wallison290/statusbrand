@@ -76,14 +76,17 @@ function getFallbackPills(stats: DashboardStats): HeroPill[] {
   return pills.slice(0, 4)
 }
 
-function getFallbackMessage(stats: DashboardStats): string {
+function getFallbackMessage(stats: DashboardStats, agencyName?: string): string {
+  const agency = agencyName ? ` na ${agencyName}` : ''
   if (stats.overdue_tasks > 0)
-    return `${stats.overdue_tasks} tarefa${stats.overdue_tasks > 1 ? 's atrasadas' : ' atrasada'}. Vale dar uma olhada hoje.`
+    return `${stats.overdue_tasks} tarefa${stats.overdue_tasks > 1 ? 's atrasadas' : ' atrasada'}${agency}. Vale dar uma olhada hoje.`
   if (stats.period_approved > 0)
-    return `${stats.period_approved} aprovação${stats.period_approved > 1 ? 'ões' : ''} no período. Ótimo ritmo!`
+    return `${stats.period_approved} aprovação${stats.period_approved > 1 ? 'ões' : ''}${agency} no período. Ótimo ritmo!`
   if (stats.period_pending_approval > 0)
-    return `${stats.period_pending_approval} conteúdo${stats.period_pending_approval > 1 ? 's aguardam' : ' aguarda'} aprovação do cliente.`
-  return 'Sua operação está organizada. Bom trabalho!'
+    return `${stats.period_pending_approval} conteúdo${stats.period_pending_approval > 1 ? 's aguardam' : ' aguarda'} aprovação do cliente${agency}.`
+  if (stats.active_clients > 0)
+    return `Todos os clientes ativos${agency} estão sem tarefas pendentes. Bom trabalho!`
+  return `Sua operação${agency} está organizada. Bom trabalho!`
 }
 
 // ── Hook principal ─────────────────────────────────────────────────────────────
@@ -93,6 +96,7 @@ export function useDashboardGreeting(
   userName: string,
   stats: DashboardStats,
   statsReady: boolean,
+  agencyName?: string,
 ): GreetingResult {
   const [message, setMessage]     = useState('Carregando resumo da sua operação…')
   const [pills, setPills]         = useState<HeroPill[]>([])
@@ -130,7 +134,7 @@ export function useDashboardGreeting(
       const { content } = await callProxy<{ content: string }>('greeting', { stats, hour, dayName })
       const json = JSON.parse(content ?? '{}')
 
-      const newMsg   = typeof json.message === 'string' ? json.message : getFallbackMessage(stats)
+      const newMsg   = typeof json.message === 'string' ? json.message : getFallbackMessage(stats, agencyName)
       const newPills = Array.isArray(json.pills) ? (json.pills as HeroPill[]).slice(0, 4) : getFallbackPills(stats)
 
       try {
@@ -141,7 +145,7 @@ export function useDashboardGreeting(
       setPills(newPills)
     } catch {
       // Fallback sem IA
-      setMessage(getFallbackMessage(stats))
+      setMessage(getFallbackMessage(stats, agencyName))
       setPills(getFallbackPills(stats))
     } finally {
       setIsLoading(false)

@@ -579,7 +579,7 @@ function AlertsWidget({
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
 
   // ── Period state (single source of truth) ─────────────────────────────────
@@ -751,7 +751,7 @@ export function Dashboard() {
 
   // ── Greeting com IA ───────────────────────────────────────────────────────
   const { greeting, message, pills, isLoading: greetingLoading, refresh: refreshGreeting } =
-    useDashboardGreeting(user?.id, userName, stats, statsReady)
+    useDashboardGreeting(user?.id, userName, stats, statsReady, (profile as any)?.agency_name || '')
 
   // ─────────────────────────────────────────────────────────────────────────
 
