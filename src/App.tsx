@@ -10,6 +10,7 @@ import { Setup } from '@/pages/Setup'
 import { Login } from '@/pages/auth/Login'
 import { Register } from '@/pages/auth/Register'
 import { ForgotPassword } from '@/pages/auth/ForgotPassword'
+import { ResetPassword } from '@/pages/auth/ResetPassword'
 import { ClientRegister } from '@/pages/auth/ClientRegister'
 import { ClientSetup } from '@/pages/auth/ClientSetup'
 import { Dashboard } from '@/pages/Dashboard'
@@ -115,6 +116,7 @@ function AppRoutes() {
       <Route path="/login"           element={<GuestGuard><Login /></GuestGuard>} />
       <Route path="/register"        element={<GuestGuard><Register /></GuestGuard>} />
       <Route path="/forgot-password" element={<GuestGuard><ForgotPassword /></GuestGuard>} />
+      <Route path="/reset-password"  element={<ResetPassword />} />
       <Route path="/client-register" element={<GuestGuard><ClientRegister /></GuestGuard>} />
       {/* Sem GuestGuard: cliente chega aqui autenticado via link de convite */}
       <Route path="/client-setup" element={<ClientSetup />} />

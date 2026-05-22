@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, CreditCard, LogOut, Key, ChevronRight,
   Camera, Check, X, Loader2, Building2, Zap, Crown,
-  HelpCircle, Star,
+  HelpCircle,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -241,7 +241,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
     setOpen(false)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://statusbrand-snowy.vercel.app/reset-password`,
       })
       if (error) throw error
       toast('E-mail de redefinição enviado!', 'success')
@@ -344,14 +344,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
                   icon={CreditCard}
                   label="Assinatura"
                   description="Planos, upgrade e cobrança"
-                  onClick={() => { setOpen(false); navigate('/planos') }}
-                />
-                <MenuItem
-                  icon={Star}
-                  label="Fazer Upgrade"
-                  description="Ver todos os planos disponíveis"
-                  onClick={() => { setOpen(false); navigate('/planos') }}
-                  highlight
+                  onClick={() => { setOpen(false); navigate('/assinatura') }}
                 />
 
                 <div className="my-1.5 border-t border-[#f1f5f9]" />
@@ -365,8 +358,8 @@ export function UserMenu({ dark = true }: UserMenuProps) {
                 <MenuItem
                   icon={HelpCircle}
                   label="Suporte"
-                  description="Dúvidas e ajuda"
-                  onClick={() => { setOpen(false); window.open('mailto:suporte@statusbrand.com.br', '_blank') }}
+                  description="Falar no WhatsApp"
+                  onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
                 />
 
                 <div className="my-1.5 border-t border-[#f1f5f9]" />
