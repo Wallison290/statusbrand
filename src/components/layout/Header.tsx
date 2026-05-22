@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
 import { useNotifications } from '@/hooks/useNotifications'
 import { NotificationsModal } from '@/components/NotificationsModal'
+import { UserMenu } from './UserMenu'
 
 interface HeaderProps {
   title: string
@@ -13,21 +13,10 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
-  const { profile, user } = useAuth()
   const navigate = useNavigate()
   const { data: notifications = [] } = useNotifications()
   const [showNotifications, setShowNotifications] = useState(false)
-
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
-
-  const rawName: string =
-    profile?.full_name ||
-    (user?.user_metadata?.full_name as string | undefined) ||
-    ''
-  const firstName      = rawName.split(' ')[0] || 'usuário'
-  const avatarInitial  = (rawName || profile?.email || 'U')[0].toUpperCase()
-  const unreadCount    = notifications.filter(n => !n.is_read).length
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
     <>
@@ -50,7 +39,7 @@ export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
         <div className="flex items-center gap-2">
           {action}
 
-          {/* Bell — notificações da agência */}
+          {/* Bell — notificações */}
           <button
             onClick={() => setShowNotifications(true)}
             title={unreadCount > 0 ? `${unreadCount} notificação${unreadCount === 1 ? '' : 'ões'} não lida${unreadCount === 1 ? '' : 's'}` : 'Notificações'}
@@ -60,26 +49,14 @@ export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
           >
             <Bell className={`w-4 h-4 ${dark ? 'text-white/70' : 'text-[#737373]'}`} />
             {unreadCount > 0 && (
-              <span
-                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-red-500 text-[9px] font-bold flex items-center justify-center px-0.5 leading-none"
-                style={{ color: '#ffffff' }}
-              >
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-red-500 text-[9px] font-bold flex items-center justify-center px-0.5 leading-none text-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
 
-          <div className={`flex items-center gap-2 ml-1 pl-2 border-l ${dark ? 'border-white/15' : 'border-[#e8e8e8]'}`}>
-            <div className="text-right hidden sm:block">
-              <p className={`text-[11px] ${dark ? 'text-white/50' : 'text-[#a0a0a0]'}`}>{greeting},</p>
-              <p className={`text-[11px] font-medium ${dark ? 'text-white' : 'text-[#0f0f0f]'}`}>{firstName}</p>
-            </div>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold ${
-              dark ? 'bg-white/15 border border-white/20' : 'bg-[#0f0f0f] border border-[#0f0f0f]'
-            }`}>
-              <span style={{ color: '#ffffff' }}>{avatarInitial}</span>
-            </div>
-          </div>
+          {/* Avatar + dropdown */}
+          <UserMenu dark={dark} />
         </div>
       </header>
 
@@ -88,11 +65,8 @@ export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
         onClose={() => setShowNotifications(false)}
         onView={(notification) => {
           setShowNotifications(false)
-          if (notification.link) {
-            navigate(`/planner?item=${notification.link}`)
-          } else {
-            navigate('/planner')
-          }
+          if (notification.link) navigate(`/planner?item=${notification.link}`)
+          else navigate('/planner')
         }}
       />
     </>

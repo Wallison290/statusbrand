@@ -65,5 +65,9 @@ export function useAuth() {
     return { error }
   }
 
-  return { user, session, profile, loading, signIn, signUp, signOut, resetPassword }
+  async function refreshProfile() {
+    if (user) await fetchProfile(user.id)
+  }
+
+  return { user, session, profile, loading, signIn, signUp, signOut, resetPassword, refreshProfile }
 }

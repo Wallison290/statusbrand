@@ -1,0 +1,432 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  User, CreditCard, LogOut, Key, ChevronRight,
+  Camera, Check, X, Loader2, Building2, Zap, Crown,
+  HelpCircle, Star,
+} from 'lucide-react'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useToast } from '@/components/ui/toast'
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+function Avatar({
+  src, initial, size = 7, dark = true, onClick, showCamera = false,
+}: {
+  src?: string | null
+  initial: string
+  size?: number
+  dark?: boolean
+  onClick?: () => void
+  showCamera?: boolean
+}) {
+  const cls = `w-${size} h-${size} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 relative`
+  return (
+    <div
+      className={`${cls} ${onClick ? 'cursor-pointer' : ''} group`}
+      onClick={onClick}
+      style={{ width: `${size * 4}px`, height: `${size * 4}px` }}
+    >
+      {src ? (
+        <img src={src} alt="avatar" className="w-full h-full object-cover" />
+      ) : (
+        <div className={`w-full h-full flex items-center justify-center text-[10px] font-semibold ${
+          dark ? 'bg-white/15 border border-white/20' : 'bg-[#0f0f0f] border border-[#0f0f0f]'
+        }`}>
+          <span style={{ color: '#ffffff', fontSize: `${size * 1.6}px` }}>{initial}</span>
+        </div>
+      )}
+      {showCamera && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+          <Camera className="w-4 h-4 text-white" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Badge de plano ────────────────────────────────────────────────────────────
+
+const PLAN_CONFIG = {
+  starter: { label: 'Starter', icon: Zap,      color: 'bg-blue-100 text-blue-700' },
+  pro:     { label: 'Pro',     icon: Crown,     color: 'bg-violet-100 text-violet-700' },
+  agency:  { label: 'Agency',  icon: Building2, color: 'bg-amber-100 text-amber-700' },
+}
+
+// ── Modal de Perfil ───────────────────────────────────────────────────────────
+
+function ProfileModal({ onClose }: { onClose: () => void }) {
+  const { user, profile, refreshProfile } = useAuth()
+  const { toast } = useToast()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [name, setName]           = useState(profile?.full_name || '')
+  const [agencyName, setAgency]   = useState(profile?.agency_name || '')
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving]       = useState(false)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploading(true)
+    try {
+      const ext  = file.name.split('.').pop() || 'jpg'
+      const path = `${user.id}/avatar.${ext}`
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      // Força reload sem cache
+      const fresh = `${publicUrl}?t=${Date.now()}`
+      setAvatarUrl(fresh)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleSave = async () => {
+    if (!user) return
+    setSaving(true)
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ full_name: name, agency_name: agencyName, avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+        .eq('id', user.id)
+      if (error) throw error
+      await refreshProfile?.()
+      toast('Perfil atualizado!', 'success')
+      onClose()
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const initial = (name || profile?.email || 'U')[0].toUpperCase()
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-[15px] font-bold text-[#0f172a]">Meu Perfil</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center transition-colors">
+            <X className="w-4 h-4 text-[#94a3b8]" />
+          </button>
+        </div>
+
+        {/* Avatar upload */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <div
+              className="w-20 h-20 rounded-full overflow-hidden cursor-pointer group border-2 border-[#e8e8e8] hover:border-violet-400 transition-colors"
+              onClick={() => fileRef.current?.click()}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-white text-2xl font-bold">{initial}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {uploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+              </div>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#94a3b8]">Clique para alterar a foto</p>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        </div>
+
+        {/* Campos */}
+        <div className="space-y-3">
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1">Nome completo</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              placeholder="Seu nome"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1">Nome da agência</label>
+            <input
+              value={agencyName}
+              onChange={e => setAgency(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              placeholder="Nome da sua agência"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1">E-mail</label>
+            <input
+              value={user?.email || ''}
+              disabled
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] bg-[#f8fafc] text-[#94a3b8] cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        {/* Botões */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            disabled={saving || uploading}
+            className="flex-1 h-9 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-[13px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+            Salvar
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 h-9 rounded-lg border border-[#e2e8f0] text-[13px] text-[#475569] hover:bg-[#f8fafc] transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ── Dropdown ──────────────────────────────────────────────────────────────────
+
+interface UserMenuProps {
+  dark?: boolean
+}
+
+export function UserMenu({ dark = true }: UserMenuProps) {
+  const navigate              = useNavigate()
+  const { profile, user, signOut } = useAuth()
+  const { data: subData }     = useSubscription()
+  const { toast }             = useToast()
+  const [open, setOpen]       = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
+  const menuRef               = useRef<HTMLDivElement>(null)
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const rawName     = profile?.full_name || (user?.user_metadata?.full_name as string) || ''
+  const firstName   = rawName.split(' ')[0] || 'Usuário'
+  const initial     = (rawName || profile?.email || 'U')[0].toUpperCase()
+  const avatarUrl   = profile?.avatar_url || null
+  const plan        = subData?.subscription.plan as keyof typeof PLAN_CONFIG | undefined
+  const planCfg     = plan ? PLAN_CONFIG[plan] : null
+  const PlanIcon    = planCfg?.icon
+
+  const handleResetPassword = async () => {
+    if (!user?.email) return
+    setOpen(false)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      if (error) throw error
+      toast('E-mail de redefinição enviado!', 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  const handleSignOut = async () => {
+    setOpen(false)
+    await signOut()
+  }
+
+  return (
+    <>
+      <div ref={menuRef} className="relative">
+        {/* Trigger */}
+        <button
+          onClick={() => setOpen(v => !v)}
+          className={`flex items-center gap-2 ml-1 pl-2 border-l ${dark ? 'border-white/15' : 'border-[#e8e8e8]'} focus:outline-none`}
+        >
+          <div className="text-right hidden sm:block">
+            <p className={`text-[11px] ${dark ? 'text-white/50' : 'text-[#a0a0a0]'}`}>
+              {new Date().getHours() < 12 ? 'Bom dia' : new Date().getHours() < 18 ? 'Boa tarde' : 'Boa noite'},
+            </p>
+            <p className={`text-[11px] font-medium ${dark ? 'text-white' : 'text-[#0f0f0f]'}`}>{firstName}</p>
+          </div>
+          <div className="relative">
+            <div className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ring-2 transition-all ${
+              open
+                ? 'ring-violet-500'
+                : dark ? 'ring-white/20 hover:ring-violet-400' : 'ring-[#e8e8e8] hover:ring-violet-400'
+            }`}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className={`w-full h-full flex items-center justify-center ${dark ? 'bg-white/15' : 'bg-[#0f0f0f]'}`}>
+                  <span className="text-white text-[10px] font-semibold">{initial}</span>
+                </div>
+              )}
+            </div>
+            {/* Badge de plano */}
+            {PlanIcon && (
+              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-violet-600 flex items-center justify-center ring-1 ring-white">
+                <PlanIcon className="w-2 h-2 text-white" />
+              </div>
+            )}
+          </div>
+        </button>
+
+        {/* Dropdown */}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -4 }}
+              transition={{ duration: 0.12 }}
+              className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] z-50 overflow-hidden"
+            >
+              {/* Header do menu */}
+              <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-200">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">{initial}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-[#0f172a] truncate">{rawName || 'Usuário'}</p>
+                    <p className="text-[11px] text-[#94a3b8] truncate">{user?.email}</p>
+                  </div>
+                </div>
+
+                {/* Plano atual */}
+                {planCfg && PlanIcon && (
+                  <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${planCfg.color}`}>
+                    <PlanIcon className="w-3 h-3" />
+                    Plano {planCfg.label}
+                    {subData?.isTrialing && (
+                      <span className="text-[10px] opacity-70">· {subData.trialDaysLeft}d trial</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Itens do menu */}
+              <div className="p-2">
+                <MenuItem
+                  icon={User}
+                  label="Meu Perfil"
+                  description="Foto, nome e agência"
+                  onClick={() => { setOpen(false); setShowProfile(true) }}
+                />
+                <MenuItem
+                  icon={CreditCard}
+                  label="Assinatura"
+                  description="Planos, upgrade e cobrança"
+                  onClick={() => { setOpen(false); navigate('/planos') }}
+                />
+                <MenuItem
+                  icon={Star}
+                  label="Fazer Upgrade"
+                  description="Ver todos os planos disponíveis"
+                  onClick={() => { setOpen(false); navigate('/planos') }}
+                  highlight
+                />
+
+                <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+                <MenuItem
+                  icon={Key}
+                  label="Alterar Senha"
+                  description="Enviar e-mail de redefinição"
+                  onClick={handleResetPassword}
+                />
+                <MenuItem
+                  icon={HelpCircle}
+                  label="Suporte"
+                  description="Dúvidas e ajuda"
+                  onClick={() => { setOpen(false); window.open('mailto:suporte@statusbrand.com.br', '_blank') }}
+                />
+
+                <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+                <MenuItem
+                  icon={LogOut}
+                  label="Sair"
+                  description="Encerrar sessão"
+                  onClick={handleSignOut}
+                  danger
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Modal de perfil */}
+      <AnimatePresence>
+        {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      </AnimatePresence>
+    </>
+  )
+}
+
+// ── Item do menu ──────────────────────────────────────────────────────────────
+
+function MenuItem({
+  icon: Icon, label, description, onClick, danger, highlight,
+}: {
+  icon: React.ElementType
+  label: string
+  description: string
+  onClick: () => void
+  danger?: boolean
+  highlight?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors group ${
+        danger
+          ? 'hover:bg-red-50'
+          : highlight
+          ? 'hover:bg-violet-50'
+          : 'hover:bg-[#f8fafc]'
+      }`}
+    >
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+        danger ? 'bg-red-100' : highlight ? 'bg-violet-100' : 'bg-[#f1f5f9]'
+      }`}>
+        <Icon className={`w-3.5 h-3.5 ${danger ? 'text-red-500' : highlight ? 'text-violet-600' : 'text-[#64748b]'}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-[12.5px] font-medium ${danger ? 'text-red-600' : highlight ? 'text-violet-700' : 'text-[#0f172a]'}`}>
+          {label}
+        </p>
+        <p className="text-[11px] text-[#94a3b8] truncate">{description}</p>
+      </div>
+      <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${danger ? 'text-red-400' : 'text-[#94a3b8]'}`} />
+    </button>
+  )
+}
