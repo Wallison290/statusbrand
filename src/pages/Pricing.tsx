@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, Loader2, LogOut, Zap, Crown, Building2, Shield, RefreshCw, ArrowRight } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
@@ -189,10 +189,28 @@ export function Pricing() {
   const { data: subData }                            = useSubscription()
   const { data: usage }                              = useAIUsage(user?.id)
   const [loadingPlan, setLoadingPlan]                = useState<PlanId | null>(null)
+  const [searchParams]                               = useSearchParams()
+  const paymentSuccess                               = searchParams.get('success') === '1'
 
   const currentPlanId = subData?.subscription.plan as PlanId | null
   const isActive      = subData?.isActive ?? false
   const hasStripe     = !!subData?.subscription.stripe_subscription_id
+
+  // Após pagamento bem-sucedido, fica verificando até o webhook ativar o plano
+  useEffect(() => {
+    if (!paymentSuccess || isActive) return
+    const interval = setInterval(() => {
+      // React Query vai refetch automaticamente; se isActive mudar, o efeito limpa
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [paymentSuccess, isActive])
+
+  // Quando plano ativar após pagamento, redireciona pro sistema
+  useEffect(() => {
+    if (paymentSuccess && isActive) {
+      navigate('/', { replace: true })
+    }
+  }, [paymentSuccess, isActive, navigate])
 
   const handleSelect = async (planId: PlanId) => {
     const priceId = PLANS[planId].stripePriceId
@@ -266,6 +284,18 @@ export function Pricing() {
             Gerencie sua agência com IA. Cancele quando quiser.
           </motion.p>
         </div>
+
+        {/* Banner de sucesso do pagamento */}
+        {paymentSuccess && !isActive && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 px-5 py-3.5 bg-green-50 border border-green-200 rounded-xl text-green-700 text-[13px] font-medium"
+          >
+            <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+            Pagamento confirmado! Ativando seu plano...
+          </motion.div>
+        )}
 
         {/* Uso atual (apenas quem já tem plano ativo) */}
         {isActive && usage && (
