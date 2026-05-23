@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks'
 import { useClients } from '@/hooks/useClients'
+import { useTeamMembers } from '@/hooks/useTeamMembers'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { formatDate, isOverdue } from '@/utils/formatters'
@@ -396,25 +397,27 @@ function NoDateSection({
 // ─── Task dialog (create + edit) ──────────────────────────────────────────────
 
 const blankForm = {
-  title:       '',
-  description: '',
-  due_date:    '',
-  due_time:    '',           // ← new
-  priority:    'media' as TaskPriority,
-  status:      'a_fazer' as TaskStatus,
-  assignee:    '',
-  client_id:   null as string | null,
+  title:        '',
+  description:  '',
+  due_date:     '',
+  due_time:     '',
+  priority:     'media' as TaskPriority,
+  status:       'a_fazer' as TaskStatus,
+  assignee:     '',
+  assignee_id:  null as string | null,
+  client_id:    null as string | null,
 }
 
 type TaskForm = typeof blankForm
 
 function TaskDialog({
-  open, onClose, prefillDate, clients, editingTask, onCreate, onUpdate,
+  open, onClose, prefillDate, clients, members, editingTask, onCreate, onUpdate,
 }: {
   open: boolean
   onClose: () => void
   prefillDate: string
   clients: { id: string; company_name: string }[]
+  members: { id: string; name: string; color: string }[]
   editingTask: Task | null
   onCreate: (form: TaskForm) => Promise<void>
   onUpdate: (id: string, form: TaskForm) => Promise<void>
@@ -435,14 +438,15 @@ function TaskDialog({
     if (editingTask) {
       // Edit mode — fill every field from the existing task
       setForm({
-        title:       editingTask.title,
-        description: editingTask.description || '',
-        due_date:    editingTask.due_date    || '',
-        due_time:    editingTask.due_time    || '',
-        priority:    editingTask.priority,
-        status:      editingTask.status,
-        assignee:    editingTask.assignee    || '',
-        client_id:   editingTask.client_id,
+        title:        editingTask.title,
+        description:  editingTask.description || '',
+        due_date:     editingTask.due_date    || '',
+        due_time:     editingTask.due_time    || '',
+        priority:     editingTask.priority,
+        status:       editingTask.status,
+        assignee:     editingTask.assignee    || '',
+        assignee_id:  (editingTask as any).assignee_id || null,
+        client_id:    editingTask.client_id,
       })
     } else {
       // Create mode — blank form, optionally pre-fill date from column "+"
@@ -552,12 +556,43 @@ function TaskDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Responsável"
-              value={form.assignee}
-              onChange={e => set('assignee', e.target.value)}
-              placeholder="Nome..."
-            />
+            {/* Responsável — dropdown de membros da equipe */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
+                Responsável
+              </label>
+              <Select
+                value={form.assignee_id || '__none__'}
+                onValueChange={v => {
+                  if (v === '__none__') {
+                    set('assignee_id', null)
+                    set('assignee', '')
+                  } else {
+                    const m = members.find(m => m.id === v)
+                    set('assignee_id', v)
+                    set('assignee', m?.name || '')
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem responsável</SelectItem>
+                  {members.map(m => (
+                    <SelectItem key={m.id} value={m.id}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: m.color }}
+                        />
+                        {m.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
                 Cliente (opcional)
@@ -601,6 +636,8 @@ export function Tasks() {
   const { user } = useAuth()
   const { data: tasks = [], isLoading } = useTasks()
   const { data: clients = [] } = useClients()
+  const { data: allMembers = [] } = useTeamMembers()
+  const activeMembers = allMembers.filter(m => m.is_active)
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
@@ -692,14 +729,17 @@ export function Tasks() {
   const handleCreate = async (form: TaskForm) => {
     if (!form.title.trim() || !user) return
     try {
-      await createTask.mutateAsync({
-        ...form,
+      await (createTask.mutateAsync as any)({
         user_id:     user.id,
-        client_id:   form.client_id || null,
+        title:       form.title.trim(),
+        description: form.description || null,
         due_date:    form.due_date || null,
         due_time:    form.due_time || null,
+        priority:    form.priority,
+        status:      form.status,
         assignee:    form.assignee || null,
-        description: form.description || null,
+        assignee_id: form.assignee_id || null,
+        client_id:   form.client_id || null,
       })
       toast('Tarefa criada!', 'success')
     } catch (err: any) {
@@ -720,6 +760,7 @@ export function Tasks() {
         priority:    form.priority,
         status:      form.status,
         assignee:    form.assignee || null,
+        ...(form.assignee_id !== undefined && { assignee_id: form.assignee_id } as any),
         client_id:   form.client_id || null,
       })
       toast('Tarefa atualizada!', 'success')
@@ -835,6 +876,7 @@ export function Tasks() {
         onClose={() => { setDialogOpen(false); setEditingTask(null) }}
         prefillDate={prefillDate}
         clients={clients}
+        members={activeMembers}
         editingTask={editingTask}
         onCreate={handleCreate}
         onUpdate={handleUpdate}

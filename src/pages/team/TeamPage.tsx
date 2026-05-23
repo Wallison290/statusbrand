@@ -3,13 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, X, Check, Loader2, Copy, ExternalLink,
   Pencil, Trash2, AlertCircle, Phone, Mail,
-  Users, ClipboardList, ChevronDown,
+  Users, ClipboardList, ChevronDown, Plus,
+  Calendar, Flag, Building2,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
+import { useClients } from '@/hooks/useClients'
 import {
   useTeamMembers, useTeamTasks,
   useCreateTeamMember, useUpdateTeamMember, useDeleteTeamMember,
+  useCreateAndDelegateTask,
   type TeamMember, type TeamTask,
 } from '@/hooks/useTeamMembers'
 
@@ -163,16 +166,215 @@ function MemberModal({
   )
 }
 
+// ── Modal: Nova Demanda ───────────────────────────────────────────────────────
+
+const PRIORITY_OPTIONS = [
+  { value: 'baixa',   label: 'Baixa'   },
+  { value: 'media',   label: 'Normal'  },
+  { value: 'alta',    label: 'Alta'    },
+  { value: 'urgente', label: 'Urgente' },
+]
+const STATUS_OPTIONS_FORM = [
+  { value: 'a_fazer',      label: 'A fazer'      },
+  { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'revisao',      label: 'Em revisão'   },
+  { value: 'concluido',    label: 'Concluído'    },
+]
+
+function NewTaskModal({
+  member,
+  clients,
+  onClose,
+}: {
+  member: TeamMember
+  clients: { id: string; company_name: string }[]
+  onClose: () => void
+}) {
+  const { toast } = useToast()
+  const createAndDelegate = useCreateAndDelegateTask()
+
+  const [title,       setTitle]      = useState('')
+  const [description, setDesc]       = useState('')
+  const [dueDate,     setDueDate]    = useState('')
+  const [dueTime,     setDueTime]    = useState('')
+  const [priority,    setPriority]   = useState('media')
+  const [status,      setStatus]     = useState('a_fazer')
+  const [clientId,    setClientId]   = useState<string | null>(null)
+
+  const saving = createAndDelegate.isPending
+
+  const handleSubmit = async () => {
+    if (!title.trim()) { toast('Título obrigatório', 'error'); return }
+    try {
+      await createAndDelegate.mutateAsync({
+        title:       title.trim(),
+        description: description || null,
+        due_date:    dueDate || null,
+        due_time:    dueTime || null,
+        priority,
+        status,
+        client_id:   clientId,
+        assignee_id: member.id,
+        assignee:    member.name,
+      })
+      toast('Demanda criada e delegada!', 'success')
+      onClose()
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  const initial = member.name[0].toUpperCase()
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold"
+              style={{ backgroundColor: member.color }}
+            >
+              {member.avatar_url
+                ? <img src={member.avatar_url} alt={member.name} className="w-full h-full rounded-full object-cover" />
+                : initial}
+            </div>
+            <div>
+              <h2 className="text-[14px] font-bold text-[#0f172a]">Nova demanda</h2>
+              <p className="text-[11px] text-[#94a3b8]">Para {member.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center">
+            <X className="w-4 h-4 text-[#94a3b8]" />
+          </button>
+        </div>
+
+        {/* Título */}
+        <div>
+          <label className="text-[11px] font-medium text-[#64748b] block mb-1">Título *</label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Descreva a demanda..."
+            autoFocus
+            className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+          />
+        </div>
+
+        {/* Descrição */}
+        <div>
+          <label className="text-[11px] font-medium text-[#64748b] block mb-1">Descrição</label>
+          <textarea
+            value={description}
+            onChange={e => setDesc(e.target.value)}
+            placeholder="Detalhes, referências, observações..."
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg border border-[#e2e8f0] text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+          />
+        </div>
+
+        {/* Data + Horário */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1 flex items-center gap-1">
+              <Calendar className="w-3 h-3" /> Prazo
+            </label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1">Horário</label>
+            <input
+              type="time"
+              value={dueTime}
+              onChange={e => setDueTime(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Prioridade + Status */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1 flex items-center gap-1">
+              <Flag className="w-3 h-3" /> Prioridade
+            </label>
+            <select
+              value={priority}
+              onChange={e => setPriority(e.target.value)}
+              className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+            >
+              {PRIORITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-[#64748b] block mb-1">Status</label>
+            <select
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+              className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+            >
+              {STATUS_OPTIONS_FORM.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Cliente */}
+        <div>
+          <label className="text-[11px] font-medium text-[#64748b] block mb-1 flex items-center gap-1">
+            <Building2 className="w-3 h-3" /> Cliente (opcional)
+          </label>
+          <select
+            value={clientId || '__none__'}
+            onChange={e => setClientId(e.target.value === '__none__' ? null : e.target.value)}
+            className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          >
+            <option value="__none__">Interno (sem cliente)</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+          </select>
+        </div>
+
+        {/* Botões */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleSubmit}
+            disabled={saving || !title.trim()}
+            className="flex-1 h-9 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+            Criar demanda
+          </button>
+          <button onClick={onClose} className="flex-1 h-9 rounded-lg border border-[#e2e8f0] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
+            Cancelar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // ── Card de Membro ────────────────────────────────────────────────────────────
 
 function MemberCard({
-  member, taskCount, onEdit, onDelete, onFilter, isFiltered,
+  member, taskCount, onEdit, onDelete, onFilter, onNewTask, isFiltered,
 }: {
   member: TeamMember
   taskCount: number
   onEdit: () => void
   onDelete: () => void
   onFilter: () => void
+  onNewTask: () => void
   isFiltered: boolean
 }) {
   const { toast } = useToast()
@@ -230,6 +432,14 @@ function MemberCard({
 
       {/* Ações */}
       <div className="flex gap-1.5 pt-1 border-t border-[#f1f5f9]" onClick={e => e.stopPropagation()}>
+        {/* Nova demanda — botão principal */}
+        <button
+          onClick={onNewTask}
+          title="Nova demanda para este membro"
+          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-violet-600 bg-violet-50 hover:bg-violet-100 transition-colors font-medium"
+        >
+          <Plus className="w-3 h-3" /> Demanda
+        </button>
         <button
           onClick={copyLink}
           title="Copiar link do portal"
@@ -526,6 +736,7 @@ export function TeamPage() {
   const { toast } = useToast()
   const { data: members = [], isLoading: loadingMembers } = useTeamMembers()
   const { data: tasks   = [], isLoading: loadingTasks   } = useTeamTasks()
+  const { data: clients = [] } = useClients()
   const deleteMember = useDeleteTeamMember()
 
   const [tab,              setTab]         = useState<ActiveTab>('membros')
@@ -533,6 +744,7 @@ export function TeamPage() {
   const [editingMember,    setEditing]     = useState<TeamMember | undefined>()
   const [deletingMember,   setDeleting]    = useState<TeamMember | undefined>()
   const [filteredMemberId, setFiltered]    = useState<string | null>(null)
+  const [newTaskMember,    setNewTaskMember] = useState<TeamMember | undefined>()
 
   const activeMembersWithCount = useMemo(() =>
     members
@@ -623,6 +835,7 @@ export function TeamPage() {
                     onEdit={() => openEdit(member)}
                     onDelete={() => setDeleting(member)}
                     onFilter={() => setFiltered(f => f === member.id ? null : member.id)}
+                    onNewTask={() => setNewTaskMember(member)}
                     isFiltered={filteredMemberId === member.id}
                   />
                 ))}
@@ -716,6 +929,13 @@ export function TeamPage() {
             name={deletingMember.name}
             onConfirm={handleDelete}
             onCancel={() => setDeleting(undefined)}
+          />
+        )}
+        {newTaskMember && (
+          <NewTaskModal
+            member={newTaskMember}
+            clients={clients}
+            onClose={() => setNewTaskMember(undefined)}
           />
         )}
       </AnimatePresence>

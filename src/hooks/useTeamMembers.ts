@@ -135,6 +135,49 @@ export function useDeleteTeamMember() {
   })
 }
 
+// ── Criar e delegar tarefa (modal Nova demanda da Equipe) ─────────────────────
+
+export interface NewTeamTaskInput {
+  title:       string
+  description: string | null
+  due_date:    string | null
+  due_time:    string | null
+  priority:    string
+  status:      string
+  client_id:   string | null
+  assignee_id: string
+  assignee:    string  // nome do membro, para exibição na aba Tarefas
+}
+
+export function useCreateAndDelegateTask() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (task: NewTeamTaskInput) => {
+      const { error } = await (supabase as any)
+        .from('tasks')
+        .insert({
+          user_id:     user!.id,
+          title:       task.title,
+          description: task.description,
+          due_date:    task.due_date,
+          due_time:    task.due_time,
+          priority:    task.priority,
+          status:      task.status,
+          client_id:   task.client_id,
+          assignee_id: task.assignee_id,
+          assignee:    task.assignee,
+        })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['team_tasks'] })
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+
 // ── Delegar tarefa ────────────────────────────────────────────────────────────
 
 export function useDelegateTask() {

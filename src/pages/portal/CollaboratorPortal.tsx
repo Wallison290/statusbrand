@@ -8,6 +8,7 @@ import {
   CheckCircle2, Clock, AlertCircle, Circle, ExternalLink, ChevronDown,
   Loader2, Send, FileText, Link as LinkIcon, Calendar, User, Briefcase,
 } from 'lucide-react'
+import { supabaseUrl, supabaseAnonKey } from '@/integrations/supabase/client'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,23 @@ interface CollaboratorTask {
   clients:           { id: string; name: string } | null
 }
 
+// ── Edge function helper ──────────────────────────────────────────────────────
+
+async function callEdgeFunction(name: string, body: Record<string, unknown>) {
+  const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
+    method:  'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey':        supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+    },
+    body: JSON.stringify(body),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? `Erro ${res.status}`)
+  return json
+}
+
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = [
@@ -50,13 +68,6 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string
   media:  { label: 'Média',   color: 'text-blue-600',   bg: 'bg-blue-100'   },
   alta:   { label: 'Alta',    color: 'text-orange-600', bg: 'bg-orange-100' },
   urgente:{ label: 'Urgente', color: 'text-red-600',    bg: 'bg-red-100'    },
-}
-
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined
-
-function getEdgeFunctionUrl(name: string) {
-  if (!SUPABASE_URL) return `/functions/v1/${name}`
-  return `${SUPABASE_URL}/functions/v1/${name}`
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -183,19 +194,13 @@ function TaskCard({
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch(getEdgeFunctionUrl('update-collaborator-task'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          portal_token:      portalToken,
-          task_id:           task.id,
-          status,
-          collaborator_note: note || undefined,
-          delivery_url:      deliveryUrl || undefined,
-        }),
+      await callEdgeFunction('update-collaborator-task', {
+        portal_token:      portalToken,
+        task_id:           task.id,
+        status,
+        collaborator_note: note || undefined,
+        delivery_url:      deliveryUrl || undefined,
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? 'Erro ao salvar')
       setSaved(true)
       onUpdated({ id: task.id, status, collaborator_note: note, delivery_url: deliveryUrl })
       setTimeout(() => setSaved(false), 3000)
@@ -395,13 +400,7 @@ export function CollaboratorPortal() {
 
     async function load() {
       try {
-        const res = await fetch(getEdgeFunctionUrl('get-collaborator-data'), {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ portal_token: token }),
-        })
-        const json = await res.json()
-        if (!res.ok) throw new Error(json.error ?? 'Erro ao carregar dados')
+        const json = await callEdgeFunction('get-collaborator-data', { portal_token: token })
         setMember(json.member)
         setTasks(json.tasks ?? [])
       } catch (err: any) {
