@@ -32,7 +32,7 @@ export interface TeamTask {
   updated_at:        string
   client_id:         string | null
   assignee_id:       string | null
-  clients:           { id: string; name: string } | null
+  clients:           { id: string; company_name: string } | null
 }
 
 // ── Leitura ───────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ export function useTeamTasks() {
           id, title, description, status, priority, due_date,
           collaborator_note, delivery_url, created_at, updated_at,
           client_id, assignee_id,
-          clients(id, name)
+          clients(id, company_name)
         `)
         .eq('user_id', user!.id)
         .not('assignee_id', 'is', null)

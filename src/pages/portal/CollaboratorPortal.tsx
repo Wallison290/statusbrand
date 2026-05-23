@@ -34,7 +34,7 @@ interface CollaboratorTask {
   created_at:        string
   updated_at:        string
   client_id:         string | null
-  clients:           { id: string; name: string } | null
+  clients:           { id: string; company_name: string } | null
 }
 
 // ── Edge function helper ──────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ function TaskCard({
               {task.clients && (
                 <span className="flex items-center gap-1">
                   <Briefcase className="w-3 h-3" />
-                  {task.clients.name}
+                  {task.clients.company_name}
                 </span>
               )}
               {task.due_date && (

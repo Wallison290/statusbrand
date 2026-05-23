@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       .select(`
         id, title, description, status, priority, due_date,
         collaborator_note, delivery_url, created_at, updated_at,
-        client_id, clients(id, name)
+        client_id, clients(id, company_name)
       `)
       .eq('assignee_id', member.id)
       .order('due_date', { ascending: true, nullsFirst: false })

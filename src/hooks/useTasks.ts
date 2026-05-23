@@ -22,11 +22,14 @@ export function useCreateTask() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (task: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'client'>) => {
-      const { data, error } = await supabase.from('tasks').insert(task).select().single()
+      const { data, error } = await (supabase as any).from('tasks').insert(task).select().single()
       if (error) throw error
       return data as Task
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['team_tasks'] })
+    },
   })
 }
 
@@ -43,7 +46,10 @@ export function useUpdateTask() {
       if (error) throw error
       return data as Task
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['team_tasks'] })
+    },
   })
 }
 

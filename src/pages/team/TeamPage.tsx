@@ -482,7 +482,7 @@ function TaskCard({ task, member }: { task: TeamTask; member?: TeamMember }) {
         <div className="flex-1 min-w-0">
           <p className="text-[12.5px] font-medium text-[#0f172a] leading-snug line-clamp-2">{task.title}</p>
           {task.clients && (
-            <p className="text-[10.5px] text-[#94a3b8] mt-0.5 truncate">🏢 {task.clients.name}</p>
+            <p className="text-[10.5px] text-[#94a3b8] mt-0.5 truncate">🏢 {task.clients.company_name}</p>
           )}
           {!task.clients && (
             <p className="text-[10.5px] text-[#94a3b8] mt-0.5">📌 Interno</p>
