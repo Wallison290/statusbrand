@@ -27,6 +27,8 @@ import { AIPage } from '@/pages/ai/AIPage'
 import { Subscription } from '@/pages/Subscription'
 import { Pricing } from '@/pages/Pricing'
 import { PortalDashboard } from '@/pages/portal/PortalDashboard'
+import { CollaboratorPortal } from '@/pages/portal/CollaboratorPortal'
+import { TeamPage } from '@/pages/team/TeamPage'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -124,6 +126,9 @@ function AppRoutes() {
       {/* Portal do cliente */}
       <Route path="/portal" element={<PortalGuard><PortalDashboard /></PortalGuard>} />
 
+      {/* Portal do colaborador — rota pública, sem autenticação */}
+      <Route path="/colaborador/:token" element={<CollaboratorPortal />} />
+
       {/* Página de planos — auth obrigatória; se já tem plano ativo, redireciona */}
       <Route path="/planos" element={<AuthGuard><ActivePlanRedirect><Pricing /></ActivePlanRedirect></AuthGuard>} />
 
@@ -144,6 +149,7 @@ function AppRoutes() {
         <Route path="/library"       element={<Library />} />
         <Route path="/financial"     element={<Financial />} />
         <Route path="/ai"            element={<AIPage />} />
+        <Route path="/equipe"        element={<TeamPage />} />
         <Route path="/assinatura"    element={<Subscription />} />
       </Route>
 

@@ -1,0 +1,156 @@
+// ── Hook: gerenciamento de membros da equipe ──────────────────────────────────
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+
+export interface TeamMember {
+  id:           string
+  user_id:      string
+  name:         string
+  role:         string | null
+  whatsapp:     string | null
+  email:        string | null
+  color:        string
+  avatar_url:   string | null
+  portal_token: string
+  is_active:    boolean
+  created_at:   string
+  updated_at:   string
+}
+
+export interface TeamTask {
+  id:                string
+  title:             string
+  description:       string | null
+  status:            string
+  priority:          string
+  due_date:          string | null
+  collaborator_note: string | null
+  delivery_url:      string | null
+  created_at:        string
+  updated_at:        string
+  client_id:         string | null
+  assignee_id:       string | null
+  clients:           { id: string; name: string } | null
+}
+
+// ── Leitura ───────────────────────────────────────────────────────────────────
+
+export function useTeamMembers() {
+  const { user } = useAuth()
+
+  return useQuery<TeamMember[]>({
+    queryKey: ['team_members', user?.id],
+    enabled:  !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('team_members')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('name')
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
+export function useTeamTasks() {
+  const { user } = useAuth()
+
+  return useQuery<TeamTask[]>({
+    queryKey: ['team_tasks', user?.id],
+    enabled:  !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('tasks')
+        .select(`
+          id, title, description, status, priority, due_date,
+          collaborator_note, delivery_url, created_at, updated_at,
+          client_id, assignee_id,
+          clients(id, name)
+        `)
+        .eq('user_id', user!.id)
+        .not('assignee_id', 'is', null)
+        .order('due_date', { ascending: true, nullsFirst: false })
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
+// ── Criação ───────────────────────────────────────────────────────────────────
+
+export function useCreateTeamMember() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (member: Pick<TeamMember, 'name' | 'role' | 'whatsapp' | 'email' | 'color'>) => {
+      const { data, error } = await (supabase as any)
+        .from('team_members')
+        .insert({ ...member, user_id: user!.id })
+        .select()
+        .single()
+      if (error) throw error
+      return data as TeamMember
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team_members'] }),
+  })
+}
+
+// ── Edição ────────────────────────────────────────────────────────────────────
+
+export function useUpdateTeamMember() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<TeamMember> & { id: string }) => {
+      const { error } = await (supabase as any)
+        .from('team_members')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team_members'] }),
+  })
+}
+
+// ── Remoção (soft delete) ─────────────────────────────────────────────────────
+
+export function useDeleteTeamMember() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from('team_members')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team_members'] }),
+  })
+}
+
+// ── Delegar tarefa ────────────────────────────────────────────────────────────
+
+export function useDelegateTask() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ task_id, assignee_id }: { task_id: string; assignee_id: string | null }) => {
+      const { error } = await (supabase as any)
+        .from('tasks')
+        .update({ assignee_id, updated_at: new Date().toISOString() })
+        .eq('id', task_id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['team_tasks'] })
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
