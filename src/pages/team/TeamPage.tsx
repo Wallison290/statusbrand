@@ -13,7 +13,7 @@ import { useUpdateTask, useDeleteTask as useDeleteTaskHook } from '@/hooks/useTa
 import {
   useTeamMembers, useTeamTasks,
   useCreateTeamMember, useUpdateTeamMember, useDeleteTeamMember,
-  useCreateAndDelegateTask,
+  useCreateAndDelegateTask, useDelegateTask,
   type TeamMember, type TeamTask,
 } from '@/hooks/useTeamMembers'
 
@@ -926,15 +926,40 @@ function MemberCard({
 
 // ── Card de Tarefa ────────────────────────────────────────────────────────────
 
-function TaskCard({ task, member }: { task: TeamTask; member?: TeamMember }) {
+function TaskCard({
+  task,
+  member,
+  onEdit,
+  onDragStart,
+  onDragEnd,
+  isDragging,
+}: {
+  task: TeamTask
+  member?: TeamMember
+  onEdit?: () => void
+  onDragStart?: (e: React.DragEvent) => void
+  onDragEnd?: () => void
+  isDragging?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const st  = STATUS_CONFIG[task.status]   ?? STATUS_CONFIG.a_fazer
   const pri = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.media
   const overdue = isOverdue(task.due_date, task.status)
 
   return (
-    <div className="bg-white rounded-xl border border-[#e8e8e8] p-3 space-y-2 hover:border-[#d0d0d0] transition-colors">
-      {/* Título + prioridade */}
+    <div
+      draggable={!!onDragStart}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className={`bg-white rounded-xl border p-3 space-y-2 transition-all select-none ${
+        onDragStart ? 'cursor-grab active:cursor-grabbing' : ''
+      } ${
+        isDragging
+          ? 'border-violet-400 shadow-lg opacity-40 scale-95'
+          : 'border-[#e8e8e8] hover:border-[#d0d0d0]'
+      }`}
+    >
+      {/* Título + prioridade + editar */}
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-[12.5px] font-medium text-[#0f172a] leading-snug line-clamp-2">{task.title}</p>
@@ -945,12 +970,24 @@ function TaskCard({ task, member }: { task: TeamTask; member?: TeamMember }) {
             <p className="text-[10.5px] text-[#94a3b8] mt-0.5">📌 Interno</p>
           )}
         </div>
-        <span
-          className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ color: pri.color, backgroundColor: `${pri.color}18` }}
-        >
-          {pri.label}
-        </span>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span
+            className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full"
+            style={{ color: pri.color, backgroundColor: `${pri.color}18` }}
+          >
+            {pri.label}
+          </span>
+          {onEdit && (
+            <button
+              onMouseDown={e => e.stopPropagation()}
+              onClick={e => { e.stopPropagation(); onEdit() }}
+              title="Editar demanda"
+              className="w-5 h-5 rounded flex items-center justify-center text-[#c0c0c0] hover:text-violet-600 hover:bg-violet-50 transition-colors"
+            >
+              <Pencil className="w-2.5 h-2.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Status + prazo */}
@@ -996,7 +1033,7 @@ function TaskCard({ task, member }: { task: TeamTask; member?: TeamMember }) {
         </div>
       )}
 
-      {/* Membro responsável (mostrado no board "todos") */}
+      {/* Membro responsável (mostrado no board por status) */}
       {member && (
         <div className="flex items-center gap-1.5 pt-1 border-t border-[#f8f8f8]">
           <div
@@ -1012,16 +1049,68 @@ function TaskCard({ task, member }: { task: TeamTask; member?: TeamMember }) {
   )
 }
 
+// ── Modal de edição de tarefa no board ───────────────────────────────────────
+
+function BoardTaskEditModal({
+  task,
+  clients,
+  onClose,
+  onSaved,
+}: {
+  task: TeamTask
+  clients: { id: string; company_name: string }[]
+  onClose: () => void
+  onSaved: (updates: Record<string, unknown>) => Promise<void>
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[14px] font-bold text-[#0f172a]">Editar demanda</h3>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center"
+          >
+            <X className="w-4 h-4 text-[#94a3b8]" />
+          </button>
+        </div>
+        <TaskEditPanel
+          task={task}
+          clients={clients}
+          onSave={onSaved}
+          onCancel={onClose}
+        />
+      </motion.div>
+    </div>
+  )
+}
+
 // ── Board ─────────────────────────────────────────────────────────────────────
 
 type BoardView = 'responsavel' | 'status'
 
-function Board({ tasks, members, filteredMemberId }: {
+function Board({ tasks, members, clients, filteredMemberId }: {
   tasks: TeamTask[]
   members: TeamMember[]
+  clients: { id: string; company_name: string }[]
   filteredMemberId: string | null
 }) {
+  const { toast } = useToast()
   const [view, setView] = useState<BoardView>('responsavel')
+  const [dragTaskId,       setDragTaskId]       = useState<string | null>(null)
+  const [dragOverMemberId, setDragOverMemberId] = useState<string | null>(null)
+  const [editingTask,      setEditingTask]      = useState<TeamTask | null>(null)
+  const delegateTask = useDelegateTask()
+  const updateTask   = useUpdateTask()
 
   const filteredTasks = filteredMemberId
     ? tasks.filter(t => t.assignee_id === filteredMemberId)
@@ -1030,6 +1119,33 @@ function Board({ tasks, members, filteredMemberId }: {
   const memberMap = useMemo(() =>
     Object.fromEntries(members.map(m => [m.id, m])), [members])
 
+  // ── Drag-and-drop: mudar responsável ─────────────────────────────────────
+  const handleDrop = async (targetMemberId: string) => {
+    if (!dragTaskId) return
+    const task = tasks.find(t => t.id === dragTaskId)
+    if (!task || task.assignee_id === targetMemberId) {
+      setDragTaskId(null); setDragOverMemberId(null); return
+    }
+    try {
+      await delegateTask.mutateAsync({ task_id: dragTaskId, assignee_id: targetMemberId })
+      const target = members.find(m => m.id === targetMemberId)
+      toast(`Demanda transferida para ${target?.name ?? 'membro'}`, 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setDragTaskId(null); setDragOverMemberId(null)
+    }
+  }
+
+  // ── Edição a partir do board ──────────────────────────────────────────────
+  const handleSaveEdit = async (updates: Record<string, unknown>) => {
+    if (!editingTask) return
+    await (updateTask.mutateAsync as any)({ id: editingTask.id, ...updates })
+    toast('Tarefa atualizada!', 'success')
+    setEditingTask(null)
+  }
+
+  // ── View por responsável ──────────────────────────────────────────────────
   if (view === 'responsavel') {
     const visibleMembers = filteredMemberId
       ? members.filter(m => m.id === filteredMemberId)
@@ -1041,22 +1157,75 @@ function Board({ tasks, members, filteredMemberId }: {
         <div className="flex gap-4 overflow-x-auto pb-4">
           {visibleMembers.map(member => {
             const memberTasks = filteredTasks.filter(t => t.assignee_id === member.id)
+            const isDragOver  = dragOverMemberId === member.id && !!dragTaskId
+
             return (
-              <div key={member.id} className="flex-shrink-0 w-72">
-                <div className="flex items-center gap-2 mb-3">
+              <div
+                key={member.id}
+                className="flex-shrink-0 w-72"
+                onDragOver={e => { e.preventDefault(); setDragOverMemberId(member.id) }}
+                onDragLeave={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverMemberId(null)
+                  }
+                }}
+                onDrop={() => handleDrop(member.id)}
+              >
+                {/* Cabeçalho da coluna */}
+                <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-xl transition-colors ${
+                  isDragOver ? 'bg-violet-50 ring-2 ring-violet-200' : ''
+                }`}>
                   <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
                     style={{ backgroundColor: member.color }}
                   >
                     {member.name[0].toUpperCase()}
                   </div>
-                  <span className="text-[12px] font-semibold text-[#0f172a]">{member.name}</span>
-                  <span className="ml-auto text-[10px] text-[#94a3b8]">{memberTasks.length} tarefa{memberTasks.length !== 1 ? 's' : ''}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-[#0f172a] truncate">{member.name}</p>
+                    {member.role && (
+                      <p className="text-[10px] text-[#94a3b8] truncate">{member.role}</p>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-[#94a3b8] flex-shrink-0">
+                    {memberTasks.length} tarefa{memberTasks.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  {memberTasks.length === 0
-                    ? <p className="text-[11px] text-[#94a3b8] text-center py-6 border border-dashed border-[#e2e8f0] rounded-xl">Sem tarefas</p>
-                    : memberTasks.map(t => <TaskCard key={t.id} task={t} />)}
+
+                {/* Zona de drop */}
+                <div className={`space-y-2 min-h-[80px] rounded-xl p-1 transition-colors ${
+                  isDragOver ? 'bg-violet-50/60' : ''
+                }`}>
+                  {memberTasks.length === 0 ? (
+                    <p className={`text-[11px] text-center py-8 border-2 border-dashed rounded-xl transition-colors ${
+                      isDragOver
+                        ? 'border-violet-400 text-violet-500 bg-white'
+                        : 'border-[#e2e8f0] text-[#94a3b8]'
+                    }`}>
+                      {isDragOver ? '↓ Soltar aqui' : 'Sem tarefas'}
+                    </p>
+                  ) : (
+                    memberTasks.map(t => (
+                      <TaskCard
+                        key={t.id}
+                        task={t}
+                        onEdit={() => setEditingTask(t)}
+                        onDragStart={e => {
+                          e.dataTransfer.effectAllowed = 'move'
+                          setDragTaskId(t.id)
+                        }}
+                        onDragEnd={() => {
+                          setDragTaskId(null)
+                          setDragOverMemberId(null)
+                        }}
+                        isDragging={dragTaskId === t.id}
+                      />
+                    ))
+                  )}
+                  {/* Drop target quando a coluna já tem tarefas */}
+                  {isDragOver && memberTasks.length > 0 && (
+                    <div className="h-1.5 rounded-full bg-violet-400 mx-1 animate-pulse" />
+                  )}
                 </div>
               </div>
             )
@@ -1065,38 +1234,64 @@ function Board({ tasks, members, filteredMemberId }: {
             <p className="text-[13px] text-[#94a3b8]">Nenhum membro encontrado</p>
           )}
         </div>
+
+        <AnimatePresence>
+          {editingTask && (
+            <BoardTaskEditModal
+              task={editingTask}
+              clients={clients}
+              onClose={() => setEditingTask(null)}
+              onSaved={handleSaveEdit}
+            />
+          )}
+        </AnimatePresence>
       </div>
     )
   }
 
-  // View por status
+  // ── View por status ───────────────────────────────────────────────────────
   const statuses = ['a_fazer', 'em_andamento', 'revisao', 'concluido']
   return (
     <div>
       <ViewTabs view={view} onChange={setView} />
       <div className="flex gap-4 overflow-x-auto pb-4">
         {statuses.map(status => {
-          const st    = STATUS_CONFIG[status]
+          const st      = STATUS_CONFIG[status]
           const stTasks = filteredTasks.filter(t => t.status === status)
           return (
             <div key={status} className="flex-shrink-0 w-64">
               <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: st.color }}
-                />
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
                 <span className="text-[12px] font-semibold text-[#0f172a]">{st.label}</span>
                 <span className="ml-auto text-[10px] text-[#94a3b8]">{stTasks.length}</span>
               </div>
               <div className="space-y-2">
                 {stTasks.length === 0
                   ? <p className="text-[11px] text-[#94a3b8] text-center py-6 border border-dashed border-[#e2e8f0] rounded-xl">Vazio</p>
-                  : stTasks.map(t => <TaskCard key={t.id} task={t} member={memberMap[t.assignee_id ?? '']} />)}
+                  : stTasks.map(t => (
+                      <TaskCard
+                        key={t.id}
+                        task={t}
+                        member={memberMap[t.assignee_id ?? '']}
+                        onEdit={() => setEditingTask(t)}
+                      />
+                    ))}
               </div>
             </div>
           )
         })}
       </div>
+
+      <AnimatePresence>
+        {editingTask && (
+          <BoardTaskEditModal
+            task={editingTask}
+            clients={clients}
+            onClose={() => setEditingTask(null)}
+            onSaved={handleSaveEdit}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -1348,6 +1543,7 @@ export function TeamPage() {
               <Board
                 tasks={tasks}
                 members={members.filter(m => m.is_active)}
+                clients={clients}
                 filteredMemberId={filteredMemberId}
               />
             )}
