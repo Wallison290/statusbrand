@@ -9,6 +9,7 @@ import {
 import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
 import { useClients } from '@/hooks/useClients'
+import { useUpdateTask, useDeleteTask as useDeleteTaskHook } from '@/hooks/useTasks'
 import {
   useTeamMembers, useTeamTasks,
   useCreateTeamMember, useUpdateTeamMember, useDeleteTeamMember,
@@ -50,6 +51,432 @@ function formatDate(date: string | null) {
 function isOverdue(date: string | null, status: string) {
   if (!date || status === 'concluido') return false
   return new Date(date) < new Date(new Date().toDateString())
+}
+
+// ── Formulário de edição de tarefa (inline no modal do membro) ───────────────
+
+function TaskEditPanel({
+  task,
+  clients,
+  onSave,
+  onCancel,
+}: {
+  task: TeamTask
+  clients: { id: string; company_name: string }[]
+  onSave: (updates: Record<string, unknown>) => Promise<void>
+  onCancel: () => void
+}) {
+  const [title,    setTitle]   = useState(task.title)
+  const [desc,     setDesc]    = useState(task.description ?? '')
+  const [dueDate,  setDueDate] = useState(task.due_date ?? '')
+  const [priority, setPri]     = useState(task.priority)
+  const [status,   setStatus]  = useState(task.status)
+  const [clientId, setClient]  = useState<string>(task.client_id ?? '__none__')
+  const [saving,   setSaving]  = useState(false)
+
+  const handleSave = async () => {
+    if (!title.trim()) return
+    setSaving(true)
+    try {
+      await onSave({
+        title:     title.trim(),
+        description: desc || null,
+        due_date:  dueDate || null,
+        priority,
+        status,
+        client_id: clientId === '__none__' ? null : clientId,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-[#f8fafc] rounded-xl p-3 mt-2 space-y-3 border border-[#e2e8f0]">
+      {/* Título */}
+      <div>
+        <label className="text-[10px] font-medium text-[#64748b] block mb-1">Título</label>
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          className="w-full h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+      </div>
+
+      {/* Descrição */}
+      <div>
+        <label className="text-[10px] font-medium text-[#64748b] block mb-1">Descrição</label>
+        <textarea
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
+          rows={2}
+          className="w-full px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {/* Data */}
+        <div>
+          <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prazo</label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          />
+        </div>
+
+        {/* Prioridade */}
+        <div>
+          <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prioridade</label>
+          <select
+            value={priority}
+            onChange={e => setPri(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          >
+            <option value="baixa">Baixa</option>
+            <option value="media">Normal</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="text-[10px] font-medium text-[#64748b] block mb-1">Status</label>
+          <select
+            value={status}
+            onChange={e => setStatus(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          >
+            <option value="a_fazer">A fazer</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="revisao">Em revisão</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+
+        {/* Cliente */}
+        <div>
+          <label className="text-[10px] font-medium text-[#64748b] block mb-1">Cliente</label>
+          <select
+            value={clientId}
+            onChange={e => setClient(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          >
+            <option value="__none__">Interno</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>{c.company_name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Entrega do colaborador (read-only) */}
+      {(task.collaborator_note || task.delivery_url) && (
+        <div className="bg-violet-50 rounded-lg p-2 space-y-1">
+          <p className="text-[10px] font-semibold text-violet-700 mb-1">Entrega do colaborador</p>
+          {task.collaborator_note && (
+            <p className="text-[11px] text-violet-800">📝 {task.collaborator_note}</p>
+          )}
+          {task.delivery_url && (
+            <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[11px] text-violet-700 underline hover:text-violet-900">
+              <ExternalLink className="w-3 h-3" /> Ver entrega
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Botões */}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={handleSave}
+          disabled={saving || !title.trim()}
+          className="flex-1 h-8 rounded-lg bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 disabled:opacity-60 flex items-center justify-center gap-1.5"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+          Salvar
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex-1 h-8 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-[#f1f5f9]"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Modal de detalhe do membro ────────────────────────────────────────────────
+
+function MemberDetailModal({
+  member,
+  allTasks,
+  clients,
+  onClose,
+  onNewTask,
+}: {
+  member: TeamMember
+  allTasks: TeamTask[]
+  clients: { id: string; company_name: string }[]
+  onClose: () => void
+  onNewTask: () => void
+}) {
+  const { toast } = useToast()
+  const updateTask = useUpdateTask()
+  const deleteTaskMutation = useDeleteTaskHook()
+  const [expandedId, setExpanded] = useState<string | null>(null)
+  const [deletingId,  setDeletingId] = useState<string | null>(null)
+
+  const memberTasks = allTasks.filter(t => t.assignee_id === member.id)
+  const initial = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+
+  // Ordena: não concluídas primeiro, depois por prazo
+  const sorted = [...memberTasks].sort((a, b) => {
+    if (a.status === 'concluido' && b.status !== 'concluido') return 1
+    if (a.status !== 'concluido' && b.status === 'concluido') return -1
+    if (!a.due_date && !b.due_date) return 0
+    if (!a.due_date) return 1
+    if (!b.due_date) return -1
+    return a.due_date.localeCompare(b.due_date)
+  })
+
+  const handleSaveTask = async (taskId: string, updates: Record<string, unknown>) => {
+    try {
+      await (updateTask.mutateAsync as any)({ id: taskId, ...updates })
+      toast('Tarefa atualizada!', 'success')
+      setExpanded(null)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTaskMutation.mutateAsync(taskId)
+      toast('Demanda removida.', 'success')
+      setDeletingId(null)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  const pending   = memberTasks.filter(t => t.status !== 'concluido').length
+  const concluded = memberTasks.filter(t => t.status === 'concluido').length
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-end bg-black/40"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 40 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white h-full w-full max-w-md flex flex-col shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header do membro */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#f1f5f9] flex-shrink-0">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
+            style={{ backgroundColor: member.color }}
+          >
+            {member.avatar_url
+              ? <img src={member.avatar_url} alt={member.name} className="w-full h-full rounded-full object-cover" />
+              : initial}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-[#0f172a] truncate">{member.name}</p>
+            <p className="text-[11px] text-[#94a3b8]">{member.role || 'Sem cargo'}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { onClose(); onNewTask() }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-violet-600 text-white text-[11px] font-semibold hover:bg-violet-700 transition-colors"
+            >
+              <Plus className="w-3 h-3" /> Demanda
+            </button>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center"
+            >
+              <X className="w-4 h-4 text-[#94a3b8]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Contato */}
+        {(member.whatsapp || member.email) && (
+          <div className="px-5 py-2 border-b border-[#f8fafc] flex gap-4 flex-shrink-0">
+            {member.whatsapp && (
+              <a href={`https://wa.me/${member.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[11px] text-[#64748b] hover:text-green-600 transition-colors">
+                <Phone className="w-3 h-3" /> {member.whatsapp}
+              </a>
+            )}
+            {member.email && (
+              <a href={`mailto:${member.email}`}
+                className="flex items-center gap-1.5 text-[11px] text-[#64748b] hover:text-blue-600 transition-colors">
+                <Mail className="w-3 h-3" /> {member.email}
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Resumo de tarefas */}
+        <div className="px-5 py-2.5 border-b border-[#f8fafc] flex gap-4 flex-shrink-0">
+          <span className="text-[11px] text-[#94a3b8]">
+            <strong className="text-[#0f172a]">{memberTasks.length}</strong> total
+          </span>
+          <span className="text-[11px] text-amber-600">
+            <strong>{pending}</strong> pendente{pending !== 1 ? 's' : ''}
+          </span>
+          <span className="text-[11px] text-emerald-600">
+            <strong>{concluded}</strong> concluída{concluded !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Lista de tarefas */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+          {sorted.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <ClipboardList className="w-9 h-9 text-[#cbd5e1]" />
+              <p className="text-[13px] text-[#94a3b8] font-medium">Nenhuma demanda atribuída</p>
+              <button
+                onClick={() => { onClose(); onNewTask() }}
+                className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-700"
+              >
+                Criar primeira demanda
+              </button>
+            </div>
+          ) : (
+            sorted.map(task => {
+              const st  = STATUS_CONFIG[task.status]   ?? STATUS_CONFIG.a_fazer
+              const pri = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.media
+              const overdue = isOverdue(task.due_date, task.status)
+              const isExpanded = expandedId === task.id
+              const isDeleting = deletingId === task.id
+
+              return (
+                <div
+                  key={task.id}
+                  className={`rounded-xl border transition-all ${
+                    task.status === 'concluido'
+                      ? 'border-[#e2e8f0] bg-[#fafafa] opacity-70'
+                      : 'border-[#e8e8e8] bg-white hover:border-[#d0d0d0]'
+                  }`}
+                >
+                  {/* Linha principal da tarefa */}
+                  <div className="p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[12.5px] font-semibold leading-snug ${
+                          task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#0f172a]'
+                        }`}>
+                          {task.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          {/* Status */}
+                          <span
+                            className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ color: st.color, backgroundColor: st.bg }}
+                          >
+                            {st.label}
+                          </span>
+                          {/* Prioridade */}
+                          <span
+                            className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ color: pri.color, backgroundColor: `${pri.color}18` }}
+                          >
+                            {pri.label}
+                          </span>
+                          {/* Cliente */}
+                          {task.clients && (
+                            <span className="text-[10px] text-blue-500 truncate max-w-[100px]">
+                              {task.clients.company_name}
+                            </span>
+                          )}
+                          {/* Prazo */}
+                          {task.due_date && (
+                            <span className={`text-[10px] ${overdue ? 'text-red-500 font-medium' : 'text-[#94a3b8]'}`}>
+                              {overdue ? '⚠️ ' : '📅 '}{formatDate(task.due_date)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Botões ação */}
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => setExpanded(isExpanded ? null : task.id)}
+                          title="Editar"
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                            isExpanded ? 'bg-violet-100 text-violet-600' : 'text-[#c0c0c0] hover:bg-[#f1f5f9] hover:text-[#0f172a]'
+                          }`}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(task.id)}
+                          title="Remover"
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#d0d0d0] hover:bg-red-50 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirmação inline de exclusão */}
+                    {isDeleting && (
+                      <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-lg px-2.5 py-2">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                        <span className="text-[11px] text-red-600 flex-1">Remover esta demanda?</span>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-[11px] font-semibold text-red-600 hover:text-red-800 px-1"
+                        >
+                          Sim
+                        </button>
+                        <button
+                          onClick={() => setDeletingId(null)}
+                          className="text-[11px] text-[#64748b] hover:text-[#0f172a] px-1"
+                        >
+                          Não
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Formulário de edição */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden px-3 pb-3"
+                      >
+                        <TaskEditPanel
+                          task={task}
+                          clients={clients}
+                          onSave={updates => handleSaveTask(task.id, updates)}
+                          onCancel={() => setExpanded(null)}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
 }
 
 // ── Modal de Membro ───────────────────────────────────────────────────────────
@@ -367,15 +794,14 @@ function NewTaskModal({
 // ── Card de Membro ────────────────────────────────────────────────────────────
 
 function MemberCard({
-  member, taskCount, onEdit, onDelete, onFilter, onNewTask, isFiltered,
+  member, taskCount, onEdit, onDelete, onNewTask, onOpenDetail,
 }: {
   member: TeamMember
   taskCount: number
   onEdit: () => void
   onDelete: () => void
-  onFilter: () => void
   onNewTask: () => void
-  isFiltered: boolean
+  onOpenDetail: () => void
 }) {
   const { toast } = useToast()
   const initial = member.name[0].toUpperCase()
@@ -387,10 +813,8 @@ function MemberCard({
 
   return (
     <div
-      className={`rounded-2xl border p-4 flex flex-col gap-3 transition-all cursor-pointer ${
-        isFiltered ? 'border-violet-400 bg-violet-50' : 'border-[#e8e8e8] bg-white hover:border-[#d0d0d0]'
-      }`}
-      onClick={onFilter}
+      className="rounded-2xl border border-[#e8e8e8] bg-white p-4 flex flex-col gap-3 transition-all cursor-pointer hover:border-violet-300 hover:shadow-md hover:shadow-violet-50 group"
+      onClick={onOpenDetail}
     >
       {/* Avatar + info */}
       <div className="flex items-center gap-3">
@@ -745,6 +1169,7 @@ export function TeamPage() {
   const [deletingMember,   setDeleting]    = useState<TeamMember | undefined>()
   const [filteredMemberId, setFiltered]    = useState<string | null>(null)
   const [newTaskMember,    setNewTaskMember] = useState<TeamMember | undefined>()
+  const [detailMember,     setDetailMember] = useState<TeamMember | undefined>()
 
   const activeMembersWithCount = useMemo(() =>
     members
@@ -834,9 +1259,8 @@ export function TeamPage() {
                     taskCount={count}
                     onEdit={() => openEdit(member)}
                     onDelete={() => setDeleting(member)}
-                    onFilter={() => setFiltered(f => f === member.id ? null : member.id)}
                     onNewTask={() => setNewTaskMember(member)}
-                    isFiltered={filteredMemberId === member.id}
+                    onOpenDetail={() => setDetailMember(member)}
                   />
                 ))}
               </div>
@@ -936,6 +1360,15 @@ export function TeamPage() {
             member={newTaskMember}
             clients={clients}
             onClose={() => setNewTaskMember(undefined)}
+          />
+        )}
+        {detailMember && (
+          <MemberDetailModal
+            member={detailMember}
+            allTasks={tasks}
+            clients={clients}
+            onClose={() => setDetailMember(undefined)}
+            onNewTask={() => { setDetailMember(undefined); setNewTaskMember(detailMember) }}
           />
         )}
       </AnimatePresence>
