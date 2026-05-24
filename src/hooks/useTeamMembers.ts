@@ -184,10 +184,26 @@ export function useDelegateTask() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ task_id, assignee_id }: { task_id: string; assignee_id: string | null }) => {
+    // assignee = nome do membro (campo texto exibido na aba Tarefas)
+    mutationFn: async ({
+      task_id,
+      assignee_id,
+      assignee,
+    }: {
+      task_id:     string
+      assignee_id: string | null
+      assignee?:   string | null   // nome para exibição na aba Tarefas
+    }) => {
+      const payload: Record<string, unknown> = {
+        assignee_id,
+        updated_at: new Date().toISOString(),
+      }
+      // Só inclui assignee se foi fornecido (evita apagar quando não necessário)
+      if (assignee !== undefined) payload.assignee = assignee
+
       const { error } = await (supabase as any)
         .from('tasks')
-        .update({ assignee_id, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', task_id)
       if (error) throw error
     },

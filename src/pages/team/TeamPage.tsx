@@ -1122,13 +1122,19 @@ function Board({ tasks, members, clients, filteredMemberId }: {
   // ── Drag-and-drop: mudar responsável ─────────────────────────────────────
   const handleDrop = async (targetMemberId: string) => {
     if (!dragTaskId) return
-    const task = tasks.find(t => t.id === dragTaskId)
+    const task   = tasks.find(t => t.id === dragTaskId)
+    const target = members.find(m => m.id === targetMemberId)
     if (!task || task.assignee_id === targetMemberId) {
       setDragTaskId(null); setDragOverMemberId(null); return
     }
     try {
-      await delegateTask.mutateAsync({ task_id: dragTaskId, assignee_id: targetMemberId })
-      const target = members.find(m => m.id === targetMemberId)
+      // Passa assignee_id (FK) + assignee (nome em texto) — ambos os campos
+      // precisam ser atualizados para a aba Tarefas refletir o novo responsável
+      await delegateTask.mutateAsync({
+        task_id:     dragTaskId,
+        assignee_id: targetMemberId,
+        assignee:    target?.name ?? null,
+      })
       toast(`Demanda transferida para ${target?.name ?? 'membro'}`, 'success')
     } catch (err: any) {
       toast(err.message, 'error')
