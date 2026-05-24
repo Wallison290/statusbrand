@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, X, Check, Loader2, Copy, ExternalLink,
@@ -43,14 +43,21 @@ function getPortalUrl(token: string) {
   return `${window.location.origin}/colaborador/${token}`
 }
 
+// Evita o bug de fuso horário: 'YYYY-MM-DD' interpretado como UTC converte
+// para o dia anterior em UTC-3. Parseando a string diretamente resolvemos.
 function formatDate(date: string | null) {
   if (!date) return '—'
-  return new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const d = date.split('T')[0] // garante só a parte da data
+  const [, mm, dd] = d.split('-')
+  return `${dd}/${mm}`
 }
 
 function isOverdue(date: string | null, status: string) {
   if (!date || status === 'concluido') return false
-  return new Date(date) < new Date(new Date().toDateString())
+  // Comparação como string YYYY-MM-DD é segura e sem fuso
+  const today = new Date()
+  const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return date.split('T')[0] < ymd
 }
 
 // ── Formulário de edição de tarefa (inline no modal do membro) ───────────────
@@ -230,11 +237,20 @@ function MemberDetailModal({
   const [expandedId, setExpanded] = useState<string | null>(null)
   const [deletingId,  setDeletingId] = useState<string | null>(null)
 
-  const memberTasks = allTasks.filter(t => t.assignee_id === member.id)
+  // Estado local para atualização otimista (mostra mudanças imediatamente sem esperar refetch)
+  const [localTasks, setLocalTasks] = useState<TeamTask[]>(
+    () => allTasks.filter(t => t.assignee_id === member.id)
+  )
+
+  // Sincroniza quando o React Query recarrega os dados (ex: nova tarefa criada externamente)
+  useEffect(() => {
+    setLocalTasks(allTasks.filter(t => t.assignee_id === member.id))
+  }, [allTasks, member.id])
+
   const initial = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 
   // Ordena: não concluídas primeiro, depois por prazo
-  const sorted = [...memberTasks].sort((a, b) => {
+  const sorted = [...localTasks].sort((a, b) => {
     if (a.status === 'concluido' && b.status !== 'concluido') return 1
     if (a.status !== 'concluido' && b.status === 'concluido') return -1
     if (!a.due_date && !b.due_date) return 0
@@ -246,6 +262,21 @@ function MemberDetailModal({
   const handleSaveTask = async (taskId: string, updates: Record<string, unknown>) => {
     try {
       await (updateTask.mutateAsync as any)({ id: taskId, ...updates })
+      // Atualização otimista: aplica mudanças localmente antes do refetch
+      setLocalTasks(prev => prev.map(t =>
+        t.id === taskId
+          ? {
+              ...t,
+              ...(updates as Partial<TeamTask>),
+              // Atualiza o objeto clients se client_id mudou
+              clients: updates.client_id
+                ? (clients.find(c => c.id === updates.client_id)
+                    ? { id: updates.client_id as string, company_name: clients.find(c => c.id === updates.client_id)!.company_name }
+                    : null)
+                : updates.client_id === null ? null : t.clients,
+            }
+          : t
+      ))
       toast('Tarefa atualizada!', 'success')
       setExpanded(null)
     } catch (err: any) {
@@ -256,6 +287,8 @@ function MemberDetailModal({
   const handleDeleteTask = async (taskId: string) => {
     try {
       await deleteTaskMutation.mutateAsync(taskId)
+      // Atualização otimista: remove localmente imediatamente
+      setLocalTasks(prev => prev.filter(t => t.id !== taskId))
       toast('Demanda removida.', 'success')
       setDeletingId(null)
     } catch (err: any) {
@@ -263,8 +296,8 @@ function MemberDetailModal({
     }
   }
 
-  const pending   = memberTasks.filter(t => t.status !== 'concluido').length
-  const concluded = memberTasks.filter(t => t.status === 'concluido').length
+  const pending   = localTasks.filter(t => t.status !== 'concluido').length
+  const concluded = localTasks.filter(t => t.status === 'concluido').length
 
   return (
     <div
@@ -330,7 +363,7 @@ function MemberDetailModal({
         {/* Resumo de tarefas */}
         <div className="px-5 py-2.5 border-b border-[#f8fafc] flex gap-4 flex-shrink-0">
           <span className="text-[11px] text-[#94a3b8]">
-            <strong className="text-[#0f172a]">{memberTasks.length}</strong> total
+            <strong className="text-[#0f172a]">{localTasks.length}</strong> total
           </span>
           <span className="text-[11px] text-amber-600">
             <strong>{pending}</strong> pendente{pending !== 1 ? 's' : ''}

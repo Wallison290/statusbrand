@@ -37,9 +37,9 @@ export function useUpdateTask() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tasks')
-        .update({ ...updates, updated_at: new Date().toISOString() } as any)
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
         .single()
