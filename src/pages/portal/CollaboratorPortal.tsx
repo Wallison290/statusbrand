@@ -298,8 +298,61 @@ function TaskDetailModal({
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Referências e materiais ({links.length})
               </p>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {links.map(link => {
+                  // ── Prévia de imagem ──
+                  if (link.type === 'imagem') {
+                    return (
+                      <div key={link.id} className="rounded-2xl overflow-hidden border border-slate-200">
+                        <img
+                          src={link.url}
+                          alt={link.label}
+                          className="w-full max-h-72 object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                        <div className="flex items-center justify-between px-3 py-2.5 bg-white">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-pink-500 bg-pink-50">
+                              <LinkTypeIcon type="imagem" className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-sm font-medium text-slate-700 truncate">{link.label}</span>
+                          </div>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-slate-300 hover:text-violet-500 ml-2 flex-shrink-0 transition-colors">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  // ── Prévia de vídeo ──
+                  if (link.type === 'video') {
+                    return (
+                      <div key={link.id} className="rounded-2xl overflow-hidden border border-slate-200">
+                        <video
+                          src={link.url}
+                          controls
+                          className="w-full max-h-72 bg-black"
+                          preload="metadata"
+                        />
+                        <div className="flex items-center justify-between px-3 py-2.5 bg-white">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-red-500 bg-red-50">
+                              <LinkTypeIcon type="video" className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-sm font-medium text-slate-700 truncate">{link.label}</span>
+                          </div>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-slate-300 hover:text-violet-500 ml-2 flex-shrink-0 transition-colors">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  // ── Outros tipos: link, arquivo, pasta ──
                   const colorCls = LINK_TYPE_COLORS[link.type] ?? 'text-blue-500 bg-blue-50'
                   return (
                     <a
