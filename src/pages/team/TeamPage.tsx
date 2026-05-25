@@ -5,7 +5,7 @@ import {
   Pencil, Trash2, AlertCircle, Phone, Mail,
   Users, ClipboardList, ChevronDown, Plus,
   Calendar, Flag, Building2,
-  Link as LinkIcon, Image, Film, FileText as FileIcon, Folder, Upload,
+  Link as LinkIcon, Image, Film, FileText as FileIcon, Folder,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
@@ -64,18 +64,6 @@ function isOverdue(date: string | null, status: string) {
 
 // ── Helpers de link ───────────────────────────────────────────────────────────
 
-const LINK_TYPES: { value: TaskLink['type']; label: string; Icon: React.FC<{ className?: string }> }[] = [
-  { value: 'link',    label: 'Link',    Icon: LinkIcon  },
-  { value: 'imagem',  label: 'Imagem',  Icon: Image     },
-  { value: 'video',   label: 'Vídeo',   Icon: Film      },
-  { value: 'arquivo', label: 'Arquivo', Icon: FileIcon  },
-  { value: 'pasta',   label: 'Pasta',   Icon: Folder    },
-]
-
-function getLinkIcon(type: TaskLink['type']) {
-  return LINK_TYPES.find(t => t.value === type)?.Icon ?? LinkIcon
-}
-
 function nanoid() {
   return Math.random().toString(36).slice(2, 10)
 }
@@ -89,6 +77,22 @@ function mimeToLinkType(mime: string): TaskLink['type'] {
 
 // ── Editor de links reutilizável ──────────────────────────────────────────────
 
+// Configuração de cada tipo: ícone, rótulo, accept do input e se é upload
+const LINK_TYPE_CONFIG: {
+  value:  TaskLink['type']
+  label:  string
+  Icon:   React.FC<{ className?: string }>
+  upload: boolean
+  accept?: string
+  color:  string
+}[] = [
+  { value: 'link',    label: 'Link',    Icon: LinkIcon, upload: false, color: 'text-violet-600' },
+  { value: 'imagem',  label: 'Imagem',  Icon: Image,    upload: true,  accept: 'image/*',         color: 'text-sky-600'    },
+  { value: 'video',   label: 'Vídeo',   Icon: Film,     upload: true,  accept: 'video/*',         color: 'text-pink-600'   },
+  { value: 'arquivo', label: 'Arquivo', Icon: FileIcon, upload: true,  accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv', color: 'text-amber-600' },
+  { value: 'pasta',   label: 'Pasta',   Icon: Folder,   upload: true,  accept: '*',               color: 'text-emerald-600'},
+]
+
 function LinksEditor({
   links,
   onChange,
@@ -101,25 +105,33 @@ function LinksEditor({
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [addingLink,   setAddingLink]   = useState(false)
-  const [newLinkLabel, setNewLinkLabel] = useState('')
-  const [newLinkUrl,   setNewLinkUrl]   = useState('')
-  const [newLinkType,  setNewLinkType]  = useState<TaskLink['type']>('link')
-  const [uploading,    setUploading]    = useState(false)
+  // null = fechado | 'picker' = selecionando tipo | TaskLink['type'] = form aberto
+  const [step, setStep] = useState<null | 'picker' | TaskLink['type']>(null)
+  const [newLabel, setNewLabel] = useState('')
+  const [newUrl,   setNewUrl]   = useState('')
+  const [uploading, setUploading] = useState(false)
 
-  const addLink = () => {
-    if (!newLinkUrl.trim()) return
-    onChange([...links, {
-      id:    nanoid(),
-      label: newLinkLabel.trim() || newLinkUrl.trim(),
-      url:   newLinkUrl.trim(),
-      type:  newLinkType,
-    }])
-    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
+  const selectedTypeCfg = step && step !== 'picker'
+    ? LINK_TYPE_CONFIG.find(t => t.value === step) ?? null
+    : null
+
+  const reset = () => {
+    setStep(null); setNewLabel(''); setNewUrl('')
   }
 
-  const removeLink = (id: string) => onChange(links.filter(l => l.id !== id))
+  // Confirmação de link externo
+  const confirmLink = () => {
+    if (!newUrl.trim()) return
+    onChange([...links, {
+      id:    nanoid(),
+      label: newLabel.trim() || newUrl.trim(),
+      url:   newUrl.trim(),
+      type:  step as TaskLink['type'],
+    }])
+    reset()
+  }
 
+  // Upload de arquivo
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -138,13 +150,18 @@ function LinksEditor({
         .from('task-files')
         .getPublicUrl(data.path)
 
+      const type = step && step !== 'picker'
+        ? (step as TaskLink['type'])
+        : mimeToLinkType(file.type)
+
       onChange([...links, {
         id:    nanoid(),
-        label: file.name,
+        label: newLabel.trim() || file.name,
         url:   urlData.publicUrl,
-        type:  mimeToLinkType(file.type),
+        type,
       }])
       toast('Arquivo enviado!', 'success')
+      reset()
     } catch (err: any) {
       toast(err.message ?? 'Erro ao enviar arquivo', 'error')
     } finally {
@@ -153,9 +170,11 @@ function LinksEditor({
     }
   }
 
+  const removeLink = (id: string) => onChange(links.filter(l => l.id !== id))
+
   const inputCls = compact
-    ? 'h-7 px-2 text-[11px] rounded-md border border-[#e2e8f0] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400'
-    : 'h-9 px-3 text-[13px] rounded-lg border border-[#e2e8f0] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400'
+    ? 'h-7 px-2 text-[11px] rounded-md border border-[#e2e8f0] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full'
+    : 'h-9 px-3 text-[13px] rounded-lg border border-[#e2e8f0] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-full'
 
   return (
     <div className={compact ? 'space-y-1.5' : 'border border-[#e2e8f0] rounded-xl p-3 space-y-2'}>
@@ -168,82 +187,127 @@ function LinksEditor({
             <span className="bg-violet-100 text-violet-700 text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>
           )}
         </label>
-        <div className="flex items-center gap-1.5">
-          {/* Upload de arquivo local */}
+        {step === null && (
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-1 text-[11px] text-emerald-600 hover:text-emerald-800 font-medium disabled:opacity-60"
-          >
-            {uploading
-              ? <Loader2 className="w-3 h-3 animate-spin" />
-              : <Upload className="w-3 h-3" />
-            }
-            {uploading ? 'Enviando...' : 'Upload'}
-          </button>
-          <span className="text-[#e2e8f0]">|</span>
-          {/* Link externo */}
-          <button
-            type="button"
-            onClick={() => setAddingLink(a => !a)}
+            onClick={() => setStep('picker')}
             className="flex items-center gap-0.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium"
           >
-            <Plus className="w-3 h-3" /> Link
+            <Plus className="w-3 h-3" /> Adicionar
           </button>
-        </div>
-        {/* Input de arquivo oculto */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv"
-          className="hidden"
-          onChange={handleFileUpload}
-        />
+        )}
       </div>
 
-      {/* Form de link externo */}
-      {addingLink && (
-        <div className="bg-violet-50 rounded-lg border border-violet-100 p-2.5 space-y-2">
-          <div className="flex gap-2">
-            <select
-              value={newLinkType}
-              onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
-              className={`${inputCls} flex-shrink-0`}
-            >
-              {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <input
-              value={newLinkLabel}
-              onChange={e => setNewLinkLabel(e.target.value)}
-              placeholder="Rótulo (ex: Briefing)"
-              className={`${inputCls} flex-1`}
-            />
+      {/* PASSO 1 — Picker de tipo */}
+      {step === 'picker' && (
+        <div className="bg-slate-50 rounded-lg border border-[#e2e8f0] p-2.5 space-y-1.5">
+          <p className={`font-medium text-[#475569] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+            O que você quer adicionar?
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {LINK_TYPE_CONFIG.map(({ value, label, Icon, color }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setStep(value)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] bg-white hover:border-violet-300 hover:bg-violet-50 transition-colors ${compact ? 'text-[10px]' : 'text-[11px]'} font-medium text-[#334155]`}
+              >
+                <Icon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${color}`} />
+                {label}
+              </button>
+            ))}
           </div>
-          <div className="flex gap-2">
-            <input
-              value={newLinkUrl}
-              onChange={e => setNewLinkUrl(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addLink()}
-              placeholder="https://..."
-              className={`${inputCls} flex-1`}
-            />
-            <button onClick={addLink}
-              className="px-3 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-700">
-              OK
-            </button>
-            <button onClick={() => setAddingLink(false)}
-              className="px-2 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-white">
-              ✕
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={reset}
+            className="text-[10px] text-[#94a3b8] hover:text-[#64748b]"
+          >
+            Cancelar
+          </button>
         </div>
       )}
 
+      {/* PASSO 2 — Form de acordo com o tipo */}
+      {selectedTypeCfg && (() => {
+        const TypeIcon = selectedTypeCfg.Icon
+        return (
+          <div className="bg-violet-50 rounded-lg border border-violet-100 p-2.5 space-y-2">
+            {/* Título do tipo selecionado */}
+            <div className="flex items-center justify-between">
+              <span className={`flex items-center gap-1.5 font-semibold text-[#334155] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+                <TypeIcon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${selectedTypeCfg.color}`} />
+                {selectedTypeCfg.label}
+              </span>
+              <button type="button" onClick={reset} className="text-[#94a3b8] hover:text-[#64748b]">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Campo de rótulo (comum a todos) */}
+            <input
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              placeholder={selectedTypeCfg.upload ? 'Rótulo (opcional)' : 'Rótulo (ex: Briefing)'}
+              className={inputCls}
+            />
+
+            {/* Link → campo de URL */}
+            {!selectedTypeCfg.upload && (
+              <div className="flex gap-2">
+                <input
+                  value={newUrl}
+                  onChange={e => setNewUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && confirmLink()}
+                  placeholder="https://..."
+                  className={`${inputCls} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={confirmLink}
+                  className={`px-3 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 flex-shrink-0 ${compact ? 'text-[11px]' : 'text-[12px]'}`}
+                >
+                  OK
+                </button>
+              </div>
+            )}
+
+            {/* Upload → área de clique */}
+            {selectedTypeCfg.upload && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-violet-200 rounded-lg py-4 bg-white hover:border-violet-400 hover:bg-violet-50 transition-colors disabled:opacity-60"
+                >
+                  {uploading
+                    ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
+                    : <TypeIcon className={`w-5 h-5 ${selectedTypeCfg.color}`} />
+                  }
+                  <span className={`font-medium text-[#475569] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+                    {uploading ? 'Enviando...' : `Clique para selecionar ${selectedTypeCfg.label.toLowerCase()}`}
+                  </span>
+                  {!uploading && (
+                    <span className="text-[10px] text-[#94a3b8]">Máximo 50 MB</span>
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={selectedTypeCfg.accept}
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </>
+            )}
+          </div>
+        )
+      })()}
+
       {/* Placeholder vazio */}
-      {links.length === 0 && !addingLink && (
-        <p className="text-[11px] text-[#94a3b8] text-center py-1.5">
-          Adicione links externos ou faça upload de arquivos
+      {links.length === 0 && step === null && (
+        <p className={`text-[#94a3b8] text-center py-1.5 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+          Adicione links, imagens, vídeos ou arquivos
         </p>
       )}
 
@@ -251,13 +315,14 @@ function LinksEditor({
       {links.length > 0 && (
         <div className="space-y-1">
           {links.map(link => {
-            const Icon = getLinkIcon(link.type)
+            const cfg = LINK_TYPE_CONFIG.find(t => t.value === link.type)
+            const Icon = cfg?.Icon ?? LinkIcon
             return (
               <div key={link.id}
                 className="flex items-center gap-2 bg-white rounded-lg border border-[#e2e8f0] px-2.5 py-2 group">
-                <Icon className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
+                <Icon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${cfg?.color ?? 'text-violet-500'} flex-shrink-0`} />
                 <a href={link.url} target="_blank" rel="noopener noreferrer"
-                  className="flex-1 min-w-0 text-[12px] text-[#0f172a] hover:text-violet-700 truncate font-medium">
+                  className={`flex-1 min-w-0 text-[#0f172a] hover:text-violet-700 truncate font-medium ${compact ? 'text-[11px]' : 'text-[12px]'}`}>
                   {link.label}
                 </a>
                 <button onClick={() => removeLink(link.id)}
