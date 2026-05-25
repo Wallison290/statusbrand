@@ -154,7 +154,8 @@ export interface NewTeamTaskInput {
   status:      string
   client_id:   string | null
   assignee_id: string
-  assignee:    string  // nome do membro, para exibição na aba Tarefas
+  assignee:    string       // nome do membro, para exibição na aba Tarefas
+  task_links?: TaskLink[]   // links/referências adicionados pela agência
 }
 
 export function useCreateAndDelegateTask() {
@@ -176,6 +177,7 @@ export function useCreateAndDelegateTask() {
           client_id:   task.client_id,
           assignee_id: task.assignee_id,
           assignee:    task.assignee,
+          task_links:  task.task_links ?? [],
         })
       if (error) throw error
     },

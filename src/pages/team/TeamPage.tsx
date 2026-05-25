@@ -752,6 +752,19 @@ function NewTaskModal({
   const [status,      setStatus]     = useState('a_fazer')
   const [clientId,    setClientId]   = useState<string | null>(null)
 
+  // Links / referências
+  const [links,        setLinks]        = useState<TaskLink[]>([])
+  const [addingLink,   setAddingLink]   = useState(false)
+  const [newLinkLabel, setNewLinkLabel] = useState('')
+  const [newLinkUrl,   setNewLinkUrl]   = useState('')
+  const [newLinkType,  setNewLinkType]  = useState<TaskLink['type']>('link')
+
+  const addLink = () => {
+    if (!newLinkUrl.trim()) return
+    setLinks(prev => [...prev, { id: nanoid(), label: newLinkLabel.trim() || newLinkUrl.trim(), url: newLinkUrl.trim(), type: newLinkType }])
+    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
+  }
+
   const saving = createAndDelegate.isPending
 
   const handleSubmit = async () => {
@@ -767,6 +780,7 @@ function NewTaskModal({
         client_id:   clientId,
         assignee_id: member.id,
         assignee:    member.name,
+        task_links:  links,
       })
       toast('Demanda criada e delegada!', 'success')
       onClose()
@@ -894,6 +908,77 @@ function NewTaskModal({
             <option value="__none__">Interno (sem cliente)</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
           </select>
+        </div>
+
+        {/* Links e referências */}
+        <div className="border border-[#e2e8f0] rounded-xl p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-[#475569] flex items-center gap-1.5">
+              <LinkIcon className="w-3.5 h-3.5 text-violet-500" />
+              Links e referências {links.length > 0 && <span className="bg-violet-100 text-violet-700 text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>}
+            </label>
+            <button
+              onClick={() => setAddingLink(a => !a)}
+              className="text-[11px] text-violet-600 hover:text-violet-800 flex items-center gap-0.5 font-medium"
+            >
+              <Plus className="w-3 h-3" /> Adicionar
+            </button>
+          </div>
+
+          {addingLink && (
+            <div className="bg-violet-50 rounded-lg p-2.5 space-y-2 border border-violet-100">
+              <div className="flex gap-2">
+                <select
+                  value={newLinkType}
+                  onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
+                  className="h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 flex-shrink-0"
+                >
+                  {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+                <input
+                  value={newLinkLabel}
+                  onChange={e => setNewLinkLabel(e.target.value)}
+                  placeholder="Rótulo (ex: Briefing)"
+                  className="flex-1 h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
+                />
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={newLinkUrl}
+                  onChange={e => setNewLinkUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addLink()}
+                  placeholder="https://..."
+                  className="flex-1 h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
+                />
+                <button onClick={addLink} className="h-8 px-3 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-700">OK</button>
+                <button onClick={() => setAddingLink(false)} className="h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-white">✕</button>
+              </div>
+            </div>
+          )}
+
+          {links.length === 0 && !addingLink && (
+            <p className="text-[11px] text-[#94a3b8] text-center py-1">
+              Adicione links, vídeos ou arquivos para o colaborador visualizar
+            </p>
+          )}
+
+          {links.length > 0 && (
+            <div className="space-y-1">
+              {links.map(link => {
+                const Icon = getLinkIcon(link.type)
+                return (
+                  <div key={link.id} className="flex items-center gap-2 bg-white rounded-lg border border-[#e2e8f0] px-2.5 py-2 group">
+                    <Icon className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
+                    <span className="flex-1 text-[12px] text-[#0f172a] truncate font-medium">{link.label}</span>
+                    <button onClick={() => setLinks(prev => prev.filter(l => l.id !== link.id))}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c0c0c0] hover:text-red-400">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Botões */}
