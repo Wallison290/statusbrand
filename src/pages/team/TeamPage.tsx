@@ -604,6 +604,198 @@ function TaskEditPanel({
   )
 }
 
+// ── Modal de visualização de tarefa ──────────────────────────────────────────
+
+function TaskViewModal({
+  task,
+  clients,
+  onClose,
+  onEdit,
+}: {
+  task: TeamTask
+  clients: { id: string; company_name: string }[]
+  onClose: () => void
+  onEdit: () => void
+}) {
+  const st  = STATUS_CONFIG[task.status]    ?? STATUS_CONFIG.a_fazer
+  const pri = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.media
+  const overdue = isOverdue(task.due_date, task.status)
+  const links   = Array.isArray(task.task_links) ? task.task_links : []
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.18 }}
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl max-h-[88vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 sticky top-0 bg-white border-b border-[#f1f5f9] z-10">
+          <div className="flex-1 min-w-0">
+            <h2 className={`text-[15px] font-bold leading-snug ${
+              task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#0f172a]'
+            }`}>{task.title}</h2>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ color: st.color, backgroundColor: st.bg }}>
+                {st.label}
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ color: pri.color, backgroundColor: `${pri.color}18` }}>
+                {pri.label}
+              </span>
+              {task.clients && (
+                <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Building2 className="w-2.5 h-2.5" /> {task.clients.company_name}
+                </span>
+              )}
+              {task.due_date && (
+                <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  overdue ? 'text-red-600 bg-red-50 font-semibold' : 'text-[#64748b] bg-[#f1f5f9]'
+                }`}>
+                  <Calendar className="w-2.5 h-2.5" />
+                  {overdue && 'Atrasado · '}{formatDate(task.due_date)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={onEdit}
+              title="Editar"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] text-[11px] text-[#475569] hover:bg-[#f8fafc] transition-colors font-medium"
+            >
+              <Pencil className="w-3 h-3" /> Editar
+            </button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center">
+              <X className="w-4 h-4 text-[#94a3b8]" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          {/* Descrição */}
+          {task.description && (
+            <div className="bg-[#f8fafc] rounded-xl p-3.5">
+              <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1.5">Descrição</p>
+              <p className="text-[13px] text-[#334155] leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {/* Links e referências com prévia */}
+          {links.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-2">
+                Referências e materiais ({links.length})
+              </p>
+              <div className="space-y-2">
+                {links.map(link => {
+                  // Prévia de imagem
+                  if (link.type === 'imagem') {
+                    return (
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                        <img
+                          src={link.url}
+                          alt={link.label}
+                          className="w-full max-h-64 object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[#94a3b8] hover:text-violet-500 ml-2 flex-shrink-0">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  // Prévia de vídeo
+                  if (link.type === 'video') {
+                    return (
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                        <video
+                          src={link.url}
+                          controls
+                          className="w-full max-h-64 bg-black"
+                          preload="metadata"
+                        />
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[#94a3b8] hover:text-violet-500 ml-2 flex-shrink-0">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  // Outros tipos — card de link
+                  const iconMap: Record<string, React.FC<{ className?: string }>> = {
+                    link:    LinkIcon,
+                    arquivo: FileIcon,
+                    pasta:   Folder,
+                  }
+                  const Icon = iconMap[link.type] ?? LinkIcon
+                  const colorMap: Record<string, string> = {
+                    link:    'text-violet-500 bg-violet-50',
+                    arquivo: 'text-amber-500 bg-amber-50',
+                    pasta:   'text-emerald-500 bg-emerald-50',
+                  }
+                  const colorCls = colorMap[link.type] ?? 'text-violet-500 bg-violet-50'
+
+                  return (
+                    <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#e2e8f0] hover:border-violet-300 hover:bg-violet-50/50 transition-all group">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorCls}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium text-[#334155] truncate group-hover:text-violet-700">{link.label}</p>
+                        <p className="text-[10px] text-[#94a3b8] truncate">{link.url}</p>
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-[#c0c0c0] group-hover:text-violet-400 flex-shrink-0" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Entrega do colaborador */}
+          {(task.collaborator_note || task.delivery_url) && (
+            <div className="bg-violet-50 rounded-xl p-3.5 border border-violet-100 space-y-1.5">
+              <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Entrega do colaborador</p>
+              {task.collaborator_note && (
+                <p className="text-[12px] text-violet-800 leading-relaxed">📝 {task.collaborator_note}</p>
+              )}
+              {task.delivery_url && (
+                <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium">
+                  <ExternalLink className="w-3 h-3" /> Ver entrega enviada
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Sem conteúdo extra */}
+          {!task.description && links.length === 0 && !task.collaborator_note && !task.delivery_url && (
+            <p className="text-[12px] text-[#94a3b8] text-center py-4">Nenhum detalhe adicional cadastrado.</p>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // ── Modal de detalhe do membro ────────────────────────────────────────────────
 
 function MemberDetailModal({
@@ -622,8 +814,9 @@ function MemberDetailModal({
   const { toast } = useToast()
   const updateTask = useUpdateTask()
   const deleteTaskMutation = useDeleteTaskHook()
-  const [expandedId, setExpanded] = useState<string | null>(null)
-  const [deletingId,  setDeletingId] = useState<string | null>(null)
+  const [expandedId,   setExpanded]    = useState<string | null>(null)
+  const [deletingId,   setDeletingId]  = useState<string | null>(null)
+  const [viewingTask,  setViewingTask] = useState<TeamTask | null>(null)
 
   // Estado local para atualização otimista (mostra mudanças imediatamente sem esperar refetch)
   const [localTasks, setLocalTasks] = useState<TeamTask[]>(
@@ -788,11 +981,14 @@ function MemberDetailModal({
                   className={`rounded-xl border transition-all ${
                     task.status === 'concluido'
                       ? 'border-[#e2e8f0] bg-[#fafafa] opacity-70'
-                      : 'border-[#e8e8e8] bg-white hover:border-[#d0d0d0]'
+                      : 'border-[#e8e8e8] bg-white hover:border-violet-200 hover:shadow-sm'
                   }`}
                 >
-                  {/* Linha principal da tarefa */}
-                  <div className="p-3">
+                  {/* Linha principal da tarefa — clicável para visualizar */}
+                  <div
+                    className="p-3 cursor-pointer"
+                    onClick={() => setViewingTask(task)}
+                  >
                     <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <p className={`text-[12.5px] font-semibold leading-snug ${
@@ -827,11 +1023,17 @@ function MemberDetailModal({
                               {overdue ? '⚠️ ' : '📅 '}{formatDate(task.due_date)}
                             </span>
                           )}
+                          {/* Indica que tem links */}
+                          {Array.isArray(task.task_links) && task.task_links.length > 0 && (
+                            <span className="text-[9.5px] text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded-full font-medium">
+                              {task.task_links.length} anexo{task.task_links.length !== 1 ? 's' : ''}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Botões ação */}
-                      <div className="flex gap-1 flex-shrink-0">
+                      {/* Botões ação — stopPropagation para não abrir o modal de visualização */}
+                      <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => setExpanded(isExpanded ? null : task.id)}
                           title="Editar"
@@ -896,6 +1098,21 @@ function MemberDetailModal({
           )}
         </div>
       </motion.div>
+
+      {/* Modal de visualização de tarefa */}
+      <AnimatePresence>
+        {viewingTask && (
+          <TaskViewModal
+            task={viewingTask}
+            clients={clients}
+            onClose={() => setViewingTask(null)}
+            onEdit={() => {
+              setExpanded(viewingTask.id)
+              setViewingTask(null)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
