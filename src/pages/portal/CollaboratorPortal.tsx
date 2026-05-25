@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom'
 import {
   CheckCircle2, Clock, AlertCircle, Circle, ExternalLink, ChevronDown,
   Loader2, Send, FileText, Link as LinkIcon, Calendar, User, Briefcase,
+  X, Image, Film, Folder,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 
@@ -22,6 +23,13 @@ interface CollaboratorMember {
   user_id:     string
 }
 
+interface TaskLink {
+  id:    string
+  label: string
+  url:   string
+  type:  'link' | 'imagem' | 'video' | 'arquivo' | 'pasta'
+}
+
 interface CollaboratorTask {
   id:                string
   title:             string
@@ -31,10 +39,29 @@ interface CollaboratorTask {
   due_date:          string | null
   collaborator_note: string | null
   delivery_url:      string | null
+  task_links:        TaskLink[] | null
   created_at:        string
   updated_at:        string
   client_id:         string | null
   clients:           { id: string; company_name: string } | null
+}
+
+// Ícone por tipo de link
+function LinkTypeIcon({ type, className }: { type: TaskLink['type']; className?: string }) {
+  const cls = className ?? 'w-4 h-4'
+  if (type === 'imagem')  return <Image   className={cls} />
+  if (type === 'video')   return <Film    className={cls} />
+  if (type === 'arquivo') return <FileText className={cls} />
+  if (type === 'pasta')   return <Folder  className={cls} />
+  return <LinkIcon className={cls} />
+}
+
+const LINK_TYPE_COLORS: Record<TaskLink['type'], string> = {
+  link:    'text-blue-500   bg-blue-50',
+  imagem:  'text-pink-500   bg-pink-50',
+  video:   'text-red-500    bg-red-50',
+  arquivo: 'text-amber-600  bg-amber-50',
+  pasta:   'text-violet-500 bg-violet-50',
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -145,37 +172,39 @@ function StatusDropdown({
   )
 }
 
-// ── TaskCard ──────────────────────────────────────────────────────────────────
+// ── TaskDetailModal ───────────────────────────────────────────────────────────
 
-function TaskCard({
+function TaskDetailModal({
   task,
   portalToken,
+  onClose,
   onUpdated,
 }: {
   task: CollaboratorTask
   portalToken: string
+  onClose: () => void
   onUpdated: (updated: Partial<CollaboratorTask> & { id: string }) => void
 }) {
-  const [status, setStatus]         = useState(task.status)
-  const [note, setNote]             = useState(task.collaborator_note ?? '')
+  const [status,      setStatus]      = useState(task.status)
+  const [note,        setNote]        = useState(task.collaborator_note ?? '')
   const [deliveryUrl, setDeliveryUrl] = useState(task.delivery_url ?? '')
-  const [expanded, setExpanded]     = useState(false)
-  const [saving, setSaving]         = useState(false)
-  const [saved, setSaved]           = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const [saving,      setSaving]      = useState(false)
+  const [saved,       setSaved]       = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
+  const [showDelivery, setShowDelivery] = useState(false)
 
   const priority = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.media
   const overdue  = isOverdue(task.due_date, status)
   const sc       = getStatusConfig(status)
+  const links    = Array.isArray(task.task_links) ? task.task_links : []
 
   const isDirty =
     status !== task.status ||
-    note !== (task.collaborator_note ?? '') ||
+    note   !== (task.collaborator_note ?? '') ||
     deliveryUrl !== (task.delivery_url ?? '')
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
+    setSaving(true); setError(null)
     try {
       const { data, error: rpcError } = await (supabase as any).rpc('update_collaborator_task', {
         p_token:             portalToken,
@@ -196,147 +225,264 @@ function TaskCard({
     }
   }
 
+  // Cor da barra lateral por status
+  const barColor = sc.color.includes('slate') ? '#94a3b8'
+    : sc.color.includes('blue')  ? '#3b82f6'
+    : sc.color.includes('amber') ? '#f59e0b'
+    : '#22c55e'
+
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm transition-all overflow-hidden
-      ${expanded ? 'border-slate-300' : 'border-slate-200 hover:border-slate-300'}`}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle bar (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
 
-      {/* Header da tarefa */}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          {/* Indicador de status lateral */}
-          <div className={`w-1 h-full rounded-full flex-shrink-0 self-stretch min-h-[40px]`}
-            style={{ background: sc.color.replace('text-', '').includes('slate') ? '#94a3b8'
-              : sc.color.replace('text-', '').includes('blue') ? '#3b82f6'
-              : sc.color.replace('text-', '').includes('amber') ? '#f59e0b'
-              : '#22c55e' }} />
-
+        {/* Header */}
+        <div className="flex items-start gap-3 px-5 pt-4 pb-3">
+          <div className="w-1.5 self-stretch rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: barColor, minHeight: 40 }} />
           <div className="flex-1 min-w-0">
-            {/* Título + prioridade */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="font-semibold text-slate-800 text-sm leading-snug">{task.title}</h3>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${priority.bg} ${priority.color}`}>
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="font-bold text-slate-800 text-base leading-snug flex-1">{task.title}</h2>
+              <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center flex-shrink-0 -mt-1">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
+            {/* Badges */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
                 {priority.label}
               </span>
-            </div>
-
-            {/* Meta: cliente + prazo */}
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
               {task.clients && (
-                <span className="flex items-center gap-1">
-                  <Briefcase className="w-3 h-3" />
-                  {task.clients.company_name}
+                <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <Briefcase className="w-3 h-3" /> {task.clients.company_name}
                 </span>
               )}
               {task.due_date && (
-                <span className={`flex items-center gap-1 ${overdue ? 'text-red-500 font-medium' : ''}`}>
+                <span className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
+                  overdue ? 'text-red-600 bg-red-50 font-semibold' : 'text-slate-500 bg-slate-100'
+                }`}>
                   <Calendar className="w-3 h-3" />
-                  {overdue && 'Atrasado · '}
-                  {formatDate(task.due_date)}
+                  {overdue && 'Atrasado · '}{formatDate(task.due_date)}
                 </span>
               )}
             </div>
-
-            {/* Descrição colapsável */}
-            {task.description && (
-              <p className="mt-2 text-xs text-slate-500 leading-relaxed line-clamp-2">
-                {task.description}
-              </p>
-            )}
           </div>
         </div>
 
-        {/* Status + botão de expandir */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-          <StatusDropdown value={status} onChange={setStatus} />
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
-          >
-            {expanded ? 'Fechar' : 'Adicionar entrega'}
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-          </button>
+        <div className="px-5 pb-6 space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-slate-500 w-16 flex-shrink-0">Status</span>
+            <StatusDropdown value={status} onChange={setStatus} />
+          </div>
+
+          {/* Descrição */}
+          {task.description && (
+            <div className="bg-slate-50 rounded-2xl p-3.5">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Descrição</p>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {/* Links e referências da agência */}
+          {links.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Referências e materiais ({links.length})
+              </p>
+              <div className="space-y-2">
+                {links.map(link => {
+                  const colorCls = LINK_TYPE_COLORS[link.type] ?? 'text-blue-500 bg-blue-50'
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${colorCls}`}>
+                        <LinkTypeIcon type={link.type} className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-700 truncate group-hover:text-violet-700 transition-colors">
+                          {link.label}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate">{link.url}</p>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-violet-400 flex-shrink-0 transition-colors" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Entrega do colaborador (existente) */}
+          {(task.collaborator_note || task.delivery_url) && (
+            <div className="bg-violet-50 rounded-2xl p-3.5 border border-violet-100">
+              <p className="text-xs font-semibold text-violet-500 uppercase tracking-wider mb-2">Sua entrega atual</p>
+              {task.collaborator_note && (
+                <p className="text-sm text-violet-800 leading-relaxed mb-2">📝 {task.collaborator_note}</p>
+              )}
+              {task.delivery_url && (
+                <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-violet-600 hover:text-violet-800 font-medium">
+                  <ExternalLink className="w-3.5 h-3.5" /> Ver entrega enviada
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Seção de atualização */}
+          <div className="border border-slate-200 rounded-2xl overflow-hidden">
+            <button
+              onClick={() => setShowDelivery(d => !d)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-700">
+                {task.collaborator_note || task.delivery_url ? 'Atualizar entrega' : 'Adicionar entrega'}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDelivery ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showDelivery && (
+              <div className="px-4 pb-4 pt-3 space-y-3">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 mb-1.5">
+                    <FileText className="w-3.5 h-3.5" /> Nota / observação
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    placeholder="Escreva uma observação, dificuldade ou comentário..."
+                    rows={3}
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-slate-200 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 placeholder:text-slate-300"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 mb-1.5">
+                    <LinkIcon className="w-3.5 h-3.5" /> Link de entrega
+                  </label>
+                  <input
+                    type="url"
+                    value={deliveryUrl}
+                    onChange={e => setDeliveryUrl(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 placeholder:text-slate-300"
+                  />
+                </div>
+                {error && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {error}
+                  </p>
+                )}
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !isDirty}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    saved ? 'bg-green-500 text-white'
+                    : isDirty ? 'bg-violet-600 hover:bg-violet-700 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+                   : saved ? <><CheckCircle2 className="w-4 h-4" /> Salvo!</>
+                   : <><Send className="w-4 h-4" /> Salvar atualização</>}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Painel de entrega (expandido) */}
-      {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3 bg-slate-50/50">
-          {/* Nota do colaborador */}
-          <div>
-            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 mb-1.5">
-              <FileText className="w-3.5 h-3.5" />
-              Nota / observação
-            </label>
-            <textarea
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder="Adicione um comentário, dificuldades ou observações..."
-              rows={3}
-              className="w-full text-sm px-3 py-2 rounded-xl border border-slate-200 bg-white resize-none
-                focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 placeholder:text-slate-300"
-            />
-          </div>
-
-          {/* URL de entrega */}
-          <div>
-            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 mb-1.5">
-              <LinkIcon className="w-3.5 h-3.5" />
-              Link de entrega
-            </label>
-            <input
-              type="url"
-              value={deliveryUrl}
-              onChange={e => setDeliveryUrl(e.target.value)}
-              placeholder="https://drive.google.com/..."
-              className="w-full text-sm px-3 py-2 rounded-xl border border-slate-200 bg-white
-                focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 placeholder:text-slate-300"
-            />
-          </div>
-
-          {/* Mostrar link existente */}
-          {task.delivery_url && !deliveryUrl && (
-            <a
-              href={task.delivery_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-violet-600 hover:text-violet-800 transition-colors"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Ver entrega atual
-            </a>
-          )}
-
-          {/* Erro */}
-          {error && (
-            <p className="text-xs text-red-500 flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {error}
-            </p>
-          )}
-
-          {/* Botão salvar */}
-          <button
-            onClick={handleSave}
-            disabled={saving || (!isDirty && !note && !deliveryUrl)}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all
-              ${saved
-                ? 'bg-green-500 text-white'
-                : isDirty || note || deliveryUrl
-                  ? 'bg-violet-600 hover:bg-violet-700 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              }`}
-          >
-            {saving ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
-            ) : saved ? (
-              <><CheckCircle2 className="w-4 h-4" /> Salvo com sucesso!</>
-            ) : (
-              <><Send className="w-4 h-4" /> Salvar atualização</>
-            )}
-          </button>
-        </div>
-      )}
     </div>
+  )
+}
+
+// ── TaskCard (resumo — clicável para abrir o modal) ───────────────────────────
+
+function TaskCard({
+  task,
+  onOpen,
+}: {
+  task: CollaboratorTask
+  onOpen: () => void
+}) {
+  const priority = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.media
+  const overdue  = isOverdue(task.due_date, task.status)
+  const sc       = getStatusConfig(task.status)
+  const links    = Array.isArray(task.task_links) ? task.task_links : []
+
+  const barColor = sc.color.includes('slate') ? '#94a3b8'
+    : sc.color.includes('blue')  ? '#3b82f6'
+    : sc.color.includes('amber') ? '#f59e0b'
+    : '#22c55e'
+
+  return (
+    <button
+      onClick={onOpen}
+      className="w-full text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-violet-300 hover:shadow-md transition-all overflow-hidden group"
+    >
+      <div className="flex gap-3 p-4">
+        {/* Barra lateral de status */}
+        <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: barColor, minHeight: 36 }} />
+
+        <div className="flex-1 min-w-0">
+          {/* Título + prioridade */}
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <h3 className="font-semibold text-slate-800 text-sm leading-snug group-hover:text-violet-700 transition-colors">
+              {task.title}
+            </h3>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${priority.bg} ${priority.color}`}>
+              {priority.label}
+            </span>
+          </div>
+
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            {task.clients && (
+              <span className="flex items-center gap-1">
+                <Briefcase className="w-3 h-3" /> {task.clients.company_name}
+              </span>
+            )}
+            {task.due_date && (
+              <span className={`flex items-center gap-1 ${overdue ? 'text-red-500 font-medium' : ''}`}>
+                <Calendar className="w-3 h-3" />
+                {overdue && 'Atrasado · '}{formatDate(task.due_date)}
+              </span>
+            )}
+          </div>
+
+          {/* Descrição (preview) */}
+          {task.description && (
+            <p className="mt-1.5 text-xs text-slate-400 line-clamp-1 leading-relaxed">{task.description}</p>
+          )}
+
+          {/* Footer: status + links badge */}
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${sc.bg} ${sc.color}`}>
+              {sc.label}
+            </span>
+            {links.length > 0 && (
+              <span className="text-[10px] text-violet-500 flex items-center gap-0.5">
+                <LinkIcon className="w-3 h-3" /> {links.length} anexo{links.length !== 1 ? 's' : ''}
+              </span>
+            )}
+            {(task.collaborator_note || task.delivery_url) && (
+              <span className="text-[10px] text-emerald-500 ml-auto">✓ Entrega enviada</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -375,10 +521,11 @@ function PortalError({ message }: { message: string }) {
 
 export function CollaboratorPortal() {
   const { token } = useParams<{ token: string }>()
-  const [member, setMember]   = useState<CollaboratorMember | null>(null)
-  const [tasks, setTasks]     = useState<CollaboratorTask[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [member,      setMember]      = useState<CollaboratorMember | null>(null)
+  const [tasks,       setTasks]       = useState<CollaboratorTask[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState<string | null>(null)
+  const [openTask,    setOpenTask]    = useState<CollaboratorTask | null>(null)
 
   useEffect(() => {
     if (!token) { setError('Token não encontrado na URL.'); setLoading(false); return }
@@ -402,17 +549,16 @@ export function CollaboratorPortal() {
   }, [token])
 
   function handleTaskUpdated(updated: Partial<CollaboratorTask> & { id: string }) {
-    setTasks(prev =>
-      prev.map(t => t.id === updated.id ? { ...t, ...updated } : t)
-    )
+    setTasks(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t))
+    // Atualiza também o modal aberto
+    setOpenTask(prev => prev && prev.id === updated.id ? { ...prev, ...updated } : prev)
   }
 
   if (loading) return <PortalLoading />
   if (error || !member) return <PortalError message={error ?? 'Colaborador não encontrado.'} />
 
-  // Contagem por status
   const counts = {
-    total:    tasks.length,
+    total:     tasks.length,
     pendentes: tasks.filter(t => t.status !== 'concluido').length,
     concluidas: tasks.filter(t => t.status === 'concluido').length,
   }
@@ -427,35 +573,29 @@ export function CollaboratorPortal() {
             <img src={member.avatar_url} alt={member.name}
               className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm" />
           ) : (
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-white shadow-sm"
-              style={{ background: member.color }}
-            >
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-white shadow-sm"
+              style={{ background: member.color }}>
               {initials}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 text-sm truncate">{member.name}</p>
-            {member.role && (
-              <p className="text-xs text-slate-400 truncate">{member.role}</p>
-            )}
+            {member.role && <p className="text-xs text-slate-400 truncate">{member.role}</p>}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
-            <User className="w-3 h-3" />
-            Portal do colaborador
+            <User className="w-3 h-3" /> Portal do colaborador
           </div>
         </div>
       </div>
 
       {/* Conteúdo */}
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-
         {/* Resumo */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Total',      value: counts.total,      color: 'text-slate-700',  bg: 'bg-white' },
-            { label: 'Pendentes',  value: counts.pendentes,  color: 'text-amber-600',  bg: 'bg-amber-50' },
-            { label: 'Concluídas', value: counts.concluidas, color: 'text-green-600',  bg: 'bg-green-50' },
+            { label: 'Total',      value: counts.total,      color: 'text-slate-700', bg: 'bg-white'    },
+            { label: 'Pendentes',  value: counts.pendentes,  color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Concluídas', value: counts.concluidas, color: 'text-green-600', bg: 'bg-green-50' },
           ].map(s => (
             <div key={s.label} className={`${s.bg} rounded-2xl p-3 border border-slate-200 text-center shadow-sm`}>
               <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -479,21 +619,25 @@ export function CollaboratorPortal() {
               Minhas tarefas ({tasks.length})
             </h2>
             {tasks.map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                portalToken={token!}
-                onUpdated={handleTaskUpdated}
-              />
+              <TaskCard key={task.id} task={task} onOpen={() => setOpenTask(task)} />
             ))}
           </div>
         )}
 
-        {/* Footer */}
         <div className="text-center pt-4 pb-8">
           <p className="text-xs text-slate-300">Powered by StatusBrand</p>
         </div>
       </div>
+
+      {/* Modal de detalhe */}
+      {openTask && (
+        <TaskDetailModal
+          task={openTask}
+          portalToken={token!}
+          onClose={() => setOpenTask(null)}
+          onUpdated={handleTaskUpdated}
+        />
+      )}
     </div>
   )
 }

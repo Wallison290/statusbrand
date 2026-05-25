@@ -5,6 +5,7 @@ import {
   Pencil, Trash2, AlertCircle, Phone, Mail,
   Users, ClipboardList, ChevronDown, Plus,
   Calendar, Flag, Building2,
+  Link as LinkIcon, Image, Film, FileText as FileIcon, Folder,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
@@ -14,7 +15,7 @@ import {
   useTeamMembers, useTeamTasks,
   useCreateTeamMember, useUpdateTeamMember, useDeleteTeamMember,
   useCreateAndDelegateTask, useDelegateTask,
-  type TeamMember, type TeamTask,
+  type TeamMember, type TeamTask, type TaskLink,
 } from '@/hooks/useTeamMembers'
 
 // ── Cores disponíveis para membros ────────────────────────────────────────────
@@ -60,6 +61,24 @@ function isOverdue(date: string | null, status: string) {
   return date.split('T')[0] < ymd
 }
 
+// ── Helpers de link ───────────────────────────────────────────────────────────
+
+const LINK_TYPES: { value: TaskLink['type']; label: string; Icon: React.FC<{ className?: string }> }[] = [
+  { value: 'link',    label: 'Link',    Icon: LinkIcon  },
+  { value: 'imagem',  label: 'Imagem',  Icon: Image     },
+  { value: 'video',   label: 'Vídeo',   Icon: Film      },
+  { value: 'arquivo', label: 'Arquivo', Icon: FileIcon  },
+  { value: 'pasta',   label: 'Pasta',   Icon: Folder    },
+]
+
+function getLinkIcon(type: TaskLink['type']) {
+  return LINK_TYPES.find(t => t.value === type)?.Icon ?? LinkIcon
+}
+
+function nanoid() {
+  return Math.random().toString(36).slice(2, 10)
+}
+
 // ── Formulário de edição de tarefa (inline no modal do membro) ───────────────
 
 function TaskEditPanel({
@@ -81,17 +100,41 @@ function TaskEditPanel({
   const [clientId, setClient]  = useState<string>(task.client_id ?? '__none__')
   const [saving,   setSaving]  = useState(false)
 
+  // Links / referências
+  const [links, setLinks] = useState<TaskLink[]>(() => {
+    if (!task.task_links) return []
+    return Array.isArray(task.task_links) ? task.task_links : []
+  })
+  const [addingLink,    setAddingLink]    = useState(false)
+  const [newLinkLabel,  setNewLinkLabel]  = useState('')
+  const [newLinkUrl,    setNewLinkUrl]    = useState('')
+  const [newLinkType,   setNewLinkType]   = useState<TaskLink['type']>('link')
+
+  const addLink = () => {
+    if (!newLinkUrl.trim()) return
+    setLinks(prev => [...prev, {
+      id:    nanoid(),
+      label: newLinkLabel.trim() || newLinkUrl.trim(),
+      url:   newLinkUrl.trim(),
+      type:  newLinkType,
+    }])
+    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
+  }
+
+  const removeLink = (id: string) => setLinks(prev => prev.filter(l => l.id !== id))
+
   const handleSave = async () => {
     if (!title.trim()) return
     setSaving(true)
     try {
       await onSave({
-        title:     title.trim(),
+        title:       title.trim(),
         description: desc || null,
-        due_date:  dueDate || null,
+        due_date:    dueDate || null,
         priority,
         status,
-        client_id: clientId === '__none__' ? null : clientId,
+        client_id:   clientId === '__none__' ? null : clientId,
+        task_links:  links,
       })
     } finally {
       setSaving(false)
@@ -122,61 +165,114 @@ function TaskEditPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {/* Data */}
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prazo</label>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={e => setDueDate(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
-          />
+          <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400" />
         </div>
-
-        {/* Prioridade */}
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prioridade</label>
-          <select
-            value={priority}
-            onChange={e => setPri(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
-          >
+          <select value={priority} onChange={e => setPri(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
             <option value="baixa">Baixa</option>
             <option value="media">Normal</option>
             <option value="alta">Alta</option>
             <option value="urgente">Urgente</option>
           </select>
         </div>
-
-        {/* Status */}
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Status</label>
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
-          >
+          <select value={status} onChange={e => setStatus(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
             <option value="a_fazer">A fazer</option>
             <option value="em_andamento">Em andamento</option>
             <option value="revisao">Em revisão</option>
             <option value="concluido">Concluído</option>
           </select>
         </div>
-
-        {/* Cliente */}
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Cliente</label>
-          <select
-            value={clientId}
-            onChange={e => setClient(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
-          >
+          <select value={clientId} onChange={e => setClient(e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
             <option value="__none__">Interno</option>
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.company_name}</option>
-            ))}
+            {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
           </select>
         </div>
+      </div>
+
+      {/* Links / referências */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[10px] font-medium text-[#64748b]">
+            Links e referências {links.length > 0 && `(${links.length})`}
+          </label>
+          <button
+            onClick={() => setAddingLink(a => !a)}
+            className="text-[10px] text-violet-600 hover:text-violet-800 flex items-center gap-0.5 font-medium"
+          >
+            <Plus className="w-3 h-3" /> Adicionar
+          </button>
+        </div>
+
+        {/* Form de novo link */}
+        {addingLink && (
+          <div className="bg-white rounded-lg border border-violet-200 p-2 space-y-1.5 mb-2">
+            <div className="flex gap-1.5">
+              <select
+                value={newLinkType}
+                onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
+                className="h-7 px-1.5 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 flex-shrink-0"
+              >
+                {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <input
+                value={newLinkLabel}
+                onChange={e => setNewLinkLabel(e.target.value)}
+                placeholder="Rótulo (opcional)"
+                className="flex-1 h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
+              />
+            </div>
+            <div className="flex gap-1.5">
+              <input
+                value={newLinkUrl}
+                onChange={e => setNewLinkUrl(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addLink()}
+                placeholder="https://..."
+                className="flex-1 h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
+              />
+              <button onClick={addLink}
+                className="h-7 px-2 rounded-md bg-violet-600 text-white text-[11px] font-medium hover:bg-violet-700">
+                OK
+              </button>
+              <button onClick={() => setAddingLink(false)}
+                className="h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] text-[#64748b] hover:bg-[#f1f5f9]">
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de links */}
+        {links.length > 0 && (
+          <div className="space-y-1">
+            {links.map(link => {
+              const Icon = getLinkIcon(link.type)
+              return (
+                <div key={link.id} className="flex items-center gap-1.5 bg-white rounded-lg border border-[#e2e8f0] px-2 py-1.5 group">
+                  <Icon className="w-3 h-3 text-violet-500 flex-shrink-0" />
+                  <a href={link.url} target="_blank" rel="noopener noreferrer"
+                    className="flex-1 min-w-0 text-[11px] text-[#0f172a] hover:text-violet-700 truncate font-medium">
+                    {link.label}
+                  </a>
+                  <button onClick={() => removeLink(link.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c0c0c0] hover:text-red-400">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Entrega do colaborador (read-only) */}
@@ -197,18 +293,13 @@ function TaskEditPanel({
 
       {/* Botões */}
       <div className="flex gap-2 pt-1">
-        <button
-          onClick={handleSave}
-          disabled={saving || !title.trim()}
-          className="flex-1 h-8 rounded-lg bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 disabled:opacity-60 flex items-center justify-center gap-1.5"
-        >
+        <button onClick={handleSave} disabled={saving || !title.trim()}
+          className="flex-1 h-8 rounded-lg bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 disabled:opacity-60 flex items-center justify-center gap-1.5">
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
           Salvar
         </button>
-        <button
-          onClick={onCancel}
-          className="flex-1 h-8 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-[#f1f5f9]"
-        >
+        <button onClick={onCancel}
+          className="flex-1 h-8 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-[#f1f5f9]">
           Cancelar
         </button>
       </div>

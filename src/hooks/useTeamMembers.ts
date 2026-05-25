@@ -19,6 +19,13 @@ export interface TeamMember {
   updated_at:   string
 }
 
+export interface TaskLink {
+  id:    string   // uuid gerado no frontend
+  label: string
+  url:   string
+  type:  'link' | 'imagem' | 'video' | 'arquivo' | 'pasta'
+}
+
 export interface TeamTask {
   id:                string
   title:             string
@@ -28,6 +35,7 @@ export interface TeamTask {
   due_date:          string | null
   collaborator_note: string | null
   delivery_url:      string | null
+  task_links:        TaskLink[] | null
   created_at:        string
   updated_at:        string
   client_id:         string | null
@@ -68,7 +76,7 @@ export function useTeamTasks() {
         .from('tasks')
         .select(`
           id, title, description, status, priority, due_date,
-          collaborator_note, delivery_url, created_at, updated_at,
+          collaborator_note, delivery_url, task_links, created_at, updated_at,
           client_id, assignee_id,
           clients(id, company_name)
         `)
