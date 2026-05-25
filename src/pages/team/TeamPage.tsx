@@ -1,15 +1,16 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, X, Check, Loader2, Copy, ExternalLink,
   Pencil, Trash2, AlertCircle, Phone, Mail,
   Users, ClipboardList, ChevronDown, Plus,
   Calendar, Flag, Building2,
-  Link as LinkIcon, Image, Film, FileText as FileIcon, Folder,
+  Link as LinkIcon, Image, Film, FileText as FileIcon, Folder, Upload,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
 import { useClients } from '@/hooks/useClients'
+import { supabase } from '@/integrations/supabase/client'
 import { useUpdateTask, useDeleteTask as useDeleteTaskHook } from '@/hooks/useTasks'
 import {
   useTeamMembers, useTeamTasks,
@@ -79,6 +80,199 @@ function nanoid() {
   return Math.random().toString(36).slice(2, 10)
 }
 
+// Detecta tipo de link pelo MIME type do arquivo
+function mimeToLinkType(mime: string): TaskLink['type'] {
+  if (mime.startsWith('image/')) return 'imagem'
+  if (mime.startsWith('video/')) return 'video'
+  return 'arquivo'
+}
+
+// ── Editor de links reutilizável ──────────────────────────────────────────────
+
+function LinksEditor({
+  links,
+  onChange,
+  compact = false,
+}: {
+  links: TaskLink[]
+  onChange: (links: TaskLink[]) => void
+  compact?: boolean
+}) {
+  const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [addingLink,   setAddingLink]   = useState(false)
+  const [newLinkLabel, setNewLinkLabel] = useState('')
+  const [newLinkUrl,   setNewLinkUrl]   = useState('')
+  const [newLinkType,  setNewLinkType]  = useState<TaskLink['type']>('link')
+  const [uploading,    setUploading]    = useState(false)
+
+  const addLink = () => {
+    if (!newLinkUrl.trim()) return
+    onChange([...links, {
+      id:    nanoid(),
+      label: newLinkLabel.trim() || newLinkUrl.trim(),
+      url:   newLinkUrl.trim(),
+      type:  newLinkType,
+    }])
+    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
+  }
+
+  const removeLink = (id: string) => onChange(links.filter(l => l.id !== id))
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const ext  = file.name.split('.').pop() ?? 'bin'
+      const path = `${Date.now()}-${nanoid()}.${ext}`
+
+      const { data, error } = await supabase.storage
+        .from('task-files')
+        .upload(path, file, { upsert: false })
+
+      if (error) throw new Error(error.message)
+
+      const { data: urlData } = supabase.storage
+        .from('task-files')
+        .getPublicUrl(data.path)
+
+      onChange([...links, {
+        id:    nanoid(),
+        label: file.name,
+        url:   urlData.publicUrl,
+        type:  mimeToLinkType(file.type),
+      }])
+      toast('Arquivo enviado!', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao enviar arquivo', 'error')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const inputCls = compact
+    ? 'h-7 px-2 text-[11px] rounded-md border border-[#e2e8f0] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400'
+    : 'h-9 px-3 text-[13px] rounded-lg border border-[#e2e8f0] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400'
+
+  return (
+    <div className={compact ? 'space-y-1.5' : 'border border-[#e2e8f0] rounded-xl p-3 space-y-2'}>
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <label className={`font-semibold text-[#475569] flex items-center gap-1.5 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+          <LinkIcon className={compact ? 'w-3 h-3 text-violet-500' : 'w-3.5 h-3.5 text-violet-500'} />
+          Links e referências
+          {links.length > 0 && (
+            <span className="bg-violet-100 text-violet-700 text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>
+          )}
+        </label>
+        <div className="flex items-center gap-1.5">
+          {/* Upload de arquivo local */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1 text-[11px] text-emerald-600 hover:text-emerald-800 font-medium disabled:opacity-60"
+          >
+            {uploading
+              ? <Loader2 className="w-3 h-3 animate-spin" />
+              : <Upload className="w-3 h-3" />
+            }
+            {uploading ? 'Enviando...' : 'Upload'}
+          </button>
+          <span className="text-[#e2e8f0]">|</span>
+          {/* Link externo */}
+          <button
+            type="button"
+            onClick={() => setAddingLink(a => !a)}
+            className="flex items-center gap-0.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium"
+          >
+            <Plus className="w-3 h-3" /> Link
+          </button>
+        </div>
+        {/* Input de arquivo oculto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
+      </div>
+
+      {/* Form de link externo */}
+      {addingLink && (
+        <div className="bg-violet-50 rounded-lg border border-violet-100 p-2.5 space-y-2">
+          <div className="flex gap-2">
+            <select
+              value={newLinkType}
+              onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
+              className={`${inputCls} flex-shrink-0`}
+            >
+              {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <input
+              value={newLinkLabel}
+              onChange={e => setNewLinkLabel(e.target.value)}
+              placeholder="Rótulo (ex: Briefing)"
+              className={`${inputCls} flex-1`}
+            />
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={newLinkUrl}
+              onChange={e => setNewLinkUrl(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addLink()}
+              placeholder="https://..."
+              className={`${inputCls} flex-1`}
+            />
+            <button onClick={addLink}
+              className="px-3 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-700">
+              OK
+            </button>
+            <button onClick={() => setAddingLink(false)}
+              className="px-2 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-white">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Placeholder vazio */}
+      {links.length === 0 && !addingLink && (
+        <p className="text-[11px] text-[#94a3b8] text-center py-1.5">
+          Adicione links externos ou faça upload de arquivos
+        </p>
+      )}
+
+      {/* Lista de links/arquivos */}
+      {links.length > 0 && (
+        <div className="space-y-1">
+          {links.map(link => {
+            const Icon = getLinkIcon(link.type)
+            return (
+              <div key={link.id}
+                className="flex items-center gap-2 bg-white rounded-lg border border-[#e2e8f0] px-2.5 py-2 group">
+                <Icon className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
+                <a href={link.url} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 min-w-0 text-[12px] text-[#0f172a] hover:text-violet-700 truncate font-medium">
+                  {link.label}
+                </a>
+                <button onClick={() => removeLink(link.id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c0c0c0] hover:text-red-400">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Formulário de edição de tarefa (inline no modal do membro) ───────────────
 
 function TaskEditPanel({
@@ -101,27 +295,9 @@ function TaskEditPanel({
   const [saving,   setSaving]  = useState(false)
 
   // Links / referências
-  const [links, setLinks] = useState<TaskLink[]>(() => {
-    if (!task.task_links) return []
-    return Array.isArray(task.task_links) ? task.task_links : []
-  })
-  const [addingLink,    setAddingLink]    = useState(false)
-  const [newLinkLabel,  setNewLinkLabel]  = useState('')
-  const [newLinkUrl,    setNewLinkUrl]    = useState('')
-  const [newLinkType,   setNewLinkType]   = useState<TaskLink['type']>('link')
-
-  const addLink = () => {
-    if (!newLinkUrl.trim()) return
-    setLinks(prev => [...prev, {
-      id:    nanoid(),
-      label: newLinkLabel.trim() || newLinkUrl.trim(),
-      url:   newLinkUrl.trim(),
-      type:  newLinkType,
-    }])
-    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
-  }
-
-  const removeLink = (id: string) => setLinks(prev => prev.filter(l => l.id !== id))
+  const [links, setLinks] = useState<TaskLink[]>(() =>
+    Array.isArray(task.task_links) ? task.task_links : []
+  )
 
   const handleSave = async () => {
     if (!title.trim()) return
@@ -201,79 +377,7 @@ function TaskEditPanel({
       </div>
 
       {/* Links / referências */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-[10px] font-medium text-[#64748b]">
-            Links e referências {links.length > 0 && `(${links.length})`}
-          </label>
-          <button
-            onClick={() => setAddingLink(a => !a)}
-            className="text-[10px] text-violet-600 hover:text-violet-800 flex items-center gap-0.5 font-medium"
-          >
-            <Plus className="w-3 h-3" /> Adicionar
-          </button>
-        </div>
-
-        {/* Form de novo link */}
-        {addingLink && (
-          <div className="bg-white rounded-lg border border-violet-200 p-2 space-y-1.5 mb-2">
-            <div className="flex gap-1.5">
-              <select
-                value={newLinkType}
-                onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
-                className="h-7 px-1.5 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 flex-shrink-0"
-              >
-                {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <input
-                value={newLinkLabel}
-                onChange={e => setNewLinkLabel(e.target.value)}
-                placeholder="Rótulo (opcional)"
-                className="flex-1 h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
-              />
-            </div>
-            <div className="flex gap-1.5">
-              <input
-                value={newLinkUrl}
-                onChange={e => setNewLinkUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addLink()}
-                placeholder="https://..."
-                className="flex-1 h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
-              />
-              <button onClick={addLink}
-                className="h-7 px-2 rounded-md bg-violet-600 text-white text-[11px] font-medium hover:bg-violet-700">
-                OK
-              </button>
-              <button onClick={() => setAddingLink(false)}
-                className="h-7 px-2 rounded-md border border-[#e2e8f0] text-[11px] text-[#64748b] hover:bg-[#f1f5f9]">
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Lista de links */}
-        {links.length > 0 && (
-          <div className="space-y-1">
-            {links.map(link => {
-              const Icon = getLinkIcon(link.type)
-              return (
-                <div key={link.id} className="flex items-center gap-1.5 bg-white rounded-lg border border-[#e2e8f0] px-2 py-1.5 group">
-                  <Icon className="w-3 h-3 text-violet-500 flex-shrink-0" />
-                  <a href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex-1 min-w-0 text-[11px] text-[#0f172a] hover:text-violet-700 truncate font-medium">
-                    {link.label}
-                  </a>
-                  <button onClick={() => removeLink(link.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c0c0c0] hover:text-red-400">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      <LinksEditor links={links} onChange={setLinks} compact />
 
       {/* Entrega do colaborador (read-only) */}
       {(task.collaborator_note || task.delivery_url) && (
@@ -753,17 +857,7 @@ function NewTaskModal({
   const [clientId,    setClientId]   = useState<string | null>(null)
 
   // Links / referências
-  const [links,        setLinks]        = useState<TaskLink[]>([])
-  const [addingLink,   setAddingLink]   = useState(false)
-  const [newLinkLabel, setNewLinkLabel] = useState('')
-  const [newLinkUrl,   setNewLinkUrl]   = useState('')
-  const [newLinkType,  setNewLinkType]  = useState<TaskLink['type']>('link')
-
-  const addLink = () => {
-    if (!newLinkUrl.trim()) return
-    setLinks(prev => [...prev, { id: nanoid(), label: newLinkLabel.trim() || newLinkUrl.trim(), url: newLinkUrl.trim(), type: newLinkType }])
-    setNewLinkLabel(''); setNewLinkUrl(''); setNewLinkType('link'); setAddingLink(false)
-  }
+  const [links, setLinks] = useState<TaskLink[]>([])
 
   const saving = createAndDelegate.isPending
 
@@ -911,75 +1005,7 @@ function NewTaskModal({
         </div>
 
         {/* Links e referências */}
-        <div className="border border-[#e2e8f0] rounded-xl p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] font-semibold text-[#475569] flex items-center gap-1.5">
-              <LinkIcon className="w-3.5 h-3.5 text-violet-500" />
-              Links e referências {links.length > 0 && <span className="bg-violet-100 text-violet-700 text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>}
-            </label>
-            <button
-              onClick={() => setAddingLink(a => !a)}
-              className="text-[11px] text-violet-600 hover:text-violet-800 flex items-center gap-0.5 font-medium"
-            >
-              <Plus className="w-3 h-3" /> Adicionar
-            </button>
-          </div>
-
-          {addingLink && (
-            <div className="bg-violet-50 rounded-lg p-2.5 space-y-2 border border-violet-100">
-              <div className="flex gap-2">
-                <select
-                  value={newLinkType}
-                  onChange={e => setNewLinkType(e.target.value as TaskLink['type'])}
-                  className="h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 flex-shrink-0"
-                >
-                  {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-                <input
-                  value={newLinkLabel}
-                  onChange={e => setNewLinkLabel(e.target.value)}
-                  placeholder="Rótulo (ex: Briefing)"
-                  className="flex-1 h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
-                />
-              </div>
-              <div className="flex gap-2">
-                <input
-                  value={newLinkUrl}
-                  onChange={e => setNewLinkUrl(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addLink()}
-                  placeholder="https://..."
-                  className="flex-1 h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400"
-                />
-                <button onClick={addLink} className="h-8 px-3 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-700">OK</button>
-                <button onClick={() => setAddingLink(false)} className="h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-white">✕</button>
-              </div>
-            </div>
-          )}
-
-          {links.length === 0 && !addingLink && (
-            <p className="text-[11px] text-[#94a3b8] text-center py-1">
-              Adicione links, vídeos ou arquivos para o colaborador visualizar
-            </p>
-          )}
-
-          {links.length > 0 && (
-            <div className="space-y-1">
-              {links.map(link => {
-                const Icon = getLinkIcon(link.type)
-                return (
-                  <div key={link.id} className="flex items-center gap-2 bg-white rounded-lg border border-[#e2e8f0] px-2.5 py-2 group">
-                    <Icon className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-                    <span className="flex-1 text-[12px] text-[#0f172a] truncate font-medium">{link.label}</span>
-                    <button onClick={() => setLinks(prev => prev.filter(l => l.id !== link.id))}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c0c0c0] hover:text-red-400">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <LinksEditor links={links} onChange={setLinks} />
 
         {/* Botões */}
         <div className="flex gap-2 pt-1">
