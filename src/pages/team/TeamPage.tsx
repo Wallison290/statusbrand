@@ -46,29 +46,43 @@ function getPortalUrl(token: string) {
 }
 
 function buildWhatsAppMessage(name: string, portalUrl: string) {
-  // Unicode code points — evita problema de encoding do arquivo
-  const wave  = String.fromCodePoint(0x1F44B) // 👋
-  const check = String.fromCodePoint(0x2705)  // ✅
-  const clip  = String.fromCodePoint(0x1F4CE) // 📎
-  const memo  = String.fromCodePoint(0x1F4DD) // 📝
-  const out   = String.fromCodePoint(0x1F4E4) // 📤
+  // Emojis via percent-decode — bypass total de encoding de arquivo
+  // wave=👋 check=✅ clip=📎 memo=📝 out=📤
+  const decode = (pct: string) => decodeURIComponent(pct)
+  const wave  = decode('%F0%9F%91%8B') // 👋
+  const check = decode('%E2%9C%85')    // ✅
+  const clip  = decode('%F0%9F%93%8E') // 📎
+  const memo  = decode('%F0%9F%93%9D') // 📝
+  const out   = decode('%F0%9F%93%A4') // 📤
+  const nl    = '\n'
 
-  return [
-    `Olá, ${name}! ${wave} Aqui está o link do seu portal de demandas: ${portalUrl}`,
-    '',
-    'Por lá você consegue:',
-    `${check} Ver todas as suas tarefas e prazos`,
-    `${clip} Acessar os arquivos e referências que enviamos`,
-    `${memo} Deixar observações sobre cada demanda`,
-    `${out} Enviar o link de entrega quando finalizar`,
-    '',
-    'Qualquer dúvida é só me chamar aqui!',
-  ].join('\n')
+  return (
+    'Olá, ' + name + '! ' + wave + ' Aqui está o link do seu portal de demandas: ' + portalUrl + nl +
+    nl +
+    'Por lá você consegue:' + nl +
+    check + ' Ver todas as suas tarefas e prazos' + nl +
+    clip  + ' Acessar os arquivos e referências que enviamos' + nl +
+    memo  + ' Deixar observações sobre cada demanda' + nl +
+    out   + ' Enviar o link de entrega quando finalizar' + nl +
+    nl +
+    'Qualquer dúvida é só me chamar aqui!'
+  )
 }
 
 function openWhatsApp(phone: string, message: string) {
   const clean = phone.replace(/\D/g, '')
-  window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank')
+  // Usar URL API garante encoding correto sem risco de double-encode
+  const url = new URL('https://wa.me/' + clean)
+  url.searchParams.set('text', message)
+  // searchParams usa + para espaço; WhatsApp prefere %20
+  const href = url.toString().replace(/\+/g, '%20')
+  const a = document.createElement('a')
+  a.href = href
+  a.target = '_blank'
+  a.rel = 'noopener noreferrer'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 
 // ── Modal de WhatsApp ─────────────────────────────────────────────────────────
