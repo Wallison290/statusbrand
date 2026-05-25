@@ -1974,28 +1974,51 @@ function ViewTabs({ view, onChange }: { view: BoardView; onChange: (v: BoardView
 }
 
 // ── Carga de trabalho ─────────────────────────────────────────────────────────
+// Escala absoluta 0–10:  0-3 = Tranquilo | 4-6 = Atenção | 7+ = Sobrecarregado
 
-function WorkloadBar({ member, count, max }: { member: TeamMember; count: number; max: number }) {
-  const pct = max > 0 ? Math.round((count / max) * 100) : 0
-  const color = pct >= 80 ? '#ef4444' : pct >= 50 ? '#f59e0b' : '#10b981'
+function getWorkloadLevel(count: number): { color: string; bg: string; label: string } {
+  if (count <= 3) return { color: '#10b981', bg: '#d1fae5', label: 'Tranquilo'      }
+  if (count <= 6) return { color: '#f59e0b', bg: '#fef3c7', label: 'Atenção'        }
+  return             { color: '#ef4444', bg: '#fee2e2', label: 'Sobrecarregado'  }
+}
+
+function WorkloadBar({ member, count }: { member: TeamMember; count: number }) {
+  // Barra baseada em escala fixa de 10 tarefas (máximo visual)
+  const pct   = Math.min(Math.round((count / 10) * 100), 100)
+  const level = getWorkloadLevel(count)
 
   return (
     <div className="flex items-center gap-3">
+      {/* Avatar */}
       <div
-        className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+        className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
         style={{ backgroundColor: member.color }}
       >
         {member.name[0].toUpperCase()}
       </div>
-      <span className="text-[12px] text-[#0f172a] w-28 truncate">{member.name}</span>
-      <div className="flex-1 h-2 rounded-full bg-[#f1f5f9] overflow-hidden">
+
+      {/* Nome */}
+      <span className="text-[12px] font-medium text-[#0f172a] w-32 truncate flex-shrink-0">{member.name}</span>
+
+      {/* Barra */}
+      <div className="flex-1 h-2.5 rounded-full bg-[#f1f5f9] overflow-hidden">
         <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: level.color }}
         />
       </div>
-      <span className="text-[11px] text-[#94a3b8] w-16 text-right">
+
+      {/* Contagem */}
+      <span className="text-[11px] text-[#64748b] w-14 text-right flex-shrink-0">
         {count} tarefa{count !== 1 ? 's' : ''}
+      </span>
+
+      {/* Badge de nível */}
+      <span
+        className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 w-28 text-center"
+        style={{ color: level.color, backgroundColor: level.bg }}
+      >
+        {level.label}
       </span>
     </div>
   )
@@ -2220,7 +2243,7 @@ export function TeamPage() {
                 {activeMembersWithCount
                   .sort((a, b) => b.count - a.count)
                   .map(({ member, count }) => (
-                    <WorkloadBar key={member.id} member={member} count={count} max={maxCount} />
+                    <WorkloadBar key={member.id} member={member} count={count} />
                   ))}
                 <div className="pt-4 border-t border-[#f1f5f9] flex gap-6 text-[11px]">
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Tranquilo</span>
