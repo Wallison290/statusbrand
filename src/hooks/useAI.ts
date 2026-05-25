@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { callProxy, streamChat } from '@/lib/aiProxy'
 
 // ── System prompt ──────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema StatusBrand — uma plataforma de gestão para agências de social media.
+const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema Kairo Hub — uma plataforma de gestão para agências de social media.
 
 Você ajuda profissionais de social media e gestores de agências com:
 • Estratégias de conteúdo para Instagram, TikTok, LinkedIn e outras plataformas

@@ -210,7 +210,7 @@ export function ClientRegister() {
           </div>
 
           <p className="text-center text-[11px] text-[#c0c0c0] mt-5">
-            © {new Date().getFullYear()} StatusBrand. Todos os direitos reservados.
+            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>
@@ -234,7 +234,7 @@ export function ClientRegister() {
         <div className="relative z-10 flex items-center justify-center w-full">
           <img
             src="/logo.png"
-            alt="StatusBrand"
+            alt="Kairo Hub"
             className="w-full max-w-[320px] object-contain select-none"
             draggable={false}
             onError={e => {
@@ -395,7 +395,7 @@ export function ClientRegister() {
           </div>
 
           <p className="text-center text-[11px] text-[#c0c0c0] mt-3">
-            © {new Date().getFullYear()} StatusBrand. Todos os direitos reservados.
+            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>

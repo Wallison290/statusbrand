@@ -51,7 +51,7 @@ export function Register() {
               <Zap className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-white">Criar conta</h1>
-            <p className="text-sm text-gray-400 mt-1">Comece a usar o StatusBrand</p>
+            <p className="text-sm text-gray-400 mt-1">Comece a usar o Kairo Hub</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

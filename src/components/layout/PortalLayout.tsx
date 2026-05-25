@@ -40,7 +40,7 @@ export function PortalLayout({
             className="text-[#0f0f0f] font-semibold text-[13px] tracking-tight"
             style={{ fontFamily: "'Georgia', serif" }}
           >
-            StatusBrand
+            Kairo Hub
           </span>
           {clientName && (
             <>

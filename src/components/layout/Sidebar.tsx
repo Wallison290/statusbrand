@@ -23,7 +23,7 @@ const navItems = [
   { href: '/ai',        icon: Sparkles,         label: 'IA Copilot',  highlight: true },
 ]
 
-// ── StatusBrand logo mark ─────────────────────────────────────────────────────
+// ── Kairo Hub logo mark ───────────────────────────────────────────────────────
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (

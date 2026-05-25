@@ -409,7 +409,7 @@ export function AIPage() {
             <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
               <Sparkles className="w-3 h-3" style={{ color: '#ffffff' }} />
             </div>
-            <span className="text-[13px] font-semibold text-[#0f0f0f]">IA StatusBrand</span>
+            <span className="text-[13px] font-semibold text-[#0f0f0f]">IA Kairo Hub</span>
           </div>
         </div>
 

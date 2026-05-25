@@ -167,7 +167,7 @@ export function ClientSetup() {
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          © 2025 StatusBrand — Gestão inteligente de social media
+          © 2025 Kairo Hub — Organize. Produza. Escale.
         </p>
       </div>
     </div>

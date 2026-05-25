@@ -231,7 +231,7 @@ export function Pricing() {
           </div>
           <span className="text-[13px] font-semibold text-[#0f0f0f]"
                 style={{ fontFamily: "'Georgia', serif" }}>
-            StatusBrand
+            Kairo Hub
           </span>
         </div>
         <div className="flex items-center gap-3">

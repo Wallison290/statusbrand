@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 
-// ── StatusBrand wordmark ───────────────────────────────────────────────────────
+// ── Kairo Hub wordmark ────────────────────────────────────────────────────────
 
 function Wordmark({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const sizes = {
@@ -76,7 +76,7 @@ export function Login() {
         <div className="relative z-10 flex items-center justify-center w-full">
           <img
             src="/logo.png"
-            alt="StatusBrand"
+            alt="Kairo Hub"
             className="w-full max-w-[320px] object-contain select-none"
             draggable={false}
             onError={e => {
@@ -182,7 +182,7 @@ export function Login() {
 
           {/* Footer note */}
           <p className="text-center text-[11px] text-[#c0c0c0] mt-5">
-            © {new Date().getFullYear()} StatusBrand. Todos os direitos reservados.
+            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>
