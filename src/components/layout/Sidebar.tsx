@@ -29,7 +29,7 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="flex items-center gap-2.5 flex-1 min-w-0">
       <div className="flex-shrink-0 w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center">
-        <span className="text-white font-bold text-[11px] tracking-tight select-none">SB</span>
+        <span className="text-white font-bold text-[11px] tracking-tight select-none">KH</span>
       </div>
 
       {!collapsed && (
@@ -42,7 +42,7 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
             className="block text-[13px] font-semibold text-[#0f0f0f] tracking-tight whitespace-nowrap"
             style={{ fontFamily: "'Georgia', serif" }}
           >
-            Status<span style={{ fontFamily: 'inherit', fontWeight: 700 }}>Brand</span>
+            Kairo<span style={{ fontFamily: 'inherit', fontWeight: 700 }}>Hub</span>
           </span>
         </motion.div>
       )}
