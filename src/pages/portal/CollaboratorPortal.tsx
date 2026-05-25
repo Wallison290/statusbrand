@@ -8,7 +8,7 @@ import {
   CheckCircle2, Clock, AlertCircle, Circle, ExternalLink, ChevronDown,
   Loader2, Send, FileText, Link as LinkIcon, Calendar, User, Briefcase,
 } from 'lucide-react'
-import { supabaseUrl, supabaseAnonKey } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/client'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -35,23 +35,6 @@ interface CollaboratorTask {
   updated_at:        string
   client_id:         string | null
   clients:           { id: string; company_name: string } | null
-}
-
-// ── Edge function helper ──────────────────────────────────────────────────────
-
-async function callEdgeFunction(name: string, body: Record<string, unknown>) {
-  const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
-    method:  'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey':        supabaseAnonKey,
-      'Authorization': `Bearer ${supabaseAnonKey}`,
-    },
-    body: JSON.stringify(body),
-  })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.error ?? `Erro ${res.status}`)
-  return json
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -194,13 +177,15 @@ function TaskCard({
     setSaving(true)
     setError(null)
     try {
-      await callEdgeFunction('update-collaborator-task', {
-        portal_token:      portalToken,
-        task_id:           task.id,
-        status,
-        collaborator_note: note || undefined,
-        delivery_url:      deliveryUrl || undefined,
+      const { data, error: rpcError } = await (supabase as any).rpc('update_collaborator_task', {
+        p_token:             portalToken,
+        p_task_id:           task.id,
+        p_status:            status,
+        p_collaborator_note: note || null,
+        p_delivery_url:      deliveryUrl || null,
       })
+      if (rpcError) throw new Error(rpcError.message)
+      if (data?.error) throw new Error(data.error)
       setSaved(true)
       onUpdated({ id: task.id, status, collaborator_note: note, delivery_url: deliveryUrl })
       setTimeout(() => setSaved(false), 3000)
@@ -400,9 +385,12 @@ export function CollaboratorPortal() {
 
     async function load() {
       try {
-        const json = await callEdgeFunction('get-collaborator-data', { portal_token: token })
-        setMember(json.member)
-        setTasks(json.tasks ?? [])
+        const { data, error: rpcError } = await (supabase as any)
+          .rpc('get_collaborator_data', { p_token: token })
+        if (rpcError) throw new Error(rpcError.message)
+        if (data?.error) throw new Error(data.error)
+        setMember(data.member)
+        setTasks(data.tasks ?? [])
       } catch (err: any) {
         setError(err.message)
       } finally {
