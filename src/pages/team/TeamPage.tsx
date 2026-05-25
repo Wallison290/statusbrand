@@ -46,15 +46,24 @@ function getPortalUrl(token: string) {
 }
 
 function buildWhatsAppMessage(name: string, portalUrl: string) {
-  return `Olá, ${name}! 👋 Aqui está o link do seu portal de demandas: ${portalUrl}
+  // Unicode code points — evita problema de encoding do arquivo
+  const wave  = String.fromCodePoint(0x1F44B) // 👋
+  const check = String.fromCodePoint(0x2705)  // ✅
+  const clip  = String.fromCodePoint(0x1F4CE) // 📎
+  const memo  = String.fromCodePoint(0x1F4DD) // 📝
+  const out   = String.fromCodePoint(0x1F4E4) // 📤
 
-Por lá você consegue:
-✅ Ver todas as suas tarefas e prazos
-📎 Acessar os arquivos e referências que enviamos
-📝 Deixar observações sobre cada demanda
-📤 Enviar o link de entrega quando finalizar
-
-Qualquer dúvida é só me chamar aqui!`
+  return [
+    `Olá, ${name}! ${wave} Aqui está o link do seu portal de demandas: ${portalUrl}`,
+    '',
+    'Por lá você consegue:',
+    `${check} Ver todas as suas tarefas e prazos`,
+    `${clip} Acessar os arquivos e referências que enviamos`,
+    `${memo} Deixar observações sobre cada demanda`,
+    `${out} Enviar o link de entrega quando finalizar`,
+    '',
+    'Qualquer dúvida é só me chamar aqui!',
+  ].join('\n')
 }
 
 function openWhatsApp(phone: string, message: string) {
