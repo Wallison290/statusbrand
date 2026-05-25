@@ -77,7 +77,7 @@ export function Login() {
           <img
             src="/logo.png"
             alt="Kairo Hub"
-            className="w-full max-w-[480px] object-contain select-none"
+            className="w-full max-w-[600px] object-contain select-none px-6"
             draggable={false}
             onError={e => {
               const img = e.currentTarget
