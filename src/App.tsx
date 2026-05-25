@@ -29,6 +29,7 @@ import { Pricing } from '@/pages/Pricing'
 import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 import { CollaboratorPortal } from '@/pages/portal/CollaboratorPortal'
 import { TeamPage } from '@/pages/team/TeamPage'
+import { InstagramPage } from '@/pages/instagram/InstagramPage'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -150,6 +151,7 @@ function AppRoutes() {
         <Route path="/financial"     element={<Financial />} />
         <Route path="/ai"            element={<AIPage />} />
         <Route path="/equipe"        element={<TeamPage />} />
+        <Route path="/instagram"     element={<InstagramPage />} />
         <Route path="/assinatura"    element={<Subscription />} />
       </Route>
 

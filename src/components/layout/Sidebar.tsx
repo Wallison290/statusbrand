@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
   { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
+  { href: '/instagram', icon: Instagram,        label: 'Instagram'      },
   { href: '/ai',        icon: Sparkles,         label: 'IA Copilot',  highlight: true },
 ]
 
