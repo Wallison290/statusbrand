@@ -51,7 +51,7 @@ function buildWhatsAppMessage(name: string, portalUrl: string) {
 Por lá você consegue:
 ✅ Ver todas as suas tarefas e prazos
 📎 Acessar os arquivos e referências que enviamos
-💬 Deixar observações sobre cada demanda
+📝 Deixar observações sobre cada demanda
 📤 Enviar o link de entrega quando finalizar
 
 Qualquer dúvida é só me chamar aqui!`
