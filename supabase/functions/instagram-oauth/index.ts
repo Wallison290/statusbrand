@@ -7,7 +7,7 @@ const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const META_APP_ID       = Deno.env.get('META_APP_ID')!
 const META_APP_SECRET   = Deno.env.get('META_APP_SECRET')!
-const APP_URL           = Deno.env.get('APP_URL')!   // ex: https://seuapp.vercel.app
+const APP_URL           = Deno.env.get('APP_URL')!
 
 Deno.serve(async (req) => {
   const url      = new URL(req.url)
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   const redirectUri = `${SUPABASE_URL}/functions/v1/instagram-oauth`
 
   try {
-    // ── 1. Troca code por token de curta duração (Instagram Business Login) ────
+    // ── 1. Troca code por token de curta duração ──────────────────────────────
     const shortRes = await fetch('https://api.instagram.com/oauth/access_token', {
       method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -45,23 +45,23 @@ Deno.serve(async (req) => {
     const igUserId = String(shortData.user_id)
 
     // ── 2. Troca por token de longa duração (60 dias) ─────────────────────────
-    const longRes = await fetch(
-      `https://graph.instagram.com/access_token` +
-      `?grant_type=ig_exchange_token` +
-      `&client_id=${META_APP_ID}` +
-      `&client_secret=${META_APP_SECRET}` +
-      `&access_token=${shortData.access_token}`
-    )
+    const longRes = await fetch('https://graph.instagram.com/access_token', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    new URLSearchParams({
+        grant_type:    'ig_exchange_token',
+        client_id:     META_APP_ID,
+        client_secret: META_APP_SECRET,
+        access_token:  shortData.access_token,
+      }),
+    })
     const longData  = await longRes.json()
-    const longToken = longData.access_token
-    if (!longToken) {
-      console.error('Long token error:', longData)
-      return redirect('/instagram?error=token_exchange_failed')
-    }
+    const longToken = longData.access_token ?? shortData.access_token
+    const expiresIn = longData.expires_in   ?? 3_600   // fallback: 1h (short token)
 
     // ── 3. Busca perfil do Instagram ──────────────────────────────────────────
     const profileRes = await fetch(
-      `https://graph.instagram.com/v19.0/me` +
+      `https://graph.instagram.com/me` +
       `?fields=username,name,profile_picture_url,followers_count` +
       `&access_token=${longToken}`
     )
@@ -71,9 +71,11 @@ Deno.serve(async (req) => {
     const igPic       = profile.profile_picture_url ?? null
     const igFollowers = profile.followers_count     ?? 0
 
+    console.log('Profile:', JSON.stringify(profile))
+
     // ── 4. Salva no Supabase ──────────────────────────────────────────────────
     const supabase  = createClient(SUPABASE_URL, SUPABASE_SERVICE)
-    const expiresAt = new Date(Date.now() + (longData.expires_in ?? 5_184_000) * 1000)
+    const expiresAt = new Date(Date.now() + expiresIn * 1000)
 
     const { error: upsertError } = await supabase
       .from('instagram_accounts')
