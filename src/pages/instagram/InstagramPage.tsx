@@ -62,7 +62,9 @@ function buildOAuthUrl(userId: string) {
   ].join(',')
   return (
     `https://www.instagram.com/oauth/authorize` +
-    `?client_id=${META_APP_ID}` +
+    `?enable_fb_login=0` +
+    `&force_authentication=1` +
+    `&client_id=${META_APP_ID}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&scope=${scope}` +
     `&state=${userId}` +
@@ -437,7 +439,10 @@ export function InstagramPage() {
         save_failed:          'Erro ao salvar dados da conta',
         unknown:              'Erro desconhecido. Tente novamente.',
       }
-      toast(msgs[error] ?? error, 'error')
+      const detail = searchParams.get('detail')
+      const msg = detail ? `${msgs[error] ?? error}: ${detail}` : (msgs[error] ?? error)
+      console.error('[Instagram OAuth Error]', error, detail)
+      toast(msg, 'error')
       window.history.replaceState({}, '', '/instagram')
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
