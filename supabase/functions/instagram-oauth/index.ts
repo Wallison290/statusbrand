@@ -1,5 +1,5 @@
 // ── Edge Function: instagram-oauth ────────────────────────────────────────────
-// Recebe o callback do Meta OAuth, troca o code por token e salva no Supabase.
+// Recebe o callback do Instagram Business Login, troca o code por token e salva.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -7,12 +7,12 @@ const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const META_APP_ID       = Deno.env.get('META_APP_ID')!
 const META_APP_SECRET   = Deno.env.get('META_APP_SECRET')!
-const APP_URL           = Deno.env.get('APP_URL')!   // ex: https://statusbrand-snowy.vercel.app
+const APP_URL           = Deno.env.get('APP_URL')!   // ex: https://seuapp.vercel.app
 
 Deno.serve(async (req) => {
-  const url    = new URL(req.url)
-  const code   = url.searchParams.get('code')
-  const state  = url.searchParams.get('state')   // user_id do Supabase
+  const url      = new URL(req.url)
+  const code     = url.searchParams.get('code')
+  const state    = url.searchParams.get('state')   // user_id do Supabase
   const errParam = url.searchParams.get('error')
 
   const redirect = (path: string) =>
@@ -24,74 +24,56 @@ Deno.serve(async (req) => {
   const redirectUri = `${SUPABASE_URL}/functions/v1/instagram-oauth`
 
   try {
-    // ── 1. Troca code por token de curta duração ──────────────────────────────
-    const shortRes  = await fetch(
-      `https://graph.facebook.com/v19.0/oauth/access_token` +
-      `?client_id=${META_APP_ID}&client_secret=${META_APP_SECRET}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
-    )
+    // ── 1. Troca code por token de curta duração (Instagram Business Login) ────
+    const shortRes = await fetch('https://api.instagram.com/oauth/access_token', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    new URLSearchParams({
+        client_id:     META_APP_ID,
+        client_secret: META_APP_SECRET,
+        grant_type:    'authorization_code',
+        redirect_uri:  redirectUri,
+        code:          code,
+      }),
+    })
     const shortData = await shortRes.json()
     if (!shortData.access_token) {
       console.error('Short token error:', shortData)
       return redirect('/instagram?error=token_exchange_failed')
     }
 
+    const igUserId = String(shortData.user_id)
+
     // ── 2. Troca por token de longa duração (60 dias) ─────────────────────────
-    const longRes  = await fetch(
-      `https://graph.facebook.com/v19.0/oauth/access_token` +
-      `?grant_type=fb_exchange_token&client_id=${META_APP_ID}` +
-      `&client_secret=${META_APP_SECRET}&fb_exchange_token=${shortData.access_token}`
+    const longRes = await fetch(
+      `https://graph.instagram.com/access_token` +
+      `?grant_type=ig_exchange_token` +
+      `&client_id=${META_APP_ID}` +
+      `&client_secret=${META_APP_SECRET}` +
+      `&access_token=${shortData.access_token}`
     )
-    const longData = await longRes.json()
+    const longData  = await longRes.json()
     const longToken = longData.access_token
+    if (!longToken) {
+      console.error('Long token error:', longData)
+      return redirect('/instagram?error=token_exchange_failed')
+    }
 
-    // ── 3. Lista Páginas do Facebook e acha conta Instagram Business ──────────
-    const pagesRes  = await fetch(
-      `https://graph.facebook.com/v19.0/me/accounts` +
-      `?fields=id,name,access_token&access_token=${longToken}`
+    // ── 3. Busca perfil do Instagram ──────────────────────────────────────────
+    const profileRes = await fetch(
+      `https://graph.instagram.com/v19.0/me` +
+      `?fields=username,name,profile_picture_url,followers_count` +
+      `&access_token=${longToken}`
     )
-    const pagesData = await pagesRes.json()
-
-    let igUserId: string | null = null
-    let igToken: string | null  = null
-    let igUsername = 'unknown'
-    let igName: string | null   = null
-    let igPic: string | null    = null
-    let igFollowers = 0
-
-    for (const page of pagesData.data ?? []) {
-      const igCheck = await fetch(
-        `https://graph.facebook.com/v19.0/${page.id}` +
-        `?fields=instagram_business_account&access_token=${page.access_token}`
-      )
-      const igCheckData = await igCheck.json()
-
-      if (igCheckData.instagram_business_account?.id) {
-        igUserId = igCheckData.instagram_business_account.id
-        igToken  = page.access_token
-
-        // Busca dados do perfil Instagram
-        const profileRes = await fetch(
-          `https://graph.facebook.com/v19.0/${igUserId}` +
-          `?fields=username,name,profile_picture_url,followers_count` +
-          `&access_token=${igToken}`
-        )
-        const profile = await profileRes.json()
-        igUsername  = profile.username   ?? 'unknown'
-        igName      = profile.name       ?? null
-        igPic       = profile.profile_picture_url ?? null
-        igFollowers = profile.followers_count     ?? 0
-        break
-      }
-    }
-
-    if (!igUserId || !igToken) {
-      return redirect('/instagram?error=no_instagram_account')
-    }
+    const profile     = await profileRes.json()
+    const igUsername  = profile.username            ?? 'unknown'
+    const igName      = profile.name                ?? null
+    const igPic       = profile.profile_picture_url ?? null
+    const igFollowers = profile.followers_count     ?? 0
 
     // ── 4. Salva no Supabase ──────────────────────────────────────────────────
-    const supabase   = createClient(SUPABASE_URL, SUPABASE_SERVICE)
-    const expiresAt  = new Date(Date.now() + (longData.expires_in ?? 5_184_000) * 1000)
+    const supabase  = createClient(SUPABASE_URL, SUPABASE_SERVICE)
+    const expiresAt = new Date(Date.now() + (longData.expires_in ?? 5_184_000) * 1000)
 
     const { error: upsertError } = await supabase
       .from('instagram_accounts')
@@ -102,7 +84,7 @@ Deno.serve(async (req) => {
         name:                igName,
         profile_picture_url: igPic,
         followers_count:     igFollowers,
-        access_token:        igToken,
+        access_token:        longToken,
         token_expires_at:    expiresAt.toISOString(),
         is_active:           true,
         updated_at:          new Date().toISOString(),

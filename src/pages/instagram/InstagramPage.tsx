@@ -57,13 +57,11 @@ const TABS: { value: TabType; label: string; statuses: string[] }[] = [
 function buildOAuthUrl(userId: string) {
   const redirectUri = `${SUPABASE_URL}/functions/v1/instagram-oauth`
   const scope = [
-    'instagram_basic',
-    'instagram_content_publish',
-    'pages_read_engagement',
-    'pages_show_list',
+    'instagram_business_basic',
+    'instagram_business_content_publish',
   ].join(',')
   return (
-    `https://www.facebook.com/dialog/oauth` +
+    `https://www.instagram.com/oauth/authorize` +
     `?client_id=${META_APP_ID}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&scope=${scope}` +
@@ -210,12 +208,12 @@ function NewPostModal({ accountId, userId, onClose }: NewPostModalProps) {
 
   const handleSubmit = async () => {
     if (!postType || files.length === 0 || !scheduledAt) {
-      toast({ title: 'Preencha todos os campos obrigatórios', type: 'error' })
+      toast('Preencha todos os campos obrigatórios', 'error')
       return
     }
     const scheduled = new Date(scheduledAt)
     if (scheduled <= new Date()) {
-      toast({ title: 'O horário deve ser no futuro', type: 'error' })
+      toast('O horário deve ser no futuro', 'error')
       return
     }
     setUploading(true)
@@ -233,10 +231,10 @@ function NewPostModal({ accountId, userId, onClose }: NewPostModalProps) {
         media_urls:    mediaUrls,
         scheduled_at:  scheduled.toISOString(),
       })
-      toast({ title: 'Post agendado com sucesso!', type: 'success' })
+      toast('Post agendado com sucesso!', 'success')
       onClose()
     } catch {
-      toast({ title: 'Erro ao agendar post. Tente novamente.', type: 'error' })
+      toast('Erro ao agendar post. Tente novamente.', 'error')
     } finally {
       setUploading(false)
     }
@@ -427,7 +425,7 @@ export function InstagramPage() {
     const connected = searchParams.get('connected')
     const error     = searchParams.get('error')
     if (connected === 'true') {
-      toast({ title: 'Instagram conectado com sucesso!', type: 'success' })
+      toast('Instagram conectado com sucesso!', 'success')
       window.history.replaceState({}, '', '/instagram')
       refetchAccount()
     }
@@ -439,14 +437,14 @@ export function InstagramPage() {
         save_failed:          'Erro ao salvar dados da conta',
         unknown:              'Erro desconhecido. Tente novamente.',
       }
-      toast({ title: msgs[error] ?? error, type: 'error' })
+      toast(msgs[error] ?? error, 'error')
       window.history.replaceState({}, '', '/instagram')
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConnect = () => {
     if (!META_APP_ID) {
-      toast({ title: 'Configure VITE_META_APP_ID nas variáveis de ambiente', type: 'error' })
+      toast('Configure VITE_META_APP_ID nas variáveis de ambiente', 'error')
       return
     }
     window.location.href = buildOAuthUrl(user!.id)
@@ -455,13 +453,13 @@ export function InstagramPage() {
   const handleDisconnect = async () => {
     if (!account || !confirm('Desconectar esta conta do Instagram?')) return
     await disconnect.mutateAsync(account.id)
-    toast({ title: 'Conta desconectada', type: 'success' })
+    toast('Conta desconectada', 'success')
   }
 
   const handleCancel = async (id: string) => {
     if (!confirm('Cancelar este post agendado?')) return
     await cancelPost.mutateAsync(id)
-    toast({ title: 'Post cancelado', type: 'success' })
+    toast('Post cancelado', 'success')
   }
 
   const filteredPosts = posts.filter(p =>
