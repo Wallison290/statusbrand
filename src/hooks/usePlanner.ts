@@ -8,7 +8,7 @@ export function usePlanner(clientId?: string) {
     queryFn: async () => {
       let q = supabase
         .from('planner')
-        .select('*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,created_at), links:planner_links(id,url,label,created_at)')
+        .select('*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,sort_order,is_ig_media,created_at), links:planner_links(id,url,label,created_at)')
         .order('scheduled_date', { ascending: true })
       if (clientId) q = q.eq('client_id', clientId)
       const { data, error } = await q

@@ -1191,10 +1191,13 @@ export function Planner() {
 
         if (!igAccount) { schedulingInProgress.current.delete(item.id); return }
 
-        // Mídias IG ordenadas
-        const igMedia = (item.attachments ?? [])
+        // Mídias IG ordenadas (com fallback para imagens/vídeos regulares)
+        const igMediaExpl = (item.attachments ?? [])
           .filter(a => a.is_ig_media)
           .sort((a, b) => a.sort_order - b.sort_order)
+        const igMediaFall = (item.attachments ?? [])
+          .filter(a => isImageAttachment(a) || isVideoAttachment(a))
+        const igMedia = igMediaExpl.length > 0 ? igMediaExpl : igMediaFall
 
         if (igMedia.length === 0) { schedulingInProgress.current.delete(item.id); return }
 
