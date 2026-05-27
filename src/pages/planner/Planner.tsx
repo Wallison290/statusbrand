@@ -1174,13 +1174,15 @@ export function Planner() {
       schedulingInProgress.current.add(item.id)
       try {
         // Busca conta Instagram do cliente
-        const { data: igAccount } = await supabase
+        if (!item.client_id) { schedulingInProgress.current.delete(item.id); return }
+        const { data: igAccountData } = await (supabase as any)
           .from('instagram_accounts')
           .select('id')
           .eq('user_id', user.id)
           .eq('client_id', item.client_id)
           .eq('is_active', true)
           .maybeSingle()
+        const igAccount = igAccountData as { id: string } | null
 
         if (!igAccount) { schedulingInProgress.current.delete(item.id); return }
 
@@ -1209,7 +1211,7 @@ export function Planner() {
         if (error) throw error
 
         // Marca como agendado
-        await supabase.from('planner').update({ ig_scheduled: true }).eq('id', item.id)
+        await (supabase as any).from('planner').update({ ig_scheduled: true }).eq('id', item.id)
         await qc.invalidateQueries({ queryKey: ['planner'] })
         await qc.invalidateQueries({ queryKey: ['scheduled_posts'] })
         toast(`"${item.title}" agendado no Instagram! 🚀`, 'success')
@@ -1442,7 +1444,7 @@ export function Planner() {
           const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
           if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
           const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
-          await supabase.from('planner_attachments').insert({
+          await (supabase as any).from('planner_attachments').insert({
             planner_id: editingItem.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),
             file_url: publicUrl, file_size: file.size,
@@ -1507,7 +1509,7 @@ export function Planner() {
           const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
           if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
           const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
-          await supabase.from('planner_attachments').insert({
+          await (supabase as any).from('planner_attachments').insert({
             planner_id: created.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),
             file_url: publicUrl, file_size: file.size,
