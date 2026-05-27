@@ -620,8 +620,8 @@ export function ReportsTab({ clientId }: { clientId: string }) {
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[13px] font-semibold text-zinc-200">Resultados</p>
-          <p className="text-[11px] text-gray-500 mt-0.5">
+          <p className="text-[13px] font-semibold text-[#0f0f0f]">Resultados</p>
+          <p className="text-[11px] text-[#64748b] mt-0.5">
             {reports.length} {reports.length === 1 ? 'relatório' : 'relatórios'} cadastrados
           </p>
         </div>
@@ -631,10 +631,10 @@ export function ReportsTab({ clientId }: { clientId: string }) {
       </div>
 
       {reports.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-white/[0.06] rounded-2xl">
-          <BarChart3 className="w-8 h-8 text-gray-700 mx-auto mb-3" />
-          <p className="text-[13px] font-medium text-gray-500">Nenhum relatório ainda</p>
-          <p className="text-[11px] text-gray-700 mt-1 mb-4">
+        <div className="text-center py-16 border border-dashed border-[#d0d0d0] rounded-2xl">
+          <BarChart3 className="w-8 h-8 text-[#c0c0c0] mx-auto mb-3" />
+          <p className="text-[13px] font-medium text-[#0f0f0f]">Nenhum relatório ainda</p>
+          <p className="text-[11px] text-[#64748b] mt-1 mb-4">
             Crie o primeiro relatório mensal para este cliente.
           </p>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -650,10 +650,10 @@ export function ReportsTab({ clientId }: { clientId: string }) {
               <button
                 key={r.id}
                 onClick={() => setSelectedId(r.id)}
-                className={`flex-shrink-0 lg:w-full text-left px-3.5 py-2.5 rounded-xl text-[12px] font-medium transition-all ${
+                className={`flex-shrink-0 lg:w-full text-left px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                   r.id === selectedId
-                    ? 'bg-white/[0.08] text-white border border-white/[0.12]'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.04] border border-transparent'
+                    ? 'bg-[#0f0f0f] text-white border border-[#0f0f0f] shadow-sm'
+                    : 'text-[#64748b] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-[#e8e8e8] bg-white'
                 }`}
               >
                 {monthLabel(r.month, r.year)}
