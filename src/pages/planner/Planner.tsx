@@ -1014,13 +1014,17 @@ function DayItemCard({
 // ─── Drag & Drop primitives ───────────────────────────────────────────────────
 
 function getChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
-  const s = item.status as PlannerStatus
+  const s   = item.status as PlannerStatus
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
-  if (s === 'publicado') return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+  // Publicado — estado final
+  if (s === 'publicado')            return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+  // Resposta do cliente tem prioridade sobre status interno
+  if (as_ === 'aprovado')           return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
+  if (as_ === 'reprovado')          return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
+  if (as_ === 'ajuste_solicitado')  return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
+  if (as_ === 'ajuste_realizado')   return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  // Sem resposta do cliente: usa status interno
   if (s === 'aprovado')  return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
-  if (as_ === 'reprovado')         return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
-  if (as_ === 'ajuste_solicitado') return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
-  if (as_ === 'ajuste_realizado')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
   if (s === 'revisao')   return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
   if (s === 'producao')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
   return { bg: '#faf5ff', border: '#c4b5fd', text: '#5b21b6' }

@@ -1,10 +1,33 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import type { PlannerItem } from '@/types'
 
+// ── Realtime: invalida o cache do planner quando qualquer row mudar ─────────────
+// Isso garante que quando o CLIENTE aprova/rejeita, a agência vê na hora.
+function usePlannerRealtime(clientId?: string) {
+  const qc = useQueryClient()
+  useEffect(() => {
+    const channel = supabase
+      .channel(`planner-rt-${clientId ?? 'all'}`)
+      .on(
+        'postgres_changes' as any,
+        { event: '*', schema: 'public', table: 'planner' },
+        () => { qc.invalidateQueries({ queryKey: ['planner'] }) }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [clientId, qc])
+}
+
 export function usePlanner(clientId?: string) {
+  // Subscription em tempo real — qualquer UPDATE no banco atualiza a agência
+  usePlannerRealtime(clientId)
+
   return useQuery({
     queryKey: ['planner', clientId],
+    staleTime: 10_000,          // considera dado "novo" por 10s
+    refetchInterval: 30_000,    // polling a cada 30s como fallback
     queryFn: async () => {
       let q = supabase
         .from('planner')

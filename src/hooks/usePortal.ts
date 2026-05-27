@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from './useAuth'
@@ -31,16 +32,34 @@ export function usePortalClient() {
 export function usePortalPlanner() {
   const { profile } = useAuth()
   const isClient = useIsPortalClient()
+  const qc = useQueryClient()
+  const clientId = profile?.linked_client_id
+
+  // Realtime: agência atualiza → cliente vê na hora
+  useEffect(() => {
+    if (!clientId) return
+    const channel = supabase
+      .channel(`portal-planner-rt-${clientId}`)
+      .on(
+        'postgres_changes' as any,
+        { event: '*', schema: 'public', table: 'planner', filter: `client_id=eq.${clientId}` },
+        () => { qc.invalidateQueries({ queryKey: ['portal-planner'] }) }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [clientId, qc])
 
   return useQuery({
-    queryKey: ['portal-planner', profile?.linked_client_id],
+    queryKey: ['portal-planner', clientId],
+    staleTime: 10_000,
+    refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('planner')
         .select(
-          '*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,created_at), links:planner_links(id,url,label,created_at)'
+          '*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,sort_order,is_ig_media,created_at), links:planner_links(id,url,label,created_at)'
         )
-        .eq('client_id', profile!.linked_client_id!)
+        .eq('client_id', clientId!)
         .order('scheduled_date', { ascending: true })
       if (error) throw error
       return data as PlannerItem[]
