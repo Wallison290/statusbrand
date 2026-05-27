@@ -403,13 +403,16 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   const createPost = useCreateScheduledPost()
   const { toast }  = useToast()
 
-  // Mídias IG configuradas no planner (ordenadas por sort_order)
-  const igMedia = (item.attachments ?? [])
-    .filter(a => a.is_ig_media)
-    .sort((a, b) => a.sort_order - b.sort_order)
-
   // Tipo vem direto do planner (sem re-seleção)
   const postType = item.ig_post_type as IgPostType | null
+
+  // Mídias IG: usa is_ig_media explícito; fallback = todas as imagens/vídeos do item
+  const igMediaExplicit = (item.attachments ?? [])
+    .filter(a => a.is_ig_media)
+    .sort((a, b) => a.sort_order - b.sort_order)
+  const igMediaFallback = (item.attachments ?? [])
+    .filter(a => isImageAttachment(a) || isVideoAttachment(a))
+  const igMedia = igMediaExplicit.length > 0 ? igMediaExplicit : igMediaFallback
 
   const [caption, setCaption]       = useState(item.notes ?? '')
   const [schedDate, setSchedDate]   = useState(item.scheduled_date)
@@ -1364,9 +1367,17 @@ export function Planner() {
     setItemViewOpen(false)
     setSelectedPlannerItem(null)
     setEditingItem(item)
-    const allAtts = item.attachments || []
-    const igMedia  = allAtts.filter(a => a.is_ig_media).sort((a,b) => a.sort_order - b.sort_order)
-    const otherAtts = allAtts.filter(a => !a.is_ig_media)
+    const allAtts    = item.attachments || []
+    const igPostType = (item.ig_post_type as any) ?? null
+    // Mídias marcadas explicitamente como IG
+    const igExplicit = allAtts.filter(a => a.is_ig_media).sort((a,b) => a.sort_order - b.sort_order)
+    // Fallback: se ig_post_type configurado mas sem is_ig_media, usa imagens/vídeos regulares
+    const igFallback = igPostType && igExplicit.length === 0
+      ? allAtts.filter(a => isImageAttachment(a) || isVideoAttachment(a))
+      : []
+    const igMedia    = igExplicit.length > 0 ? igExplicit : igFallback
+    const igIds      = new Set(igMedia.map(a => a.id))
+    const otherAtts  = allAtts.filter(a => !igIds.has(a.id))
     setForm({
       title: item.title,
       content_type: item.content_type,
@@ -1375,7 +1386,7 @@ export function Planner() {
       client_id: item.client_id,
       scheduled_date: item.scheduled_date,
       scheduled_time: item.scheduled_time || '',
-      ig_post_type: (item.ig_post_type as any) ?? null,
+      ig_post_type: igPostType,
     })
     setExistingIgMedia(igMedia)
     setIgFiles([])
@@ -1436,6 +1447,13 @@ export function Planner() {
           const path = extractStoragePath(att.file_url)
           if (path) await supabase.storage.from('planner-attachments').remove([path])
           await supabase.from('planner_attachments').delete().eq('id', att.id)
+        }
+        // Promover anexos de fallback para is_ig_media = true (se ainda não estavam marcados)
+        const toPromote = existingIgMedia.filter(a => !a.is_ig_media)
+        for (let i = 0; i < toPromote.length; i++) {
+          await (supabase as any).from('planner_attachments')
+            .update({ is_ig_media: true, sort_order: i })
+            .eq('id', toPromote[i].id)
         }
         // Upload novas mídias IG
         const igStart = existingIgMedia.length
