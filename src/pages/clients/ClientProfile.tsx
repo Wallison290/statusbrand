@@ -838,7 +838,7 @@ export function ClientProfile() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/clients"><ArrowLeft className="w-3.5 h-3.5" /></Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm" className="border border-white/40 bg-white/10 text-white hover:bg-white hover:text-[#0f0f0f] transition-colors">
               <Link to={`/clients/${id}/edit`}><Edit className="w-3.5 h-3.5" /> Editar</Link>
             </Button>
           </div>
