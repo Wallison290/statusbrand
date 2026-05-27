@@ -405,8 +405,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
 
   // Tipo vem direto do planner (sem re-seleção)
   const postType = item.ig_post_type as IgPostType | null
-
-  const typeLabel = postType === 'IMAGE' ? 'imagem'
+  const ptLabel  = postType === 'IMAGE' ? 'imagem'
     : postType === 'CAROUSEL_ALBUM' ? 'carrossel'
     : postType === 'REELS' ? 'reel' : 'post'
 
@@ -422,7 +421,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <p className="text-xs font-semibold text-emerald-800">Aprovado e agendado automaticamente</p>
         </div>
         <p className="text-[11px] text-emerald-700 leading-relaxed">
-          O cliente aprovou este {typeLabel} e ele foi agendado no Instagram automaticamente.
+          O cliente aprovou este {ptLabel} e ele foi agendado no Instagram automaticamente.
           Acompanhe a publicação na aba <strong>Instagram</strong>.
         </p>
       </div>
@@ -440,7 +439,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <p className="text-xs font-semibold text-orange-800">Ajuste solicitado pelo cliente</p>
         </div>
         <p className="text-[11px] text-orange-700 leading-relaxed">
-          O cliente solicitou alterações neste {typeLabel}. Realize as correções, edite o post e reenvie para aprovação.
+          O cliente solicitou alterações neste {ptLabel}. Realize as correções, edite o post e reenvie para aprovação.
           O agendamento ocorrerá automaticamente após a nova aprovação.
         </p>
       </div>
@@ -458,7 +457,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <p className="text-xs font-semibold text-blue-800">Aguardando nova aprovação do cliente</p>
         </div>
         <p className="text-[11px] text-blue-700 leading-relaxed">
-          Os ajustes foram realizados e o {typeLabel} foi reenviado ao cliente.
+          Os ajustes foram realizados e o {ptLabel} foi reenviado ao cliente.
           Quando ele aprovar, o agendamento no Instagram acontecerá automaticamente.
         </p>
       </div>
@@ -476,7 +475,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <p className="text-xs font-semibold text-red-800">Conteúdo reprovado pelo cliente</p>
         </div>
         <p className="text-[11px] text-red-700 leading-relaxed">
-          Este {typeLabel} foi reprovado. Revise o conteúdo, edite e reenvie para o cliente aprovar
+          Este {ptLabel} foi reprovado. Revise o conteúdo, edite e reenvie para o cliente aprovar
           antes de agendar no Instagram.
         </p>
       </div>
