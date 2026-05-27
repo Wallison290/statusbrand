@@ -262,8 +262,8 @@ function TaskViewModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-start justify-between gap-3 pr-6">
             <DialogTitle className="text-[16px] font-semibold text-[#0f0f0f] leading-snug">
               {task.title}
@@ -271,7 +271,7 @@ function TaskViewModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-1">
+        <div className="space-y-4 mt-1 overflow-y-auto flex-1 pr-1">
           {/* Badges: prioridade + status */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${pCfg.bg} ${pCfg.text}`}>
@@ -349,7 +349,7 @@ function TaskViewModal({
           </p>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-shrink-0 border-t border-[#f1f5f9] pt-4 mt-2">
           <Button
             variant="outline"
             size="sm"
