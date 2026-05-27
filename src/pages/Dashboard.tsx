@@ -51,6 +51,8 @@ interface Stats {
   period_approved:         number
   period_scheduled:        number
   period_published:        number
+  period_in_production:    number
+  period_adjustments:      number
 }
 
 interface PlannerDay {
@@ -608,7 +610,7 @@ export function Dashboard() {
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [statsReady, setStatsReady]             = useState(false)
-  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0 })
+  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0, period_in_production: 0, period_adjustments: 0 })
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
@@ -690,8 +692,10 @@ export function Dashboard() {
     const pList = plannerRes.data || []
     const period_pending_approval = pList.filter(isAwaitingApproval).length
     const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
-    const period_scheduled        = pList.filter((p: any) => p.status === 'agendado').length
-    const period_published        = pList.filter((p: any) => p.status === 'publicado').length
+    const period_scheduled     = pList.filter((p: any) => p.status === 'agendado').length
+    const period_published     = pList.filter((p: any) => p.status === 'publicado').length
+    const period_in_production = pList.filter((p: any) => p.status === 'producao' || p.status === 'revisao').length
+    const period_adjustments   = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado' || p.approval_status === 'reprovado').length
 
     setStatsReady(true)
     setStats({
@@ -703,6 +707,8 @@ export function Dashboard() {
       period_approved,
       period_scheduled,
       period_published,
+      period_in_production,
+      period_adjustments,
     })
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
@@ -814,20 +820,19 @@ export function Dashboard() {
             iconColor="text-emerald-700"
           />
           <KpiCard
-            label="Receita Recebida"
-            value={finStats.received}
-            displayValue={fmtBRL(finStats.received)}
-            subtitle="neste mês"
-            href="/financial"
-            icon={DollarSign}
-            iconBg="bg-green-50"
-            iconColor="text-green-700"
+            label="Em Produção"
+            value={stats.period_in_production}
+            subtitle="criação e revisão"
+            href="/planner"
+            icon={Clock}
+            iconBg="bg-purple-50"
+            iconColor="text-purple-700"
           />
           <KpiCard
-            label="Clientes Inadimplentes"
-            value={finStats.overdueCount}
-            subtitle={finStats.overdueCount > 0 ? fmtBRL(finStats.overdueAmt) + ' em atraso' : 'todos em dia'}
-            href="/financial"
+            label="Ajustes Solicitados"
+            value={stats.period_adjustments}
+            subtitle={stats.period_adjustments > 0 ? 'requer correção' : 'nenhum pendente'}
+            href="/planner"
             icon={AlertTriangle}
             warning
           />
