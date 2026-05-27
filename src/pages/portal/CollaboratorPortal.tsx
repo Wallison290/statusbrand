@@ -57,27 +57,27 @@ function LinkTypeIcon({ type, className }: { type: TaskLink['type']; className?:
 }
 
 const LINK_TYPE_COLORS: Record<TaskLink['type'], string> = {
-  link:    'text-blue-500   bg-blue-50',
-  imagem:  'text-pink-500   bg-pink-50',
-  video:   'text-red-500    bg-red-50',
-  arquivo: 'text-amber-600  bg-amber-50',
-  pasta:   'text-violet-500 bg-violet-50',
+  link:    'text-blue-800   bg-blue-50',
+  imagem:  'text-pink-800   bg-pink-50',
+  video:   'text-red-800    bg-red-50',
+  arquivo: 'text-amber-800  bg-amber-50',
+  pasta:   'text-violet-800 bg-violet-50',
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = [
   { value: 'a_fazer',      label: 'A fazer',       icon: Circle,       color: 'text-slate-400',  bg: 'bg-slate-100' },
-  { value: 'em_andamento', label: 'Em andamento',  icon: Clock,        color: 'text-blue-500',   bg: 'bg-blue-50'   },
-  { value: 'revisao',      label: 'Em revisão',    icon: AlertCircle,  color: 'text-amber-500',  bg: 'bg-amber-50'  },
-  { value: 'concluido',    label: 'Concluído',     icon: CheckCircle2, color: 'text-green-500',  bg: 'bg-green-50'  },
+  { value: 'em_andamento', label: 'Em andamento',  icon: Clock,        color: 'text-blue-800',   bg: 'bg-blue-50'   },
+  { value: 'revisao',      label: 'Em revisão',    icon: AlertCircle,  color: 'text-amber-800',  bg: 'bg-amber-50'  },
+  { value: 'concluido',    label: 'Concluído',     icon: CheckCircle2, color: 'text-green-800',  bg: 'bg-green-50'  },
 ]
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   baixa:  { label: 'Baixa',   color: 'text-slate-500',  bg: 'bg-slate-100'  },
-  media:  { label: 'Média',   color: 'text-blue-600',   bg: 'bg-blue-100'   },
-  alta:   { label: 'Alta',    color: 'text-orange-600', bg: 'bg-orange-100' },
-  urgente:{ label: 'Urgente', color: 'text-red-600',    bg: 'bg-red-100'    },
+  media:  { label: 'Média',   color: 'text-blue-800',   bg: 'bg-blue-100'   },
+  alta:   { label: 'Alta',    color: 'text-orange-800', bg: 'bg-orange-100' },
+  urgente:{ label: 'Urgente', color: 'text-red-800',    bg: 'bg-red-100'    },
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ function TaskDetailModal({
               )}
               {task.due_date && (
                 <span className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
-                  overdue ? 'text-red-600 bg-red-50 font-semibold' : 'text-slate-500 bg-slate-100'
+                  overdue ? 'text-red-800 bg-red-50 font-semibold' : 'text-slate-500 bg-slate-100'
                 }`}>
                   <Calendar className="w-3 h-3" />
                   {overdue && 'Atrasado · '}{formatDate(task.due_date)}
@@ -338,7 +338,7 @@ function TaskDetailModal({
                         />
                         <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-red-500 bg-red-50">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-red-800 bg-red-50">
                               <LinkTypeIcon type="video" className="w-3.5 h-3.5" />
                             </div>
                             <span className="text-sm font-medium text-slate-700 truncate">{link.label}</span>
@@ -353,7 +353,7 @@ function TaskDetailModal({
                   }
 
                   // ── Outros tipos: link, arquivo, pasta ──
-                  const colorCls = LINK_TYPE_COLORS[link.type] ?? 'text-blue-500 bg-blue-50'
+                  const colorCls = LINK_TYPE_COLORS[link.type] ?? 'text-blue-800 bg-blue-50'
                   return (
                     <a
                       key={link.id}
@@ -651,8 +651,8 @@ export function CollaboratorPortal() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Total',      value: counts.total,      color: 'text-slate-700', bg: 'bg-white'    },
-            { label: 'Pendentes',  value: counts.pendentes,  color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Concluídas', value: counts.concluidas, color: 'text-green-600', bg: 'bg-green-50' },
+            { label: 'Pendentes',  value: counts.pendentes,  color: 'text-amber-800', bg: 'bg-amber-50' },
+            { label: 'Concluídas', value: counts.concluidas, color: 'text-green-800', bg: 'bg-green-50' },
           ].map(s => (
             <div key={s.label} className={`${s.bg} rounded-2xl p-3 border border-slate-200 text-center shadow-sm`}>
               <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>

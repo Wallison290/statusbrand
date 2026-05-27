@@ -23,8 +23,8 @@ const typeLabels: Record<NoteType, string> = {
 }
 const typeBadgeColors: Record<NoteType, string> = {
   interna:    'bg-[#f0f0f0] text-[#737373]',
-  ideia:      'bg-amber-50 text-amber-600',
-  solicitacao: 'bg-blue-50 text-blue-600',
+  ideia:      'bg-amber-50 text-amber-800',
+  solicitacao: 'bg-blue-50 text-blue-800',
 }
 const originLabels: Record<NoteOrigin, string> = {
   agency: 'Agência',
@@ -70,7 +70,7 @@ function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
           </span>
         )}
         {note.origin === 'client' && (
-          <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">
+          <span className="text-[10px] text-purple-800 bg-purple-50 px-1.5 py-0.5 rounded-md">
             do cliente
           </span>
         )}

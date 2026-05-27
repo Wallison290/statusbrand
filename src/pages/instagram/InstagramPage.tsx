@@ -31,11 +31,11 @@ const POST_TYPE_CFG = {
 } as const
 
 const STATUS_CFG = {
-  scheduled:  { label: 'Agendado',   color: 'text-blue-600',  bg: 'bg-blue-50 border-blue-100',   dot: 'bg-blue-400',   Icon: Clock,        spin: false },
-  publishing: { label: 'Publicando', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', dot: 'bg-amber-400',  Icon: Loader2,      spin: true  },
-  published:  { label: 'Publicado',  color: 'text-green-600', bg: 'bg-green-50 border-green-100', dot: 'bg-green-400',  Icon: CheckCircle2, spin: false },
-  failed:     { label: 'Falhou',     color: 'text-red-600',   bg: 'bg-red-50 border-red-100',     dot: 'bg-red-400',    Icon: XCircle,      spin: false },
-  cancelled:  { label: 'Cancelado',  color: 'text-gray-500',  bg: 'bg-gray-50 border-gray-100',   dot: 'bg-gray-300',   Icon: X,            spin: false },
+  scheduled:  { label: 'Agendado',   color: 'text-blue-900',  bg: 'bg-blue-50 border-blue-200',   dot: 'bg-blue-400',   Icon: Clock,        spin: false },
+  publishing: { label: 'Publicando', color: 'text-amber-900', bg: 'bg-amber-50 border-amber-200', dot: 'bg-amber-400',  Icon: Loader2,      spin: true  },
+  published:  { label: 'Publicado',  color: 'text-green-900', bg: 'bg-green-50 border-green-200', dot: 'bg-green-400',  Icon: CheckCircle2, spin: false },
+  failed:     { label: 'Falhou',     color: 'text-red-900',   bg: 'bg-red-50 border-red-200',     dot: 'bg-red-400',    Icon: XCircle,      spin: false },
+  cancelled:  { label: 'Cancelado',  color: 'text-gray-700',  bg: 'bg-gray-50 border-gray-200',   dot: 'bg-gray-300',   Icon: X,            spin: false },
 } as const
 
 const TABS: { value: TabType; label: string; statuses: string[] }[] = [
@@ -96,17 +96,17 @@ function AccountListCard({
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             {scheduledCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
                 {scheduledCount} ag.
               </span>
             )}
             {publishedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200">
                 {publishedCount} pub.
               </span>
             )}
             {failedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200">
                 {failedCount} falha{failedCount > 1 ? 's' : ''}
               </span>
             )}
@@ -280,10 +280,10 @@ function AccountDetailView({
       {/* Stats da conta */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Agendados',  value: stats.scheduled, color: 'text-blue-600',  bg: 'bg-blue-50'  },
-          { label: 'Publicados', value: stats.published, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Falhas',     value: stats.failed,    color: 'text-red-600',   bg: 'bg-red-50'   },
-          { label: 'Cancelados', value: stats.cancelled, color: 'text-gray-500',  bg: 'bg-gray-50'  },
+          { label: 'Agendados',  value: stats.scheduled, color: 'text-blue-800',  bg: 'bg-blue-50'  },
+          { label: 'Publicados', value: stats.published, color: 'text-green-800', bg: 'bg-green-50' },
+          { label: 'Falhas',     value: stats.failed,    color: 'text-red-800',   bg: 'bg-red-50'   },
+          { label: 'Cancelados', value: stats.cancelled, color: 'text-gray-700',  bg: 'bg-gray-50'  },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border border-[#e8e8e8] ${s.bg} p-4 text-center`}>
             <div className={`text-[22px] font-bold ${s.color}`}>{s.value}</div>

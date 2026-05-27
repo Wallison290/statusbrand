@@ -41,10 +41,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, x: 50, scale: 0.9 }}
               className={cn(
                 'pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-sm min-w-[280px] max-w-[400px]',
-                t.type === 'success' && 'bg-green-500/10 border-green-500/20 text-green-300',
-                t.type === 'error' && 'bg-red-500/10 border-red-500/20 text-red-300',
-                t.type === 'info' && 'bg-blue-500/10 border-blue-500/20 text-blue-300',
-                t.type === 'warning' && 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300',
+                t.type === 'success' && 'bg-green-50 border-green-200 text-green-900',
+                t.type === 'error' && 'bg-red-50 border-red-200 text-red-900',
+                t.type === 'info' && 'bg-blue-50 border-blue-200 text-blue-900',
+                t.type === 'warning' && 'bg-amber-50 border-amber-200 text-amber-900',
               )}
             >
               {t.type === 'success' && <CheckCircle2 className="h-4 w-4 flex-shrink-0" />}

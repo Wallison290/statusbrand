@@ -292,10 +292,10 @@ function KpiCard({
     >
       <div className="flex items-start justify-between">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
-          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-400' : iconColor}`} />
+          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-700' : iconColor}`} />
         </div>
         {showWarning && (
-          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-400 border border-red-100">
+          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200">
             Atenção
           </span>
         )}
@@ -545,10 +545,10 @@ function AlertsWidget({
   const allGood = pendingApproval === 0 && overdueTasks === 0
 
   const rows = [
-    { icon: CheckCircle2, label: 'Aprovados no período',    value: periodApproved,  color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/planner' },
-    { icon: Clock,        label: 'Aguardando aprovação',    value: pendingApproval, color: pendingApproval > 0 ? 'text-amber-600'  : 'text-gray-400', bg: pendingApproval > 0 ? 'bg-amber-50'  : 'bg-gray-50', href: '/planner' },
-    { icon: CheckSquare,  label: 'Tarefas em aberto',       value: pendingTasks,    color: pendingTasks    > 0 ? 'text-blue-600'   : 'text-gray-400', bg: pendingTasks    > 0 ? 'bg-blue-50'   : 'bg-gray-50', href: '/tasks'   },
-    { icon: AlertTriangle,label: 'Tarefas atrasadas',       value: overdueTasks,    color: overdueTasks    > 0 ? 'text-red-500'    : 'text-gray-400', bg: overdueTasks    > 0 ? 'bg-red-50'    : 'bg-gray-50', href: '/tasks'   },
+    { icon: CheckCircle2, label: 'Aprovados no período',    value: periodApproved,  color: 'text-emerald-800', bg: 'bg-emerald-50', href: '/planner' },
+    { icon: Clock,        label: 'Aguardando aprovação',    value: pendingApproval, color: pendingApproval > 0 ? 'text-amber-800'  : 'text-gray-400', bg: pendingApproval > 0 ? 'bg-amber-50'  : 'bg-gray-50', href: '/planner' },
+    { icon: CheckSquare,  label: 'Tarefas em aberto',       value: pendingTasks,    color: pendingTasks    > 0 ? 'text-blue-800'   : 'text-gray-400', bg: pendingTasks    > 0 ? 'bg-blue-50'   : 'bg-gray-50', href: '/tasks'   },
+    { icon: AlertTriangle,label: 'Tarefas atrasadas',       value: overdueTasks,    color: overdueTasks    > 0 ? 'text-red-800'    : 'text-gray-400', bg: overdueTasks    > 0 ? 'bg-red-50'    : 'bg-gray-50', href: '/tasks'   },
   ]
 
   return (
@@ -789,11 +789,11 @@ export function Dashboard() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
           <KpiCard label="Total de Clientes"  value={stats.total_clients}            subtitle="global"             href="/clients"  icon={Users}          featured />
-          <KpiCard label="Clientes Ativos"    value={stats.active_clients}           subtitle="em operação"        href="/clients"  icon={TrendingUp}     iconBg="bg-emerald-50"  iconColor="text-emerald-600" />
-          <KpiCard label="Tarefas Pendentes"  value={stats.pending_tasks}            subtitle="no período"         href="/tasks"    icon={CheckSquare}    iconBg="bg-blue-50"     iconColor="text-blue-500" />
+          <KpiCard label="Clientes Ativos"    value={stats.active_clients}           subtitle="em operação"        href="/clients"  icon={TrendingUp}     iconBg="bg-emerald-50"  iconColor="text-emerald-800" />
+          <KpiCard label="Tarefas Pendentes"  value={stats.pending_tasks}            subtitle="no período"         href="/tasks"    icon={CheckSquare}    iconBg="bg-blue-50"     iconColor="text-blue-800" />
           <KpiCard label="Tarefas Atrasadas"  value={stats.overdue_tasks}            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'em dia'} href="/tasks"    icon={AlertTriangle}  warning />
-          <KpiCard label="Ag. aprovação"      value={stats.period_pending_approval}  subtitle="no período"         href="/planner"  icon={Clock}          iconBg="bg-orange-50"   iconColor="text-orange-500" />
-          <KpiCard label="Aprovados"          value={stats.period_approved}          subtitle="no período"         href="/planner"  icon={CheckCircle2}   iconBg="bg-emerald-50"  iconColor="text-emerald-600" />
+          <KpiCard label="Ag. aprovação"      value={stats.period_pending_approval}  subtitle="no período"         href="/planner"  icon={Clock}          iconBg="bg-orange-50"   iconColor="text-orange-800" />
+          <KpiCard label="Aprovados"          value={stats.period_approved}          subtitle="no período"         href="/planner"  icon={CheckCircle2}   iconBg="bg-emerald-50"  iconColor="text-emerald-800" />
         </div>
 
         {/* Main grid */}

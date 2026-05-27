@@ -457,13 +457,13 @@ function groupPlannerByWeek(items: PlannerItem[]): WeekGroup[] {
 }
 
 function getPlannerBadge(item: PlannerItem): { label: string; cls: string } {
-  if (item.status === 'publicado') return { label: 'Publicado', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' }
+  if (item.status === 'publicado') return { label: 'Publicado', cls: 'bg-emerald-50 text-emerald-900 border border-emerald-200' }
   switch (item.approval_status) {
-    case 'aprovado':          return { label: 'Aprovado',     cls: 'bg-green-50 text-green-700 border border-green-200' }
-    case 'reprovado':         return { label: 'Reprovado',    cls: 'bg-red-50 text-red-700 border border-red-200' }
-    case 'ajuste_solicitado': return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' }
-    case 'ajuste_realizado':  return { label: 'Ajuste Feito', cls: 'bg-blue-50 text-blue-700 border border-blue-200' }
-    default:                  return { label: 'Em Aprovação', cls: 'bg-amber-50 text-amber-700 border border-amber-200' }
+    case 'aprovado':          return { label: 'Aprovado',     cls: 'bg-green-50 text-green-900 border border-green-200' }
+    case 'reprovado':         return { label: 'Reprovado',    cls: 'bg-red-50 text-red-900 border border-red-200' }
+    case 'ajuste_solicitado': return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-900 border border-orange-200' }
+    case 'ajuste_realizado':  return { label: 'Ajuste Feito', cls: 'bg-blue-50 text-blue-900 border border-blue-200' }
+    default:                  return { label: 'Em Aprovação', cls: 'bg-amber-50 text-amber-900 border border-amber-200' }
   }
 }
 
@@ -483,11 +483,11 @@ function getWeekSummaryBadge(items: PlannerItem[]): { label: string; cls: string
   const hasReprovado = items.some(i => i.approval_status === 'reprovado')
   const allPublished = items.length > 0 && items.every(i => i.status === 'publicado')
   const allApproved  = items.length > 0 && items.every(i => i.approval_status === 'aprovado' || i.status === 'publicado')
-  if (hasReprovado) return { label: 'Reprovado',   cls: 'bg-red-50 text-red-600' }
-  if (hasAjuste)    return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-600' }
-  if (allPublished) return { label: 'Publicado',    cls: 'bg-emerald-50 text-emerald-600' }
-  if (allApproved)  return { label: 'Aprovado',     cls: 'bg-green-50 text-green-600' }
-  return              { label: 'Em Aprovação',  cls: 'bg-amber-50 text-amber-600' }
+  if (hasReprovado) return { label: 'Reprovado',   cls: 'bg-red-50 text-red-800' }
+  if (hasAjuste)    return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-800' }
+  if (allPublished) return { label: 'Publicado',    cls: 'bg-emerald-50 text-emerald-800' }
+  if (allApproved)  return { label: 'Aprovado',     cls: 'bg-green-50 text-green-800' }
+  return              { label: 'Em Aprovação',  cls: 'bg-amber-50 text-amber-800' }
 }
 
 // ─── Instagram Tab ────────────────────────────────────────────────────────────

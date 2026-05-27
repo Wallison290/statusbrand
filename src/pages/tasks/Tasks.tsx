@@ -27,9 +27,9 @@ import type { Task, TaskStatus, TaskPriority } from '@/types'
 
 const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; dot: string }> = {
   a_fazer:      { label: 'A fazer',      bg: 'bg-[#f0f0f0]',  text: 'text-[#737373]',   dot: 'bg-[#c0c0c0]'   },
-  em_andamento: { label: 'Em andamento', bg: 'bg-blue-50',    text: 'text-blue-600',    dot: 'bg-blue-400'    },
-  revisao:      { label: 'Revisão',      bg: 'bg-amber-50',   text: 'text-amber-600',   dot: 'bg-amber-400'   },
-  concluido:    { label: 'Concluído',    bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-400' },
+  em_andamento: { label: 'Em andamento', bg: 'bg-blue-50',    text: 'text-blue-900',    dot: 'bg-blue-400'    },
+  revisao:      { label: 'Revisão',      bg: 'bg-amber-50',   text: 'text-amber-900',   dot: 'bg-amber-400'   },
+  concluido:    { label: 'Concluído',    bg: 'bg-emerald-50', text: 'text-emerald-900', dot: 'bg-emerald-400' },
 }
 
 const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string }> = {

@@ -37,13 +37,13 @@ function gradientById(id: string | null | undefined): string {
 // ─── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<string, { label: string; dot: string; badge: string }> = {
-  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
-  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-600 border-amber-200'       },
-  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-50 text-red-500 border-red-200'             },
-  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-50 text-blue-600 border-blue-200'          },
-  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-50 text-violet-600 border-violet-200'    },
-  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-50 text-teal-600 border-teal-200'          },
-  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-50 text-orange-600 border-orange-200'   },
+  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-800 border-amber-200'       },
+  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-50 text-red-800 border-red-200'             },
+  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-50 text-blue-800 border-blue-200'          },
+  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-50 text-violet-800 border-violet-200'    },
+  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-50 text-teal-800 border-teal-200'          },
+  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-50 text-orange-800 border-orange-200'   },
 }
 
 const SORT_OPTIONS = [

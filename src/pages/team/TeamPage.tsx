@@ -651,13 +651,13 @@ function TaskViewModal({
                 {pri.label}
               </span>
               {task.clients && (
-                <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[10px] text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Building2 className="w-2.5 h-2.5" /> {task.clients.company_name}
                 </span>
               )}
               {task.due_date && (
                 <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  overdue ? 'text-red-600 bg-red-50 font-semibold' : 'text-[#64748b] bg-[#f1f5f9]'
+                  overdue ? 'text-red-800 bg-red-50 font-semibold' : 'text-[#64748b] bg-[#f1f5f9]'
                 }`}>
                   <Calendar className="w-2.5 h-2.5" />
                   {overdue && 'Atrasado · '}{formatDate(task.due_date)}
@@ -746,11 +746,11 @@ function TaskViewModal({
                   }
                   const Icon = iconMap[link.type] ?? LinkIcon
                   const colorMap: Record<string, string> = {
-                    link:    'text-violet-500 bg-violet-50',
-                    arquivo: 'text-amber-500 bg-amber-50',
-                    pasta:   'text-emerald-500 bg-emerald-50',
+                    link:    'text-violet-800 bg-violet-50',
+                    arquivo: 'text-amber-800 bg-amber-50',
+                    pasta:   'text-emerald-800 bg-emerald-50',
                   }
-                  const colorCls = colorMap[link.type] ?? 'text-violet-500 bg-violet-50'
+                  const colorCls = colorMap[link.type] ?? 'text-violet-800 bg-violet-50'
 
                   return (
                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
@@ -1056,8 +1056,8 @@ function MemberDetailModal({
                     {/* Confirmação inline de exclusão */}
                     {isDeleting && (
                       <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-lg px-2.5 py-2">
-                        <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                        <span className="text-[11px] text-red-600 flex-1">Remover esta demanda?</span>
+                        <AlertCircle className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
+                        <span className="text-[11px] text-red-800 flex-1">Remover esta demanda?</span>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
                           className="text-[11px] font-semibold text-red-600 hover:text-red-800 px-1"
@@ -1561,7 +1561,7 @@ function MemberCard({
             <button
               onClick={onDelete}
               title="Remover membro"
-              className="flex items-center p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors ml-auto"
+              className="flex items-center p-1.5 rounded-lg text-red-700 hover:bg-red-50 transition-colors ml-auto"
             >
               <Trash2 className="w-3 h-3" />
             </button>

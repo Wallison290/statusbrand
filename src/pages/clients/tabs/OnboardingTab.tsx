@@ -119,7 +119,7 @@ function StatusSection({ client }: { client: Client }) {
           <button
             onClick={handleFechado}
             disabled={updateStatus.isPending}
-            className="px-3 py-1.5 rounded-md border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[12px] hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 rounded-md border border-purple-300 bg-purple-50 text-purple-800 text-[12px] hover:bg-purple-100 transition-colors disabled:opacity-50"
           >
             Negócio fechado → Iniciar onboarding
           </button>

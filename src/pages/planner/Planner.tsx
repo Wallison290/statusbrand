@@ -334,11 +334,11 @@ function DayTooltip({ state }: { state: HoverState }) {
               const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
               return (
                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md mb-1.5 ${
-                  as_ === 'aprovado' ? 'bg-green-50 text-green-700' :
-                  as_ === 'ajuste_solicitado' ? 'bg-orange-50 text-orange-700' :
-                  as_ === 'ajuste_realizado' ? 'bg-blue-50 text-blue-700' :
-                  as_ === 'reprovado' ? 'bg-red-50 text-red-700' :
-                  'bg-amber-50 text-amber-700'
+                  as_ === 'aprovado' ? 'bg-green-50 text-green-900' :
+                  as_ === 'ajuste_solicitado' ? 'bg-orange-50 text-orange-900' :
+                  as_ === 'ajuste_realizado' ? 'bg-blue-50 text-blue-900' :
+                  as_ === 'reprovado' ? 'bg-red-50 text-red-900' :
+                  'bg-amber-50 text-amber-900'
                 }`}>
                   <div className={`w-1 h-1 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
                   <span className="text-[9px] font-medium">{approvalLabel[as_]}</span>
@@ -856,7 +856,7 @@ function PlannerItemView({
                   )}
                   {(localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
                     <button onClick={handleMarkAdjustmentDone} disabled={updateItem.isPending}
-                      className="mt-2 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
+                      className="mt-2 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
                       {updateItem.isPending
                         ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         : <Check className="w-3 h-3" />}

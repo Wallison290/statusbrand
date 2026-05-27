@@ -50,17 +50,17 @@ function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
       {/* Tipo badge */}
       <div className="mb-1.5">
         {note.type === 'solicitacao' && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600">
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-800">
             Solicitação
           </span>
         )}
         {note.type === 'ideia' && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600">
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800">
             Ideia
           </span>
         )}
         {isClientNote && (
-          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">
+          <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-900">
             sua nota
           </span>
         )}
@@ -362,7 +362,7 @@ function NoteModal({ note, onClose }: { note: Note | null; onClose: () => void }
                   <button
                     onClick={handleDelete}
                     disabled={deleteNote.isPending}
-                    className="text-[12px] px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition-colors"
+                    className="text-[12px] px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-800 hover:bg-red-100 transition-colors"
                   >
                     Sim, excluir
                   </button>

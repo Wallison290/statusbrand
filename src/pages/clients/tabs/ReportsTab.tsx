@@ -418,7 +418,7 @@ function ReportDetail({
                   <span className="text-[11px] text-gray-400">Excluir relatório?</span>
                   <Button variant="outline" size="sm" onClick={() => setConfirmDel(false)}>Não</Button>
                   <Button size="sm" onClick={handleDelete}
-                    className="bg-red-500/15 text-red-400 border-red-500/20 hover:bg-red-500/25">
+                    className="bg-red-50 text-red-800 border-red-200 hover:bg-red-100">
                     Sim
                   </Button>
                 </div>
