@@ -406,11 +406,13 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   // Tipo vem direto do planner (sem re-seleção)
   const postType = item.ig_post_type as IgPostType | null
 
-  // ── Já foi agendado automaticamente (cliente aprovou) ─────────────────────
+  const typeLabel = postType === 'IMAGE' ? 'imagem'
+    : postType === 'CAROUSEL_ALBUM' ? 'carrossel'
+    : postType === 'REELS' ? 'reel' : 'post'
+
+  // ── Estados que bloqueiam agendamento ──────────────────────────────────────
+  // Aprovado + agendado automaticamente
   if (item.ig_scheduled && item.approval_status === 'aprovado') {
-    const typeLabel = postType === 'IMAGE' ? 'imagem'
-      : postType === 'CAROUSEL_ALBUM' ? 'carrossel'
-      : postType === 'REELS' ? 'reel' : 'post'
     return (
       <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1.5">
         <div className="flex items-center gap-2">
@@ -422,6 +424,60 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
         <p className="text-[11px] text-emerald-700 leading-relaxed">
           O cliente aprovou este {typeLabel} e ele foi agendado no Instagram automaticamente.
           Acompanhe a publicação na aba <strong>Instagram</strong>.
+        </p>
+      </div>
+    )
+  }
+
+  // Ajuste solicitado — cliente pediu correções
+  if (item.approval_status === 'ajuste_solicitado') {
+    return (
+      <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
+            <Pencil className="w-3 h-3 text-white" />
+          </div>
+          <p className="text-xs font-semibold text-orange-800">Ajuste solicitado pelo cliente</p>
+        </div>
+        <p className="text-[11px] text-orange-700 leading-relaxed">
+          O cliente solicitou alterações neste {typeLabel}. Realize as correções, edite o post e reenvie para aprovação.
+          O agendamento ocorrerá automaticamente após a nova aprovação.
+        </p>
+      </div>
+    )
+  }
+
+  // Ajuste realizado — agência corrigiu, aguardando nova aprovação
+  if (item.approval_status === 'ajuste_realizado') {
+    return (
+      <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+            <Check className="w-3 h-3 text-white" />
+          </div>
+          <p className="text-xs font-semibold text-blue-800">Aguardando nova aprovação do cliente</p>
+        </div>
+        <p className="text-[11px] text-blue-700 leading-relaxed">
+          Os ajustes foram realizados e o {typeLabel} foi reenviado ao cliente.
+          Quando ele aprovar, o agendamento no Instagram acontecerá automaticamente.
+        </p>
+      </div>
+    )
+  }
+
+  // Reprovado — cliente rejeitou
+  if (item.approval_status === 'reprovado') {
+    return (
+      <div className="p-3 bg-red-50 rounded-xl border border-red-200 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+            <X className="w-3 h-3 text-white" />
+          </div>
+          <p className="text-xs font-semibold text-red-800">Conteúdo reprovado pelo cliente</p>
+        </div>
+        <p className="text-[11px] text-red-700 leading-relaxed">
+          Este {typeLabel} foi reprovado. Revise o conteúdo, edite e reenvie para o cliente aprovar
+          antes de agendar no Instagram.
         </p>
       </div>
     )
