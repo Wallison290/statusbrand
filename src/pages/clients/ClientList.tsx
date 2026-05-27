@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette, Clock, CheckCircle, FileEdit, XCircle } from 'lucide-react'
+import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette, Clock, CheckCircle, FileEdit, XCircle, Upload, ImageIcon } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
 import { useClients, useDeleteClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 
 // ─── Gradientes disponíveis ───────────────────────────────────────────────────
 
 const GRADIENTS = [
+  // ── Vibrantes ──────────────────────────────────────────────────────────────
   { id: 'sunset',       value: 'linear-gradient(135deg, #f97316 0%, #fbbf24 100%)',   preview: ['#f97316', '#fbbf24'] },
   { id: 'ocean',        value: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',   preview: ['#3b82f6', '#06b6d4'] },
   { id: 'violet',       value: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',   preview: ['#8b5cf6', '#ec4899'] },
@@ -24,14 +26,34 @@ const GRADIENTS = [
   { id: 'teal-sky',     value: 'linear-gradient(135deg, #6ee7b7 0%, #38bdf8 100%)',   preview: ['#6ee7b7', '#38bdf8'] },
   { id: 'navy',         value: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)',   preview: ['#1e293b', '#3b82f6'] },
   { id: 'coral',        value: 'linear-gradient(135deg, #e94560 0%, #fcd34d 100%)',   preview: ['#e94560', '#fcd34d'] },
+  // ── Metálicos ─────────────────────────────────────────────────────────────
+  { id: 'gold',         value: 'linear-gradient(135deg, #92400e 0%, #fbbf24 50%, #b45309 100%)', preview: ['#a16207', '#fbbf24'] },
+  { id: 'silver',       value: 'linear-gradient(135deg, #64748b 0%, #e2e8f0 50%, #94a3b8 100%)', preview: ['#94a3b8', '#e2e8f0'] },
+  { id: 'bronze',       value: 'linear-gradient(135deg, #7c2d12 0%, #c2732a 50%, #92400e 100%)', preview: ['#92400e', '#c2732a'] },
+  { id: 'chrome',       value: 'linear-gradient(135deg, #1e293b 0%, #94a3b8 50%, #334155 100%)', preview: ['#334155', '#94a3b8'] },
+  { id: 'rose-gold',    value: 'linear-gradient(135deg, #9f1239 0%, #f9a8d4 50%, #be185d 100%)', preview: ['#be185d', '#f9a8d4'] },
+  // ── Escuros / Pretos ──────────────────────────────────────────────────────
+  { id: 'midnight',     value: 'linear-gradient(135deg, #0f0f0f 0%, #1e293b 100%)',   preview: ['#0f0f0f', '#1e293b'] },
+  { id: 'obsidian',     value: 'linear-gradient(135deg, #0f0f0f 0%, #374151 100%)',   preview: ['#111827', '#374151'] },
+  { id: 'dark-purple',  value: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%)',   preview: ['#1e1b4b', '#4c1d95'] },
+  { id: 'dark-teal',    value: 'linear-gradient(135deg, #042f2e 0%, #0f766e 100%)',   preview: ['#042f2e', '#0f766e'] },
+  { id: 'pure-black',   value: 'linear-gradient(135deg, #000000 0%, #111111 100%)',   preview: ['#000000', '#1a1a1a'] },
 ]
 
 const DEFAULT_GRADIENT_ID = 'sunset'
 
-/** Converte ID → valor CSS do gradiente */
-function gradientById(id: string | null | undefined): string {
+/** Retorna o estilo CSS do banner (gradiente ou imagem de fundo) */
+function getBannerStyle(id: string | null | undefined): React.CSSProperties {
+  if (!id) return { background: GRADIENTS[0].value }
+  if (id.startsWith('url:')) {
+    return {
+      backgroundImage:    `url(${id.slice(4)})`,
+      backgroundSize:     'cover',
+      backgroundPosition: 'center',
+    }
+  }
   const found = GRADIENTS.find(g => g.id === id)
-  return found ? found.value : GRADIENTS[0].value
+  return { background: found ? found.value : GRADIENTS[0].value }
 }
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -70,6 +92,7 @@ export function ClientList() {
   const { toast }    = useToast()
   const navigate     = useNavigate()
   const queryClient  = useQueryClient()
+  const { user }     = useAuth()
 
   const [search, setSearch]         = useState('')
   const [filter, setFilter]         = useState<'all' | 'ativo' | 'pausado' | 'encerrado'>('all')
@@ -77,7 +100,9 @@ export function ClientList() {
   const [showSort, setShowSort]     = useState(false)
   const [stats, setStats]           = useState<Record<string, ClientStats>>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
-  const [saving, setSaving]         = useState<string | null>(null) // clientId sendo salvo
+  const [pickerTab, setPickerTab]   = useState<'cores' | 'imagem'>('cores')
+  const [saving, setSaving]         = useState<string | null>(null)
+  const imageInputRef               = useRef<HTMLInputElement>(null)
 
   // ── Carrega stats do planner por cliente ──────────────────────────────────
   useEffect(() => {
@@ -150,6 +175,35 @@ export function ClientList() {
     setSaving(null)
   }
 
+  // ── Upload de imagem como banner ──────────────────────────────────────────
+  async function changeBannerImage(clientId: string, file: File) {
+    if (saving === clientId) return
+    setPickerOpen(null)
+    setSaving(clientId)
+    try {
+      const ext  = file.name.split('.').pop() || 'jpg'
+      const path = `${user?.id}/banner_${clientId}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('client-logos')
+        .upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage
+        .from('client-logos')
+        .getPublicUrl(path)
+      const imageId = `url:${publicUrl}`
+      try { localStorage.setItem(`banner_${clientId}`, imageId) } catch {}
+      await (supabase.from('clients') as any)
+        .update({ card_gradient: imageId, updated_at: new Date().toISOString() })
+        .eq('id', clientId)
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      toast('Imagem do banner atualizada!', 'success')
+    } catch (err: any) {
+      toast(err.message || 'Erro ao enviar imagem', 'error')
+    } finally {
+      setSaving(null)
+    }
+  }
+
   // ── Filtragem e ordenação ─────────────────────────────────────────────────
   const filtered = clients
     .filter(c => {
@@ -188,11 +242,12 @@ export function ClientList() {
         title="Clientes"
         subtitle={`${clients.length} cliente${clients.length === 1 ? '' : 's'} cadastrado${clients.length === 1 ? '' : 's'}`}
         action={
-          <Button asChild size="sm" variant="premium">
-            <Link to="/clients/new">
-              <Plus className="w-4 h-4" /> Novo cliente
-            </Link>
-          </Button>
+          <Link
+            to="/clients/new"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-sm font-medium bg-white text-[#0f0f0f] border border-white/30 hover:bg-white/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Novo cliente
+          </Link>
         }
       />
 
@@ -298,11 +353,12 @@ export function ClientList() {
                 </p>
               </div>
               {!search && (
-                <Button asChild size="sm" variant="premium" className="mt-2">
-                  <Link to="/clients/new">
-                    <Plus className="w-4 h-4" /> Novo cliente
-                  </Link>
-                </Button>
+                <Link
+                  to="/clients/new"
+                  className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-sm font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors mt-2"
+                >
+                  <Plus className="w-4 h-4" /> Novo cliente
+                </Link>
               )}
             </div>
           )}
@@ -317,7 +373,7 @@ export function ClientList() {
                   // Banco tem prioridade; localStorage é fallback enquanto schema cache recarrega
                   const localGradient = (() => { try { return localStorage.getItem(`banner_${client.id}`) } catch { return null } })()
                   const gradientId    = client.card_gradient || localGradient || DEFAULT_GRADIENT_ID
-                  const banner       = gradientById(gradientId)
+                  const bannerStyle   = getBannerStyle(gradientId)
                   const clientStats  = stats[client.id] || { pendentes: 0, aprovados: 0, ajuste_solicitado: 0, reprovado: 0 }
                   const isPickerOpen = pickerOpen === client.id
                   const isSaving     = saving === client.id
@@ -334,10 +390,10 @@ export function ClientList() {
                       className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm hover:shadow-xl hover:border-[#d0d8e8] transition-all cursor-pointer overflow-hidden group relative"
                     >
 
-                      {/* ── Banner gradiente ──────────────────────────────────── */}
+                      {/* ── Banner gradiente / imagem ─────────────────────────── */}
                       <div
                         className="relative h-28 flex-shrink-0"
-                        style={{ background: banner }}
+                        style={bannerStyle}
                       >
                         <div className="absolute inset-0 bg-black/5 rounded-t-2xl" />
 
@@ -361,7 +417,7 @@ export function ClientList() {
                           <Trash2 className="w-3.5 h-3.5 text-white drop-shadow" />
                         </button>
 
-                        {/* ── Gradient picker ────────────────────────────────── */}
+                        {/* ── Banner picker (Cores / Imagem) ─────────────────── */}
                         {isPickerOpen && (
                           <>
                             <div
@@ -369,27 +425,81 @@ export function ClientList() {
                               onClick={e => { e.stopPropagation(); setPickerOpen(null) }}
                             />
                             <div
-                              className="absolute top-11 left-3 z-40 bg-white rounded-2xl shadow-2xl border border-[#e2e8f0] p-3.5"
+                              className="absolute top-11 left-3 z-40 bg-white rounded-2xl shadow-2xl border border-[#e2e8f0] p-3.5 w-[220px]"
                               onClick={e => e.stopPropagation()}
                             >
-                              <p className="text-[10px] font-semibold text-[#a0a0a0] uppercase tracking-wider mb-2.5">
-                                Cor do banner
-                              </p>
-                              <div className="grid grid-cols-6 gap-2">
-                                {GRADIENTS.map(g => (
+                              {/* Abas */}
+                              <div className="flex gap-1 mb-3 bg-[#f1f5f9] rounded-lg p-0.5">
+                                {(['cores', 'imagem'] as const).map(tab => (
                                   <button
-                                    key={g.id}
-                                    onClick={e => { e.stopPropagation(); changeBanner(client.id, g.id) }}
-                                    className="w-7 h-7 rounded-full transition-transform hover:scale-110 active:scale-95 relative flex-shrink-0"
-                                    style={{ background: `linear-gradient(135deg, ${g.preview[0]} 0%, ${g.preview[1]} 100%)` }}
-                                    title={g.id}
+                                    key={tab}
+                                    onClick={e => { e.stopPropagation(); setPickerTab(tab) }}
+                                    className={`flex-1 py-1 rounded-md text-[11px] font-semibold transition-colors capitalize ${
+                                      pickerTab === tab
+                                        ? 'bg-white text-[#0f0f0f] shadow-sm'
+                                        : 'text-[#94a3b8] hover:text-[#64748b]'
+                                    }`}
                                   >
-                                    {gradientId === g.id && (
-                                      <span className="absolute inset-0 rounded-full ring-2 ring-white ring-offset-[2px] ring-offset-[#0f0f0f]" />
-                                    )}
+                                    {tab === 'cores' ? '🎨 Cores' : '🖼️ Imagem'}
                                   </button>
                                 ))}
                               </div>
+
+                              {pickerTab === 'cores' ? (
+                                /* ── Grid de gradientes ── */
+                                <div className="grid grid-cols-6 gap-1.5">
+                                  {GRADIENTS.map(g => (
+                                    <button
+                                      key={g.id}
+                                      onClick={e => { e.stopPropagation(); changeBanner(client.id, g.id) }}
+                                      className="w-7 h-7 rounded-full transition-transform hover:scale-110 active:scale-95 relative flex-shrink-0"
+                                      style={{ background: `linear-gradient(135deg, ${g.preview[0]} 0%, ${g.preview[1]} 100%)` }}
+                                      title={g.id}
+                                    >
+                                      {gradientId === g.id && !gradientId.startsWith('url:') && (
+                                        <span className="absolute inset-0 rounded-full ring-2 ring-white ring-offset-[2px] ring-offset-[#4f46e5]" />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                /* ── Upload de imagem ── */
+                                <div>
+                                  <input
+                                    ref={imageInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={e => {
+                                      const file = e.target.files?.[0]
+                                      if (file) changeBannerImage(client.id, file)
+                                      e.target.value = ''
+                                    }}
+                                  />
+                                  <button
+                                    onClick={e => { e.stopPropagation(); imageInputRef.current?.click() }}
+                                    className="w-full h-20 rounded-xl border-2 border-dashed border-[#e2e8f0] hover:border-[#4f46e5] hover:bg-[#f5f3ff] flex flex-col items-center justify-center gap-1.5 transition-colors group"
+                                  >
+                                    <Upload className="w-5 h-5 text-[#94a3b8] group-hover:text-[#4f46e5] transition-colors" />
+                                    <span className="text-[11px] text-[#94a3b8] group-hover:text-[#4f46e5] transition-colors font-medium">
+                                      Clique para enviar
+                                    </span>
+                                    <span className="text-[10px] text-[#cbd5e1]">JPG, PNG, WEBP</span>
+                                  </button>
+                                  {gradientId.startsWith('url:') && (
+                                    <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#64748b]">
+                                      <ImageIcon className="w-3 h-3 text-emerald-500" />
+                                      <span>Imagem ativa</span>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); changeBanner(client.id, DEFAULT_GRADIENT_ID) }}
+                                        className="ml-auto text-red-400 hover:text-red-600 font-medium"
+                                      >
+                                        Remover
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </>
                         )}
