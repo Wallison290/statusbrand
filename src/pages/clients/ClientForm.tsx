@@ -119,9 +119,15 @@ export function ClientForm() {
         title={isEdit ? 'Editar Cliente' : 'Novo Cliente'}
         subtitle={isEdit ? existingClient?.company_name : 'Preencha os dados do cliente'}
         action={
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-colors"
+            style={{ color: '#ffffff', background: 'transparent' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+          >
             <ArrowLeft className="w-4 h-4" /> Voltar
-          </Button>
+          </button>
         }
       />
 
