@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, Trash2,
   User, CalendarDays, AlertCircle, LayoutList, Clock, Pencil,
+  ExternalLink, Link2, FileText, Folder,
 } from 'lucide-react'
 import {
   startOfWeek, endOfWeek, eachDayOfInterval,
@@ -96,6 +97,7 @@ function TaskCard({
   onStatusChange,
   onDelete,
   onEdit,
+  onView,
   dragging,
   onDragStart,
   onDragEnd,
@@ -104,10 +106,13 @@ function TaskCard({
   onStatusChange: (id: string, s: TaskStatus) => void
   onDelete: (id: string) => void
   onEdit: (task: Task) => void
+  onView: (task: Task) => void
   dragging: boolean
   onDragStart: (id: string) => void
   onDragEnd: () => void
 }) {
+  const dragStarted = useRef(false)
+
   const overdueAndOpen = task.due_date
     ? isOverdue(task.due_date) && task.status !== 'concluido'
     : false
@@ -118,10 +123,18 @@ function TaskCard({
   return (
     <div
       draggable
-      onDragStart={(e: React.DragEvent<HTMLDivElement>) => { e.dataTransfer.setData('taskId', task.id); onDragStart(task.id) }}
-      onDragEnd={onDragEnd}
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
+        dragStarted.current = true
+        e.dataTransfer.setData('taskId', task.id)
+        onDragStart(task.id)
+      }}
+      onDragEnd={() => {
+        setTimeout(() => { dragStarted.current = false }, 50)
+        onDragEnd()
+      }}
+      onClick={() => { if (!dragStarted.current) onView(task) }}
       className={`
-        bg-white rounded-xl border select-none cursor-grab active:cursor-grabbing
+        bg-white rounded-xl border select-none cursor-pointer active:cursor-grabbing
         transition-all duration-150 hover:shadow-md group
         ${overdueAndOpen
           ? 'border-red-200 border-l-[3px] border-l-red-400'
@@ -217,7 +230,7 @@ function TaskCard({
 function DayColumn({
   day, tasks, draggingId,
   onDrop, onDragStart, onDragEnd,
-  onStatusChange, onDelete, onEdit, onAddTask,
+  onStatusChange, onDelete, onEdit, onView, onAddTask,
 }: {
   day: Date
   tasks: Task[]
@@ -228,6 +241,7 @@ function DayColumn({
   onStatusChange: (id: string, s: TaskStatus) => void
   onDelete: (id: string) => void
   onEdit: (task: Task) => void
+  onView: (task: Task) => void
   onAddTask: (day: Date) => void
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
@@ -304,6 +318,7 @@ function DayColumn({
                 onStatusChange={onStatusChange}
                 onDelete={onDelete}
                 onEdit={onEdit}
+                onView={onView}
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
               />
@@ -336,13 +351,14 @@ function DayColumn({
 
 function NoDateSection({
   tasks, draggingId,
-  onStatusChange, onDelete, onEdit, onDragStart, onDragEnd,
+  onStatusChange, onDelete, onEdit, onView, onDragStart, onDragEnd,
 }: {
   tasks: Task[]
   draggingId: string | null
   onStatusChange: (id: string, s: TaskStatus) => void
   onDelete: (id: string) => void
   onEdit: (task: Task) => void
+  onView: (task: Task) => void
   onDragStart: (id: string) => void
   onDragEnd: () => void
 }) {
@@ -382,6 +398,7 @@ function NoDateSection({
                   onStatusChange={onStatusChange}
                   onDelete={onDelete}
                   onEdit={onEdit}
+                  onView={onView}
                   onDragStart={onDragStart}
                   onDragEnd={onDragEnd}
                 />
@@ -391,6 +408,193 @@ function NoDateSection({
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+// ─── Task view modal ──────────────────────────────────────────────────────────
+
+function TaskViewModal({
+  task, members, open, onClose, onEdit, onDelete,
+}: {
+  task:     Task | null
+  members:  { id: string; name: string; color: string }[]
+  open:     boolean
+  onClose:  () => void
+  onEdit:   (t: Task) => void
+  onDelete: (id: string) => void
+}) {
+  if (!task) return null
+
+  const pCfg    = PRIORITY_CFG[task.priority]
+  const sCfg    = STATUS_CFG[task.status]
+  const member  = members.find(m => m.id === (task as any).assignee_id)
+  const overdue = isOverdue(task.due_date) && task.status !== 'concluido'
+  const clientName = (task.client as any)?.company_name
+  const links: { id: string; label: string; url: string; type: string }[] =
+    Array.isArray((task as any).task_links) ? (task as any).task_links : []
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="pr-6">
+            <DialogTitle className="text-[16px] font-semibold text-[#0f0f0f] leading-snug">
+              {task.title}
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-1 overflow-y-auto max-h-[60vh] pr-1">
+          {/* Badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold`}
+              style={{ color: pCfg.color, backgroundColor: `${pCfg.color}18` }}>
+              {task.priority === 'urgente' && <AlertCircle className="w-3 h-3" />}
+              {pCfg.label}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${sCfg.bg} ${sCfg.text}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${sCfg.dot}`} />
+              {sCfg.label}
+            </span>
+            {overdue && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-50 text-red-700 border border-red-200">
+                ⚠ Atrasada
+              </span>
+            )}
+            {clientName && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">
+                {clientName}
+              </span>
+            )}
+          </div>
+
+          {/* Descrição */}
+          {task.description && (
+            <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5">Descrição</p>
+              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {/* Grid: prazo + responsável */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" /> Prazo
+              </p>
+              {task.due_date ? (
+                <>
+                  <p className={`text-[13px] font-medium ${overdue ? 'text-red-600' : 'text-[#0f0f0f]'}`}>
+                    {format(new Date(task.due_date + 'T00:00:00'), "d 'de' MMMM yyyy", { locale: ptBR })}
+                  </p>
+                  {task.due_time && (
+                    <p className="text-[12px] text-[#64748b] mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {task.due_time.slice(0, 5)}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[13px] text-[#94a3b8]">Sem prazo</p>
+              )}
+            </div>
+            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <User className="w-3 h-3" /> Responsável
+              </p>
+              {member ? (
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+                    style={{ backgroundColor: member.color }}>
+                    {member.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-[13px] font-medium text-[#0f0f0f]">{member.name}</span>
+                </div>
+              ) : task.assignee ? (
+                <p className="text-[13px] text-[#374151]">{task.assignee}</p>
+              ) : (
+                <p className="text-[13px] text-[#94a3b8]">Sem responsável</p>
+              )}
+            </div>
+          </div>
+
+          {/* Referências / links */}
+          {links.length > 0 && (
+            <div>
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-2">
+                Referências ({links.length})
+              </p>
+              <div className="space-y-2">
+                {links.map(link => {
+                  if (link.type === 'imagem') {
+                    return (
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                        <img src={link.url} alt={link.label} className="w-full max-h-48 object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[#94a3b8] hover:text-[#0f0f0f] ml-2">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+                  const iconMap: Record<string, typeof Link2> = { link: Link2, arquivo: FileText, pasta: Folder }
+                  const Icon = iconMap[link.type] ?? Link2
+                  return (
+                    <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#e2e8f0] hover:border-blue-300 hover:bg-blue-50/50 transition-all group">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium text-[#334155] truncate group-hover:text-blue-700">{link.label}</p>
+                        <p className="text-[10px] text-[#94a3b8] truncate">{link.url}</p>
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-[#c0c0c0] group-hover:text-blue-400 flex-shrink-0" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Entrega do colaborador */}
+          {((task as any).collaborator_note || (task as any).delivery_url) && (
+            <div className="bg-violet-50 rounded-xl p-3.5 border border-violet-100 space-y-1.5">
+              <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Entrega do colaborador</p>
+              {(task as any).collaborator_note && (
+                <p className="text-[12px] text-violet-800 leading-relaxed">📝 {(task as any).collaborator_note}</p>
+              )}
+              {(task as any).delivery_url && (
+                <a href={(task as any).delivery_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium">
+                  <ExternalLink className="w-3 h-3" /> Ver entrega enviada
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Criada em */}
+          <p className="text-[11px] text-[#94a3b8]">
+            Criada em {format(new Date(task.created_at), "d 'de' MMMM yyyy 'às' HH:mm", { locale: ptBR })}
+          </p>
+        </div>
+
+        <DialogFooter className="gap-2 border-t border-[#f1f5f9] pt-3">
+          <Button variant="outline" size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+            onClick={() => { onClose(); onDelete(task.id) }}>
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          <Button size="sm" onClick={() => { onClose(); onEdit(task) }}>
+            <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -657,6 +861,10 @@ export function Tasks() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [prefillDate, setPrefillDate] = useState('')
 
+  // View modal state
+  const [viewingTask, setViewingTask] = useState<Task | null>(null)
+  const handleViewTask = (task: Task) => setViewingTask(task)
+
   const weekLabel = `${format(weekStart, "d 'de' MMM", { locale: ptBR })} – ${format(weekEnd, "d 'de' MMM", { locale: ptBR })}`
 
   // Tasks by day — sorted by due_time (nulls last)
@@ -852,6 +1060,7 @@ export function Tasks() {
                 onStatusChange={handleStatusChange}
                 onDelete={handleDelete}
                 onEdit={handleEditTask}
+                onView={handleViewTask}
                 onAddTask={handleAddTask}
               />
             ))}
@@ -865,6 +1074,7 @@ export function Tasks() {
           onStatusChange={handleStatusChange}
           onDelete={handleDelete}
           onEdit={handleEditTask}
+          onView={handleViewTask}
           onDragStart={setDraggingId}
           onDragEnd={() => setDraggingId(null)}
         />
@@ -880,6 +1090,16 @@ export function Tasks() {
         editingTask={editingTask}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
+      />
+
+      {/* Task view modal */}
+      <TaskViewModal
+        task={viewingTask}
+        members={activeMembers}
+        open={!!viewingTask}
+        onClose={() => setViewingTask(null)}
+        onEdit={task => { setViewingTask(null); handleEditTask(task) }}
+        onDelete={id => { setViewingTask(null); handleDelete(id) }}
       />
     </div>
   )
