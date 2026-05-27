@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 export interface InstagramAccount {
   id:                  string
   ig_user_id:          string
+  client_id:           string | null
   username:            string
   name:                string | null
   profile_picture_url: string | null

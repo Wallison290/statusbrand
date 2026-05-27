@@ -206,8 +206,19 @@ export function InstagramPage() {
   const { toast }         = useToast()
   const cancelPost        = useCancelScheduledPost()
 
-  const { data: accounts = [], isLoading: loadingAccounts, refetch: refetchAccounts, isRefetching: refetchingAccounts } = useAllInstagramAccounts()
-  const { data: posts    = [], isLoading: loadingPosts,    refetch: refetchPosts,    isRefetching: refetchingPosts    } = useScheduledPosts()
+  const { data: rawAccounts = [], isLoading: loadingAccounts, refetch: refetchAccounts, isRefetching: refetchingAccounts } = useAllInstagramAccounts()
+  const { data: posts       = [], isLoading: loadingPosts,    refetch: refetchPosts,    isRefetching: refetchingPosts    } = useScheduledPosts()
+
+  // Deduplicar por ig_user_id: preferindo conta vinculada a um cliente (client_id != null)
+  const accounts = Object.values(
+    rawAccounts.reduce<Record<string, InstagramAccount>>((acc, a) => {
+      const existing = acc[a.ig_user_id]
+      if (!existing || (!existing.client_id && a.client_id)) {
+        acc[a.ig_user_id] = a
+      }
+      return acc
+    }, {})
+  )
 
   const isRefreshing = refetchingAccounts || refetchingPosts
 

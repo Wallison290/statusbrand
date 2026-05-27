@@ -398,49 +398,35 @@ function DayTooltip({ state }: { state: HoverState }) {
 
 type IgPostType = 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS'
 
-async function uploadIgMedia(url: string, userId: string): Promise<string> {
-  const res  = await fetch(url)
-  const blob = await res.blob()
-  const ext  = url.split('.').pop()?.split('?')[0] ?? 'jpg'
-  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const { error } = await (supabase as any).storage.from('post-media').upload(path, blob)
-  if (error) throw error
-  const { data } = (supabase as any).storage.from('post-media').getPublicUrl(path)
-  return data.publicUrl as string
-}
-
-function InstagramScheduleSection({ item, userId }: { item: PlannerItem; userId: string }) {
+function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string }) {
   const { data: igAccount, isLoading: igLoading } = useClientInstagramAccount(item.client_id ?? undefined)
   const createPost = useCreateScheduledPost()
   const { toast }  = useToast()
 
-  const imageAtts = (item.attachments ?? []).filter(a => isImageAttachment(a))
-  const videoAtts = (item.attachments ?? []).filter(a => isVideoAttachment(a))
-  const hasMedia  = imageAtts.length > 0 || videoAtts.length > 0
+  // Mídias IG configuradas no planner (ordenadas por sort_order)
+  const igMedia = (item.attachments ?? [])
+    .filter(a => a.is_ig_media)
+    .sort((a, b) => a.sort_order - b.sort_order)
 
-  const [postType, setPostType]       = useState<IgPostType>('IMAGE')
-  const [caption, setCaption]         = useState(item.notes ?? '')
-  const [schedDate, setSchedDate]     = useState(item.scheduled_date)
-  const [schedTime, setSchedTime]     = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
-  const [publishing, setPublishing]   = useState(false)
-  const [success, setSuccess]         = useState(false)
+  // Tipo vem direto do planner (sem re-seleção)
+  const postType = item.ig_post_type as IgPostType | null
+
+  const [caption, setCaption]       = useState(item.notes ?? '')
+  const [schedDate, setSchedDate]   = useState(item.scheduled_date)
+  const [schedTime, setSchedTime]   = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
+  const [publishing, setPublishing] = useState(false)
+  const [success, setSuccess]       = useState(false)
 
   const handleSchedule = async () => {
-    if (!igAccount) return
+    if (!igAccount || !postType) return
     setPublishing(true)
     try {
-      const atts = postType === 'REELS' ? videoAtts : imageAtts
-      const limit = postType === 'CAROUSEL_ALBUM' ? 10 : 1
-      const mediaUrls: string[] = []
-      for (const att of atts.slice(0, limit)) {
-        mediaUrls.push(await uploadIgMedia(att.file_url, userId))
-      }
       await createPost.mutateAsync({
         ig_account_id: igAccount.id,
         client_id:     item.client_id,
         post_type:     postType,
         caption,
-        media_urls:    mediaUrls,
+        media_urls:    igMedia.map(a => a.file_url),
         scheduled_at:  new Date(`${schedDate}T${schedTime}:00`).toISOString(),
       })
       setSuccess(true)
@@ -454,83 +440,99 @@ function InstagramScheduleSection({ item, userId }: { item: PlannerItem; userId:
 
   if (igLoading) return (
     <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
-      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verificando Instagram...
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" /> Verificando Instagram...
     </div>
   )
 
   if (!item.client_id) return (
-    <div className="p-3 bg-white/3 rounded-xl border border-white/8 text-xs text-gray-500">
+    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-500">
       Post sem cliente vinculado — não é possível agendar no Instagram.
     </div>
   )
 
   if (!igAccount) return (
-    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-1.5">
+    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1.5">
       <div className="flex items-center gap-2">
-        <Instagram className="w-3.5 h-3.5 text-gray-500" />
-        <p className="text-xs text-gray-400 font-medium">Instagram não conectado</p>
+        <Instagram className="w-3.5 h-3.5 text-gray-400" />
+        <p className="text-xs text-gray-700 font-medium">Instagram não conectado</p>
       </div>
-      <p className="text-[11px] text-gray-600">
-        Acesse o perfil do cliente → aba <strong className="text-gray-400">Instagram</strong> para conectar a conta.
+      <p className="text-[11px] text-gray-500">
+        Acesse o perfil do cliente → aba <strong className="text-gray-700">Instagram</strong> para conectar a conta.
       </p>
     </div>
   )
 
+  if (!postType) return (
+    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
+      <p className="text-xs text-amber-800 font-medium">Tipo de post não configurado</p>
+      <p className="text-[11px] text-amber-700">Edite o post e selecione o tipo (Imagem, Carrossel ou Reel) para poder agendar.</p>
+    </div>
+  )
+
+  if (igMedia.length === 0) return (
+    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
+      <p className="text-xs text-amber-800 font-medium">Sem mídia configurada</p>
+      <p className="text-[11px] text-amber-700">Edite o post e adicione as mídias na seção "Publicação no Instagram".</p>
+    </div>
+  )
+
   if (success) return (
-    <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-      <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+    <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
       <div>
-        <p className="text-xs font-medium text-emerald-400">Post agendado!</p>
-        <p className="text-[11px] text-gray-500 mt-0.5">Veja em <strong className="text-gray-400">Instagram → Agendados</strong>.</p>
+        <p className="text-xs font-medium text-emerald-700">Post agendado!</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
       </div>
     </div>
   )
 
+  const typeLabel = postType === 'IMAGE' ? 'Imagem' : postType === 'CAROUSEL_ALBUM' ? `Carrossel (${igMedia.length})` : 'Reel'
+  const TypeIcon  = postType === 'REELS' ? Film : postType === 'CAROUSEL_ALBUM' ? LayoutGrid : ImageIcon
+
   return (
-    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-3">
-      {/* Conta */}
+    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+      {/* Conta conectada */}
       <div className="flex items-center gap-2">
         {igAccount.profile_picture_url
           ? <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
           : <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}><Instagram className="w-3.5 h-3.5 text-white" /></div>
         }
-        <span className="text-xs text-gray-300 font-medium">@{igAccount.username}</span>
-        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Conectado</span>
+        <span className="text-xs text-gray-800 font-medium">@{igAccount.username}</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Conectado</span>
       </div>
 
-      {!hasMedia && (
-        <p className="text-[11px] text-amber-400 flex items-center gap-1.5">
-          <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
-          Nenhuma imagem/vídeo anexado. Adicione mídia ao post primeiro.
-        </p>
-      )}
-
-      {/* Tipo */}
-      <div className="flex gap-1.5">
-        {(['IMAGE','CAROUSEL_ALBUM','REELS'] as IgPostType[])
-          .filter(t => t === 'REELS' ? videoAtts.length > 0 : imageAtts.length > 0)
-          .map(t => (
-            <button key={t} onClick={() => setPostType(t)}
-              className={`text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${postType===t ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/20'}`}>
-              {t === 'IMAGE' ? 'Imagem' : t === 'CAROUSEL_ALBUM' ? `Carrossel (${Math.min(10, imageAtts.length)})` : 'Reel'}
-            </button>
-          ))
-        }
+      {/* Tipo + prévia das mídias */}
+      <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+        <TypeIcon className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+        <span className="text-xs text-gray-700 font-medium">{typeLabel}</span>
+        <div className="ml-auto flex gap-1">
+          {igMedia.slice(0, 4).map((att, i) => (
+            <div key={att.id} className="w-8 h-8 rounded overflow-hidden border border-gray-200 flex-shrink-0">
+              {isVideoAttachment(att)
+                ? <video src={att.file_url} className="w-full h-full object-cover" muted />
+                : <img src={att.file_url} alt="" className="w-full h-full object-cover" />
+              }
+            </div>
+          ))}
+          {igMedia.length > 4 && (
+            <span className="text-[10px] text-gray-400 self-center pl-0.5">+{igMedia.length - 4}</span>
+          )}
+        </div>
       </div>
 
       {/* Legenda */}
       <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} placeholder="Legenda..."
-        className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+        className="w-full text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:border-blue-400 transition-colors" />
 
       {/* Data/hora */}
       <div className="grid grid-cols-2 gap-2">
         <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
-          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+          className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-blue-400 transition-colors [color-scheme:light]" />
         <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)}
-          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+          className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-blue-400 transition-colors [color-scheme:light]" />
       </div>
 
-      <Button size="sm" onClick={handleSchedule} disabled={publishing || !hasMedia}
+      <Button size="sm" onClick={handleSchedule} disabled={publishing}
         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
         {publishing
           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Agendando...</>
