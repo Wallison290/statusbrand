@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { OnboardingTab } from './tabs/OnboardingTab'
 import { MaterialsTab } from './tabs/MaterialsTab'
 import { SupportTab } from './tabs/SupportTab'
+import { TasksTab } from './tabs/TasksTab'
 import { PlannerItemViewModal } from '@/components/PlannerItemViewModal'
 import { ReportsTab } from './tabs/ReportsTab'
 import { useToast } from '@/components/ui/toast'
@@ -1250,25 +1251,7 @@ export function ClientProfile() {
 
           {/* ── Tarefas ──────────────────────────────────────────────────── */}
           <TabsContent value="tasks">
-            <div className="space-y-2">
-              {(tasks || []).map(t => (
-                <Card key={t.id}>
-                  <CardContent className="p-3.5 flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-normal text-[#0f0f0f] truncate">{t.title}</p>
-                      {t.description && <p className="text-[11px] text-[#9ca3af] truncate">{t.description}</p>}
-                    </div>
-                    <Badge status={t.priority} />
-                    <Badge status={t.status} />
-                  </CardContent>
-                </Card>
-              ))}
-              {(!tasks || tasks.length === 0) && (
-                <div className="text-center py-10 text-[12px] text-[#9ca3af]">
-                  Nenhuma tarefa ainda.
-                </div>
-              )}
-            </div>
+            <TasksTab clientId={id!} />
           </TabsContent>
         </Tabs>
       </div>

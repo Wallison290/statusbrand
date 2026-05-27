@@ -1,0 +1,479 @@
+import { useState, useEffect } from 'react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks'
+import { useTeamMembers } from '@/hooks/useTeamMembers'
+import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/components/ui/toast'
+import { formatDate, isOverdue } from '@/utils/formatters'
+import type { Task, TaskStatus, TaskPriority } from '@/types'
+
+// ─── Configs ──────────────────────────────────────────────────────────────────
+
+const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; dot: string }> = {
+  a_fazer:      { label: 'A fazer',      bg: 'bg-[#f0f0f0]',  text: 'text-[#737373]',   dot: 'bg-[#c0c0c0]'   },
+  em_andamento: { label: 'Em andamento', bg: 'bg-blue-50',    text: 'text-blue-900',    dot: 'bg-blue-400'    },
+  revisao:      { label: 'Revisão',      bg: 'bg-amber-50',   text: 'text-amber-900',   dot: 'bg-amber-400'   },
+  concluido:    { label: 'Concluído',    bg: 'bg-emerald-50', text: 'text-emerald-900', dot: 'bg-emerald-400' },
+}
+
+const PRIORITY_CFG: Record<TaskPriority, { label: string; bg: string; text: string }> = {
+  baixa:   { label: 'Baixa',   bg: 'bg-[#f0f0f0]', text: 'text-[#737373]' },
+  media:   { label: 'Média',   bg: 'bg-blue-50',   text: 'text-blue-800'  },
+  alta:    { label: 'Alta',    bg: 'bg-amber-50',  text: 'text-amber-800' },
+  urgente: { label: 'Urgente', bg: 'bg-red-50',    text: 'text-red-800'   },
+}
+
+// ─── Status pill com dropdown inline ─────────────────────────────────────────
+
+function StatusPill({ status, onChange }: { status: TaskStatus; onChange: (s: TaskStatus) => void }) {
+  const [open, setOpen] = useState(false)
+  const cfg = STATUS_CFG[status]
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${cfg.bg} ${cfg.text}`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+        {cfg.label}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false) }} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -4 }}
+              transition={{ duration: 0.12 }}
+              className="absolute left-0 top-full mt-1 z-40 bg-white border border-[#e2e8f0] rounded-xl shadow-lg overflow-hidden py-1 min-w-[150px]"
+              onClick={e => e.stopPropagation()}
+            >
+              {(Object.entries(STATUS_CFG) as [TaskStatus, typeof STATUS_CFG[TaskStatus]][]).map(([s, c]) => (
+                <button
+                  key={s}
+                  onClick={e => { e.stopPropagation(); onChange(s); setOpen(false) }}
+                  className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f5f7fb] transition-colors flex items-center gap-2 ${s === status ? 'font-semibold' : ''}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                  {c.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── Formulário de tarefa ─────────────────────────────────────────────────────
+
+const blankForm = {
+  title:       '',
+  description: '',
+  due_date:    '',
+  due_time:    '',
+  priority:    'media'  as TaskPriority,
+  status:      'a_fazer' as TaskStatus,
+  assignee:    '',
+  assignee_id: null as string | null,
+}
+
+type TaskForm = typeof blankForm
+
+function TaskDialog({
+  open, onClose, editingTask, clientId, members, onCreate, onUpdate,
+}: {
+  open:        boolean
+  onClose:     () => void
+  editingTask: Task | null
+  clientId:    string
+  members:     { id: string; name: string; color: string }[]
+  onCreate:    (form: TaskForm) => Promise<void>
+  onUpdate:    (id: string, form: TaskForm) => Promise<void>
+}) {
+  const [form, setForm] = useState<TaskForm>(blankForm)
+  const [saving, setSaving] = useState(false)
+  const isEdit = !!editingTask
+
+  const set = (k: keyof TaskForm, v: unknown) => setForm(p => ({ ...p, [k]: v }))
+
+  useEffect(() => {
+    if (!open) return
+    if (editingTask) {
+      setForm({
+        title:       editingTask.title,
+        description: editingTask.description || '',
+        due_date:    editingTask.due_date    || '',
+        due_time:    editingTask.due_time    || '',
+        priority:    editingTask.priority,
+        status:      editingTask.status,
+        assignee:    editingTask.assignee    || '',
+        assignee_id: (editingTask as any).assignee_id || null,
+      })
+    } else {
+      setForm(blankForm)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editingTask?.id])
+
+  const handleClose = () => { onClose(); setForm(blankForm) }
+
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      if (isEdit && editingTask) await onUpdate(editingTask.id, form)
+      else await onCreate(form)
+      handleClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Editar tarefa' : 'Nova tarefa'}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-1">
+          <Input
+            label="Título *"
+            value={form.title}
+            onChange={e => set('title', e.target.value)}
+            placeholder="Descrição da tarefa..."
+          />
+
+          <Textarea
+            label="Descrição"
+            value={form.description}
+            onChange={e => set('description', e.target.value)}
+            rows={2}
+            placeholder="Detalhes opcionais..."
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">Prioridade</label>
+              <Select value={form.priority} onValueChange={v => set('priority', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baixa">Baixa</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="urgente">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">Status</label>
+              <Select value={form.status} onValueChange={v => set('status', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="a_fazer">A fazer</SelectItem>
+                  <SelectItem value="em_andamento">Em andamento</SelectItem>
+                  <SelectItem value="revisao">Revisão</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Data" type="date" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
+            <div>
+              <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">Horário</label>
+              <div className="relative">
+                <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#c0c0c0] pointer-events-none" />
+                <input
+                  type="time"
+                  value={form.due_time}
+                  onChange={e => set('due_time', e.target.value)}
+                  className="w-full h-9 pl-8 pr-3 rounded-lg border border-[#e0e0e0] bg-white text-[13px] text-[#0f0f0f] focus:outline-none focus:border-[#b0b0b0]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">Responsável</label>
+            <Select
+              value={form.assignee_id || '__none__'}
+              onValueChange={v => {
+                if (v === '__none__') { set('assignee_id', null); set('assignee', '') }
+                else { const m = members.find(m => m.id === v); set('assignee_id', v); set('assignee', m?.name || '') }
+              }}
+            >
+              <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem responsável</SelectItem>
+                {members.map(m => (
+                  <SelectItem key={m.id} value={m.id}>
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
+                      {m.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={handleClose}>Cancelar</Button>
+          <Button size="sm" onClick={handleSubmit} disabled={saving || !form.title.trim()}>
+            {saving ? (isEdit ? 'Salvando...' : 'Criando...') : (isEdit ? 'Salvar alterações' : 'Criar tarefa')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── TasksTab ─────────────────────────────────────────────────────────────────
+
+export function TasksTab({ clientId }: { clientId: string }) {
+  const { user }                         = useAuth()
+  const { data: tasks = [] }             = useTasks(clientId)
+  const { data: allMembers = [] }        = useTeamMembers()
+  const activeMembers                    = allMembers.filter(m => m.is_active)
+  const createTask                       = useCreateTask()
+  const updateTask                       = useUpdateTask()
+  const deleteTask                       = useDeleteTask()
+  const { toast }                        = useToast()
+
+  const [dialogOpen, setDialogOpen]     = useState(false)
+  const [editingTask, setEditingTask]   = useState<Task | null>(null)
+  const [deletingId, setDeletingId]     = useState<string | null>(null)
+
+  const handleEdit = (task: Task) => { setEditingTask(task); setDialogOpen(true) }
+  const handleNew  = () => { setEditingTask(null); setDialogOpen(true) }
+
+  const handleDelete = async (taskId: string) => {
+    try {
+      await deleteTask.mutateAsync(taskId)
+      toast('Tarefa excluída.', 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleCreate = async (form: TaskForm) => {
+    if (!form.title.trim() || !user) return
+    try {
+      await (createTask.mutateAsync as any)({
+        user_id:     user.id,
+        title:       form.title.trim(),
+        description: form.description || null,
+        due_date:    form.due_date    || null,
+        due_time:    form.due_time    || null,
+        priority:    form.priority,
+        status:      form.status,
+        assignee:    form.assignee    || null,
+        assignee_id: form.assignee_id || null,
+        client_id:   clientId,
+      })
+      toast('Tarefa criada!', 'success')
+    } catch (err: any) { toast(err.message, 'error'); throw err }
+  }
+
+  const handleUpdate = async (taskId: string, form: TaskForm) => {
+    try {
+      await updateTask.mutateAsync({
+        id:          taskId,
+        title:       form.title.trim(),
+        description: form.description || null,
+        due_date:    form.due_date    || null,
+        due_time:    form.due_time    || null,
+        priority:    form.priority,
+        status:      form.status,
+        assignee:    form.assignee    || null,
+        ...(form.assignee_id !== undefined && { assignee_id: form.assignee_id } as any),
+        client_id:   clientId,
+      })
+      toast('Tarefa atualizada!', 'success')
+    } catch (err: any) { toast(err.message, 'error'); throw err }
+  }
+
+  const handleStatusChange = async (task: Task, status: TaskStatus) => {
+    try {
+      await updateTask.mutateAsync({ id: task.id, status })
+    } catch (err: any) { toast(err.message, 'error') }
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Header da aba */}
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] text-[#94a3b8]">
+          {tasks.length} tarefa{tasks.length !== 1 ? 's' : ''}
+        </p>
+        <button
+          onClick={handleNew}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" /> Nova tarefa
+        </button>
+      </div>
+
+      {/* Lista */}
+      <AnimatePresence>
+        {tasks.map((task, i) => {
+          const pCfg    = PRIORITY_CFG[task.priority]
+          const overdue = isOverdue(task.due_date) && task.status !== 'concluido'
+          const member  = activeMembers.find(m => m.id === (task as any).assignee_id)
+          const isConfirming = deletingId === task.id
+
+          return (
+            <motion.div
+              key={task.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -20, transition: { duration: 0.15 } }}
+              transition={{ delay: i * 0.03, duration: 0.18 }}
+              className={`bg-white rounded-xl border transition-all hover:shadow-sm group ${
+                overdue ? 'border-red-200 border-l-[3px] border-l-red-400' : 'border-[#e8e8e8]'
+              }`}
+            >
+              <div className="p-3.5 flex items-start gap-3">
+                {/* Conteúdo principal */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className={`text-[13px] font-medium leading-snug ${task.status === 'concluido' ? 'line-through text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
+                      {task.title}
+                    </p>
+                    {/* Badge prioridade */}
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${pCfg.bg} ${pCfg.text}`}>
+                      {pCfg.label}
+                    </span>
+                  </div>
+
+                  {task.description && (
+                    <p className="text-[11px] text-[#9ca3af] mb-2 leading-relaxed line-clamp-2">{task.description}</p>
+                  )}
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Status — clicável */}
+                    <StatusPill
+                      status={task.status}
+                      onChange={s => handleStatusChange(task, s)}
+                    />
+
+                    {/* Data */}
+                    {task.due_date && (
+                      <span className={`inline-flex items-center gap-1 text-[11px] ${overdue ? 'text-red-500 font-medium' : 'text-[#94a3b8]'}`}>
+                        <CalendarDays className="w-3 h-3" />
+                        {formatDate(task.due_date)}
+                        {task.due_time && <span className="ml-0.5">· {task.due_time.slice(0, 5)}</span>}
+                        {overdue && <span className="text-[10px]">(atrasada)</span>}
+                      </span>
+                    )}
+
+                    {/* Responsável */}
+                    {(task.assignee || member) && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-[#94a3b8]">
+                        {member ? (
+                          <>
+                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0"
+                              style={{ backgroundColor: member.color }}>
+                              {member.name.charAt(0).toUpperCase()}
+                            </span>
+                            {member.name}
+                          </>
+                        ) : (
+                          <>
+                            <User className="w-3 h-3" />
+                            {task.assignee}
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ações */}
+                <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isConfirming ? (
+                    <>
+                      <span className="text-[11px] text-[#9ca3af] mr-1">Excluir?</span>
+                      <button
+                        onClick={() => setDeletingId(null)}
+                        className="px-2 py-1 rounded-lg text-[11px] text-[#64748b] hover:bg-[#f1f5f9] transition-colors"
+                      >
+                        Não
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        className="px-2 py-1 rounded-lg text-[11px] text-red-600 hover:bg-red-50 font-medium transition-colors"
+                      >
+                        Sim
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleEdit(task)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#0f0f0f] hover:bg-[#f1f5f9] transition-colors"
+                        title="Editar"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingId(task.id)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
+
+      {/* Empty state */}
+      {tasks.length === 0 && (
+        <div className="text-center py-12 flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#f1f5f9] flex items-center justify-center">
+            <CalendarDays className="w-5 h-5 text-[#94a3b8]" />
+          </div>
+          <div>
+            <p className="text-[13px] font-medium text-[#374151]">Nenhuma tarefa ainda</p>
+            <p className="text-[12px] text-[#9ca3af] mt-0.5">Crie a primeira tarefa para este cliente</p>
+          </div>
+          <button
+            onClick={handleNew}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Nova tarefa
+          </button>
+        </div>
+      )}
+
+      {/* Dialog criar / editar */}
+      <TaskDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingTask(null) }}
+        editingTask={editingTask}
+        clientId={clientId}
+        members={activeMembers}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+      />
+    </div>
+  )
+}
