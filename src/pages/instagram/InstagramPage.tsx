@@ -1,6 +1,6 @@
 // ── Página: Agendamento Instagram ─────────────────────────────────────────────
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -56,10 +56,7 @@ const TABS: { value: TabType; label: string; statuses: string[] }[] = [
 
 function buildOAuthUrl(userId: string) {
   const redirectUri = `${SUPABASE_URL}/functions/v1/instagram-oauth`
-  const scope = [
-    'instagram_business_basic',
-    'instagram_business_content_publish',
-  ].join(',')
+  const scope = 'instagram_business_basic,instagram_business_content_publish'
   return (
     `https://www.instagram.com/oauth/authorize` +
     `?enable_fb_login=0` +
@@ -184,10 +181,41 @@ function NewPostModal({ accountId, userId, onClose }: NewPostModalProps) {
   const [caption,     setCaption]     = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [uploading,   setUploading]   = useState(false)
+  const [dragOver,    setDragOver]    = useState<number | null>(null)
+  const dragIdx  = useRef<number | null>(null)
   const fileRef  = useRef<HTMLInputElement>(null)
   const { toast }  = useToast()
   const create   = useCreateScheduledPost()
   const typeCfg  = POST_TYPES.find(t => t.value === postType)
+
+  // Drag-and-drop handlers para reordenar carrossel
+  const onDragStart = useCallback((i: number) => {
+    dragIdx.current = i
+  }, [])
+
+  const onDragEnter = useCallback((i: number) => {
+    setDragOver(i)
+  }, [])
+
+  const onDragEnd = useCallback(() => {
+    setDragOver(null)
+    dragIdx.current = null
+  }, [])
+
+  const onDrop = useCallback((targetIdx: number) => {
+    const fromIdx = dragIdx.current
+    if (fromIdx === null || fromIdx === targetIdx) { setDragOver(null); return }
+    const reorder = <T,>(arr: T[]) => {
+      const next = [...arr]
+      const [item] = next.splice(fromIdx, 1)
+      next.splice(targetIdx, 0, item)
+      return next
+    }
+    setFiles(reorder)
+    setPreviews(reorder)
+    setDragOver(null)
+    dragIdx.current = null
+  }, [])
 
   // Bloqueia scroll do fundo
   useEffect(() => {
@@ -320,7 +348,90 @@ function NewPostModal({ accountId, userId, onClose }: NewPostModalProps) {
                     {postType === 'REELS' ? 'MP4 até 200 MB' : 'JPG, PNG até 200 MB'}
                   </span>
                 </button>
+              ) : postType === 'CAROUSEL_ALBUM' ? (
+                /* ── Carrossel: grid com drag-and-drop e badges de posição ── */
+                <div className="space-y-2">
+                  <p className="text-[11px] text-[#94a3b8]">
+                    Arraste para reordenar · A primeira imagem é a capa do carrossel
+                  </p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {previews.map((url, i) => (
+                      <div
+                        key={i}
+                        draggable
+                        onDragStart={() => onDragStart(i)}
+                        onDragEnter={() => onDragEnter(i)}
+                        onDragOver={e => e.preventDefault()}
+                        onDragEnd={onDragEnd}
+                        onDrop={() => onDrop(i)}
+                        className={`relative rounded-xl overflow-hidden border-2 flex-shrink-0 cursor-grab active:cursor-grabbing transition-all select-none aspect-square ${
+                          dragOver === i
+                            ? 'border-[#6366f1] scale-105 shadow-lg shadow-indigo-200'
+                            : dragIdx.current === i
+                            ? 'border-[#6366f1]/50 opacity-50'
+                            : 'border-[#e2e8f0] hover:border-[#6366f1]/40'
+                        }`}
+                      >
+                        <img src={url} alt={`Parte ${i + 1}`} className="w-full h-full object-cover" draggable={false} />
+
+                        {/* Badge de posição */}
+                        <div className={`absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold leading-none ${
+                          i === 0
+                            ? 'bg-[#6366f1] text-white'
+                            : 'bg-black/60 text-white'
+                        }`}>
+                          {i === 0 ? '⭐ Capa' : `${i + 1}`}
+                        </div>
+
+                        {/* Botão remover */}
+                        <button
+                          onClick={() => removeFile(i)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center hover:bg-red-500 transition-colors"
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+
+                        {/* Indicador de arrastar */}
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 opacity-60">
+                          <div className="w-0.5 h-3 bg-white rounded-full" />
+                          <div className="w-0.5 h-3 bg-white rounded-full" />
+                          <div className="w-0.5 h-3 bg-white rounded-full" />
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Botão adicionar mais */}
+                    {files.length < (typeCfg?.max ?? 10) && (
+                      <button
+                        onClick={() => fileRef.current?.click()}
+                        className="aspect-square rounded-xl border-2 border-dashed border-[#e2e8f0] hover:border-[#6366f1] hover:bg-[#f5f3ff] flex flex-col items-center justify-center gap-1 transition-colors flex-shrink-0"
+                      >
+                        <Plus className="w-5 h-5 text-[#94a3b8]" />
+                        <span className="text-[9px] text-[#94a3b8] font-medium">Adicionar</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sequência em texto */}
+                  {previews.length > 1 && (
+                    <div className="flex items-center gap-1 flex-wrap pt-1">
+                      {previews.map((_, i) => (
+                        <span key={i} className="flex items-center gap-1">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            i === 0 ? 'bg-[#6366f1] text-white' : 'bg-[#f1f5f9] text-[#64748b]'
+                          }`}>
+                            {i === 0 ? 'Capa' : `Parte ${i + 1}`}
+                          </span>
+                          {i < previews.length - 1 && (
+                            <span className="text-[#c0c0c0] text-[10px]">→</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
+                /* ── Imagem única / Reel ── */
                 <div className="flex flex-wrap gap-2">
                   {previews.map((url, i) => (
                     <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-[#e2e8f0] flex-shrink-0">
@@ -336,14 +447,6 @@ function NewPostModal({ accountId, userId, onClose }: NewPostModalProps) {
                       </button>
                     </div>
                   ))}
-                  {postType === 'CAROUSEL_ALBUM' && files.length < (typeCfg?.max ?? 10) && (
-                    <button
-                      onClick={() => fileRef.current?.click()}
-                      className="w-20 h-20 rounded-xl border-2 border-dashed border-[#e2e8f0] hover:border-[#6366f1] flex items-center justify-center transition-colors flex-shrink-0"
-                    >
-                      <Plus className="w-5 h-5 text-[#94a3b8]" />
-                    </button>
-                  )}
                 </div>
               )}
 
@@ -417,8 +520,9 @@ export function InstagramPage() {
   const [showModal, setShowModal] = useState(false)
   const { toast } = useToast()
 
-  const { data: account, isLoading: loadingAccount, refetch: refetchAccount } = useInstagramAccount()
-  const { data: posts = [], isLoading: loadingPosts, refetch: refetchPosts }  = useScheduledPosts()
+  const { data: account, isLoading: loadingAccount, refetch: refetchAccount, isRefetching: isRefetchingAccount } = useInstagramAccount()
+  const { data: posts = [], isLoading: loadingPosts, refetch: refetchPosts, isRefetching: isRefetchingPosts }    = useScheduledPosts()
+  const isRefreshing = isRefetchingAccount || isRefetchingPosts
   const cancelPost   = useCancelScheduledPost()
   const disconnect   = useDisconnectInstagram()
 
@@ -493,10 +597,11 @@ export function InstagramPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => { refetchAccount(); refetchPosts() }}
-              className="w-9 h-9 rounded-xl border border-[#e8e8e8] bg-white flex items-center justify-center text-[#94a3b8] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors"
+              disabled={isRefreshing}
+              className="w-9 h-9 rounded-xl border border-[#e8e8e8] bg-white flex items-center justify-center text-[#94a3b8] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors disabled:opacity-50"
               title="Atualizar"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             {account && (
               <button
