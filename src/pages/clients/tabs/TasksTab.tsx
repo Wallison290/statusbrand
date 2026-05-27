@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, CalendarDays, Clock, User } from 'lucide-react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -239,6 +241,134 @@ function TaskDialog({
   )
 }
 
+// ─── Modal de visualização da tarefa ─────────────────────────────────────────
+
+function TaskViewModal({
+  task, members, open, onClose, onEdit, onDelete,
+}: {
+  task:    Task | null
+  members: { id: string; name: string; color: string }[]
+  open:    boolean
+  onClose: () => void
+  onEdit:  (t: Task) => void
+  onDelete:(id: string) => void
+}) {
+  if (!task) return null
+
+  const pCfg   = PRIORITY_CFG[task.priority]
+  const sCfg   = STATUS_CFG[task.status]
+  const member = members.find(m => m.id === (task as any).assignee_id)
+  const overdue = isOverdue(task.due_date) && task.status !== 'concluido'
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-start justify-between gap-3 pr-6">
+            <DialogTitle className="text-[16px] font-semibold text-[#0f0f0f] leading-snug">
+              {task.title}
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-1">
+          {/* Badges: prioridade + status */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${pCfg.bg} ${pCfg.text}`}>
+              {task.priority === 'urgente' && <AlertCircle className="w-3 h-3" />}
+              {pCfg.label}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${sCfg.bg} ${sCfg.text}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${sCfg.dot}`} />
+              {sCfg.label}
+            </span>
+            {overdue && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-50 text-red-700 border border-red-200">
+                ⚠ Atrasada
+              </span>
+            )}
+          </div>
+
+          {/* Descrição */}
+          {task.description && (
+            <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5">Descrição</p>
+              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {/* Grid de detalhes */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Data e hora */}
+            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" /> Prazo
+              </p>
+              {task.due_date ? (
+                <>
+                  <p className={`text-[13px] font-medium ${overdue ? 'text-red-600' : 'text-[#0f0f0f]'}`}>
+                    {format(new Date(task.due_date + 'T00:00:00'), "d 'de' MMMM yyyy", { locale: ptBR })}
+                  </p>
+                  {task.due_time && (
+                    <p className="text-[12px] text-[#64748b] mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {task.due_time.slice(0, 5)}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[13px] text-[#94a3b8]">Sem prazo</p>
+              )}
+            </div>
+
+            {/* Responsável */}
+            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <User className="w-3 h-3" /> Responsável
+              </p>
+              {member ? (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+                    style={{ backgroundColor: member.color }}
+                  >
+                    {member.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-[13px] font-medium text-[#0f0f0f]">{member.name}</span>
+                </div>
+              ) : task.assignee ? (
+                <p className="text-[13px] text-[#374151]">{task.assignee}</p>
+              ) : (
+                <p className="text-[13px] text-[#94a3b8]">Sem responsável</p>
+              )}
+            </div>
+          </div>
+
+          {/* Data de criação */}
+          <p className="text-[11px] text-[#94a3b8]">
+            Criada em {format(new Date(task.created_at), "d 'de' MMMM yyyy 'às' HH:mm", { locale: ptBR })}
+          </p>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+            onClick={() => { onClose(); onDelete(task.id) }}
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          <Button size="sm" onClick={() => { onClose(); onEdit(task) }}>
+            <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── TasksTab ─────────────────────────────────────────────────────────────────
 
 export function TasksTab({ clientId }: { clientId: string }) {
@@ -253,10 +383,12 @@ export function TasksTab({ clientId }: { clientId: string }) {
 
   const [dialogOpen, setDialogOpen]     = useState(false)
   const [editingTask, setEditingTask]   = useState<Task | null>(null)
+  const [viewingTask, setViewingTask]   = useState<Task | null>(null)
   const [deletingId, setDeletingId]     = useState<string | null>(null)
 
   const handleEdit = (task: Task) => { setEditingTask(task); setDialogOpen(true) }
   const handleNew  = () => { setEditingTask(null); setDialogOpen(true) }
+  const handleView = (task: Task) => { setViewingTask(task) }
 
   const handleDelete = async (taskId: string) => {
     try {
@@ -342,7 +474,8 @@ export function TasksTab({ clientId }: { clientId: string }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20, transition: { duration: 0.15 } }}
               transition={{ delay: i * 0.03, duration: 0.18 }}
-              className={`bg-white rounded-xl border transition-all hover:shadow-sm group ${
+              onClick={() => !isConfirming && handleView(task)}
+              className={`bg-white rounded-xl border transition-all hover:shadow-md cursor-pointer group ${
                 overdue ? 'border-red-200 border-l-[3px] border-l-red-400' : 'border-[#e8e8e8]'
               }`}
             >
@@ -364,11 +497,13 @@ export function TasksTab({ clientId }: { clientId: string }) {
                   )}
 
                   <div className="flex items-center gap-3 flex-wrap">
-                    {/* Status — clicável */}
-                    <StatusPill
-                      status={task.status}
-                      onChange={s => handleStatusChange(task, s)}
-                    />
+                    {/* Status — stop propagation para não abrir modal de view */}
+                    <div onClick={e => e.stopPropagation()}>
+                      <StatusPill
+                        status={task.status}
+                        onChange={s => handleStatusChange(task, s)}
+                      />
+                    </div>
 
                     {/* Data */}
                     {task.due_date && (
@@ -403,7 +538,10 @@ export function TasksTab({ clientId }: { clientId: string }) {
                 </div>
 
                 {/* Ações */}
-                <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={e => e.stopPropagation()}
+                >
                   {isConfirming ? (
                     <>
                       <span className="text-[11px] text-[#9ca3af] mr-1">Excluir?</span>
@@ -463,6 +601,16 @@ export function TasksTab({ clientId }: { clientId: string }) {
           </button>
         </div>
       )}
+
+      {/* Modal de visualização */}
+      <TaskViewModal
+        task={viewingTask}
+        members={activeMembers}
+        open={!!viewingTask}
+        onClose={() => setViewingTask(null)}
+        onEdit={task => { setViewingTask(null); handleEdit(task) }}
+        onDelete={taskId => { setViewingTask(null); setDeletingId(taskId) }}
+      />
 
       {/* Dialog criar / editar */}
       <TaskDialog
