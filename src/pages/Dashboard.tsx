@@ -43,12 +43,14 @@ type PeriodMode = 'dia' | 'semana' | 'mes' | 'ano' | 'custom'
 interface DateRange { start: Date; end: Date }
 
 interface Stats {
-  total_clients:         number
-  active_clients:        number
-  pending_tasks:         number
-  overdue_tasks:         number
+  total_clients:           number
+  active_clients:          number
+  pending_tasks:           number
+  overdue_tasks:           number
   period_pending_approval: number
   period_approved:         number
+  period_scheduled:        number
+  period_published:        number
 }
 
 interface PlannerDay {
@@ -248,19 +250,20 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, subtitle, href, icon: Icon,
+  label, value, displayValue, subtitle, href, icon: Icon,
   iconBg = 'bg-gray-100', iconColor = 'text-gray-500',
   featured = false, warning = false,
 }: {
-  label:      string
-  value:      number
-  subtitle?:  string
-  href?:      string
-  icon:       React.ElementType
-  iconBg?:    string
-  iconColor?: string
-  featured?:  boolean
-  warning?:   boolean
+  label:         string
+  value:         number
+  displayValue?: string
+  subtitle?:     string
+  href?:         string
+  icon:          React.ElementType
+  iconBg?:       string
+  iconColor?:    string
+  featured?:     boolean
+  warning?:      boolean
 }) {
   const showWarning = warning && value > 0
 
@@ -278,7 +281,7 @@ function KpiCard({
         </span>
       </div>
       <div className="mt-auto">
-        <p className="text-[28px] font-semibold text-white tabular-nums leading-none">{value}</p>
+        <p className="text-[28px] font-semibold text-white tabular-nums leading-none">{displayValue ?? value}</p>
         <p className="text-[12px] text-white/60 mt-1.5 leading-tight">{label}</p>
         {subtitle && <p className="text-[10px] text-white/30 mt-0.5">{subtitle}</p>}
       </div>
@@ -301,7 +304,7 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className="text-[26px] font-semibold text-[#0f172a] tabular-nums leading-none">{value}</p>
+        <p className="text-[26px] font-semibold text-[#0f172a] tabular-nums leading-none">{displayValue ?? value}</p>
         <p className="text-[12px] text-[#64748b] mt-1.5 leading-tight">{label}</p>
         {subtitle && <p className="text-[10px] text-[#94a3b8] mt-0.5">{subtitle}</p>}
       </div>
@@ -605,7 +608,7 @@ export function Dashboard() {
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [statsReady, setStatsReady]             = useState(false)
-  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0 })
+  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0 })
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
@@ -687,6 +690,8 @@ export function Dashboard() {
     const pList = plannerRes.data || []
     const period_pending_approval = pList.filter(isAwaitingApproval).length
     const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
+    const period_scheduled        = pList.filter((p: any) => p.status === 'agendado').length
+    const period_published        = pList.filter((p: any) => p.status === 'publicado').length
 
     setStatsReady(true)
     setStats({
@@ -696,6 +701,8 @@ export function Dashboard() {
       overdue_tasks:  overdue,
       period_pending_approval,
       period_approved,
+      period_scheduled,
+      period_published,
     })
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
@@ -787,13 +794,43 @@ export function Dashboard() {
       <div className="px-6 py-6 md:px-8 md:py-7 space-y-6">
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-          <KpiCard label="Total de Clientes"  value={stats.total_clients}            subtitle="global"             href="/clients"  icon={Users}          featured />
-          <KpiCard label="Clientes Ativos"    value={stats.active_clients}           subtitle="em operação"        href="/clients"  icon={TrendingUp}     iconBg="bg-emerald-50"  iconColor="text-emerald-800" />
-          <KpiCard label="Tarefas Pendentes"  value={stats.pending_tasks}            subtitle="no período"         href="/tasks"    icon={CheckSquare}    iconBg="bg-blue-50"     iconColor="text-blue-800" />
-          <KpiCard label="Tarefas Atrasadas"  value={stats.overdue_tasks}            subtitle={stats.overdue_tasks > 0 ? 'requer atenção' : 'em dia'} href="/tasks"    icon={AlertTriangle}  warning />
-          <KpiCard label="Ag. aprovação"      value={stats.period_pending_approval}  subtitle="no período"         href="/planner"  icon={Clock}          iconBg="bg-orange-50"   iconColor="text-orange-800" />
-          <KpiCard label="Aprovados"          value={stats.period_approved}          subtitle="no período"         href="/planner"  icon={CheckCircle2}   iconBg="bg-emerald-50"  iconColor="text-emerald-800" />
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <KpiCard
+            label="Posts Agendados"
+            value={stats.period_scheduled}
+            subtitle="no período"
+            href="/planner"
+            icon={CalendarDays}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-700"
+          />
+          <KpiCard
+            label="Posts Publicados"
+            value={stats.period_published}
+            subtitle="no período"
+            href="/planner"
+            icon={CheckCircle2}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-700"
+          />
+          <KpiCard
+            label="Receita Recebida"
+            value={finStats.received}
+            displayValue={fmtBRL(finStats.received)}
+            subtitle="neste mês"
+            href="/financial"
+            icon={DollarSign}
+            iconBg="bg-green-50"
+            iconColor="text-green-700"
+          />
+          <KpiCard
+            label="Clientes Inadimplentes"
+            value={finStats.overdueCount}
+            subtitle={finStats.overdueCount > 0 ? fmtBRL(finStats.overdueAmt) + ' em atraso' : 'todos em dia'}
+            href="/financial"
+            icon={AlertTriangle}
+            warning
+          />
         </div>
 
         {/* Main grid */}
