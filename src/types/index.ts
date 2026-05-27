@@ -235,6 +235,13 @@ export interface PlannerItem {
 export type TaskStatus = 'a_fazer' | 'em_andamento' | 'revisao' | 'concluido'
 export type TaskPriority = 'baixa' | 'media' | 'alta' | 'urgente'
 
+export interface TaskLink {
+  id:    string
+  label: string
+  url:   string
+  type:  'link' | 'imagem' | 'video' | 'arquivo' | 'pasta'
+}
+
 export interface Task {
   id: string
   user_id: string
@@ -246,6 +253,10 @@ export interface Task {
   priority: TaskPriority
   status: TaskStatus
   assignee: string | null
+  assignee_id?: string | null
+  collaborator_note: string | null
+  delivery_url: string | null
+  task_links: TaskLink[] | null
   created_at: string
   updated_at: string
   client?: Client

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder } from 'lucide-react'
+import type { TaskLink } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -342,6 +343,110 @@ function TaskViewModal({
               )}
             </div>
           </div>
+
+          {/* Referências e materiais (task_links) */}
+          {Array.isArray(task.task_links) && task.task_links.length > 0 && (
+            <div>
+              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-2">
+                Referências e materiais ({task.task_links.length})
+              </p>
+              <div className="space-y-2">
+                {task.task_links.map((link: TaskLink) => {
+                  if (link.type === 'imagem') {
+                    return (
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                        <img
+                          src={link.url}
+                          alt={link.label}
+                          className="w-full max-h-64 object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[#94a3b8] hover:text-[#0f0f0f] ml-2 flex-shrink-0">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  if (link.type === 'video') {
+                    return (
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                        <video
+                          src={link.url}
+                          controls
+                          className="w-full max-h-64 bg-black"
+                          preload="metadata"
+                        />
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[#94a3b8] hover:text-[#0f0f0f] ml-2 flex-shrink-0">
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const iconMap: Record<string, (p: { className?: string }) => JSX.Element | null> = {
+                    link:    Link2,
+                    arquivo: FileText,
+                    pasta:   Folder,
+                  }
+                  const Icon = iconMap[link.type] ?? Link2
+                  const colorMap: Record<string, string> = {
+                    link:    'text-blue-800 bg-blue-50',
+                    arquivo: 'text-amber-800 bg-amber-50',
+                    pasta:   'text-emerald-800 bg-emerald-50',
+                  }
+                  const colorCls = colorMap[link.type] ?? 'text-blue-800 bg-blue-50'
+
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#e2e8f0] hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+                    >
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorCls}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium text-[#334155] truncate group-hover:text-blue-700">{link.label}</p>
+                        <p className="text-[10px] text-[#94a3b8] truncate">{link.url}</p>
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-[#c0c0c0] group-hover:text-blue-400 flex-shrink-0" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Entrega do colaborador */}
+          {(task.collaborator_note || task.delivery_url) && (
+            <div className="bg-violet-50 rounded-xl p-3.5 border border-violet-100 space-y-1.5">
+              <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Entrega do colaborador</p>
+              {task.collaborator_note && (
+                <p className="text-[12px] text-violet-800 leading-relaxed">📝 {task.collaborator_note}</p>
+              )}
+              {task.delivery_url && (
+                <a
+                  href={task.delivery_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium"
+                >
+                  <ExternalLink className="w-3 h-3" /> Ver entrega enviada
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Data de criação */}
           <p className="text-[11px] text-[#94a3b8]">
