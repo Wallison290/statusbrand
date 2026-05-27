@@ -1200,6 +1200,10 @@ export function Planner() {
   // Filtro por status de aprovação
   const [selectedApprovalFilter, setSelectedApprovalFilter] = useState<ApprovalStatus | 'todos'>('todos')
 
+  // Dropdowns de filtro
+  const [clientDropOpen, setClientDropOpen]   = useState(false)
+  const [statusDropOpen, setStatusDropOpen]   = useState(false)
+
   // Hover tooltip
   const [hover, setHover] = useState<HoverState | null>(null)
 
@@ -1725,63 +1729,150 @@ export function Planner() {
       />
 
       <div className="p-4 md:p-6">
-        {/* Filtro por cliente */}
+        {/* ── Filtros compactos ────────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
-          <button
-            onClick={() => setSelectedClientFilter(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectedClientFilter === null
-                ? 'bg-[#0f0f0f] text-white'
-                : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
-            }`}
-          >
-            Geral
-          </button>
-          {(clients || []).map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedClientFilter(c.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                selectedClientFilter === c.id
-                  ? 'bg-[#0f0f0f] text-white'
-                  : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
-              }`}
-            >
-              {c.logo_url ? (
-                <img src={c.logo_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-[8px] font-bold flex-shrink-0 text-blue-700">
-                  {c.company_name[0].toUpperCase()}
-                </span>
-              )}
-              {c.company_name}
-            </button>
-          ))}
-        </div>
 
-        {/* Filtro por status de aprovação */}
-        <div className="flex items-center gap-2 mb-5 flex-wrap">
-          {([
-            { key: 'todos',              label: 'Todos',             dot: 'bg-gray-400' },
-            { key: 'pendente_aprovacao', label: 'Pendentes',          dot: 'bg-yellow-400' },
-            { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
-            { key: 'ajuste_solicitado',  label: 'Ajuste solicitado',  dot: 'bg-orange-400' },
-            { key: 'ajuste_realizado',   label: 'Ajuste realizado',   dot: 'bg-blue-400' },
-            { key: 'reprovado',          label: 'Reprovados',         dot: 'bg-red-400' },
-          ] as const).map(({ key, label, dot }) => (
-            <button
-              key={key}
-              onClick={() => setSelectedApprovalFilter(key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                selectedApprovalFilter === key
-                  ? 'bg-[#0f0f0f] text-white border border-transparent'
-                  : 'bg-white text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] border border-[#e8e8e8]'
-              }`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
-              {label}
-            </button>
-          ))}
+          {/* Seletor de cliente */}
+          {(() => {
+            const selectedClient = (clients || []).find(c => c.id === selectedClientFilter)
+            return (
+              <div className="relative">
+                <button
+                  onClick={() => { setClientDropOpen(o => !o); setStatusDropOpen(false) }}
+                  className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
+                    selectedClientFilter
+                      ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
+                      : 'bg-white text-[#374151] border-[#e0e0e0] hover:border-[#c0c0c0] hover:bg-[#fafafa]'
+                  }`}
+                >
+                  {selectedClient ? (
+                    selectedClient.logo_url ? (
+                      <img src={selectedClient.logo_url} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0">
+                        {selectedClient.company_name[0].toUpperCase()}
+                      </span>
+                    )
+                  ) : (
+                    <Building2 className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                  )}
+                  <span className="max-w-[140px] truncate">
+                    {selectedClient ? selectedClient.company_name : 'Todos os clientes'}
+                  </span>
+                  <ChevronRightIcon className={`w-3.5 h-3.5 flex-shrink-0 transition-transform opacity-60 ${clientDropOpen ? 'rotate-90' : 'rotate-90 -rotate-90'} ${clientDropOpen ? '-rotate-90' : 'rotate-90'}`} />
+                </button>
+
+                <AnimatePresence>
+                  {clientDropOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setClientDropOpen(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 4, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-white border border-[#e0e0e0] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[200px]"
+                      >
+                        {/* Opção Todos */}
+                        <button
+                          onClick={() => { setSelectedClientFilter(null); setClientDropOpen(false) }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
+                            selectedClientFilter === null ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                          }`}
+                        >
+                          <span className="w-5 h-5 rounded-full bg-[#e8e8e8] flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-3 h-3 text-[#9ca3af]" />
+                          </span>
+                          Todos os clientes
+                          {selectedClientFilter === null && <Check className="w-3 h-3 ml-auto text-[#0f0f0f]" />}
+                        </button>
+                        {(clients || []).length > 0 && <div className="h-px bg-[#f0f0f0] mx-3 my-1" />}
+                        {(clients || []).map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => { setSelectedClientFilter(c.id); setClientDropOpen(false) }}
+                            className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
+                              selectedClientFilter === c.id ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                            }`}
+                          >
+                            {c.logo_url ? (
+                              <img src={c.logo_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0">
+                                {c.company_name[0].toUpperCase()}
+                              </span>
+                            )}
+                            <span className="truncate flex-1">{c.company_name}</span>
+                            {selectedClientFilter === c.id && <Check className="w-3 h-3 ml-auto text-[#0f0f0f] flex-shrink-0" />}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          })()}
+
+          {/* Seletor de status de aprovação */}
+          {(() => {
+            const STATUS_OPTIONS = [
+              { key: 'todos',              label: 'Todos os status',   dot: 'bg-[#c0c0c0]' },
+              { key: 'pendente_aprovacao', label: 'Pendentes',          dot: 'bg-yellow-400' },
+              { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
+              { key: 'ajuste_solicitado',  label: 'Ajuste solicitado',  dot: 'bg-orange-400' },
+              { key: 'ajuste_realizado',   label: 'Ajuste realizado',   dot: 'bg-blue-400' },
+              { key: 'reprovado',          label: 'Reprovados',         dot: 'bg-red-400' },
+            ] as const
+            const current = STATUS_OPTIONS.find(s => s.key === selectedApprovalFilter) ?? STATUS_OPTIONS[0]
+            const isFiltered = selectedApprovalFilter !== 'todos'
+            return (
+              <div className="relative">
+                <button
+                  onClick={() => { setStatusDropOpen(o => !o); setClientDropOpen(false) }}
+                  className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
+                    isFiltered
+                      ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
+                      : 'bg-white text-[#374151] border-[#e0e0e0] hover:border-[#c0c0c0] hover:bg-[#fafafa]'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${current.dot}`} />
+                  <span>{current.label}</span>
+                  <ChevronRightIcon className={`w-3.5 h-3.5 flex-shrink-0 opacity-60 transition-transform ${statusDropOpen ? '-rotate-90' : 'rotate-90'}`} />
+                </button>
+
+                <AnimatePresence>
+                  {statusDropOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setStatusDropOpen(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 4, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-white border border-[#e0e0e0] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[190px]"
+                      >
+                        {STATUS_OPTIONS.map(({ key, label, dot }) => (
+                          <button
+                            key={key}
+                            onClick={() => { setSelectedApprovalFilter(key); setStatusDropOpen(false) }}
+                            className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
+                              selectedApprovalFilter === key ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                            }`}
+                          >
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+                            <span className="flex-1">{label}</span>
+                            {selectedApprovalFilter === key && <Check className="w-3 h-3 ml-auto text-[#0f0f0f] flex-shrink-0" />}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          })()}
+
         </div>
 
         {/* Navigation */}
