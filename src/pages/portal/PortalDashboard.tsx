@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight, Paperclip, Link2,
   FileText, ImageIcon, Video, Music, File, Building2,
   ExternalLink, Instagram, Mail, Globe, Phone, Sparkles,
-  CheckCircle2, AlertCircle, XCircle, Clock, MessageSquare,
+  CheckCircle2, AlertCircle, XCircle, Clock, MessageSquare, X,
   LayoutDashboard, CalendarDays, FolderOpen, LifeBuoy,
   ArrowRight, Bell, Calendar, MessageCircle, Download, Eye,
 } from 'lucide-react'
@@ -163,8 +163,21 @@ function DayTooltip({ state }: { state: HoverState }) {
 function ItemDetailView({
   item, open, onClose,
 }: { item: PlannerItem; open: boolean; onClose: () => void }) {
-  const images = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
-  const otherAttachments = item.attachments?.filter((a: PlannerAttachment) => !a.file_type.startsWith('image/')) || []
+  // Carrossel: imagens + vídeos no painel esquerdo
+  const mediaItems = [
+    ...(item.attachments?.filter(a => a.file_type.startsWith('image/')) || []).map(a => ({ ...a, kind: 'image' as const })),
+    ...(item.attachments?.filter(a => a.file_type.startsWith('video/')) || []).map(a => ({ ...a, kind: 'video' as const })),
+  ]
+  const otherAttachments = item.attachments?.filter(
+    (a: PlannerAttachment) => !a.file_type.startsWith('image/') && !a.file_type.startsWith('video/')
+  ) || []
+
+  const [mediaIdx, setMediaIdx] = useState(0)
+  const currentMedia = mediaItems[mediaIdx] ?? null
+  const hasMedia = mediaItems.length > 0
+
+  const [notesExpanded, setNotesExpanded] = useState(false)
+
   const submitApproval = useSubmitApproval()
   const { toast } = useToast()
 
@@ -174,11 +187,12 @@ function ItemDetailView({
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [pendingAction, setPendingAction] = useState<ApprovalStatus | null>(null)
 
-  // Reset local state whenever a different item is opened
   useEffect(() => {
     setLocalStatus((item.approval_status || 'pendente_aprovacao') as ApprovalStatus)
     setSuccessMsg(null)
     setPendingAction(null)
+    setMediaIdx(0)
+    setNotesExpanded(false)
   }, [item.id])
 
   const handleApproval = async (status: ApprovalStatus) => {
@@ -195,183 +209,207 @@ function ItemDetailView({
     }
   }
 
-  // ajuste_realizado = agência fez o ajuste, cliente precisa revisar novamente
   const isDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
   const isBusy = submitApproval.isPending
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug break-words min-w-0 select-text">{item.title}</DialogTitle>
-          </div>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <span className="text-xs text-gray-500">
-              {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              {item.scheduled_time && ` às ${item.scheduled_time}`}
-            </span>
-            <span className="text-gray-700">·</span>
-            <span className="text-xs text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
-            <span className="text-gray-700">·</span>
-            <span className={`text-xs font-medium ${statusTextColors[item.status as PlannerStatus]}`}>
-              {statusLabels[item.status as PlannerStatus]}
-            </span>
-          </div>
-        </DialogHeader>
+      {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
+      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden bg-white flex flex-col h-[90vh]">
+        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
 
-        <div
-          className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden"
-          style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
-        >
-          {item.notes && (
-            <div className="p-3 bg-[#f7f7f7] rounded-xl border border-[#e8e8e8]">
-              <p className="text-[10px] text-[#a0a0a0] uppercase tracking-wide mb-2">Notas</p>
-              <p
-                className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words select-text"
-                style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
-              >{item.notes}</p>
-            </div>
-          )}
+          {/* ══ ESQUERDA: Mídia — preenche todo o painel ══ */}
+          {hasMedia && (
+            <div className="lg:w-1/2 flex-shrink-0 relative bg-gray-200 overflow-hidden h-[45vw] lg:h-full">
+              {currentMedia?.kind === 'image' ? (
+                <img src={currentMedia.file_url} alt={currentMedia.file_name}
+                  className="absolute inset-0 w-full h-full object-cover" />
+              ) : currentMedia?.kind === 'video' ? (
+                <video key={currentMedia.file_url} src={currentMedia.file_url}
+                  autoPlay muted loop playsInline controls
+                  className="absolute inset-0 w-full h-full object-cover" />
+              ) : null}
 
-          {images.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Imagens</p>
-              <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                {images.map(img => (
-                  <a key={img.id} href={img.file_url} target="_blank" rel="noopener noreferrer"
-                    className="block w-full max-w-full overflow-hidden rounded-xl border border-[#e8e8e8] hover:border-[#c8c8c8] transition-colors">
-                    <img src={img.file_url} alt={img.file_name} className="w-full max-w-full object-contain max-h-[60vh]" />
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-[#f5f5f5]">
-                      <ImageIcon className="w-3 h-3 text-blue-500" />
-                      <span className="text-[10px] text-[#737373] truncate flex-1">{img.file_name}</span>
-                      <ExternalLink className="w-3 h-3 text-[#a0a0a0]" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+              {mediaItems.length > 1 && (
+                <>
+                  <button onClick={() => setMediaIdx(i => Math.max(0, i - 1))} disabled={mediaIdx === 0}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))} disabled={mediaIdx === mediaItems.length - 1}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
+              )}
 
-          {otherAttachments.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Anexos</p>
-              <div className="space-y-1.5">
-                {otherAttachments.map((att: PlannerAttachment) => (
-                  <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0 max-w-full overflow-hidden">
-                    <FileTypeIcon type={att.file_type} size="md" />
-                    <span className="text-xs text-[#0f0f0f] truncate flex-1">{att.file_name}</span>
-                    {att.file_size && <span className="text-[10px] text-[#a0a0a0] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
-                    <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+              {mediaItems.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 z-10 flex items-center justify-center gap-1.5">
+                  {mediaItems.map((_, i) => (
+                    <button key={i} onClick={() => setMediaIdx(i)}
+                      className={`rounded-full transition-all ${i === mediaIdx ? 'w-2 h-2 bg-white shadow' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`} />
+                  ))}
+                  <span className="ml-1.5 text-[10px] text-white font-semibold drop-shadow">{mediaIdx + 1}/{mediaItems.length}</span>
+                </div>
+              )}
 
-          {item.links && item.links.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Links</p>
-              <div className="space-y-1.5">
-                {item.links.map(link => (
-                  <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-[#f7f7f7] border border-[#e8e8e8] rounded-xl hover:border-[#d0d0d0] hover:bg-[#f0f0f0] transition-colors min-w-0 overflow-hidden">
-                    <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                    <span className="text-xs text-blue-600 flex-1 min-w-0 break-all">{link.label || link.url}</span>
-                    <ExternalLink className="w-3 h-3 text-[#a0a0a0] flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Seção de Aprovação ── */}
-          <div className={`rounded-xl border p-4 ${approvalBg[localStatus]}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
-              <p className={`text-xs font-semibold ${approvalText[localStatus]}`}>
-                {approvalLabels[localStatus]}
-              </p>
-              {item.reviewed_at && !successMsg && (
-                <span className="text-[10px] text-gray-600 ml-auto">
-                  {format(parseISO(item.reviewed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                </span>
+              {currentMedia && (
+                <a href={currentMedia.file_url} target="_blank" rel="noopener noreferrer"
+                  className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/80 hover:text-white transition-all">
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
             </div>
+          )}
 
-            {/* Feedback de sucesso imediato */}
-            {successMsg && (
-              <div className="mb-3 flex items-center gap-2 p-2.5 bg-white/70 border border-black/[0.06] rounded-lg">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                <p className="text-xs text-[#0f0f0f] font-medium">{successMsg}</p>
-              </div>
-            )}
+          {/* ══ DIREITA: Informações + Aprovação ══ */}
+          <div className={`flex flex-col overflow-hidden bg-white ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-gray-200' : 'w-full'} flex-1`}>
 
-            {item.client_feedback && localStatus !== 'pendente_aprovacao' && !successMsg && (
-              <div className="mb-3 p-2.5 bg-white/70 border border-black/[0.06] rounded-lg">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <MessageSquare className="w-3 h-3 text-[#a0a0a0]" />
-                  <span className="text-[10px] text-[#a0a0a0] uppercase tracking-wide">Seu comentário</span>
+            {/* Header fixo */}
+            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-200">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
+                    <span className="text-[11px] text-gray-500">
+                      {format(parseISO(item.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
+                      {item.scheduled_time && ` · ${item.scheduled_time.slice(0, 5)}`}
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-[11px] text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
+                    <span className="text-gray-300">·</span>
+                    <span className={`text-[11px] font-semibold ${statusTextColors[item.status as PlannerStatus]}`}>
+                      {statusLabels[item.status as PlannerStatus]}
+                    </span>
+                  </div>
+                  <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
                 </div>
-                <p
-                  className="text-xs text-[#737373] leading-relaxed break-words select-text"
-                  style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
-                >{item.client_feedback}</p>
+                <button onClick={onClose}
+                  className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all flex-shrink-0">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-            )}
+            </div>
 
-            {/* Botões: ocultos após decisão confirmada */}
-            {!isDecided && (
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => handleApproval('aprovado')}
-                  disabled={isBusy}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
-                    bg-green-50 text-green-700 hover:bg-green-100 border border-green-200
-                    disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {pendingAction === 'aprovado'
-                    ? <span className="w-3.5 h-3.5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                    : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Aprovar
-                </button>
-                <button
-                  onClick={() => handleApproval('ajuste_solicitado')}
-                  disabled={isBusy}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
-                    bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200
-                    disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {pendingAction === 'ajuste_solicitado'
-                    ? <span className="w-3.5 h-3.5 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
-                    : <AlertCircle className="w-3.5 h-3.5" />}
-                  Solicitar ajuste
-                </button>
-                <button
-                  onClick={() => handleApproval('reprovado')}
-                  disabled={isBusy}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all
-                    bg-red-50 text-red-700 hover:bg-red-100 border border-red-200
-                    disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {pendingAction === 'reprovado'
-                    ? <span className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                    : <XCircle className="w-3.5 h-3.5" />}
-                  Reprovar
-                </button>
+            {/* Corpo scrollável */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+
+              {/* Legenda */}
+              {item.notes && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Legenda</p>
+                  <div className="relative">
+                    <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
+                      {item.notes}
+                    </p>
+                    {item.notes.length > 200 && (
+                      <button onClick={() => setNotesExpanded(v => !v)}
+                        className="text-[12px] text-gray-500 hover:text-gray-700 mt-1.5 font-medium transition-colors">
+                        {notesExpanded ? 'ver menos' : 'ver mais'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Outros anexos */}
+              {otherAttachments.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Anexos</p>
+                  <div className="space-y-1.5">
+                    {otherAttachments.map((att: PlannerAttachment) => (
+                      <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <FileTypeIcon type={att.file_type} size="md" />
+                        <span className="text-xs text-gray-700 truncate flex-1">{att.file_name}</span>
+                        {att.file_size && <span className="text-[10px] text-gray-400 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {item.links && item.links.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Links</p>
+                  <div className="space-y-1.5">
+                    {item.links.map(link => (
+                      <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                        <span className="text-xs text-blue-600 flex-1 min-w-0 break-all">{link.label || link.url}</span>
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Seção de Aprovação ── */}
+              <div className={`rounded-xl border p-4 ${approvalBg[localStatus]}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
+                  <p className={`text-xs font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
+                  {item.reviewed_at && !successMsg && (
+                    <span className="text-[10px] text-gray-500 ml-auto">
+                      {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    </span>
+                  )}
+                </div>
+
+                {successMsg && (
+                  <div className="mb-3 flex items-center gap-2 p-2.5 bg-white/80 border border-black/[0.06] rounded-lg">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                    <p className="text-xs text-gray-900 font-medium">{successMsg}</p>
+                  </div>
+                )}
+
+                {item.client_feedback && localStatus !== 'pendente_aprovacao' && !successMsg && (
+                  <div className="mb-3 p-2.5 bg-white/80 border border-black/[0.06] rounded-lg">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <MessageSquare className="w-3 h-3 text-gray-400" />
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Seu comentário</span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed break-words select-text">{item.client_feedback}</p>
+                  </div>
+                )}
+
+                {!isDecided && (
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => handleApproval('aprovado')} disabled={isBusy}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                      {pendingAction === 'aprovado'
+                        ? <span className="w-3.5 h-3.5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                        : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      Aprovar
+                    </button>
+                    <button onClick={() => handleApproval('ajuste_solicitado')} disabled={isBusy}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                      {pendingAction === 'ajuste_solicitado'
+                        ? <span className="w-3.5 h-3.5 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                        : <AlertCircle className="w-3.5 h-3.5" />}
+                      Solicitar ajuste
+                    </button>
+                    <button onClick={() => handleApproval('reprovado')} disabled={isBusy}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                      {pendingAction === 'reprovado'
+                        ? <span className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                        : <XCircle className="w-3.5 h-3.5" />}
+                      Reprovar
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Comentários */}
+              <div className="pb-2">
+                <PlannerCommentsThread plannerId={item.id} role="client" />
+              </div>
+            </div>
           </div>
-
-          {/* Comment thread */}
-          <PlannerCommentsThread plannerId={item.id} role="client" />
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Fechar</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

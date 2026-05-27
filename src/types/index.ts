@@ -193,6 +193,8 @@ export interface PlannerAttachment {
   file_type: string
   file_url: string
   file_size: number | null
+  sort_order: number
+  is_ig_media: boolean
   created_at: string
 }
 
@@ -221,6 +223,8 @@ export interface PlannerItem {
   reviewed_at: string | null
   reviewed_by: string | null
   asset_id?: string | null
+  ig_post_type?: 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS' | null
+  ig_scheduled?: boolean
   created_at: string
   updated_at: string
   client?: Client

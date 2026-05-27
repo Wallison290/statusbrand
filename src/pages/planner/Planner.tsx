@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable,
@@ -11,6 +11,7 @@ import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
+  LayoutGrid, Film,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -33,6 +34,7 @@ import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { useContentAssets } from '@/hooks/useContentAssets'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
+import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
 import type { PlannerStatus, PlannerItem, PlannerAttachment, PlannerLink, ContentType, ApprovalStatus, ContentAsset } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -392,6 +394,152 @@ function DayTooltip({ state }: { state: HoverState }) {
   )
 }
 
+// ─── Instagram Schedule Section ───────────────────────────────────────────────
+
+type IgPostType = 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS'
+
+async function uploadIgMedia(url: string, userId: string): Promise<string> {
+  const res  = await fetch(url)
+  const blob = await res.blob()
+  const ext  = url.split('.').pop()?.split('?')[0] ?? 'jpg'
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await (supabase as any).storage.from('post-media').upload(path, blob)
+  if (error) throw error
+  const { data } = (supabase as any).storage.from('post-media').getPublicUrl(path)
+  return data.publicUrl as string
+}
+
+function InstagramScheduleSection({ item, userId }: { item: PlannerItem; userId: string }) {
+  const { data: igAccount, isLoading: igLoading } = useClientInstagramAccount(item.client_id ?? undefined)
+  const createPost = useCreateScheduledPost()
+  const { toast }  = useToast()
+
+  const imageAtts = (item.attachments ?? []).filter(a => isImageAttachment(a))
+  const videoAtts = (item.attachments ?? []).filter(a => isVideoAttachment(a))
+  const hasMedia  = imageAtts.length > 0 || videoAtts.length > 0
+
+  const [postType, setPostType]       = useState<IgPostType>('IMAGE')
+  const [caption, setCaption]         = useState(item.notes ?? '')
+  const [schedDate, setSchedDate]     = useState(item.scheduled_date)
+  const [schedTime, setSchedTime]     = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
+  const [publishing, setPublishing]   = useState(false)
+  const [success, setSuccess]         = useState(false)
+
+  const handleSchedule = async () => {
+    if (!igAccount) return
+    setPublishing(true)
+    try {
+      const atts = postType === 'REELS' ? videoAtts : imageAtts
+      const limit = postType === 'CAROUSEL_ALBUM' ? 10 : 1
+      const mediaUrls: string[] = []
+      for (const att of atts.slice(0, limit)) {
+        mediaUrls.push(await uploadIgMedia(att.file_url, userId))
+      }
+      await createPost.mutateAsync({
+        ig_account_id: igAccount.id,
+        client_id:     item.client_id,
+        post_type:     postType,
+        caption,
+        media_urls:    mediaUrls,
+        scheduled_at:  new Date(`${schedDate}T${schedTime}:00`).toISOString(),
+      })
+      setSuccess(true)
+      toast('Post agendado no Instagram!', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao agendar.', 'error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  if (igLoading) return (
+    <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
+      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verificando Instagram...
+    </div>
+  )
+
+  if (!item.client_id) return (
+    <div className="p-3 bg-white/3 rounded-xl border border-white/8 text-xs text-gray-500">
+      Post sem cliente vinculado — não é possível agendar no Instagram.
+    </div>
+  )
+
+  if (!igAccount) return (
+    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-1.5">
+      <div className="flex items-center gap-2">
+        <Instagram className="w-3.5 h-3.5 text-gray-500" />
+        <p className="text-xs text-gray-400 font-medium">Instagram não conectado</p>
+      </div>
+      <p className="text-[11px] text-gray-600">
+        Acesse o perfil do cliente → aba <strong className="text-gray-400">Instagram</strong> para conectar a conta.
+      </p>
+    </div>
+  )
+
+  if (success) return (
+    <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+      <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+      <div>
+        <p className="text-xs font-medium text-emerald-400">Post agendado!</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">Veja em <strong className="text-gray-400">Instagram → Agendados</strong>.</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-3">
+      {/* Conta */}
+      <div className="flex items-center gap-2">
+        {igAccount.profile_picture_url
+          ? <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
+          : <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}><Instagram className="w-3.5 h-3.5 text-white" /></div>
+        }
+        <span className="text-xs text-gray-300 font-medium">@{igAccount.username}</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Conectado</span>
+      </div>
+
+      {!hasMedia && (
+        <p className="text-[11px] text-amber-400 flex items-center gap-1.5">
+          <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
+          Nenhuma imagem/vídeo anexado. Adicione mídia ao post primeiro.
+        </p>
+      )}
+
+      {/* Tipo */}
+      <div className="flex gap-1.5">
+        {(['IMAGE','CAROUSEL_ALBUM','REELS'] as IgPostType[])
+          .filter(t => t === 'REELS' ? videoAtts.length > 0 : imageAtts.length > 0)
+          .map(t => (
+            <button key={t} onClick={() => setPostType(t)}
+              className={`text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${postType===t ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/20'}`}>
+              {t === 'IMAGE' ? 'Imagem' : t === 'CAROUSEL_ALBUM' ? `Carrossel (${Math.min(10, imageAtts.length)})` : 'Reel'}
+            </button>
+          ))
+        }
+      </div>
+
+      {/* Legenda */}
+      <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} placeholder="Legenda..."
+        className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+
+      {/* Data/hora */}
+      <div className="grid grid-cols-2 gap-2">
+        <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
+          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+        <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)}
+          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors" />
+      </div>
+
+      <Button size="sm" onClick={handleSchedule} disabled={publishing || !hasMedia}
+        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+        {publishing
+          ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Agendando...</>
+          : <><Instagram className="w-3.5 h-3.5" /> Agendar no Instagram</>}
+      </Button>
+    </div>
+  )
+}
+
 // ─── Visualização completa do evento ─────────────────────────────────────────
 
 function PlannerItemView({
@@ -399,237 +547,260 @@ function PlannerItemView({
   open,
   onClose,
   onEdit,
+  userId,
 }: {
   item: PlannerItem
   open: boolean
   onClose: () => void
   onEdit: () => void
+  userId: string
 }) {
   const images           = item.attachments?.filter(a => isImageAttachment(a)) || []
   const videos           = item.attachments?.filter(a => isVideoAttachment(a)) || []
   const otherAttachments = item.attachments?.filter(a => !isImageAttachment(a) && !isVideoAttachment(a)) || []
 
+  // Carrossel: imagens + vídeos juntos no painel esquerdo
+  const mediaItems = [
+    ...images.map(a => ({ ...a, kind: 'image' as const })),
+    ...videos.map(a => ({ ...a, kind: 'video' as const })),
+  ]
+  const [mediaIdx, setMediaIdx] = useState(0)
+  const currentMedia = mediaItems[mediaIdx] ?? null
+
+  const [notesExpanded, setNotesExpanded]       = useState(false)
   const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
     item.approval_status as ApprovalStatus | null
   )
   const updateItem = useUpdatePlannerItem()
-  const { toast } = useToast()
+  const { toast }  = useToast()
 
   const handleMarkAdjustmentDone = async () => {
     try {
       await updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' })
       setLocalApprovalStatus('ajuste_realizado')
       toast('Ajuste marcado como realizado.', 'success')
-    } catch (err: any) {
-      toast(err.message, 'error')
-    }
+    } catch (err: any) { toast(err.message, 'error') }
   }
+
+  const hasMedia = mediaItems.length > 0
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug break-words min-w-0">{item.title}</DialogTitle>
-          </div>
-          <div className="flex items-center gap-2 mt-1.5 ml-4.5 flex-wrap">
-            <span className="text-xs text-gray-500">
-              {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              {item.scheduled_time && ` às ${item.scheduled_time}`}
-            </span>
-            <span className="text-gray-700">·</span>
-            <span className="text-xs text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
-            <span className="text-gray-700">·</span>
-            <span className={`text-xs font-medium ${statusTextColors[item.status as PlannerStatus]}`}>
-              {statusLabels[item.status as PlannerStatus]}
-            </span>
-          </div>
-        </DialogHeader>
+      {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
+      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden bg-white flex flex-col h-[90vh]">
 
-        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
-          {/* Cliente */}
-          {item.client && (
-            <div className="flex items-center gap-3 p-3 bg-white/3 rounded-xl border border-white/8">
-              <Building2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Cliente</p>
-                <p className="text-sm text-white font-medium">{item.client.company_name}</p>
-              </div>
-            </div>
-          )}
+        {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
+        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
 
-          {/* Notas */}
-          {item.notes && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words select-text" style={{ color: '#0f0f0f' }}>{item.notes}</p>
-            </div>
-          )}
+          {/* ══ ESQUERDA: Mídia — preenche todo o painel, sem fundo preto ══ */}
+          {hasMedia && (
+            /* mobile: altura fixa 45vw (aprox. quadrado); desktop: 50% da largura, altura total do modal */
+            <div className="lg:w-1/2 flex-shrink-0 relative bg-gray-200 overflow-hidden h-[45vw] lg:h-full">
 
-          {/* Imagens em destaque */}
-          {images.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Imagens</p>
-              <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                {images.map(img => (
-                  <a
-                    key={img.id}
-                    href={img.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full max-w-full overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors"
+              {/* Mídia — cobre todo o espaço, centralizada */}
+              {currentMedia?.kind === 'image' ? (
+                <img
+                  src={currentMedia.file_url}
+                  alt={currentMedia.file_name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : currentMedia?.kind === 'video' ? (
+                <video
+                  key={currentMedia.file_url}
+                  src={currentMedia.file_url}
+                  autoPlay muted loop playsInline controls
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : null}
+
+              {/* Setas de navegação */}
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setMediaIdx(i => Math.max(0, i - 1))}
+                    disabled={mediaIdx === 0}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20"
                   >
-                    <img
-                      src={img.file_url}
-                      alt={img.file_name}
-                      className="w-full max-w-full object-contain max-h-[60vh]"
-                    />
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/3">
-                      <ImageIcon className="w-3 h-3 text-blue-400" />
-                      <span className="text-[10px] text-gray-400 truncate flex-1">{img.file_name}</span>
-                      <ExternalLink className="w-3 h-3 text-gray-600" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Vídeos com player autoPlay inline */}
-          {videos.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Vídeos</p>
-              <div className="space-y-3">
-                {videos.map(vid => (
-                  <div key={vid.id} className="rounded-xl border border-white/8 overflow-hidden bg-black">
-                    <video
-                      src={vid.file_url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      controls
-                      className="w-full max-h-[55vh] object-contain bg-black"
-                    />
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/[0.04]">
-                      <Video className="w-3 h-3 text-purple-400 flex-shrink-0" />
-                      <span className="text-[10px] text-gray-400 truncate flex-1">{vid.file_name}</span>
-                      {vid.file_size && (
-                        <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(vid.file_size)}</span>
-                      )}
-                      <a
-                        href={vid.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0"
-                      >
-                        <ExternalLink className="w-3 h-3 text-gray-600 hover:text-gray-400 transition-colors" />
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Outros anexos */}
-          {otherAttachments.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Anexos</p>
-              <div className="space-y-1.5">
-                {otherAttachments.map(att => (
-                  <a
-                    key={att.id}
-                    href={att.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 max-w-full overflow-hidden"
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))}
+                    disabled={mediaIdx === mediaItems.length - 1}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20"
                   >
-                    <FileTypeIcon type={att.file_type} size="md" />
-                    <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
-                    {att.file_size && (
-                      <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(att.file_size)}</span>
-                    )}
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Links */}
-          {item.links && item.links.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Links</p>
-              <div className="space-y-1.5">
-                {item.links.map(link => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 overflow-hidden"
-                  >
-                    <Link2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                    <span className="text-xs text-blue-300 flex-1 min-w-0 break-all">{link.label || link.url}</span>
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Nenhum conteúdo extra */}
-          {!item.client && !item.notes && images.length === 0 && videos.length === 0 && otherAttachments.length === 0 && (!item.links || item.links.length === 0) && (
-            <p className="text-xs text-gray-600 text-center py-4">Nenhuma informação adicional cadastrada.</p>
-          )}
-
-          {/* Resposta do cliente */}
-          {item.approval_status && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Resposta do Cliente</p>
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
-                <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
-                  {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
-                </span>
-                {item.reviewed_at && (
-                  <span className="text-[10px] text-gray-600 ml-auto">
-                    {format(parseISO(item.reviewed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </span>
-                )}
-              </div>
-              {item.client_feedback && (
-                <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words">
-                  "{item.client_feedback}"
-                </p>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
               )}
-              {(localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
-                <button
-                  onClick={handleMarkAdjustmentDone}
-                  disabled={updateItem.isPending}
-                  className="mt-3 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+
+              {/* Dots + contador — sobreposto na base */}
+              {mediaItems.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 z-10 flex items-center justify-center gap-1.5">
+                  {mediaItems.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMediaIdx(i)}
+                      className={`rounded-full transition-all ${i === mediaIdx ? 'w-2 h-2 bg-white shadow' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`}
+                    />
+                  ))}
+                  <span className="ml-1.5 text-[10px] text-white font-semibold drop-shadow">{mediaIdx + 1}/{mediaItems.length}</span>
+                </div>
+              )}
+
+              {/* Abrir original */}
+              {currentMedia && (
+                <a
+                  href={currentMedia.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/80 hover:text-white transition-all"
                 >
-                  {updateItem.isPending
-                    ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    : <Check className="w-3 h-3" />}
-                  Ajuste realizado
-                </button>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
             </div>
           )}
 
-          {/* Thread de comentários */}
-          <PlannerCommentsThread plannerId={item.id} role="agency" />
-        </div>
+          {/* ══ DIREITA: Informações — scroll independente ══ */}
+          <div className={`flex flex-col overflow-hidden bg-white ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-gray-200' : 'w-full'} flex-1`}>
+            {/* Header fixo — não rola */}
+            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-200">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  {item.client && (
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      <span className="text-[11px] text-gray-500 font-medium">{item.client.company_name}</span>
+                    </div>
+                  )}
+                  <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    <span className="text-[11px] text-gray-500">
+                      {format(parseISO(item.scheduled_date), "dd 'de' MMM", { locale: ptBR })}
+                      {item.scheduled_time && ` · ${item.scheduled_time.slice(0,5)}`}
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-[11px] text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
+                    <span className="text-gray-300">·</span>
+                    <span className={`text-[11px] font-semibold ${statusTextColors[item.status as PlannerStatus]}`}>
+                      {statusLabels[item.status as PlannerStatus]}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button onClick={onEdit} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={onClose} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <DialogFooter className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onClose}>Fechar</Button>
-          <Button variant="outline" onClick={onEdit}>
-            <Pencil className="w-3.5 h-3.5" /> Editar
-          </Button>
-        </DialogFooter>
+            {/* Corpo — rola independentemente */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+
+              {/* Legenda */}
+              {item.notes && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Legenda</p>
+                  <div className="relative">
+                    <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
+                      {item.notes}
+                    </p>
+                    {item.notes.length > 200 && (
+                      <button onClick={() => setNotesExpanded(v => !v)} className="text-[12px] text-gray-500 hover:text-gray-700 mt-1.5 font-medium transition-colors">
+                        {notesExpanded ? 'ver menos' : 'ver mais'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Outros anexos */}
+              {otherAttachments.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Anexos</p>
+                  <div className="space-y-1.5">
+                    {otherAttachments.map(att => (
+                      <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <FileTypeIcon type={att.file_type} size="md" />
+                        <span className="text-xs text-gray-700 truncate flex-1">{att.file_name}</span>
+                        {att.file_size && <span className="text-[10px] text-gray-400 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {item.links && item.links.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Links</p>
+                  <div className="space-y-1.5">
+                    {item.links.map(link => (
+                      <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                        <span className="text-xs text-blue-600 flex-1 min-w-0 truncate">{link.label || link.url}</span>
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resposta do cliente */}
+              {item.approval_status && (
+                <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Resposta do Cliente</p>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
+                    <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
+                      {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
+                    </span>
+                    {item.reviewed_at && (
+                      <span className="text-[10px] text-gray-400 ml-auto">
+                        {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                    )}
+                  </div>
+                  {item.client_feedback && (
+                    <p className="text-xs text-gray-700 leading-relaxed bg-white border border-gray-100 rounded-lg px-3 py-2 break-words">
+                      "{item.client_feedback}"
+                    </p>
+                  )}
+                  {(localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
+                    <button onClick={handleMarkAdjustmentDone} disabled={updateItem.isPending}
+                      className="mt-2 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
+                      {updateItem.isPending
+                        ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        : <Check className="w-3 h-3" />}
+                      Ajuste realizado
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Agendar no Instagram */}
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
+                  <Instagram className="w-3 h-3" /> Agendar no Instagram
+                </p>
+                <InstagramScheduleSection item={item} userId={userId} />
+              </div>
+
+              {/* Comentários */}
+              <div className="pb-2">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Comentários</p>
+                <PlannerCommentsThread plannerId={item.id} role="agency" />
+              </div>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -866,12 +1037,56 @@ export function Planner() {
     client_id: null as string | null,
     scheduled_date: format(new Date(), 'yyyy-MM-dd'),
     scheduled_time: '',
+    ig_post_type: null as 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS' | null,
   })
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [linkInput, setLinkInput] = useState('')
   const [pendingLinks, setPendingLinks] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null)
+
+  // Mídia Instagram (separada dos outros anexos)
+  const [igFiles, setIgFiles]         = useState<File[]>([])
+  const [igPreviews, setIgPreviews]   = useState<string[]>([])
+  const [igDragOver, setIgDragOver]   = useState<number | null>(null)
+  const igDragIdx  = useRef<number | null>(null)
+  const igFileRef  = useRef<HTMLInputElement>(null)
+  const [existingIgMedia, setExistingIgMedia] = useState<PlannerAttachment[]>([])
+  const [igMediaToDelete, setIgMediaToDelete] = useState<PlannerAttachment[]>([])
+
+  // IG drag handlers
+  const igOnDragStart = useCallback((i: number) => { igDragIdx.current = i }, [])
+  const igOnDragEnter = useCallback((i: number) => { setIgDragOver(i) }, [])
+  const igOnDragEnd   = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
+  const igOnDrop      = useCallback((targetIdx: number) => {
+    const from = igDragIdx.current
+    if (from === null || from === targetIdx) { setIgDragOver(null); return }
+    const reorder = <T,>(arr: T[]) => {
+      const next = [...arr]; const [item] = next.splice(from, 1); next.splice(targetIdx, 0, item); return next
+    }
+    setIgFiles(reorder); setIgPreviews(reorder)
+    setIgDragOver(null); igDragIdx.current = null
+  }, [])
+
+  const handleIgFiles = (list: FileList | null) => {
+    if (!list || !form.ig_post_type) return
+    const max    = form.ig_post_type === 'CAROUSEL_ALBUM' ? 10 : 1
+    const accept = form.ig_post_type === 'REELS' ? 'video/' : 'image/'
+    const arr    = Array.from(list).filter(f => f.type.startsWith(accept)).slice(0, max)
+    const urls   = arr.map(f => URL.createObjectURL(f))
+    setIgFiles(prev  => form.ig_post_type === 'CAROUSEL_ALBUM' ? [...prev, ...arr].slice(0, max) : arr)
+    setIgPreviews(prev => form.ig_post_type === 'CAROUSEL_ALBUM' ? [...prev, ...urls].slice(0, max) : urls)
+  }
+
+  const removeIgFile = (i: number) => {
+    setIgFiles(p    => p.filter((_, idx) => idx !== i))
+    setIgPreviews(p => p.filter((_, idx) => idx !== i))
+  }
+
+  const removeExistingIgMedia = (att: PlannerAttachment) => {
+    setExistingIgMedia(p => p.filter(a => a.id !== att.id))
+    setIgMediaToDelete(p => [...p, att])
+  }
 
   // Modo edição
   const [editingItem, setEditingItem] = useState<PlannerItem | null>(null)
@@ -939,6 +1154,72 @@ export function Planner() {
   const deleteItem = useDeletePlannerItem()
   const { toast } = useToast()
 
+  // ── Auto-agendamento Instagram ─────────────────────────────────────────────
+  // Quando approval_status muda para 'aprovado' e há ig_post_type + mídias,
+  // cria automaticamente um scheduled_post para o cliente.
+  const schedulingInProgress = useRef(new Set<string>())
+
+  useEffect(() => {
+    if (!items || !user) return
+    const toSchedule = items.filter(item =>
+      item.approval_status === 'aprovado' &&
+      item.ig_post_type &&
+      !item.ig_scheduled &&
+      item.client_id &&
+      !schedulingInProgress.current.has(item.id)
+    )
+    if (toSchedule.length === 0) return
+
+    toSchedule.forEach(async (item) => {
+      schedulingInProgress.current.add(item.id)
+      try {
+        // Busca conta Instagram do cliente
+        const { data: igAccount } = await supabase
+          .from('instagram_accounts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('client_id', item.client_id)
+          .eq('is_active', true)
+          .maybeSingle()
+
+        if (!igAccount) { schedulingInProgress.current.delete(item.id); return }
+
+        // Mídias IG ordenadas
+        const igMedia = (item.attachments ?? [])
+          .filter(a => a.is_ig_media)
+          .sort((a, b) => a.sort_order - b.sort_order)
+
+        if (igMedia.length === 0) { schedulingInProgress.current.delete(item.id); return }
+
+        const mediaUrls  = igMedia.map(a => a.file_url)
+        const timeStr    = item.scheduled_time || '12:00'
+        const scheduledAt = new Date(`${item.scheduled_date}T${timeStr}:00`).toISOString()
+
+        // Cria post agendado
+        const { error } = await (supabase as any).from('scheduled_posts').insert({
+          user_id:      user.id,
+          ig_account_id: igAccount.id,
+          client_id:    item.client_id,
+          post_type:    item.ig_post_type,
+          caption:      item.notes ?? '',
+          media_urls:   mediaUrls,
+          scheduled_at: scheduledAt,
+          status:       'scheduled',
+        })
+        if (error) throw error
+
+        // Marca como agendado
+        await supabase.from('planner').update({ ig_scheduled: true }).eq('id', item.id)
+        await qc.invalidateQueries({ queryKey: ['planner'] })
+        await qc.invalidateQueries({ queryKey: ['scheduled_posts'] })
+        toast(`"${item.title}" agendado no Instagram! 🚀`, 'success')
+      } catch (err) {
+        console.error('Auto-schedule error:', item.id, err)
+        schedulingInProgress.current.delete(item.id)
+      }
+    })
+  }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Calendar calculations ──────────────────────────────────────────────────
 
   const monthStart = startOfMonth(currentMonth)
@@ -969,6 +1250,7 @@ export function Planner() {
       notes: '', client_id: null,
       scheduled_date: format(new Date(), 'yyyy-MM-dd'),
       scheduled_time: '',
+      ig_post_type: null,
     })
     setPendingFiles([])
     setPendingLinks([])
@@ -979,6 +1261,10 @@ export function Planner() {
     setAttachmentsToDelete([])
     setLinksToDelete([])
     setLinkedAsset(null)
+    setIgFiles([])
+    setIgPreviews([])
+    setExistingIgMedia([])
+    setIgMediaToDelete([])
   }
 
   const FILE_SIZE_LIMIT = 50 * 1024 * 1024 // 50MB — limite do Supabase free tier
@@ -1074,6 +1360,9 @@ export function Planner() {
     setItemViewOpen(false)
     setSelectedPlannerItem(null)
     setEditingItem(item)
+    const allAtts = item.attachments || []
+    const igMedia  = allAtts.filter(a => a.is_ig_media).sort((a,b) => a.sort_order - b.sort_order)
+    const otherAtts = allAtts.filter(a => !a.is_ig_media)
     setForm({
       title: item.title,
       content_type: item.content_type,
@@ -1082,8 +1371,13 @@ export function Planner() {
       client_id: item.client_id,
       scheduled_date: item.scheduled_date,
       scheduled_time: item.scheduled_time || '',
+      ig_post_type: (item.ig_post_type as any) ?? null,
     })
-    setExistingAttachments(item.attachments || [])
+    setExistingIgMedia(igMedia)
+    setIgFiles([])
+    setIgPreviews([])
+    setIgMediaToDelete([])
+    setExistingAttachments(otherAtts)
     setExistingLinks(item.links || [])
     setPendingFiles([])
     setPendingLinks([])
@@ -1130,8 +1424,31 @@ export function Planner() {
           client_id: form.client_id,
           scheduled_date: form.scheduled_date,
           scheduled_time: form.scheduled_time || null,
+          ig_post_type: form.ig_post_type,
           approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
         })
+        // Deletar mídias IG removidas
+        for (const att of igMediaToDelete) {
+          const path = extractStoragePath(att.file_url)
+          if (path) await supabase.storage.from('planner-attachments').remove([path])
+          await supabase.from('planner_attachments').delete().eq('id', att.id)
+        }
+        // Upload novas mídias IG
+        const igStart = existingIgMedia.length
+        for (let fi = 0; fi < igFiles.length; fi++) {
+          const file = igFiles[fi]
+          const ext  = file.name.split('.').pop() || 'bin'
+          const path = `${user.id}/${editingItem.id}/ig_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
+          if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
+          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          await supabase.from('planner_attachments').insert({
+            planner_id: editingItem.id, user_id: user.id,
+            file_name: file.name, file_type: getMimeType(file),
+            file_url: publicUrl, file_size: file.size,
+            is_ig_media: true, sort_order: igStart + fi,
+          })
+        }
         for (const att of attachmentsToDelete) {
           const path = extractStoragePath(att.file_url)
           if (path) await supabase.storage.from('planner-attachments').remove([path])
@@ -1174,6 +1491,7 @@ export function Planner() {
           client_id: form.client_id,
           scheduled_date: form.scheduled_date,
           scheduled_time: form.scheduled_time || null,
+          ig_post_type: form.ig_post_type,
           content_id: null,
           asset_id: linkedAsset?.id ?? null,
           approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
@@ -1181,6 +1499,21 @@ export function Planner() {
           reviewed_at: null,
           reviewed_by: null,
         })
+        // Upload mídias Instagram
+        for (let fi = 0; fi < igFiles.length; fi++) {
+          const file = igFiles[fi]
+          const ext  = file.name.split('.').pop() || 'bin'
+          const path = `${user.id}/${created.id}/ig_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
+          if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
+          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          await supabase.from('planner_attachments').insert({
+            planner_id: created.id, user_id: user.id,
+            file_name: file.name, file_type: getMimeType(file),
+            file_url: publicUrl, file_size: file.size,
+            is_ig_media: true, sort_order: fi,
+          })
+        }
         // Vincular mídia do arsenal como anexo
         if (linkedAsset?.media_url) {
           const ext = linkedAsset.media_url.split('.').pop()?.split('?')[0] || 'file'
@@ -1524,6 +1857,7 @@ export function Planner() {
           open={itemViewOpen}
           onClose={closeItemView}
           onEdit={() => openEdit(liveSelectedItem)}
+          userId={user?.id ?? ''}
         />
       )}
 
@@ -1644,9 +1978,230 @@ export function Planner() {
 
             <Textarea label="Notas" value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Contexto, referências..." />
 
-            {/* Anexos */}
+            {/* ── Publicação Instagram ───────────────────────────────────── */}
+            <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#E1306C,#833AB4)' }}>
+                  <Instagram className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-[11px] text-zinc-400 uppercase tracking-wide font-semibold">Publicação no Instagram</p>
+              </div>
+
+              {/* Seletor de tipo */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {([
+                  { value: null,             label: 'Nenhum',    Icon: X         },
+                  { value: 'IMAGE',          label: 'Imagem',    Icon: ImageIcon },
+                  { value: 'CAROUSEL_ALBUM', label: 'Carrossel', Icon: LayoutGrid },
+                  { value: 'REELS',          label: 'Reel',      Icon: Film      },
+                ] as const).map(({ value, label, Icon }) => {
+                  const active = form.ig_post_type === value
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        set('ig_post_type', value)
+                        setIgFiles([]); setIgPreviews([])
+                      }}
+                      className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg border text-[10px] font-medium transition-all ${
+                        active
+                          ? 'border-pink-500/60 bg-pink-500/10 text-pink-300'
+                          : 'border-white/10 text-zinc-500 hover:border-white/20 hover:text-zinc-300'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Área de upload de mídia IG */}
+              {form.ig_post_type && (() => {
+                const isCarousel = form.ig_post_type === 'CAROUSEL_ALBUM'
+                const isReel     = form.ig_post_type === 'REELS'
+                const max        = isCarousel ? 10 : 1
+                const totalIg    = existingIgMedia.length + igFiles.length
+
+                return (
+                  <div className="space-y-2">
+                    {isCarousel && (
+                      <p className="text-[10px] text-zinc-600">
+                        Arraste para reordenar · 1ª imagem = capa
+                      </p>
+                    )}
+
+                    {/* Mídias existentes (edição) */}
+                    {existingIgMedia.length > 0 && (
+                      isCarousel ? (
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {existingIgMedia.map((att, i) => (
+                            <div key={att.id} className="relative aspect-square rounded-lg overflow-hidden border border-white/10">
+                              {isVideoAttachment(att)
+                                ? <video src={att.file_url} className="w-full h-full object-cover" />
+                                : <img src={att.file_url} alt="" className="w-full h-full object-cover" />
+                              }
+                              <div className="absolute top-0.5 left-0.5 text-[8px] font-bold px-1 py-0.5 rounded bg-black/60 text-white">
+                                {i + 1}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeExistingIgMedia(att)}
+                                className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/70 flex items-center justify-center hover:bg-red-500 transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5 text-white" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-white/10">
+                          {isVideoAttachment(existingIgMedia[0])
+                            ? <video src={existingIgMedia[0].file_url} className="w-full h-full object-cover" controls />
+                            : <img src={existingIgMedia[0].file_url} alt="" className="w-full h-full object-cover" />
+                          }
+                          <button
+                            type="button"
+                            onClick={() => removeExistingIgMedia(existingIgMedia[0])}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center hover:bg-red-500 transition-colors"
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      )
+                    )}
+
+                    {/* Novas mídias pendentes */}
+                    {igPreviews.length > 0 && (
+                      isCarousel ? (
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {igPreviews.map((url, i) => {
+                            const globalIdx = existingIgMedia.length + i
+                            return (
+                              <div
+                                key={i}
+                                draggable
+                                onDragStart={() => igOnDragStart(i)}
+                                onDragEnter={() => igOnDragEnter(i)}
+                                onDragOver={e => e.preventDefault()}
+                                onDragEnd={igOnDragEnd}
+                                onDrop={() => igOnDrop(i)}
+                                className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing select-none transition-all ${
+                                  igDragOver === i
+                                    ? 'border-pink-500 scale-105'
+                                    : igDragIdx.current === i
+                                    ? 'border-pink-500/40 opacity-50'
+                                    : 'border-white/10 hover:border-white/20'
+                                }`}
+                              >
+                                {isReel
+                                  ? <video src={url} className="w-full h-full object-cover" />
+                                  : <img src={url} alt="" className="w-full h-full object-cover" draggable={false} />
+                                }
+                                <div className={`absolute top-0.5 left-0.5 text-[8px] font-bold px-1 py-0.5 rounded leading-none ${
+                                  globalIdx === 0 ? 'bg-pink-500 text-white' : 'bg-black/60 text-white'
+                                }`}>
+                                  {globalIdx === 0 ? '★' : globalIdx + 1}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeIgFile(i)}
+                                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/70 flex items-center justify-center hover:bg-red-500 transition-colors"
+                                >
+                                  <X className="w-2.5 h-2.5 text-white" />
+                                </button>
+                              </div>
+                            )
+                          })}
+                          {totalIg < max && (
+                            <button
+                              type="button"
+                              onClick={() => igFileRef.current?.click()}
+                              className="aspect-square rounded-lg border-2 border-dashed border-white/20 hover:border-pink-500/50 flex flex-col items-center justify-center gap-0.5 transition-colors text-zinc-600 hover:text-zinc-400"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span className="text-[9px]">Add</span>
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-white/10">
+                          {isReel
+                            ? <video src={igPreviews[0]} className="w-full h-full object-cover" controls />
+                            : <img src={igPreviews[0]} alt="" className="w-full h-full object-cover" />
+                          }
+                          <button
+                            type="button"
+                            onClick={() => { setIgFiles([]); setIgPreviews([]) }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center hover:bg-red-500 transition-colors"
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      )
+                    )}
+
+                    {/* Botão de upload inicial */}
+                    {totalIg === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => igFileRef.current?.click()}
+                        className="flex items-center gap-2 w-full h-10 px-3 rounded-lg border border-dashed border-white/15 bg-white/3 text-zinc-500 text-xs hover:border-pink-500/50 hover:text-zinc-300 transition-colors"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>
+                          {isCarousel ? 'Selecionar imagens (até 10)' : isReel ? 'Selecionar vídeo' : 'Selecionar imagem'}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Carousel add button when empty new files but has existing */}
+                    {isCarousel && igPreviews.length === 0 && existingIgMedia.length > 0 && existingIgMedia.length < max && (
+                      <button
+                        type="button"
+                        onClick={() => igFileRef.current?.click()}
+                        className="flex items-center gap-2 w-full h-9 px-3 rounded-lg border border-dashed border-white/15 text-zinc-600 text-xs hover:border-pink-500/50 hover:text-zinc-400 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Adicionar mais imagens ({existingIgMedia.length}/{max})
+                      </button>
+                    )}
+
+                    <input
+                      ref={igFileRef}
+                      type="file"
+                      accept={isReel ? 'video/*' : 'image/*'}
+                      multiple={isCarousel}
+                      className="hidden"
+                      onChange={e => handleIgFiles(e.target.files)}
+                    />
+
+                    {isCarousel && (existingIgMedia.length + igFiles.length) > 1 && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {[...existingIgMedia, ...igFiles].map((_, i) => (
+                          <span key={i} className="flex items-center gap-1">
+                            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                              i === 0 ? 'bg-pink-500 text-white' : 'bg-white/10 text-zinc-400'
+                            }`}>
+                              {i === 0 ? 'Capa' : `Parte ${i + 1}`}
+                            </span>
+                            {i < (existingIgMedia.length + igFiles.length) - 1 && (
+                              <span className="text-zinc-700 text-[9px]">→</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Outros Anexos */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Anexos</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Outros anexos</label>
               {existingAttachments.length > 0 && (
                 <div className="mb-2 space-y-2">
                   {existingAttachments.map(att => {

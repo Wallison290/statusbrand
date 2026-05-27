@@ -30,6 +30,8 @@ import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 import { CollaboratorPortal } from '@/pages/portal/CollaboratorPortal'
 import { TeamPage } from '@/pages/team/TeamPage'
 import { InstagramPage } from '@/pages/instagram/InstagramPage'
+import { PrivacyPage } from '@/pages/PrivacyPage'
+import { TermsPage } from '@/pages/TermsPage'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -115,6 +117,10 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Páginas públicas sem auth */}
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms"   element={<TermsPage />} />
+
       {/* Públicas */}
       <Route path="/login"           element={<GuestGuard><Login /></GuestGuard>} />
       <Route path="/register"        element={<GuestGuard><Register /></GuestGuard>} />

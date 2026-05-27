@@ -33,8 +33,8 @@ export function PortalLayout({
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-1">
-          <div className="w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center flex-shrink-0">
-            <span className="font-bold text-[11px] tracking-tight select-none" style={{ color: '#ffffff' }}>SB</span>
+          <div className="w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src="/logo-icon.png" alt="Kairo Hub" className="w-full h-full object-contain select-none" draggable={false} />
           </div>
           <span
             className="text-[#0f0f0f] font-semibold text-[13px] tracking-tight"

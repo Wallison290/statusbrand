@@ -1,0 +1,9 @@
+-- Agendamento Instagram integrado ao Planner
+
+ALTER TABLE planner
+  ADD COLUMN IF NOT EXISTS ig_post_type  TEXT CHECK (ig_post_type IN ('IMAGE','CAROUSEL_ALBUM','REELS')),
+  ADD COLUMN IF NOT EXISTS ig_scheduled  BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE planner_attachments
+  ADD COLUMN IF NOT EXISTS sort_order   INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS is_ig_media  BOOLEAN NOT NULL DEFAULT FALSE;

@@ -2,16 +2,21 @@ import { useState } from 'react'
 import {
   ImageIcon, Video, Music, FileText, File,
   ExternalLink, Link2, Building2, Pencil, Trash2, Check,
+  Instagram, Calendar, Loader2, AlertCircle,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useUpdatePlannerItem, useDeletePlannerItem } from '@/hooks/usePlanner'
 import { useToast } from '@/components/ui/toast'
 import { contentTypeLabels } from '@/utils/formatters'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
+import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/integrations/supabase/client'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType, ApprovalStatus } from '@/types'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -65,6 +70,245 @@ function FileTypeIcon({ type, size = 'sm' }: { type: string; size?: 'sm' | 'md' 
   if (type.startsWith('audio/')) return <Music     className={`${cls} text-green-400`} />
   if (type === 'application/pdf') return <FileText className={`${cls} text-red-400`} />
   return <File className={`${cls} text-gray-400`} />
+}
+
+// ─── Instagram Schedule Section ───────────────────────────────────────────────
+
+type PostType = 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS'
+
+const POST_TYPE_OPTS: { value: PostType; label: string }[] = [
+  { value: 'IMAGE',          label: 'Imagem' },
+  { value: 'CAROUSEL_ALBUM', label: 'Carrossel' },
+  { value: 'REELS',          label: 'Reel' },
+]
+
+async function uploadMediaFromUrl(url: string, userId: string): Promise<string> {
+  const res  = await fetch(url)
+  const blob = await res.blob()
+  const ext  = url.split('.').pop()?.split('?')[0] ?? 'jpg'
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await (supabase as any).storage.from('post-media').upload(path, blob)
+  if (error) throw error
+  const { data } = (supabase as any).storage.from('post-media').getPublicUrl(path)
+  return data.publicUrl as string
+}
+
+function InstagramScheduleSection({ item }: { item: PlannerItem }) {
+  const { user } = useAuth()
+  const { data: igAccount, isLoading: igLoading } = useClientInstagramAccount(item.client_id ?? undefined)
+  const createPost = useCreateScheduledPost()
+  const { toast } = useToast()
+
+  const imageAttachments = item.attachments?.filter(a => a.file_type.startsWith('image/')) ?? []
+  const videoAttachments = item.attachments?.filter(a => a.file_type.startsWith('video/')) ?? []
+
+  const [postType, setPostType]     = useState<PostType>('IMAGE')
+  const [caption, setCaption]       = useState(item.notes ?? '')
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [scheduledTime, setScheduledTime] = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
+  const [publishing, setPublishing] = useState(false)
+  const [success, setSuccess]       = useState(false)
+
+  // Pré-preenche data com a data do item
+  const defaultDate = item.scheduled_date
+
+  const handleSchedule = async () => {
+    if (!igAccount || !user) return
+    const date = scheduledAt || defaultDate
+    if (!date || !scheduledTime) {
+      toast('Preencha a data e horário.', 'error')
+      return
+    }
+    const attachments = postType === 'REELS' ? videoAttachments : imageAttachments
+    if (attachments.length === 0) {
+      toast('Este post não tem mídia anexada no planejador.', 'error')
+      return
+    }
+
+    setPublishing(true)
+    try {
+      // Faz upload das mídias para o bucket post-media
+      const mediaUrls: string[] = []
+      for (const att of attachments.slice(0, postType === 'CAROUSEL_ALBUM' ? 10 : 1)) {
+        const publicUrl = await uploadMediaFromUrl(att.file_url, user.id)
+        mediaUrls.push(publicUrl)
+      }
+
+      const scheduledAtISO = new Date(`${date}T${scheduledTime}:00`).toISOString()
+
+      await createPost.mutateAsync({
+        ig_account_id: igAccount.id,
+        client_id:     item.client_id,
+        post_type:     postType,
+        caption,
+        media_urls:    mediaUrls,
+        scheduled_at:  scheduledAtISO,
+      })
+
+      setSuccess(true)
+      toast('Post agendado no Instagram!', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao agendar.', 'error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  if (igLoading) {
+    return (
+      <div className="flex items-center gap-2 py-3">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+        <span className="text-xs text-gray-400">Verificando conta Instagram...</span>
+      </div>
+    )
+  }
+
+  if (!item.client_id) {
+    return (
+      <div className="flex items-center gap-2 p-3 bg-white/3 rounded-xl border border-white/8">
+        <AlertCircle className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+        <p className="text-xs text-gray-400">Este post não está vinculado a um cliente.</p>
+      </div>
+    )
+  }
+
+  if (!igAccount) {
+    return (
+      <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-2">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
+          >
+            <Instagram className="w-3.5 h-3.5 text-white" />
+          </div>
+          <p className="text-xs text-gray-300 font-medium">Instagram não conectado</p>
+        </div>
+        <p className="text-[11px] text-gray-500">
+          Acesse o perfil do cliente → aba <strong className="text-gray-400">Instagram</strong> para conectar a conta.
+        </p>
+      </div>
+    )
+  }
+
+  if (success) {
+    return (
+      <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+        <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        <div>
+          <p className="text-xs font-medium text-emerald-400">Post agendado!</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">Veja o status em <strong className="text-gray-400">Instagram → Agendados</strong>.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const imageCount = imageAttachments.length
+  const videoCount = videoAttachments.length
+  const hasMedia   = imageCount > 0 || videoCount > 0
+
+  return (
+    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-3">
+      {/* Conta conectada */}
+      <div className="flex items-center gap-2">
+        {igAccount.profile_picture_url ? (
+          <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
+        ) : (
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
+          >
+            <Instagram className="w-3.5 h-3.5 text-white" />
+          </div>
+        )}
+        <span className="text-xs text-gray-300 font-medium">@{igAccount.username}</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+          Conectado
+        </span>
+      </div>
+
+      {/* Alerta sem mídia */}
+      {!hasMedia && (
+        <div className="flex items-center gap-2 text-[11px] text-amber-400">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          Nenhuma imagem/vídeo anexado. Adicione mídia ao item no planejador.
+        </div>
+      )}
+
+      {/* Tipo do post */}
+      <div>
+        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Tipo de post</p>
+        <div className="flex gap-1.5">
+          {POST_TYPE_OPTS.filter(o =>
+            o.value === 'REELS' ? videoCount > 0 : imageCount > 0
+          ).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setPostType(opt.value)}
+              className={`text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${
+                postType === opt.value
+                  ? 'bg-[#6366f1] text-white border-[#6366f1]'
+                  : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/20'
+              }`}
+            >
+              {opt.label}
+              {opt.value === 'IMAGE' && imageCount > 0 && ` (${Math.min(1, imageCount)})`}
+              {opt.value === 'CAROUSEL_ALBUM' && imageCount > 1 && ` (${Math.min(10, imageCount)})`}
+              {opt.value === 'REELS' && videoCount > 0 && ` (1)`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Legenda */}
+      <div>
+        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Legenda</p>
+        <textarea
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          rows={3}
+          placeholder="Legenda do post..."
+          className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+        />
+      </div>
+
+      {/* Data e hora */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Data</p>
+          <input
+            type="date"
+            value={scheduledAt || defaultDate}
+            onChange={e => setScheduledAt(e.target.value)}
+            className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+          />
+        </div>
+        <div>
+          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Horário</p>
+          <input
+            type="time"
+            value={scheduledTime}
+            onChange={e => setScheduledTime(e.target.value)}
+            className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Botão */}
+      <Button
+        size="sm"
+        onClick={handleSchedule}
+        disabled={publishing || !hasMedia}
+        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
+      >
+        {publishing ? (
+          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Agendando...</>
+        ) : (
+          <><Instagram className="w-3.5 h-3.5" /> Agendar no Instagram</>
+        )}
+      </Button>
+    </div>
+  )
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -302,6 +546,16 @@ export function PlannerItemViewModal({
                   Ajuste realizado
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Agendar no Instagram */}
+          {showAgencyActions && (
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Instagram className="w-3 h-3" /> Agendar no Instagram
+              </p>
+              <InstagramScheduleSection item={item} />
             </div>
           )}
 
