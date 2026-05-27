@@ -1,48 +1,59 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Moon, Sun, SunMedium, RefreshCw } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { HeroPill } from '@/hooks/useDashboardGreeting'
 import { DashboardHeroArt } from './DashboardHeroArt'
 
 // ── Pill (dark glassmorphism) ─────────────────────────────────────────────────
 
-function Pill({ icon, label, variant }: HeroPill) {
+function Pill({ icon, label, variant, href }: HeroPill) {
   const style = {
     default: {
-      bg:     'rgba(255,255,255,0.07)',
-      border: 'rgba(255,255,255,0.13)',
-      color:  '#94a3b8',
+      bg:        'rgba(255,255,255,0.07)',
+      bgHover:   'rgba(255,255,255,0.13)',
+      border:    'rgba(255,255,255,0.13)',
+      color:     '#94a3b8',
     },
     success: {
-      bg:     'rgba(16,185,129,0.10)',
-      border: 'rgba(16,185,129,0.22)',
-      color:  '#34d399',
+      bg:        'rgba(16,185,129,0.10)',
+      bgHover:   'rgba(16,185,129,0.18)',
+      border:    'rgba(16,185,129,0.22)',
+      color:     '#34d399',
     },
     warning: {
-      bg:     'rgba(245,158,11,0.10)',
-      border: 'rgba(245,158,11,0.22)',
-      color:  '#fbbf24',
+      bg:        'rgba(245,158,11,0.10)',
+      bgHover:   'rgba(245,158,11,0.18)',
+      border:    'rgba(245,158,11,0.22)',
+      color:     '#fbbf24',
     },
   }[variant] ?? {
-    bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.13)', color: '#94a3b8',
+    bg: 'rgba(255,255,255,0.07)', bgHover: 'rgba(255,255,255,0.13)', border: 'rgba(255,255,255,0.13)', color: '#94a3b8',
   }
 
-  return (
+  const inner = (
     <motion.div
-      whileHover={{ scale: 1.03, y: -1 }}
+      whileHover={{ scale: 1.04, y: -1 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-      className="flex items-center gap-1.5 px-3 py-[5px] rounded-full cursor-default backdrop-blur-sm"
+      className="flex items-center gap-1.5 px-3 py-[5px] rounded-full backdrop-blur-sm transition-colors"
       style={{
-        background:  style.bg,
-        border:      `1px solid ${style.border}`,
-        color:       style.color,
-        boxShadow:   '0 1px 6px rgba(0,0,0,0.18)',
+        background: style.bg,
+        border:     `1px solid ${style.border}`,
+        color:      style.color,
+        boxShadow:  '0 1px 6px rgba(0,0,0,0.18)',
+        cursor:     href ? 'pointer' : 'default',
       }}
+      onMouseEnter={e => { if (href) (e.currentTarget as HTMLDivElement).style.background = style.bgHover }}
+      onMouseLeave={e => { if (href) (e.currentTarget as HTMLDivElement).style.background = style.bg }}
     >
       <span className="text-[12px] leading-none">{icon}</span>
       <span className="text-[11.5px] font-medium whitespace-nowrap">{label}</span>
     </motion.div>
   )
+
+  if (href) return <Link to={href} className="block">{inner}</Link>
+  return inner
 }
 
 // ── Context icon — dark glass ─────────────────────────────────────────────────

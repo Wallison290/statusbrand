@@ -7,6 +7,7 @@ export interface HeroPill {
   icon: string
   label: string
   variant: 'default' | 'warning' | 'success'
+  href?: string
 }
 
 export interface DashboardStats {
@@ -45,18 +46,12 @@ function getGreetingText(name: string): string {
 function getFallbackPills(stats: DashboardStats): HeroPill[] {
   const pills: HeroPill[] = []
 
-  if (stats.period_approved > 0)
+  if (stats.active_clients > 0)
     pills.push({
       icon: '✅',
-      label: `${stats.period_approved} aprovação${stats.period_approved > 1 ? 'ões' : ''} no período`,
+      label: `${stats.active_clients} de ${stats.total_clients} clientes ativos`,
       variant: 'success',
-    })
-
-  if (stats.period_pending_approval > 0)
-    pills.push({
-      icon: '📅',
-      label: `${stats.period_pending_approval} aguardando aprovação`,
-      variant: 'default',
+      href: '/clients',
     })
 
   if (stats.overdue_tasks > 0)
@@ -64,13 +59,23 @@ function getFallbackPills(stats: DashboardStats): HeroPill[] {
       icon: '⚠️',
       label: `${stats.overdue_tasks} tarefa${stats.overdue_tasks > 1 ? 's' : ''} atrasada${stats.overdue_tasks > 1 ? 's' : ''}`,
       variant: 'warning',
+      href: '/tasks',
     })
 
-  if (stats.active_clients > 0 && pills.length < 3)
+  if (stats.period_pending_approval > 0)
     pills.push({
-      icon: '📈',
-      label: `${stats.active_clients} clientes ativos`,
+      icon: '🕐',
+      label: `${stats.period_pending_approval} conteúdo${stats.period_pending_approval > 1 ? 's' : ''} aguardando aprovação`,
       variant: 'default',
+      href: '/planner',
+    })
+
+  if (stats.period_approved > 0 && pills.length < 3)
+    pills.push({
+      icon: '🚀',
+      label: `${stats.period_approved} aprovação${stats.period_approved > 1 ? 'ões' : ''} no período`,
+      variant: 'success',
+      href: '/planner',
     })
 
   return pills.slice(0, 4)
