@@ -834,13 +834,23 @@ export function ClientProfile() {
         title={client.company_name}
         subtitle={client.niche}
         action={
-          <div className="flex gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/clients"><ArrowLeft className="w-3.5 h-3.5" /></Link>
-            </Button>
-            <Button asChild size="sm" className="border border-white/40 bg-white/10 text-white hover:bg-white hover:text-[#0f0f0f] transition-colors">
-              <Link to={`/clients/${id}/edit`}><Edit className="w-3.5 h-3.5" /> Editar</Link>
-            </Button>
+          <div className="flex gap-2 items-center">
+            {/* Botão Voltar — fundo transparente, ícone branco, hover suave claro */}
+            <Link
+              to="/clients"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-white/70 hover:text-white hover:bg-white/15 active:bg-white/20 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+
+            {/* Botão Editar — borda/bg translúcidos brancos; hover: fundo branco + texto preto */}
+            <Link
+              to={`/clients/${id}/edit`}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium border border-white/40 bg-white/10 text-white hover:bg-white hover:text-[#0f0f0f] hover:border-transparent active:bg-white/90 active:text-[#0f0f0f] transition-colors"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              Editar
+            </Link>
           </div>
         }
       />
