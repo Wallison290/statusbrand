@@ -708,6 +708,8 @@ export function ClientProfile() {
     }
   }
 
+  const [backHover, setBackHover] = useState(false)
+  const [editHover, setEditHover] = useState(false)
   const [assetModalOpen, setAssetModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<ContentAsset | null>(null)
   const [viewingAsset, setViewingAsset] = useState<ContentAsset | null>(null)
@@ -835,18 +837,31 @@ export function ClientProfile() {
         subtitle={client.niche}
         action={
           <div className="flex gap-2 items-center">
-            {/* Botão Voltar — fundo transparente, ícone branco, hover suave claro */}
+            {/* Botão Voltar */}
             <Link
               to="/clients"
-              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-white/70 hover:text-white hover:bg-white/15 active:bg-white/20 transition-colors"
+              onMouseEnter={() => setBackHover(true)}
+              onMouseLeave={() => setBackHover(false)}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors"
+              style={{
+                backgroundColor: backHover ? 'rgba(255,255,255,0.15)' : 'transparent',
+                color: 'rgba(255,255,255,0.85)',
+              }}
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
 
-            {/* Botão Editar — borda/bg translúcidos brancos; hover: fundo branco + texto preto */}
+            {/* Botão Editar */}
             <Link
               to={`/clients/${id}/edit`}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium border border-white/40 bg-white/10 text-white hover:bg-white hover:text-[#0f0f0f] hover:border-transparent active:bg-white/90 active:text-[#0f0f0f] transition-colors"
+              onMouseEnter={() => setEditHover(true)}
+              onMouseLeave={() => setEditHover(false)}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: editHover ? '#ffffff' : 'rgba(255,255,255,0.1)',
+                color: editHover ? '#0f0f0f' : '#ffffff',
+                border: editHover ? '1px solid transparent' : '1px solid rgba(255,255,255,0.4)',
+              }}
             >
               <Edit className="w-3.5 h-3.5" />
               Editar
