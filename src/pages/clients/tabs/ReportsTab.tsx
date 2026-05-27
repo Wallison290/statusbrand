@@ -103,11 +103,11 @@ function MetricCard({
 }: { icon: React.ReactNode; label: string; value: string; sub?: string; accent: string }) {
   return (
     <div className={`rounded-2xl border p-4 flex flex-col gap-2.5 ${accent}`}>
-      <div className="opacity-60">{icon}</div>
+      <div className="opacity-70">{icon}</div>
       <div>
-        <p className="text-[11px] text-gray-500">{label}</p>
-        <p className="text-[20px] font-bold text-white leading-tight mt-0.5">{value}</p>
-        {sub && <p className="text-[10px] text-gray-600 mt-0.5">{sub}</p>}
+        <p className="text-[11px] text-[#64748b] font-medium">{label}</p>
+        <p className="text-[20px] font-bold text-[#0f0f0f] leading-tight mt-0.5">{value}</p>
+        {sub && <p className="text-[10px] text-[#64748b] mt-0.5">{sub}</p>}
       </div>
     </div>
   )
@@ -125,20 +125,20 @@ function AttachmentItem({
     <>
       <div
         onClick={() => isImg && setImgOpen(true)}
-        className={`group flex items-center gap-3 p-3 rounded-xl border border-white/[0.07] bg-white/[0.02] transition-all ${isImg ? 'cursor-pointer hover:bg-white/[0.05] hover:border-white/[0.12]' : ''}`}
+        className={`group flex items-center gap-3 p-3 rounded-xl border border-[#e8e8e8] bg-[#fafafa] transition-all ${isImg ? 'cursor-pointer hover:bg-[#f0f0f0] hover:border-[#d0d0d0]' : ''}`}
       >
-        <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-10 h-10 rounded-lg bg-white border border-[#e8e8e8] flex items-center justify-center flex-shrink-0 overflow-hidden">
           {isImg && att.file_url
             ? <img src={att.file_url} alt={att.title} className="w-full h-full object-cover" />
-            : att.type === 'pdf' ? <FileText className="w-4 h-4 text-red-400" />
-            : att.type === 'link' ? <Link2 className="w-4 h-4 text-sky-400" />
-            : <File className="w-4 h-4 text-gray-500" />
+            : att.type === 'pdf' ? <FileText className="w-4 h-4 text-red-700" />
+            : att.type === 'link' ? <Link2 className="w-4 h-4 text-blue-700" />
+            : <File className="w-4 h-4 text-[#64748b]" />
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium text-zinc-200 truncate">{att.title}</p>
-          {att.description && <p className="text-[10px] text-gray-500 truncate mt-0.5">{att.description}</p>}
-          <p className="text-[10px] text-gray-600 mt-0.5 uppercase tracking-wide">
+          <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{att.title}</p>
+          {att.description && <p className="text-[10px] text-[#64748b] truncate mt-0.5">{att.description}</p>}
+          <p className="text-[10px] text-[#94a3b8] mt-0.5 uppercase tracking-wide">
             {att.type === 'imagem' ? 'Imagem' : att.type === 'pdf' ? 'PDF' : 'Link'}
           </p>
         </div>
@@ -146,20 +146,20 @@ function AttachmentItem({
           {att.type === 'link' && att.link_url && (
             <a href={att.link_url} target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded text-[#64748b] hover:text-[#0f0f0f] hover:bg-[#e8e8e8] transition-colors">
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
           {att.file_url && att.type !== 'link' && (
             <a href={att.file_url} download target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded text-[#64748b] hover:text-[#0f0f0f] hover:bg-[#e8e8e8] transition-colors">
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
           {onDelete && (
             <button onClick={e => { e.stopPropagation(); onDelete() }}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-600 hover:text-red-400 hover:bg-white/[0.06] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded text-[#94a3b8] hover:text-red-700 hover:bg-red-50 transition-colors">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
@@ -260,16 +260,16 @@ function AddAttachmentModal({
             <Input label="URL *" value={form.link_url} onChange={e => setForm(p => ({ ...p, link_url: e.target.value }))} placeholder="https://..." />
           ) : (
             <div>
-              <label className="block text-[12px] text-zinc-500 mb-1.5">Arquivo</label>
+              <label className="block text-[12px] text-[#64748b] mb-1.5">Arquivo</label>
               {file ? (
-                <div className="flex items-center gap-2 p-2.5 rounded-md border border-white/[0.08] bg-white/[0.03]">
-                  <File className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
-                  <span className="text-[12px] text-zinc-300 truncate flex-1">{file.name}</span>
-                  <button type="button" onClick={() => setFile(null)} className="text-zinc-500 hover:text-red-400 flex-shrink-0"><X className="w-3 h-3" /></button>
+                <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#e8e8e8] bg-[#fafafa]">
+                  <File className="w-3.5 h-3.5 text-[#64748b] flex-shrink-0" />
+                  <span className="text-[12px] text-[#0f0f0f] truncate flex-1">{file.name}</span>
+                  <button type="button" onClick={() => setFile(null)} className="text-[#94a3b8] hover:text-red-700 flex-shrink-0"><X className="w-3 h-3" /></button>
                 </div>
               ) : (
                 <button type="button" onClick={() => fileRef.current?.click()}
-                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-white/[0.12] bg-white/[0.02] text-zinc-500 text-[12px] hover:border-white/[0.22] hover:bg-white/[0.04] transition-colors">
+                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-[#d0d0d0] bg-white text-[#64748b] text-[12px] hover:border-[#a0a0a0] hover:bg-[#fafafa] transition-colors">
                   <Upload className="w-3.5 h-3.5" /> Selecionar arquivo
                 </button>
               )}
@@ -398,8 +398,8 @@ function ReportDetail({
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-[16px] font-semibold text-white">{monthLabel(report.month, report.year)}</h3>
-          <p className="text-[11px] text-gray-600 mt-0.5">Relatório de performance</p>
+          <h3 className="text-[16px] font-semibold text-[#0f0f0f]">{monthLabel(report.month, report.year)}</h3>
+          <p className="text-[11px] text-[#64748b] mt-0.5">Relatório de performance</p>
         </div>
         <div className="flex items-center gap-2">
           {editMode ? (
@@ -439,38 +439,38 @@ function ReportDetail({
       {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <MetricCard
-          icon={<Users className="w-4 h-4 text-green-400" />}
+          icon={<Users className="w-4 h-4 text-green-700" />}
           label="Crescimento de seguidores"
           value={followerDiff(report)}
           sub={report.followers_end != null ? `${fmt(report.followers_end)} total` : undefined}
-          accent="border-green-500/20 bg-green-500/[0.05]"
+          accent="border-green-200 bg-green-50"
         />
         <MetricCard
-          icon={<Eye className="w-4 h-4 text-blue-400" />}
+          icon={<Eye className="w-4 h-4 text-blue-500" />}
           label="Alcance"
           value={fmt(report.reach)}
-          accent="border-blue-500/20 bg-blue-500/[0.05]"
+          accent="border-blue-200 bg-blue-50"
         />
         <MetricCard
-          icon={<Heart className="w-4 h-4 text-pink-400" />}
+          icon={<Heart className="w-4 h-4 text-pink-500" />}
           label="Engajamento"
           value={report.engagement != null ? `${report.engagement}%` : '—'}
-          accent="border-pink-500/20 bg-pink-500/[0.05]"
+          accent="border-pink-200 bg-pink-50"
         />
         <MetricCard
-          icon={<BarChart3 className="w-4 h-4 text-purple-400" />}
+          icon={<BarChart3 className="w-4 h-4 text-purple-500" />}
           label="Publicados"
           value={report.posts_published != null ? String(report.posts_published) : '—'}
           sub="conteúdos no mês"
-          accent="border-purple-500/20 bg-purple-500/[0.05]"
+          accent="border-purple-200 bg-purple-50"
         />
       </div>
 
       {/* ── Redes Sociais ── */}
-      <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.05] flex items-center gap-2">
-          <TrendingUp className="w-3.5 h-3.5 text-gray-500" />
-          <p className="text-[13px] font-semibold text-white">Redes sociais</p>
+      <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
+          <TrendingUp className="w-3.5 h-3.5 text-[#64748b]" />
+          <p className="text-[13px] font-semibold text-[#0f0f0f]">Redes sociais</p>
         </div>
         <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
           {editMode ? (
@@ -493,8 +493,8 @@ function ReportDetail({
                 ['Posts publicados', fmt(report.posts_published)],
               ] as [string, string][]).map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-1">{label}</p>
-                  <p className="text-[14px] font-semibold text-zinc-200">{value}</p>
+                  <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1">{label}</p>
+                  <p className="text-[14px] font-semibold text-[#0f0f0f]">{value}</p>
                 </div>
               ))}
             </>
@@ -504,10 +504,10 @@ function ReportDetail({
 
       {/* ── Tráfego Pago ── */}
       {showPaid && (
-        <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.05] flex items-center gap-2">
-            <DollarSign className="w-3.5 h-3.5 text-gray-500" />
-            <p className="text-[13px] font-semibold text-white">Tráfego pago</p>
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
+            <DollarSign className="w-3.5 h-3.5 text-[#64748b]" />
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Tráfego pago</p>
           </div>
           <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
             {editMode ? (
@@ -539,10 +539,10 @@ function ReportDetail({
       )}
 
       {/* ── Análise do mês ── */}
-      <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.04] overflow-hidden">
-        <div className="px-5 py-4 border-b border-indigo-500/[0.12] flex items-center gap-2">
-          <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-          <p className="text-[13px] font-semibold text-white">Análise do mês</p>
+      <section className="rounded-2xl border border-indigo-200 bg-indigo-50 overflow-hidden">
+        <div className="px-5 py-4 border-b border-indigo-100 flex items-center gap-2">
+          <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+          <p className="text-[13px] font-semibold text-indigo-900">Análise do mês</p>
         </div>
         <div className="p-5">
           {editMode ? (
@@ -553,9 +553,9 @@ function ReportDetail({
               rows={6}
             />
           ) : report.analysis_text ? (
-            <p className="text-[13px] text-gray-300 leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
+            <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
           ) : (
-            <p className="text-[12px] text-gray-600 italic">
+            <p className="text-[12px] text-[#64748b] italic">
               Nenhuma análise escrita ainda. Clique em Editar para adicionar.
             </p>
           )}
@@ -563,13 +563,13 @@ function ReportDetail({
       </section>
 
       {/* ── Anexos ── */}
-      <section className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
+      <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
           <div className="flex items-center gap-2">
-            <ImageIcon className="w-3.5 h-3.5 text-gray-500" />
-            <p className="text-[13px] font-semibold text-white">Anexos</p>
+            <ImageIcon className="w-3.5 h-3.5 text-[#64748b]" />
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Anexos</p>
             {atts.length > 0 && (
-              <span className="text-[11px] text-gray-600">{atts.length}</span>
+              <span className="text-[11px] text-[#94a3b8]">{atts.length}</span>
             )}
           </div>
           <Button size="sm" variant="outline" onClick={() => setAttOpen(true)}>
@@ -578,7 +578,7 @@ function ReportDetail({
         </div>
         <div className="p-5">
           {atts.length === 0 ? (
-            <p className="text-[12px] text-gray-600 text-center py-4">
+            <p className="text-[12px] text-[#64748b] text-center py-4">
               Nenhum anexo ainda. Adicione prints, PDFs ou links de relatórios.
             </p>
           ) : (

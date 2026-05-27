@@ -23,12 +23,12 @@ import type { Client, ClientStatus, BriefingData } from '@/types'
 
 // 'fechado' é gatilho de transição — não aparece como pill navegável
 const CLIENT_STATUSES: { value: ClientStatus; label: string; color: string; bg: string }[] = [
-  { value: 'lead',        label: 'Lead',        color: 'text-zinc-400',   bg: 'bg-zinc-400/10 border-zinc-400/20' },
-  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-400',   bg: 'bg-blue-400/10 border-blue-400/20' },
-  { value: 'onboarding',  label: 'Onboarding',  color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20' },
-  { value: 'ativo',       label: 'Ativo',       color: 'text-green-400',  bg: 'bg-green-400/10 border-green-400/20' },
-  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
-  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-400',    bg: 'bg-red-400/10 border-red-400/20' },
+  { value: 'lead',        label: 'Lead',        color: 'text-slate-700',   bg: 'bg-slate-100 border-slate-300' },
+  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-800',    bg: 'bg-blue-50 border-blue-200' },
+  { value: 'onboarding',  label: 'Onboarding',  color: 'text-amber-800',   bg: 'bg-amber-50 border-amber-200' },
+  { value: 'ativo',       label: 'Ativo',       color: 'text-green-800',   bg: 'bg-green-50 border-green-200' },
+  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-800',  bg: 'bg-orange-50 border-orange-200' },
+  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-800',     bg: 'bg-red-50 border-red-200' },
 ]
 
 function getStatusConfig(status: string) {
@@ -38,10 +38,10 @@ function getStatusConfig(status: string) {
 // ─── Ícone de tipo de arquivo ─────────────────────────────────────────────────
 
 function DocTypeIcon({ type }: { type: string }) {
-  if (type.startsWith('image/')) return <ImageIcon className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-  if (type.startsWith('video/')) return <Video className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-  if (type === 'application/pdf') return <FileText className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-  return <File className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+  if (type.startsWith('image/')) return <ImageIcon className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
+  if (type.startsWith('video/')) return <Video className="w-3.5 h-3.5 text-purple-700 flex-shrink-0" />
+  if (type === 'application/pdf') return <FileText className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
+  return <File className="w-3.5 h-3.5 text-[#64748b] flex-shrink-0" />
 }
 
 function formatSize(bytes: number | null): string {
@@ -105,7 +105,7 @@ function StatusSection({ client }: { client: Client }) {
             className={`px-3 py-1.5 rounded-md border text-[12px] transition-colors ${
               client.status === s.value
                 ? `${s.color} ${s.bg} font-medium`
-                : 'text-zinc-500 bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.07] hover:text-zinc-300'
+                : 'text-[#64748b] bg-white border-[#e8e8e8] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
             }`}
           >
             {s.label}
@@ -132,7 +132,7 @@ function StatusSection({ client }: { client: Client }) {
         <button
           onClick={handleFinalizar}
           disabled={updateStatus.isPending}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-green-500/30 bg-green-600/10 text-green-300 text-[13px] font-medium hover:bg-green-600/20 transition-colors disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-green-200 bg-green-50 text-green-900 text-[13px] font-medium hover:bg-green-100 transition-colors disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" />
           Finalizar onboarding → Marcar como Ativo
@@ -160,7 +160,7 @@ function ChecklistSection({ clientId }: { clientId: string }) {
       </div>
 
       {/* Barra de progresso */}
-      <div className="w-full h-1 bg-white/[0.06] rounded-full overflow-hidden mb-4">
+      <div className="w-full h-1 bg-[#e8e8e8] rounded-full overflow-hidden mb-4">
         <div
           className="h-full bg-green-600 rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}
@@ -172,17 +172,17 @@ function ChecklistSection({ clientId }: { clientId: string }) {
           <button
             key={item.id}
             onClick={() => toggle.mutate({ id: item.id, completed: !item.completed, clientId })}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-white/[0.04] transition-colors group text-left"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[#f5f5f5] transition-colors group text-left"
           >
             <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
               item.completed
                 ? 'bg-green-600 border-green-600'
-                : 'border-white/[0.20] group-hover:border-white/[0.35]'
+                : 'border-[#d0d0d0] group-hover:border-[#a0a0a0]'
             }`}>
               {item.completed && <Check className="w-2.5 h-2.5 text-white" />}
             </div>
             <span className={`text-[13px] transition-colors ${
-              item.completed ? 'text-zinc-600 line-through' : 'text-zinc-300'
+              item.completed ? 'text-[#9ca3af] line-through' : 'text-[#374151]'
             }`}>
               {item.title}
             </span>
@@ -313,8 +313,8 @@ function DocumentsSection({ clientId }: { clientId: string }) {
       </div>
 
       {docs.length === 0 ? (
-        <div className="text-center py-6 border border-dashed border-white/[0.06] rounded-lg">
-          <p className="text-[12px] text-zinc-600">Nenhum documento ainda. Faça upload de logos, manuais, fotos...</p>
+        <div className="text-center py-6 border border-dashed border-[#d0d0d0] rounded-lg">
+          <p className="text-[12px] text-[#64748b]">Nenhum documento ainda. Faça upload de logos, manuais, fotos...</p>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -323,7 +323,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
             return (
               <div
                 key={doc.id}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-white/[0.06] bg-white/[0.02] group"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-[#e8e8e8] bg-[#fafafa] group"
               >
                 {isImg ? (
                   <img
@@ -332,19 +332,19 @@ function DocumentsSection({ clientId }: { clientId: string }) {
                     className="w-8 h-8 rounded object-cover flex-shrink-0 border border-white/[0.08]"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded bg-[#f0f0f0] flex items-center justify-center flex-shrink-0">
                     <DocTypeIcon type={doc.file_type} />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-zinc-200 truncate">{doc.name}</p>
-                  <p className="text-[10px] text-zinc-600">{formatDate(doc.created_at)}{doc.file_size ? ` · ${formatSize(doc.file_size)}` : ''}</p>
+                  <p className="text-[12px] text-[#0f0f0f] truncate">{doc.name}</p>
+                  <p className="text-[10px] text-[#94a3b8]">{formatDate(doc.created_at)}{doc.file_size ? ` · ${formatSize(doc.file_size)}` : ''}</p>
                 </div>
                 <a
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-zinc-600 hover:text-zinc-300 transition-colors flex-shrink-0"
+                  className="text-[#94a3b8] hover:text-[#0f0f0f] transition-colors flex-shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -362,7 +362,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
                 ) : (
                   <button
                     onClick={() => setConfirmingId(doc.id)}
-                    className="text-zinc-600 hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    className="text-[#94a3b8] hover:text-red-600 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -478,15 +478,15 @@ function BriefingSection({ clientId }: { clientId: string }) {
         {BRIEFING_BLOCKS.map(block => (
           <div
             key={block.key}
-            className="rounded-lg border border-white/[0.06] overflow-hidden"
+            className="rounded-lg border border-[#e8e8e8] overflow-hidden"
           >
             {/* Header do bloco */}
             <button
               type="button"
               onClick={() => toggleBlock(block.key)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#fafafa] hover:bg-[#f5f5f5] transition-colors"
             >
-              <p className="text-[13px] font-medium text-zinc-200">{block.title}</p>
+              <p className="text-[13px] font-medium text-[#0f0f0f]">{block.title}</p>
               {openBlocks[block.key]
                 ? <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
                 : <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
@@ -495,7 +495,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
 
             {/* Campos do bloco */}
             {openBlocks[block.key] && (
-              <div className="p-4 space-y-3 border-t border-white/[0.06]">
+              <div className="p-4 space-y-3 border-t border-[#e8e8e8]">
                 {block.fields.map(field => {
                   if (field.type === 'textarea') {
                     return (
@@ -521,7 +521,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                           value={(form[field.key] as string) || ''}
                           onChange={e => setField(field.key, e.target.value)}
                           placeholder={field.placeholder}
-                          className="flex h-8 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 text-[13px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/15 transition-colors"
+                          className="flex h-8 w-full rounded-md border border-[#e8e8e8] bg-white px-3 text-[13px] text-[#0f0f0f] placeholder:text-[#9ca3af] focus:outline-none focus:ring-1 focus:ring-[#0f0f0f]/10 focus:border-[#c0c0c0] transition-colors"
                         />
                       </div>
                     )
@@ -531,15 +531,15 @@ function BriefingSection({ clientId }: { clientId: string }) {
                     const val = form[field.key] as boolean | undefined
                     return (
                       <div key={field.key as string} className="flex items-center justify-between">
-                        <label className="text-[13px] text-zinc-300">{field.label}</label>
+                        <label className="text-[13px] text-[#374151]">{field.label}</label>
                         <div className="flex gap-1">
                           <button
                             type="button"
                             onClick={() => setField(field.key, true)}
                             className={`px-3 py-1 rounded-md text-[12px] border transition-colors ${
                               val === true
-                                ? 'bg-green-600/20 border-green-500/30 text-green-300'
-                                : 'bg-white/[0.04] border-white/[0.06] text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-green-50 border-green-200 text-green-800 font-medium'
+                                : 'bg-white border-[#e8e8e8] text-[#64748b] hover:text-[#0f0f0f]'
                             }`}
                           >Sim</button>
                           <button
@@ -547,8 +547,8 @@ function BriefingSection({ clientId }: { clientId: string }) {
                             onClick={() => setField(field.key, false)}
                             className={`px-3 py-1 rounded-md text-[12px] border transition-colors ${
                               val === false
-                                ? 'bg-red-600/20 border-red-500/30 text-red-300'
-                                : 'bg-white/[0.04] border-white/[0.06] text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-red-50 border-red-200 text-red-800 font-medium'
+                                : 'bg-white border-[#e8e8e8] text-[#64748b] hover:text-[#0f0f0f]'
                             }`}
                           >Não</button>
                         </div>
@@ -572,7 +572,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                         }`}>
                           {val && <Check className="w-2.5 h-2.5 text-white" />}
                         </div>
-                        <span className={`text-[13px] ${val ? 'text-zinc-200' : 'text-zinc-400'}`}>
+                        <span className={`text-[13px] ${val ? 'text-[#0f0f0f]' : 'text-[#64748b]'}`}>
                           {field.label}
                         </span>
                       </button>
@@ -596,37 +596,37 @@ export function OnboardingTab({ client }: { client: Client }) {
   return (
     <div className="space-y-8">
       {/* 1. Status */}
-      <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
         <StatusSection client={client} />
       </div>
 
       {/* 2. Checklist — só visível durante onboarding */}
       {client.status === 'onboarding' ? (
-        <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+        <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
           <ChecklistSection clientId={client.id} />
         </div>
       ) : (
-        <div className="p-4 rounded-lg border border-dashed border-white/[0.06] bg-transparent">
-          <p className="text-[11px] text-zinc-500 uppercase tracking-wide mb-2">Checklist de Onboarding</p>
-          <p className="text-[12px] text-zinc-600">
-            O checklist fica disponível quando o cliente está em <span className="text-yellow-400">Onboarding</span>.
-            {' '}Use o botão <span className="text-purple-400">Negócio fechado → Iniciar onboarding</span> acima para começar.
+        <div className="p-4 rounded-lg border border-dashed border-[#d0d0d0] bg-[#fafafa]">
+          <p className="text-[11px] text-[#64748b] uppercase tracking-wide mb-2">Checklist de Onboarding</p>
+          <p className="text-[12px] text-[#64748b]">
+            O checklist fica disponível quando o cliente está em <span className="text-amber-700 font-medium">Onboarding</span>.
+            {' '}Use o botão <span className="text-purple-700 font-medium">Negócio fechado → Iniciar onboarding</span> acima para começar.
           </p>
         </div>
       )}
 
       {/* 3. Responsável */}
-      <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
         <ResponsibleSection client={client} />
       </div>
 
       {/* 4. Documentos */}
-      <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
         <DocumentsSection clientId={client.id} />
       </div>
 
       {/* 5. Briefing */}
-      <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
         <BriefingSection clientId={client.id} />
       </div>
     </div>
