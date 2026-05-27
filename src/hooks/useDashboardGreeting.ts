@@ -31,6 +31,21 @@ export interface GreetingResult {
 
 const CACHE_TTL = 30 * 60 * 1000
 
+// ── Injeta hrefs nas pills com base no conteúdo do label ──────────────────────
+
+function withHrefs(pills: HeroPill[]): HeroPill[] {
+  return pills.map(pill => {
+    if (pill.href) return pill
+    const l = pill.label.toLowerCase()
+    if (l.includes('cliente'))                                          return { ...pill, href: '/clients' }
+    if (l.includes('tarefa') || l.includes('task'))                    return { ...pill, href: '/tasks' }
+    if (l.includes('aprovação') || l.includes('aprovacao') ||
+        l.includes('conteúdo') || l.includes('conteudo') ||
+        l.includes('planner') || l.includes('publicação'))             return { ...pill, href: '/planner' }
+    return pill
+  })
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getGreetingText(name: string): string {
@@ -108,7 +123,7 @@ export function useDashboardGreeting(
   const [isLoading, setIsLoading] = useState(true)
   const hasFetched                = useRef(false)
 
-  const cacheKey = userId ? `dash_greeting_v2_${userId}` : null
+  const cacheKey = userId ? `dash_greeting_v3_${userId}` : null
 
   // ── Fetch via Edge Function (com cache localStorage) ──────────────────────
   const fetchGreeting = useCallback(async (forceRefresh = false) => {
@@ -122,7 +137,7 @@ export function useDashboardGreeting(
           const { msg, pills: cachedPills, ts } = JSON.parse(raw)
           if (Date.now() - ts < CACHE_TTL && typeof msg === 'string') {
             setMessage(msg)
-            setPills(cachedPills ?? [])
+            setPills(withHrefs(cachedPills ?? []))
             setIsLoading(false)
             return
           }
@@ -140,7 +155,8 @@ export function useDashboardGreeting(
       const json = JSON.parse(content ?? '{}')
 
       const newMsg   = typeof json.message === 'string' ? json.message : getFallbackMessage(stats, agencyName)
-      const newPills = Array.isArray(json.pills) ? (json.pills as HeroPill[]).slice(0, 4) : getFallbackPills(stats)
+      const rawPills = Array.isArray(json.pills) ? (json.pills as HeroPill[]).slice(0, 4) : getFallbackPills(stats)
+      const newPills = withHrefs(rawPills)
 
       try {
         localStorage.setItem(cacheKey, JSON.stringify({ msg: newMsg, pills: newPills, ts: Date.now() }))
@@ -151,7 +167,7 @@ export function useDashboardGreeting(
     } catch {
       // Fallback sem IA
       setMessage(getFallbackMessage(stats, agencyName))
-      setPills(getFallbackPills(stats))
+      setPills(withHrefs(getFallbackPills(stats)))
     } finally {
       setIsLoading(false)
     }
