@@ -15,12 +15,12 @@ const navItems = [
   { href: '/clients',   icon: Users,            label: 'Clientes'       },
   { href: '/feed',      icon: LayoutGrid,       label: 'Feed do Perfil' },
   { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },
+  { href: '/instagram', icon: Instagram,        label: 'Instagram'      },
   { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'        },
   { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
   { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
-  { href: '/instagram', icon: Instagram,        label: 'Instagram'      },
   { href: '/ai',        icon: Sparkles,         label: 'IA Copilot',  highlight: true },
 ]
 
