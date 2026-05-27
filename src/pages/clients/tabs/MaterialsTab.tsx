@@ -33,19 +33,19 @@ const MATERIAL_TYPES: { value: MaterialType; label: string }[] = [
   { value: 'outro',     label: 'Outro' },
 ]
 
-const TYPE_META: Record<MaterialType, { label: string; color: string; bg: string; icon: string }> = {
-  pdf:       { label: 'PDF',       color: 'text-red-600',    bg: 'bg-red-50',    icon: 'pdf' },
-  imagem:    { label: 'Imagem',    color: 'text-blue-600',   bg: 'bg-blue-50',   icon: 'img' },
-  video:     { label: 'Vídeo',     color: 'text-violet-600', bg: 'bg-violet-50', icon: 'vid' },
-  link:      { label: 'Link',      color: 'text-sky-600',    bg: 'bg-sky-50',    icon: 'lnk' },
-  documento: { label: 'Documento', color: 'text-zinc-600',   bg: 'bg-zinc-100',  icon: 'doc' },
-  outro:     { label: 'Outro',     color: 'text-zinc-500',   bg: 'bg-zinc-100',  icon: 'out' },
+const TYPE_META: Record<MaterialType, { label: string; color: string; bg: string }> = {
+  pdf:       { label: 'PDF',       color: 'text-red-600',    bg: 'bg-red-50'    },
+  imagem:    { label: 'Imagem',    color: 'text-blue-600',   bg: 'bg-blue-50'   },
+  video:     { label: 'Vídeo',     color: 'text-violet-600', bg: 'bg-violet-50' },
+  link:      { label: 'Link',      color: 'text-sky-600',    bg: 'bg-sky-50'    },
+  documento: { label: 'Documento', color: 'text-zinc-600',   bg: 'bg-zinc-100'  },
+  outro:     { label: 'Outro',     color: 'text-zinc-500',   bg: 'bg-zinc-100'  },
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function MaterialIcon({ type, size = 'md' }: { type: MaterialType; size?: 'sm' | 'md' | 'lg' }) {
-  const sz = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-6 h-6' : 'w-4 h-4'
+  const sz = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-7 h-7' : 'w-4 h-4'
   const meta = TYPE_META[type]
   switch (type) {
     case 'pdf':    return <FileText  className={`${sz} ${meta.color}`} />
@@ -63,26 +63,180 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / 1048576).toFixed(1)} MB`
 }
 
+// ─── Material view modal ───────────────────────────────────────────────────────
+
+function MaterialViewModal({
+  mat,
+  open,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  mat:      ClientMaterial | null
+  open:     boolean
+  onClose:  () => void
+  onEdit:   () => void
+  onDelete: () => void
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  if (!mat) return null
+
+  const meta    = TYPE_META[mat.type]
+  const size    = formatSize(mat.file_size)
+  const fileUrl = mat.link_url || mat.file_url
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setConfirmDelete(false) } }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center gap-3 pr-6">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${meta.bg}`}>
+              <MaterialIcon type={mat.type} size="lg" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-[15px] font-semibold text-[#0f0f0f] leading-snug truncate">
+                {mat.title}
+              </DialogTitle>
+              <p className="text-[11px] mt-0.5">
+                <span className={`font-medium ${meta.color}`}>{meta.label}</span>
+                {size && <span className="text-[#9ca3af]"> · {size}</span>}
+                {mat.folder_name && (
+                  <span className="text-[#9ca3af]"> · 📁 {mat.folder_name}</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-1 max-h-[55vh] overflow-y-auto pr-1">
+          {/* Preview: imagem */}
+          {mat.type === 'imagem' && mat.file_url && (
+            <div className="rounded-xl overflow-hidden border border-[#e8e8e8]">
+              <img
+                src={mat.file_url}
+                alt={mat.title}
+                className="w-full max-h-64 object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            </div>
+          )}
+
+          {/* Preview: vídeo */}
+          {mat.type === 'video' && mat.file_url && (
+            <div className="rounded-xl overflow-hidden border border-[#e8e8e8] bg-black">
+              <video
+                src={mat.file_url}
+                controls
+                className="w-full max-h-64"
+                preload="metadata"
+              />
+            </div>
+          )}
+
+          {/* Descrição */}
+          {mat.description && (
+            <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#e8e8e8]">
+              <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1.5">Descrição</p>
+              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{mat.description}</p>
+            </div>
+          )}
+
+          {/* Arquivo / link — botão de abrir */}
+          {fileUrl && (
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-3.5 rounded-xl border border-[#e8e8e8] hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${meta.bg}`}>
+                <MaterialIcon type={mat.type} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-[#0f0f0f] group-hover:text-blue-700 transition-colors">
+                  {mat.type === 'link' ? 'Abrir link externo' : 'Abrir arquivo em nova guia'}
+                </p>
+                <p className="text-[10px] text-[#9ca3af] truncate mt-0.5">{fileUrl}</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-[#c0c0c0] group-hover:text-blue-500 flex-shrink-0" />
+            </a>
+          )}
+
+          {/* Metadados */}
+          <div className="grid grid-cols-2 gap-3 text-[11px]">
+            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+              <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">Adicionado em</p>
+              <p className="text-[12px] text-[#374151] font-medium">{formatDate(mat.created_at)}</p>
+            </div>
+            {mat.folder_name && (
+              <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
+                <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">Pasta</p>
+                <p className="text-[12px] text-[#374151] font-medium flex items-center gap-1">
+                  <Folder className="w-3.5 h-3.5 text-[#f59e0b]" /> {mat.folder_name}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 border-t border-[#f1f5f9] pt-3">
+          {confirmDelete ? (
+            <>
+              <span className="text-[12px] text-[#6b7280] self-center">Confirmar exclusão?</span>
+              <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>Não</Button>
+              <Button
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
+                onClick={() => { setConfirmDelete(false); onClose(); onDelete() }}
+              >
+                Excluir
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
+              </Button>
+              <div className="flex-1" />
+              <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+              <Button size="sm" onClick={() => { onClose(); onEdit() }}>
+                <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Folder card ──────────────────────────────────────────────────────────────
 
 function FolderCard({
   name,
   count,
   onClick,
+  onRename,
   onDelete,
 }: {
-  name: string
-  count: number
-  onClick: () => void
+  name:     string
+  count:    number
+  onClick:  () => void
+  onRename: () => void
   onDelete: () => void
 }) {
-  const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   return (
     <div
       className="relative bg-white border border-[#e8e8e8] rounded-2xl p-4 cursor-pointer hover:border-[#c8c8c8] hover:shadow-md transition-all group select-none"
-      onClick={() => { if (!menuOpen && !confirmDelete) onClick() }}
+      onClick={() => { if (!confirmDelete) onClick() }}
     >
       {/* Folder icon */}
       <div className="mb-3 relative">
@@ -97,40 +251,45 @@ function FolderCard({
       </div>
 
       {/* Name */}
-      <p className="text-[13px] font-semibold text-[#0f0f0f] truncate leading-snug">{name}</p>
+      <p className="text-[13px] font-semibold text-[#0f0f0f] truncate leading-snug pr-4">{name}</p>
       <p className="text-[11px] text-[#9ca3af] mt-0.5">
         {count} arquivo{count !== 1 ? 's' : ''}
       </p>
 
-      {/* Actions menu */}
+      {/* Actions */}
       <div
-        className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={e => e.stopPropagation()}
       >
         {confirmDelete ? (
           <div className="flex items-center gap-1 bg-white border border-[#e8e8e8] rounded-lg shadow-sm px-2 py-1">
-            <span className="text-[10px] text-[#6b7280] mr-1">Excluir?</span>
+            <span className="text-[10px] text-[#6b7280]">Excluir?</span>
             <button
               onClick={() => setConfirmDelete(false)}
               className="text-[10px] text-[#6b7280] hover:text-[#0f0f0f] px-1.5 py-0.5 rounded"
-            >
-              Não
-            </button>
+            >Não</button>
             <button
-              onClick={() => { setConfirmDelete(false); setMenuOpen(false); onDelete() }}
-              className="text-[10px] text-red-600 hover:text-red-700 font-medium px-1.5 py-0.5 rounded"
-            >
-              Sim
-            </button>
+              onClick={() => { setConfirmDelete(false); onDelete() }}
+              className="text-[10px] text-red-600 font-medium px-1.5 py-0.5 rounded hover:text-red-700"
+            >Sim</button>
           </div>
         ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="w-6 h-6 rounded-md flex items-center justify-center text-[#c0c0c0] hover:text-red-500 hover:bg-red-50 transition-colors"
-            title="Excluir pasta"
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
+          <>
+            <button
+              onClick={onRename}
+              className="w-6 h-6 rounded-md flex items-center justify-center text-[#c0c0c0] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] transition-colors"
+              title="Renomear pasta"
+            >
+              <Pencil className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="w-6 h-6 rounded-md flex items-center justify-center text-[#c0c0c0] hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Excluir pasta"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </>
         )}
       </div>
 
@@ -144,11 +303,13 @@ function FolderCard({
 
 function MaterialRow({
   mat,
+  onView,
   onEdit,
   onDelete,
 }: {
-  mat: ClientMaterial
-  onEdit: () => void
+  mat:      ClientMaterial
+  onView:   () => void
+  onEdit:   () => void
   onDelete: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -160,7 +321,8 @@ function MaterialRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
-      className="flex items-center gap-3 px-3.5 py-3 rounded-xl border border-[#e8e8e8] bg-white hover:border-[#d0d0d0] hover:shadow-sm transition-all group"
+      className="flex items-center gap-3 px-3.5 py-3 rounded-xl border border-[#e8e8e8] bg-white hover:border-[#d0d0d0] hover:shadow-sm transition-all group cursor-pointer"
+      onClick={() => { if (!confirmDelete) onView() }}
     >
       {/* Icon */}
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${meta.bg}`}>
@@ -181,14 +343,17 @@ function MaterialRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+      <div
+        className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+        onClick={e => e.stopPropagation()}
+      >
         {(mat.file_url || mat.link_url) && (
           <a
             href={mat.link_url || mat.file_url || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="w-7 h-7 rounded-lg flex items-center justify-center text-[#b0b0b0] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] transition-colors"
-            title="Abrir"
+            title="Abrir em nova guia"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -205,16 +370,12 @@ function MaterialRow({
           <div className="flex items-center gap-1 ml-1">
             <button
               onClick={() => setConfirmDelete(false)}
-              className="text-[11px] text-[#6b7280] hover:text-[#0f0f0f] px-2 py-1 rounded-lg hover:bg-[#f0f0f0] transition-colors"
-            >
-              Não
-            </button>
+              className="text-[11px] text-[#6b7280] px-2 py-1 rounded-lg hover:bg-[#f0f0f0] transition-colors"
+            >Não</button>
             <button
               onClick={onDelete}
               className="text-[11px] text-red-600 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              Excluir
-            </button>
+            >Excluir</button>
           </div>
         ) : (
           <button
@@ -230,7 +391,7 @@ function MaterialRow({
   )
 }
 
-// ─── Material form modal ──────────────────────────────────────────────────────
+// ─── Material form modal ───────────────────────────────────────────────────────
 
 const blankForm = {
   title:       '',
@@ -260,13 +421,12 @@ function MaterialFormModal({
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [form, setForm]               = useState(blankForm)
+  const [form, setForm]                 = useState(blankForm)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading]       = useState(false)
 
   const isLink = form.type === 'link'
 
-  // Sync form whenever the modal opens or the target changes
   useEffect(() => {
     if (!open) return
     if (editing) {
@@ -363,7 +523,6 @@ function MaterialFormModal({
             rows={2}
           />
 
-          {/* Pasta */}
           <div>
             <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
               Pasta (opcional)
@@ -380,7 +539,6 @@ function MaterialFormModal({
             </div>
           </div>
 
-          {/* Link ou arquivo */}
           {isLink ? (
             <Input
               label="URL *"
@@ -397,11 +555,7 @@ function MaterialFormModal({
                 <div className="flex items-center gap-2 p-2.5 rounded-lg border border-[#e0e0e0] bg-[#f8fafc]">
                   <File className="w-3.5 h-3.5 text-[#6b7280] flex-shrink-0" />
                   <span className="text-[12px] text-[#374151] truncate flex-1">{selectedFile.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFile(null)}
-                    className="text-[#9ca3af] hover:text-red-400 flex-shrink-0"
-                  >
+                  <button type="button" onClick={() => setSelectedFile(null)} className="text-[#9ca3af] hover:text-red-400">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -409,11 +563,7 @@ function MaterialFormModal({
                 <div className="flex items-center gap-2 p-2.5 rounded-lg border border-[#e0e0e0] bg-[#f8fafc]">
                   <File className="w-3.5 h-3.5 text-[#6b7280] flex-shrink-0" />
                   <span className="text-[12px] text-[#6b7280] truncate flex-1">Arquivo atual</span>
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="text-[11px] text-blue-600 hover:text-blue-700 flex-shrink-0"
-                  >
+                  <button type="button" onClick={() => fileRef.current?.click()} className="text-[11px] text-blue-600 hover:text-blue-700">
                     Substituir
                   </button>
                 </div>
@@ -462,34 +612,43 @@ function MaterialFormModal({
   )
 }
 
-// ─── New folder modal ─────────────────────────────────────────────────────────
+// ─── New / rename folder modal ─────────────────────────────────────────────────
 
-function NewFolderModal({
+function FolderNameModal({
   open,
   onClose,
   onConfirm,
   existingFolders,
+  initialName,
+  mode,
 }: {
   open:            boolean
   onClose:         () => void
   onConfirm:       (name: string) => void
   existingFolders: string[]
+  initialName:     string
+  mode:            'create' | 'rename'
 }) {
-  const [name, setName] = useState('')
-  const isDuplicate = existingFolders.includes(name.trim())
+  const [name, setName] = useState(initialName)
+
+  useEffect(() => {
+    if (open) setName(initialName)
+  }, [open, initialName])
+
+  const isDuplicate = name.trim() !== initialName && existingFolders.includes(name.trim())
+  const unchanged   = mode === 'rename' && name.trim() === initialName
 
   const handleConfirm = () => {
     const trimmed = name.trim()
-    if (!trimmed || isDuplicate) return
+    if (!trimmed || isDuplicate || unchanged) return
     onConfirm(trimmed)
-    setName('')
   }
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setName('') } }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Nova pasta</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Nova pasta' : 'Renomear pasta'}</DialogTitle>
         </DialogHeader>
         <div className="mt-1">
           <div className="relative">
@@ -509,13 +668,17 @@ function NewFolderModal({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => { onClose(); setName('') }}>Cancelar</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
           <Button
             size="sm"
             onClick={handleConfirm}
-            disabled={!name.trim() || isDuplicate}
+            disabled={!name.trim() || isDuplicate || unchanged}
           >
-            <FolderPlus className="w-3 h-3" /> Criar pasta
+            {mode === 'create' ? (
+              <><FolderPlus className="w-3 h-3" /> Criar pasta</>
+            ) : (
+              <><Save className="w-3 h-3" /> Renomear</>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -528,6 +691,7 @@ function NewFolderModal({
 export function MaterialsTab({ clientId }: { clientId: string }) {
   const { user } = useAuth()
   const { data: materials = [] } = useClientMaterials(clientId)
+  const updateMaterial = useUpdateMaterial()
   const deleteMaterial = useDeleteMaterial()
   const { toast } = useToast()
 
@@ -535,18 +699,21 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
 
   // Modals
-  const [formOpen, setFormOpen]           = useState(false)
-  const [editing, setEditing]             = useState<ClientMaterial | null>(null)
-  const [newFolderOpen, setNewFolderOpen] = useState(false)
-  const [prefillFolder, setPrefillFolder] = useState('')
+  const [formOpen, setFormOpen]               = useState(false)
+  const [editing, setEditing]                 = useState<ClientMaterial | null>(null)
+  const [prefillFolder, setPrefillFolder]     = useState('')
 
-  // Derived data
+  const [viewingMat, setViewingMat]           = useState<ClientMaterial | null>(null)
+
+  const [folderModalOpen, setFolderModalOpen] = useState(false)
+  const [folderModalMode, setFolderModalMode] = useState<'create' | 'rename'>('create')
+  const [renamingFolder, setRenamingFolder]   = useState('')
+
+  // Derived
   const folders = useMemo(() => {
     const map = new Map<string, number>()
     materials.forEach(m => {
-      if (m.folder_name) {
-        map.set(m.folder_name, (map.get(m.folder_name) ?? 0) + 1)
-      }
+      if (m.folder_name) map.set(m.folder_name, (map.get(m.folder_name) ?? 0) + 1)
     })
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [materials])
@@ -557,21 +724,21 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
     [materials, currentFolder],
   )
 
-  // Open add modal (context-aware)
+  // Add
   const openAdd = (folder = '') => {
     setEditing(null)
     setPrefillFolder(folder)
     setFormOpen(true)
   }
 
-  // Open edit modal
+  // Edit
   const openEdit = (mat: ClientMaterial) => {
     setEditing(mat)
     setPrefillFolder(mat.folder_name ?? '')
     setFormOpen(true)
   }
 
-  // Delete single material
+  // Delete material
   const handleDelete = async (mat: ClientMaterial) => {
     try {
       await deleteMaterial.mutateAsync({ id: mat.id, clientId, fileUrl: mat.file_url })
@@ -581,7 +748,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
     }
   }
 
-  // Delete entire folder (all materials inside)
+  // Delete folder
   const handleDeleteFolder = async (folderName: string) => {
     const toDelete = materials.filter(m => m.folder_name === folderName)
     try {
@@ -595,14 +762,48 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
     }
   }
 
-  // New folder confirmed → open add-material modal pre-filled
-  const handleNewFolderConfirm = (name: string) => {
-    setNewFolderOpen(false)
-    setCurrentFolder(name)
-    openAdd(name)
+  // Rename folder — update all materials inside
+  const handleRenameFolder = async (oldName: string, newName: string) => {
+    const toUpdate = materials.filter(m => m.folder_name === oldName)
+    try {
+      await Promise.all(
+        toUpdate.map(m =>
+          updateMaterial.mutateAsync({ id: m.id, clientId, folder_name: newName })
+        )
+      )
+      toast(`Pasta renomeada para "${newName}".`, 'success')
+      if (currentFolder === oldName) setCurrentFolder(newName)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
   }
 
-  // ── Render: folder view ─────────────────────────────────────────────────────
+  // New folder
+  const handleNewFolder = () => {
+    setFolderModalMode('create')
+    setRenamingFolder('')
+    setFolderModalOpen(true)
+  }
+
+  // Rename folder open
+  const handleOpenRename = (name: string) => {
+    setFolderModalMode('rename')
+    setRenamingFolder(name)
+    setFolderModalOpen(true)
+  }
+
+  // Folder modal confirm
+  const handleFolderModalConfirm = (name: string) => {
+    setFolderModalOpen(false)
+    if (folderModalMode === 'create') {
+      setCurrentFolder(name)
+      openAdd(name)
+    } else {
+      handleRenameFolder(renamingFolder, name)
+    }
+  }
+
+  // ── View: folder ────────────────────────────────────────────────────────────
 
   if (currentFolder !== null) {
     return (
@@ -621,6 +822,13 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
             <div className="flex items-center gap-1.5">
               <Folder className="w-4 h-4 text-[#f59e0b]" fill="#fef9ee" />
               <span className="text-[13px] font-semibold text-[#0f0f0f]">{currentFolder}</span>
+              <button
+                onClick={() => handleOpenRename(currentFolder)}
+                className="w-5 h-5 rounded flex items-center justify-center text-[#c0c0c0] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] transition-colors ml-0.5"
+                title="Renomear pasta"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
             </div>
           </div>
           <button
@@ -631,12 +839,10 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
           </button>
         </div>
 
-        {/* Counter */}
         <p className="text-[11px] text-[#9ca3af]">
           {folderMaterials.length} arquivo{folderMaterials.length !== 1 ? 's' : ''}
         </p>
 
-        {/* Materials */}
         {folderMaterials.length === 0 ? (
           <div className="text-center py-14 border-2 border-dashed border-[#e8e8e8] rounded-2xl">
             <Folder className="w-10 h-10 text-[#d0d0d0] mx-auto mb-3" />
@@ -656,6 +862,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
                 <MaterialRow
                   key={mat.id}
                   mat={mat}
+                  onView={() => setViewingMat(mat)}
                   onEdit={() => openEdit(mat)}
                   onDelete={() => handleDelete(mat)}
                 />
@@ -665,6 +872,13 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         )}
 
         {/* Modals */}
+        <MaterialViewModal
+          mat={viewingMat}
+          open={!!viewingMat}
+          onClose={() => setViewingMat(null)}
+          onEdit={() => { setViewingMat(null); openEdit(viewingMat!) }}
+          onDelete={() => { setViewingMat(null); handleDelete(viewingMat!) }}
+        />
         <MaterialFormModal
           open={formOpen}
           onClose={() => { setFormOpen(false); setEditing(null) }}
@@ -673,13 +887,19 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
           clientId={clientId}
           userId={user?.id ?? ''}
         />
+        <FolderNameModal
+          open={folderModalOpen}
+          onClose={() => setFolderModalOpen(false)}
+          onConfirm={handleFolderModalConfirm}
+          existingFolders={folders.map(([n]) => n).filter(n => n !== renamingFolder)}
+          initialName={renamingFolder}
+          mode={folderModalMode}
+        />
       </div>
     )
   }
 
-  // ── Render: root view ───────────────────────────────────────────────────────
-
-  const totalCount = materials.length
+  // ── View: root ──────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-5">
@@ -688,12 +908,12 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         <div>
           <p className="text-[13px] font-semibold text-[#0f0f0f]">Materiais do cliente</p>
           <p className="text-[11px] text-[#9ca3af] mt-0.5">
-            {totalCount} {totalCount === 1 ? 'arquivo' : 'arquivos'} · visíveis no portal
+            {materials.length} {materials.length === 1 ? 'arquivo' : 'arquivos'} · visíveis no portal
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setNewFolderOpen(true)}
+            onClick={handleNewFolder}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-[#e0e0e0] bg-white text-[#374151] hover:bg-[#f5f5f5] transition-colors"
           >
             <FolderPlus className="w-3.5 h-3.5 text-[#f59e0b]" /> Nova pasta
@@ -707,19 +927,17 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      {/* Empty state global */}
+      {/* Empty state */}
       {materials.length === 0 && (
         <div className="text-center py-16 border-2 border-dashed border-[#e8e8e8] rounded-2xl">
-          <div className="flex justify-center mb-3">
-            <Folder className="w-12 h-12 text-[#e0e0e0]" />
-          </div>
+          <Folder className="w-12 h-12 text-[#e0e0e0] mx-auto mb-3" />
           <p className="text-[13px] font-medium text-[#374151]">Nenhum material ainda</p>
           <p className="text-[11px] text-[#9ca3af] mt-1">
             Adicione PDFs, imagens, links e documentos.<br />O cliente verá tudo no portal.
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
             <button
-              onClick={() => setNewFolderOpen(true)}
+              onClick={handleNewFolder}
               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-[#e0e0e0] bg-white text-[#374151] hover:bg-[#f5f5f5] transition-colors"
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#f59e0b]" /> Nova pasta
@@ -734,7 +952,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      {/* Folders section */}
+      {/* Folders */}
       {folders.length > 0 && (
         <div>
           <p className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-3">
@@ -753,6 +971,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
                     name={name}
                     count={count}
                     onClick={() => setCurrentFolder(name)}
+                    onRename={() => handleOpenRename(name)}
                     onDelete={() => handleDeleteFolder(name)}
                   />
                 </motion.div>
@@ -762,7 +981,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      {/* Root materials (no folder) */}
+      {/* Root materials */}
       {rootMaterials.length > 0 && (
         <div>
           {folders.length > 0 && (
@@ -776,6 +995,7 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
                 <MaterialRow
                   key={mat.id}
                   mat={mat}
+                  onView={() => setViewingMat(mat)}
                   onEdit={() => openEdit(mat)}
                   onDelete={() => handleDelete(mat)}
                 />
@@ -786,6 +1006,13 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
       )}
 
       {/* Modals */}
+      <MaterialViewModal
+        mat={viewingMat}
+        open={!!viewingMat}
+        onClose={() => setViewingMat(null)}
+        onEdit={() => { setViewingMat(null); openEdit(viewingMat!) }}
+        onDelete={() => { setViewingMat(null); handleDelete(viewingMat!) }}
+      />
       <MaterialFormModal
         open={formOpen}
         onClose={() => { setFormOpen(false); setEditing(null) }}
@@ -794,12 +1021,13 @@ export function MaterialsTab({ clientId }: { clientId: string }) {
         clientId={clientId}
         userId={user?.id ?? ''}
       />
-
-      <NewFolderModal
-        open={newFolderOpen}
-        onClose={() => setNewFolderOpen(false)}
-        onConfirm={handleNewFolderConfirm}
-        existingFolders={folders.map(([n]) => n)}
+      <FolderNameModal
+        open={folderModalOpen}
+        onClose={() => setFolderModalOpen(false)}
+        onConfirm={handleFolderModalConfirm}
+        existingFolders={folders.map(([n]) => n).filter(n => n !== renamingFolder)}
+        initialName={renamingFolder}
+        mode={folderModalMode}
       />
     </div>
   )
