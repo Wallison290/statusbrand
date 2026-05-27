@@ -31,6 +31,8 @@ export interface ScheduledPost {
   error_message: string | null
   published_at:  string | null
   created_at:    string
+  // Joined
+  instagram_accounts?: { username: string; profile_picture_url: string | null } | null
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────
@@ -47,6 +49,50 @@ export function useInstagramAccount() {
         .from('instagram_accounts')
         .select('*')
         .eq('user_id', user!.id)
+        .is('client_id', null)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/** Todas as contas Instagram ativas do usuário (própria + clientes) */
+export function useAllInstagramAccounts() {
+  const { user } = useAuth()
+
+  return useQuery<InstagramAccount[]>({
+    queryKey:  ['instagram_accounts_all', user?.id],
+    enabled:   !!user,
+    staleTime: 60_000,
+    queryFn:   async () => {
+      const { data, error } = await (supabase as any)
+        .from('instagram_accounts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('is_active', true)
+        .order('connected_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
+/** Conta Instagram vinculada a um cliente específico */
+export function useClientInstagramAccount(clientId: string | undefined) {
+  const { user } = useAuth()
+
+  return useQuery<InstagramAccount | null>({
+    queryKey:  ['instagram_account_client', clientId],
+    enabled:   !!user && !!clientId,
+    staleTime: 60_000,
+    queryFn:   async () => {
+      const { data, error } = await (supabase as any)
+        .from('instagram_accounts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('client_id', clientId)
         .eq('is_active', true)
         .maybeSingle()
       if (error) throw error
@@ -66,7 +112,7 @@ export function useScheduledPosts() {
     queryFn:   async () => {
       const { data, error } = await (supabase as any)
         .from('scheduled_posts')
-        .select('*')
+        .select('*, instagram_accounts!ig_account_id(username, profile_picture_url)')
         .eq('user_id', user!.id)
         .order('scheduled_at', { ascending: false })
       if (error) throw error
@@ -127,6 +173,7 @@ export function useDisconnectInstagram() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['instagram_account'] })
+      qc.invalidateQueries({ queryKey: ['instagram_account_client'] })
       qc.invalidateQueries({ queryKey: ['scheduled_posts'] })
     },
   })

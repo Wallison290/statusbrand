@@ -1,9 +1,10 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Edit, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
   Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
+  Unlink, RefreshCw,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useClient, useBrandDNA, useUpsertBrandDNA, useUpdateClient, useRegisterPayment } from '@/hooks/useClients'
+import { useClientInstagramAccount, useDisconnectInstagram } from '@/hooks/useInstagram'
 import { useTasks } from '@/hooks/useTasks'
 import { usePlanner } from '@/hooks/usePlanner'
 import { useContentAssets, useCreateContentAsset, useUpdateContentAsset, useDeleteContentAsset } from '@/hooks/useContentAssets'
@@ -31,7 +33,7 @@ import { ptBR } from 'date-fns/locale'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
 import type { FinancialStatus } from '@/types'
 import { supabase } from '@/integrations/supabase/client'
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { ContentAsset, ContentType, PlannerItem } from '@/types'
 
 // ─── Asset Card ───────────────────────────────────────────────────────────────
@@ -488,10 +490,159 @@ function getWeekSummaryBadge(items: PlannerItem[]): { label: string; cls: string
   return              { label: 'Em Aprovação',  cls: 'bg-amber-50 text-amber-600' }
 }
 
+// ─── Instagram Tab ────────────────────────────────────────────────────────────
+
+const META_APP_ID_CLIENT  = import.meta.env.VITE_META_APP_ID  as string | undefined
+const SUPABASE_URL_CLIENT = import.meta.env.VITE_SUPABASE_URL as string
+
+function buildClientOAuthUrl(userId: string, clientId: string) {
+  const redirectUri = `${SUPABASE_URL_CLIENT}/functions/v1/instagram-oauth`
+  const scope = ['instagram_business_basic', 'instagram_business_content_publish'].join(',')
+  const state = `${userId}|${clientId}`
+  return (
+    `https://www.instagram.com/oauth/authorize` +
+    `?enable_fb_login=0` +
+    `&force_authentication=1` +
+    `&client_id=${META_APP_ID_CLIENT}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${scope}` +
+    `&state=${encodeURIComponent(state)}` +
+    `&response_type=code`
+  )
+}
+
+function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: string }) {
+  const { data: igAccount, isLoading } = useClientInstagramAccount(clientId)
+  const disconnect = useDisconnectInstagram()
+  const { toast } = useToast()
+  const [confirming, setConfirming] = useState(false)
+
+  const handleConnect = () => {
+    if (!META_APP_ID_CLIENT) {
+      toast('VITE_META_APP_ID não configurado.', 'error')
+      return
+    }
+    window.location.href = buildClientOAuthUrl(userId, clientId)
+  }
+
+  const handleDisconnect = async () => {
+    if (!igAccount) return
+    try {
+      await disconnect.mutateAsync(igAccount.id)
+      toast('Instagram desconectado.', 'success')
+      setConfirming(false)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    )
+  }
+
+  if (!igAccount) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
+        >
+          <Instagram className="w-8 h-8 text-white" />
+        </div>
+        <div className="text-center">
+          <p className="text-[14px] font-semibold text-[#0f0f0f]">Instagram não conectado</p>
+          <p className="text-[12px] text-[#9ca3af] mt-1">
+            Conecte a conta Business ou Creator deste cliente para agendar posts.
+          </p>
+        </div>
+        <Button onClick={handleConnect} className="gap-2">
+          <Instagram className="w-3.5 h-3.5" />
+          Conectar Instagram
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Conta conectada */}
+      <div className="flex items-center gap-4 p-4 rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+        {igAccount.profile_picture_url ? (
+          <img
+            src={igAccount.profile_picture_url}
+            alt={igAccount.username}
+            className="w-14 h-14 rounded-full border-2 border-[#e2e8f0] object-cover flex-shrink-0"
+          />
+        ) : (
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
+          >
+            <Instagram className="w-7 h-7 text-white" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-[14px] font-semibold text-[#0f0f0f]">@{igAccount.username}</p>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Conectado
+            </span>
+          </div>
+          {igAccount.name && (
+            <p className="text-[12px] text-[#6b7280] mt-0.5">{igAccount.name}</p>
+          )}
+          <p className="text-[12px] text-[#9ca3af] mt-0.5">
+            {igAccount.followers_count.toLocaleString('pt-BR')} seguidores
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          {confirming ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[#9ca3af]">Desconectar?</span>
+              <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>Não</Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-red-500 hover:text-red-600"
+                onClick={handleDisconnect}
+                disabled={disconnect.isPending}
+              >
+                Sim
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => setConfirming(true)} className="text-[11px]">
+              <Unlink className="w-3 h-3" /> Desconectar
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc]">
+        <p className="text-[12px] text-[#6b7280] leading-relaxed">
+          Com o Instagram conectado, você pode agendar posts diretamente pelo modal de planejamento.
+          Basta abrir qualquer post no planejador e usar a aba <strong>"Agendar no Instagram"</strong>.
+        </p>
+      </div>
+
+      {/* Reconectar */}
+      <Button size="sm" variant="outline" onClick={handleConnect} className="text-[11px]">
+        <RefreshCw className="w-3 h-3" /> Reconectar / Trocar conta
+      </Button>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ClientProfile() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuth()
   const { data: client, isLoading } = useClient(id!)
   const { data: dna } = useBrandDNA(id!)
@@ -503,6 +654,14 @@ export function ClientProfile() {
   const updateAsset = useUpdateContentAsset()
   const deleteAsset = useDeleteContentAsset()
   const { toast } = useToast()
+
+  // Toast de sucesso ao retornar do OAuth do Instagram
+  useEffect(() => {
+    if (searchParams.get('ig_connected') === 'true') {
+      toast('Instagram conectado com sucesso!', 'success')
+      setSearchParams(prev => { prev.delete('ig_connected'); return prev }, { replace: true })
+    }
+  }, [searchParams])
 
   const assetFileRef = useRef<HTMLInputElement>(null)
 
@@ -747,6 +906,9 @@ export function ClientProfile() {
         <Tabs defaultValue="overview">
           <TabsList className="flex-wrap h-auto gap-1 overflow-x-auto max-w-full">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="instagram" className="gap-1">
+              <Instagram className="w-3 h-3" />Instagram
+            </TabsTrigger>
             <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
             <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             <TabsTrigger value="contents">Arsenal ({assets?.length || 0})</TabsTrigger>
@@ -1054,6 +1216,11 @@ export function ClientProfile() {
           {/* ── Resultados ───────────────────────────────────────────────── */}
           <TabsContent value="results">
             <ReportsTab clientId={id!} />
+          </TabsContent>
+
+          {/* ── Instagram ────────────────────────────────────────────────── */}
+          <TabsContent value="instagram">
+            {user && <ClientInstagramTab clientId={id!} userId={user.id} />}
           </TabsContent>
 
           {/* ── Tarefas ──────────────────────────────────────────────────── */}
