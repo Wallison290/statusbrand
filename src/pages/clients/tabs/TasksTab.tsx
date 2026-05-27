@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder } from 'lucide-react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder, type LucideIcon } from 'lucide-react'
 import type { TaskLink } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
@@ -392,7 +392,7 @@ function TaskViewModal({
                     )
                   }
 
-                  const iconMap: Record<string, (p: { className?: string }) => JSX.Element | null> = {
+                  const iconMap: Record<string, LucideIcon> = {
                     link:    Link2,
                     arquivo: FileText,
                     pasta:   Folder,
