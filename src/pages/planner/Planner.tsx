@@ -920,9 +920,11 @@ function PlannerItemView({
 
               {/* Resposta do cliente */}
               {item.approval_status && (
-                <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Resposta do Cliente</p>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Resposta do Cliente</p>
+
+                  {/* Status geral + data */}
+                  <div className="flex items-center gap-2 px-0.5 flex-wrap">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
                     <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
                       {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
@@ -933,14 +935,117 @@ function PlannerItemView({
                       </span>
                     )}
                   </div>
-                  {item.client_feedback && (
+
+                  {/* ── Arte ── */}
+                  {(item as any).art_approval_status && (() => {
+                    const artStatus = (item as any).art_approval_status as ApprovalStatus
+                    const artFeedback = (item as any).art_feedback as string | null
+                    const bgMap: Record<ApprovalStatus, string> = {
+                      pendente_aprovacao: 'border-yellow-200 bg-yellow-50',
+                      aprovado:           'border-green-200 bg-green-50',
+                      ajuste_solicitado:  'border-orange-200 bg-orange-50',
+                      ajuste_realizado:   'border-blue-200 bg-blue-50',
+                      reprovado:          'border-red-200 bg-red-50',
+                    }
+                    return (
+                      <div className={`rounded-xl border p-3 ${bgMap[artStatus]}`}>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Arte</p>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[artStatus]}`} />
+                            <span className={`text-[11px] font-semibold ${approvalTextColor[artStatus]}`}>
+                              {approvalLabel[artStatus]}
+                            </span>
+                          </div>
+                        </div>
+                        {artFeedback && artStatus !== 'aprovado' && artStatus !== 'pendente_aprovacao' && (
+                          <div className="mt-2 flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
+                            <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{artFeedback}"</p>
+                          </div>
+                        )}
+                        {artStatus === 'ajuste_solicitado' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await updateItem.mutateAsync({ id: item.id, art_approval_status: 'ajuste_realizado' } as any)
+                                toast('Ajuste de Arte marcado como realizado.', 'success')
+                              } catch (err: any) { toast(err.message, 'error') }
+                            }}
+                            disabled={updateItem.isPending}
+                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 transition-colors disabled:opacity-50"
+                          >
+                            {updateItem.isPending
+                              ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              : <Check className="w-3 h-3" />}
+                            Marcar ajuste de Arte como realizado
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  {/* ── Copy ── */}
+                  {(item as any).copy_approval_status && (() => {
+                    const copyStatus = (item as any).copy_approval_status as ApprovalStatus
+                    const copyFeedback = (item as any).copy_feedback as string | null
+                    const bgMap: Record<ApprovalStatus, string> = {
+                      pendente_aprovacao: 'border-yellow-200 bg-yellow-50',
+                      aprovado:           'border-green-200 bg-green-50',
+                      ajuste_solicitado:  'border-orange-200 bg-orange-50',
+                      ajuste_realizado:   'border-blue-200 bg-blue-50',
+                      reprovado:          'border-red-200 bg-red-50',
+                    }
+                    return (
+                      <div className={`rounded-xl border p-3 ${bgMap[copyStatus]}`}>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Copy</p>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[copyStatus]}`} />
+                            <span className={`text-[11px] font-semibold ${approvalTextColor[copyStatus]}`}>
+                              {approvalLabel[copyStatus]}
+                            </span>
+                          </div>
+                        </div>
+                        {copyFeedback && copyStatus !== 'aprovado' && copyStatus !== 'pendente_aprovacao' && (
+                          <div className="mt-2 flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
+                            <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
+                          </div>
+                        )}
+                        {copyStatus === 'ajuste_solicitado' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await updateItem.mutateAsync({ id: item.id, copy_approval_status: 'ajuste_realizado' } as any)
+                                toast('Ajuste de Copy marcado como realizado.', 'success')
+                              } catch (err: any) { toast(err.message, 'error') }
+                            }}
+                            disabled={updateItem.isPending}
+                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 transition-colors disabled:opacity-50"
+                          >
+                            {updateItem.isPending
+                              ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              : <Check className="w-3 h-3" />}
+                            Marcar ajuste de Copy como realizado
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  {/* Fallback legado: feedback geral quando não há campos parciais */}
+                  {!(item as any).art_approval_status && !(item as any).copy_approval_status && item.client_feedback && (
                     <p className="text-xs text-gray-700 leading-relaxed bg-white border border-gray-100 rounded-lg px-3 py-2 break-words">
                       "{item.client_feedback}"
                     </p>
                   )}
-                  {(localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
+
+                  {/* Botão legado "Ajuste realizado" — só quando não usa campos parciais */}
+                  {!(item as any).art_approval_status && !(item as any).copy_approval_status &&
+                    (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
                     <button onClick={handleMarkAdjustmentDone} disabled={updateItem.isPending}
-                      className="mt-2 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
+                      className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
                       {updateItem.isPending
                         ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         : <Check className="w-3 h-3" />}

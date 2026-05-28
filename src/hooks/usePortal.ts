@@ -284,11 +284,20 @@ export function useSubmitPartialApproval() {
         updatePayload.copy_feedback = feedback.trim() || null
       }
 
-      const { error } = await (supabase as any)
+      const { data: updated, error } = await (supabase as any)
         .from('planner')
         .update(updatePayload)
         .eq('id', plannerId)
+        .select('id, approval_status, art_approval_status, copy_approval_status, art_feedback, copy_feedback')
+        .single()
       if (error) throw error
+      // Verifica se os campos parciais foram realmente salvos
+      if (field === 'art' && updated?.art_approval_status !== status) {
+        throw new Error(`Falha ao salvar art_approval_status. Verifique se a coluna existe no banco (migration 038).`)
+      }
+      if (field === 'copy' && updated?.copy_approval_status !== status) {
+        throw new Error(`Falha ao salvar copy_approval_status. Verifique se a coluna existe no banco (migration 038).`)
+      }
     },
     onSuccess: () => {
       // Invalida tanto o portal (cliente) quanto o planner (agência)
