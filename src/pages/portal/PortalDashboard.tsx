@@ -614,6 +614,17 @@ function getPortalChipStyle(item: PlannerItem): { bg: string; border: string; te
 
 // ─── Portal Planner (read-only) ───────────────────────────────────────────────
 
+type PortalApprovalFilter = ApprovalStatus | 'todos'
+
+const PORTAL_FILTER_OPTIONS: { key: PortalApprovalFilter; label: string; dot: string; activeBg: string; activeBorder: string; activeText: string }[] = [
+  { key: 'todos',               label: 'Todos',             dot: 'bg-gray-400',   activeBg: 'bg-gray-100',    activeBorder: 'border-gray-400',   activeText: 'text-gray-700' },
+  { key: 'pendente_aprovacao',  label: 'Pendente',          dot: 'bg-yellow-400', activeBg: 'bg-yellow-50',   activeBorder: 'border-yellow-400', activeText: 'text-yellow-700' },
+  { key: 'aprovado',            label: 'Aprovado',          dot: 'bg-green-500',  activeBg: 'bg-green-50',    activeBorder: 'border-green-500',  activeText: 'text-green-700' },
+  { key: 'ajuste_solicitado',   label: 'Ajuste solicitado', dot: 'bg-orange-400', activeBg: 'bg-orange-50',   activeBorder: 'border-orange-400', activeText: 'text-orange-700' },
+  { key: 'ajuste_realizado',    label: 'Ajuste realizado',  dot: 'bg-blue-500',   activeBg: 'bg-blue-50',     activeBorder: 'border-blue-500',   activeText: 'text-blue-700' },
+  { key: 'reprovado',           label: 'Reprovado',         dot: 'bg-red-500',    activeBg: 'bg-red-50',      activeBorder: 'border-red-500',    activeText: 'text-red-700' },
+]
+
 function PortalPlannerView({
   items,
   autoOpenItemId,
@@ -631,6 +642,33 @@ function PortalPlannerView({
   const [selectedItem, setSelectedItem] = useState<PlannerItem | null>(null)
   const [itemOpen, setItemOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+  const [approvalFilter, setApprovalFilter] = useState<PortalApprovalFilter>('todos')
+
+  // Itens filtrados pelo status de aprovação
+  const filteredItems = useMemo(() => {
+    if (approvalFilter === 'todos') return items
+    return items.filter(i => {
+      const status = (i.approval_status || 'pendente_aprovacao') as ApprovalStatus
+      return status === approvalFilter
+    })
+  }, [items, approvalFilter])
+
+  // Contagem por status para os chips
+  const countByStatus = useMemo(() => {
+    const counts: Record<PortalApprovalFilter, number> = {
+      todos: items.length,
+      pendente_aprovacao: 0,
+      aprovado: 0,
+      ajuste_solicitado: 0,
+      ajuste_realizado: 0,
+      reprovado: 0,
+    }
+    items.forEach(i => {
+      const s = (i.approval_status || 'pendente_aprovacao') as ApprovalStatus
+      if (s in counts) counts[s]++
+    })
+    return counts
+  }, [items])
 
   // Auto-abrir item ao receber autoOpenItemId (vindo de notificação)
   useEffect(() => {
@@ -655,7 +693,7 @@ function PortalPlannerView({
   const calEnd = endOfWeek(monthEnd, { locale: ptBR })
   const days = eachDayOfInterval({ start: calStart, end: calEnd })
 
-  const getDay = (day: Date) => items.filter(i => isSameDay(parseISO(i.scheduled_date), day))
+  const getDay = (day: Date) => filteredItems.filter(i => isSameDay(parseISO(i.scheduled_date), day))
 
   const handleDayClick = (day: Date, di: PlannerItem[]) => {
     if (di.length === 0) return
@@ -676,6 +714,35 @@ function PortalPlannerView({
 
   return (
     <div>
+      {/* ── Filtros de aprovação ── */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {PORTAL_FILTER_OPTIONS.map(opt => {
+          const count = countByStatus[opt.key]
+          if (opt.key !== 'todos' && count === 0) return null
+          const isActive = approvalFilter === opt.key
+          return (
+            <button
+              key={opt.key}
+              onClick={() => setApprovalFilter(opt.key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all
+                ${isActive
+                  ? `${opt.activeBg} ${opt.activeBorder} ${opt.activeText} shadow-sm`
+                  : 'bg-white border-[#e8e8e8] text-[#737373] hover:border-[#c0c0c0] hover:bg-[#f7f7f7]'
+                }`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full ${opt.dot}`} />
+              {opt.label}
+              {count > 0 && (
+                <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold
+                  ${isActive ? 'bg-white/70' : 'bg-[#f0f0f0]'}`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Nav */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-[#0f0f0f] capitalize">
