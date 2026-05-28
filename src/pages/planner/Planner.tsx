@@ -894,11 +894,13 @@ function DayItemCard({
   onView,
   onEdit,
   onDelete,
+  onSend,
 }: {
   item: PlannerItem
   onView: () => void
   onEdit: () => void
   onDelete: () => void
+  onSend: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
   const imageThumbnail = item.attachments?.find(a => isImageAttachment(a))
@@ -1010,6 +1012,16 @@ function DayItemCard({
           <Button size="sm" variant="outline" onClick={onEdit}>
             <Pencil className="w-3.5 h-3.5 mr-1" /> Editar
           </Button>
+          {!item.sent_to_client && item.client_id && (
+            <Button
+              size="sm"
+              variant="premium"
+              onClick={e => { e.stopPropagation(); onSend() }}
+              className="text-[11px]"
+            >
+              <Send className="w-3.5 h-3.5 mr-1" /> Enviar ao cliente
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -1021,18 +1033,19 @@ function DayItemCard({
 function getChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
   const s   = item.status as PlannerStatus
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+
+  // Rascunho — não enviado ao cliente → cinza
+  if (!item.sent_to_client)         return { bg: '#f3f4f6', border: '#d1d5db', text: '#6b7280' }
+
   // Publicado — estado final
   if (s === 'publicado')            return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
-  // Resposta do cliente tem prioridade sobre status interno
+  // Resposta do cliente tem prioridade
   if (as_ === 'aprovado')           return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
   if (as_ === 'reprovado')          return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
   if (as_ === 'ajuste_solicitado')  return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
   if (as_ === 'ajuste_realizado')   return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
-  // Sem resposta do cliente: usa status interno
-  if (s === 'aprovado')  return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
-  if (s === 'revisao')   return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
-  if (s === 'producao')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
-  return { bg: '#faf5ff', border: '#c4b5fd', text: '#5b21b6' }
+  // Enviado, aguardando aprovação → amarelo
+  return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
 }
 
 function DayPreviewChip({
@@ -1204,7 +1217,7 @@ export function Planner() {
   const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null)
 
   // Filtro por status de aprovação
-  const [selectedApprovalFilter, setSelectedApprovalFilter] = useState<ApprovalStatus | 'todos'>('todos')
+  const [selectedApprovalFilter, setSelectedApprovalFilter] = useState<ApprovalStatus | 'todos' | 'rascunho'>('todos')
 
   // Dropdowns de filtro
   const [clientDropOpen, setClientDropOpen]   = useState(false)
@@ -1333,6 +1346,7 @@ export function Planner() {
     : (items || [])
   ).filter(i => {
     if (selectedApprovalFilter === 'todos') return true
+    if (selectedApprovalFilter === 'rascunho') return !i.sent_to_client
     const status = (i.approval_status || 'pendente_aprovacao') as ApprovalStatus
     return status === selectedApprovalFilter
   })
@@ -1826,7 +1840,8 @@ export function Planner() {
           {(() => {
             const STATUS_OPTIONS = [
               { key: 'todos',              label: 'Todos os status',   dot: 'bg-[#c0c0c0]' },
-              { key: 'pendente_aprovacao', label: 'Pendentes',          dot: 'bg-yellow-400' },
+              { key: 'rascunho',           label: 'Rascunho',           dot: 'bg-gray-400' },
+              { key: 'pendente_aprovacao', label: 'Aguardando aprovação', dot: 'bg-yellow-400' },
               { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
               { key: 'ajuste_solicitado',  label: 'Ajuste solicitado',  dot: 'bg-orange-400' },
               { key: 'ajuste_realizado',   label: 'Ajuste realizado',   dot: 'bg-blue-400' },
@@ -2020,6 +2035,19 @@ export function Planner() {
                   onView={() => openItemView(item)}
                   onEdit={() => openEdit(item)}
                   onDelete={() => deleteItem.mutateAsync(item.id)}
+                  onSend={async () => {
+                    try {
+                      await updateItem.mutateAsync({
+                        id: item.id,
+                        sent_to_client: true,
+                        approval_status: item.status !== 'publicado' && item.client_id ? 'pendente_aprovacao' : (item.approval_status ?? null),
+                      } as any)
+                      await qc.refetchQueries({ queryKey: ['planner'] })
+                      toast('Post enviado ao cliente!', 'success')
+                    } catch (err: any) {
+                      toast(err.message, 'error')
+                    }
+                  }}
                 />
               ))
             )}
