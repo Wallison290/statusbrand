@@ -354,7 +354,7 @@ function ApprovalFieldBlock({
       )}
 
       {/* Botão ajuste realizado */}
-      {showAction && status === 'ajuste_solicitado' && (
+      {showAction && (status === 'ajuste_solicitado' || status === 'reprovado') && (
         <button
           onClick={onMarkDone}
           disabled={isPending}

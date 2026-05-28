@@ -964,7 +964,7 @@ function PlannerItemView({
                             <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{artFeedback}"</p>
                           </div>
                         )}
-                        {artStatus === 'ajuste_solicitado' && (
+                        {(artStatus === 'ajuste_solicitado' || artStatus === 'reprovado') && (
                           <button
                             onClick={async () => {
                               try {
@@ -1013,7 +1013,7 @@ function PlannerItemView({
                             <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
                           </div>
                         )}
-                        {copyStatus === 'ajuste_solicitado' && (
+                        {(copyStatus === 'ajuste_solicitado' || copyStatus === 'reprovado') && (
                           <button
                             onClick={async () => {
                               try {
