@@ -602,11 +602,15 @@ function ItemDetailView({
 function getPortalChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
   const s = item.status as PlannerStatus
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+  // Publicado tem prioridade máxima
   if (s === 'publicado') return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
-  if (s === 'aprovado')  return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
+  // Aprovado pelo cliente (status de produção OU approval_status) → verde
+  if (s === 'aprovado' || as_ === 'aprovado') return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
+  // Demais estados de aprovação do cliente
   if (as_ === 'reprovado')         return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
   if (as_ === 'ajuste_solicitado') return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
   if (as_ === 'ajuste_realizado')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  // Fallback por status de produção
   if (s === 'revisao')   return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
   if (s === 'producao')  return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
   return { bg: '#faf5ff', border: '#c4b5fd', text: '#5b21b6' }
