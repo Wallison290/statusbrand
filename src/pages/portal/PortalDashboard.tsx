@@ -359,11 +359,21 @@ function ItemDetailView({
   const overallDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
   const artResolved   = (localArtStatus  || 'pendente_aprovacao') as ApprovalStatus
   const copyResolved  = (localCopyStatus || 'pendente_aprovacao') as ApprovalStatus
-  // Quando o status geral é ajuste_realizado, a agência fez o ajuste e o cliente precisa
-  // reavaliar — nenhuma parte deve ser considerada "decidida" neste estado
-  const needsReview = localStatus === 'ajuste_realizado'
-  const artDecided  = !needsReview && artResolved  !== 'pendente_aprovacao' && artResolved  !== 'ajuste_realizado'
-  const copyDecided = !needsReview && copyResolved !== 'pendente_aprovacao' && copyResolved !== 'ajuste_realizado'
+  const needsReview   = localStatus === 'ajuste_realizado'
+
+  // Aprovado → decisão permanente, botões somem para sempre.
+  // Ajuste solicitado / reprovado → botões somem enquanto aguarda agência.
+  // Quando agência retorna (ajuste_realizado), apenas as partes com ajuste/reprovado
+  // reaparecem com botões — o que já estava aprovado continua sem botões.
+  const artDecided  = artResolved  === 'aprovado'
+    || (artResolved  !== 'pendente_aprovacao' && artResolved  !== 'ajuste_realizado' && !needsReview)
+  const copyDecided = copyResolved === 'aprovado'
+    || (copyResolved !== 'pendente_aprovacao' && copyResolved !== 'ajuste_realizado' && !needsReview)
+
+  // Quando a agência devolveu (ajuste_realizado), mostrar "Ajuste realizado" no label
+  // em vez do status anterior (ajuste_solicitado / reprovado) — contexto mais claro pro cliente
+  const displayArtStatus: ApprovalStatus  = (needsReview && (artResolved  === 'ajuste_solicitado' || artResolved  === 'reprovado')) ? 'ajuste_realizado' : artResolved
+  const displayCopyStatus: ApprovalStatus = (needsReview && (copyResolved === 'ajuste_solicitado' || copyResolved === 'reprovado')) ? 'ajuste_realizado' : copyResolved
   const copyNeedsFeedback = copyPending === 'ajuste_solicitado' || copyPending === 'reprovado'
 
   // ── Handlers ──
@@ -665,16 +675,16 @@ function ItemDetailView({
                             <span className="text-[9px] text-gray-300">·</span>
                             <span className="text-[10px] text-gray-400">Imagem, vídeo ou carrossel</span>
                           </div>
-                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[artResolved]}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[artResolved]}`} />
-                            {approvalLabels[artResolved]}
+                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[displayArtStatus]}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[displayArtStatus]}`} />
+                            {approvalLabels[displayArtStatus]}
                           </div>
                         </div>
 
                         {artDecided ? (
-                          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[artResolved]}`}>
-                            <span className={approvalText[artResolved]}>{approvalIcons[artResolved]}</span>
-                            <span className={`text-[11px] font-semibold ${approvalText[artResolved]}`}>{approvalLabels[artResolved]}</span>
+                          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[displayArtStatus]}`}>
+                            <span className={approvalText[displayArtStatus]}>{approvalIcons[displayArtStatus]}</span>
+                            <span className={`text-[11px] font-semibold ${approvalText[displayArtStatus]}`}>{approvalLabels[displayArtStatus]}</span>
                           </div>
                         ) : isCarousel ? (
                           /* Carrossel: thumb + botões por slide */
@@ -745,19 +755,19 @@ function ItemDetailView({
                             <span className="text-[9px] text-gray-300">·</span>
                             <span className="text-[10px] text-gray-400">Legenda e texto do post</span>
                           </div>
-                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[copyResolved]}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[copyResolved]}`} />
-                            {approvalLabels[copyResolved]}
+                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[displayCopyStatus]}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[displayCopyStatus]}`} />
+                            {approvalLabels[displayCopyStatus]}
                           </div>
                         </div>
 
                         {copyDecided ? (
                           <div>
-                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[copyResolved]}`}>
-                              <span className={approvalText[copyResolved]}>{approvalIcons[copyResolved]}</span>
-                              <span className={`text-[11px] font-semibold ${approvalText[copyResolved]}`}>{approvalLabels[copyResolved]}</span>
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[displayCopyStatus]}`}>
+                              <span className={approvalText[displayCopyStatus]}>{approvalIcons[displayCopyStatus]}</span>
+                              <span className={`text-[11px] font-semibold ${approvalText[displayCopyStatus]}`}>{approvalLabels[displayCopyStatus]}</span>
                             </div>
-                            {copyFeedback && (copyResolved === 'ajuste_solicitado' || copyResolved === 'reprovado') && (
+                            {copyFeedback && (copyResolved === 'ajuste_solicitado' || copyResolved === 'reprovado') && !needsReview && (
                               <div className="mt-2 flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
                                 <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
                                 <p className="text-[11px] text-gray-600 leading-relaxed">{copyFeedback}</p>
