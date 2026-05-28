@@ -559,7 +559,7 @@ function ItemDetailView({
                     <button
                       onClick={handleApproveAll}
                       disabled={isBusy}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-green-500 text-white hover:bg-green-600 border border-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0"
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-green-600 text-white hover:bg-green-700 border border-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0" style={{ color: '#ffffff' }}
                     >
                       {busyField === 'all'
                         ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -102,8 +102,7 @@ export function PlannerCommentsThread({
         <button
           onClick={handleSend}
           disabled={!input.trim() || addComment.isPending}
-          className="px-3 py-1.5 rounded-lg text-[11px] font-semibold disabled:opacity-40 transition-colors flex-shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300"
-          style={{ color: '#ffffff' }}
+          className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white disabled:opacity-60 transition-colors flex-shrink-0 bg-blue-700 hover:bg-blue-800 disabled:bg-blue-600"
         >
           Enviar
         </button>
