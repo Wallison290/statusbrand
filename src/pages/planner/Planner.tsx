@@ -2172,7 +2172,7 @@ export function Planner() {
               </div>
             )}
 
-            <Textarea label="Notas" value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Contexto, referências..." />
+            <Textarea label="Copy" value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Contexto, referências..." />
 
             {/* ── Publicação Instagram ───────────────────────────────────── */}
             <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-3 space-y-3">
