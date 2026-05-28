@@ -119,12 +119,19 @@
 
   /* Exceptions: text-white inside dark/colored backgrounds stays white */
   [class*="bg-blue-"] .text-white,
+  [class*="bg-blue-"].text-white,
   [class*="bg-emerald-"] .text-white,
+  [class*="bg-emerald-"].text-white,
   [class*="bg-green-"] .text-white,
+  [class*="bg-green-"].text-white,
   [class*="bg-red-"] .text-white,
+  [class*="bg-red-"].text-white,
   [class*="bg-purple-"] .text-white,
+  [class*="bg-purple-"].text-white,
   [class*="bg-amber-"] .text-white,
+  [class*="bg-amber-"].text-white,
   [class*="bg-indigo-"] .text-white,
+  [class*="bg-indigo-"].text-white,
   [class*="from-blue"] .text-white,
   [class*="from-purple"] .text-white,
   /* Sidebar active item (dark bg) */
