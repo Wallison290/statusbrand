@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, Trash2,
   User, CalendarDays, AlertCircle, LayoutList, Clock, Pencil,
-  ExternalLink, Link2, FileText, Folder,
+  ExternalLink, Link2, FileText, Folder, CheckCircle2,
 } from 'lucide-react'
 import {
   startOfWeek, endOfWeek, eachDayOfInterval,
@@ -33,11 +33,17 @@ const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; 
   concluido:    { label: 'Concluído',    bg: 'bg-emerald-50', text: 'text-emerald-900', dot: 'bg-emerald-400' },
 }
 
-const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string }> = {
-  baixa:   { label: 'Baixa',   color: '#a0a0a0' },
-  media:   { label: 'Média',   color: '#3b82f6' },
-  alta:    { label: 'Alta',    color: '#f59e0b' },
-  urgente: { label: 'Urgente', color: '#ef4444' },
+const PRIORITY_CFG: Record<TaskPriority, {
+  label: string
+  color: string
+  borderClass: string
+  pillBg: string
+  pillText: string
+}> = {
+  baixa:   { label: 'Baixa',   color: '#9ca3af', borderClass: 'border-l-[#d1d5db]', pillBg: 'bg-[#f3f4f6]', pillText: 'text-[#6b7280]' },
+  media:   { label: 'Média',   color: '#3b82f6', borderClass: 'border-l-blue-300',  pillBg: 'bg-blue-50',   pillText: 'text-blue-700'  },
+  alta:    { label: 'Alta',    color: '#f59e0b', borderClass: 'border-l-amber-400', pillBg: 'bg-amber-50',  pillText: 'text-amber-700' },
+  urgente: { label: 'Urgente', color: '#ef4444', borderClass: 'border-l-red-400',   pillBg: 'bg-red-50',    pillText: 'text-red-700'   },
 }
 
 // ─── Status pill with inline dropdown ────────────────────────────────────────
@@ -52,10 +58,10 @@ function StatusPill({
   const cfg = STATUS_CFG[status]
 
   return (
-    <div className="relative">
+    <div className="relative flex-shrink-0">
       <button
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${cfg.bg} ${cfg.text}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer hover:opacity-80 transition-opacity ${cfg.bg} ${cfg.text}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
         {cfg.label}
@@ -70,13 +76,13 @@ function StatusPill({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.97 }}
               transition={{ duration: 0.12 }}
-              className="absolute bottom-full mb-1.5 left-0 z-20 w-36 bg-white border border-[#e8e8e8] rounded-xl shadow-lg overflow-hidden py-1"
+              className="absolute bottom-full mb-1.5 left-0 z-20 w-36 bg-white border border-[#e8e8e8] rounded-xl shadow-xl overflow-hidden py-1"
             >
               {(Object.entries(STATUS_CFG) as [TaskStatus, typeof STATUS_CFG[TaskStatus]][]).map(([s, c]) => (
                 <button
                   key={s}
                   onClick={e => { e.stopPropagation(); onChange(s); setOpen(false) }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#f5f5f5] transition-colors text-left ${s === status ? 'font-semibold' : ''}`}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#f5f5f5] transition-colors text-left ${s === status ? 'font-bold' : ''}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
                   <span className={c.text}>{c.label}</span>
@@ -133,43 +139,32 @@ function TaskCard({
         onDragEnd()
       }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      className={`
-        bg-white rounded-xl border select-none cursor-pointer active:cursor-grabbing
-        transition-all duration-150 hover:shadow-md group
-        ${overdueAndOpen
-          ? 'border-red-200 border-l-[3px] border-l-red-400'
-          : 'border-[#e8e8e8] hover:border-[#d0d0d0]'}
-        ${dragging ? 'opacity-40 scale-[0.97]' : 'opacity-100'}
-      `}
+      className={[
+        'relative bg-white rounded-xl border border-l-[3px] select-none cursor-pointer group',
+        'transition-all duration-150 hover:shadow-md hover:-translate-y-[1px]',
+        priCfg.borderClass,
+        overdueAndOpen ? 'border-red-100 border-t-red-100 border-r-red-100 border-b-red-100' : 'border-[#eaecf0]',
+        dragging ? 'opacity-40 scale-[0.97] shadow-none' : 'shadow-sm',
+      ].join(' ')}
     >
       <div className="p-2.5">
-        {/* Time badge — shown at top if present */}
-        {task.due_time && (
-          <div className="flex items-center gap-1 mb-1.5">
-            <Clock className="w-3 h-3 text-[#c0c0c0] flex-shrink-0" />
-            <span className="text-[11px] font-semibold text-[#0f0f0f] tabular-nums">
-              {task.due_time}
-            </span>
-          </div>
-        )}
 
-        {/* Top row: title + actions */}
-        <div className="flex items-start gap-1.5">
-          <p className="text-[12px] font-semibold text-[#0f0f0f] leading-snug flex-1 min-w-0">
-            {task.title}
-          </p>
-          {/* Action buttons — visible on hover */}
-          <div className="flex-shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Row 1: Priority pill + action buttons */}
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${priCfg.pillBg} ${priCfg.pillText}`}>
+            {task.priority === 'urgente' && '⚡ '}{priCfg.label}
+          </span>
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={e => { e.stopPropagation(); onEdit(task) }}
-              className="text-[#c0c0c0] hover:text-[#0f0f0f] transition-colors p-0.5"
+              className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-[#374151] hover:bg-[#f5f5f5] transition-colors"
               title="Editar"
             >
               <Pencil className="w-3 h-3" />
             </button>
             <button
               onClick={e => { e.stopPropagation(); onDelete(task.id) }}
-              className="text-[#d0d0d0] hover:text-red-400 transition-colors p-0.5"
+              className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-red-400 hover:bg-red-50 transition-colors"
               title="Excluir"
             >
               <Trash2 className="w-3 h-3" />
@@ -177,49 +172,58 @@ function TaskCard({
           </div>
         </div>
 
-        {/* Client */}
-        {clientName && (
-          <p className="text-[10px] text-blue-500 font-medium mt-1 truncate">{clientName}</p>
-        )}
-
-        {/* Description */}
-        {task.description && (
-          <p className="text-[10px] text-[#a0a0a0] mt-1 line-clamp-2 leading-relaxed">
-            {task.description}
-          </p>
-        )}
-
-        {/* Overdue warning */}
-        {overdueAndOpen && (
-          <div className="flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
-            <span className="text-[10px] text-red-400 font-medium">
-              Atrasada {task.due_date ? `· ${formatDate(task.due_date)}` : ''}
+        {/* Time badge */}
+        {task.due_time && (
+          <div className="flex items-center gap-1 mb-1.5">
+            <Clock className="w-2.5 h-2.5 text-[#94a3b8] flex-shrink-0" />
+            <span className="text-[11px] font-bold text-[#334155] tabular-nums">
+              {task.due_time.slice(0, 5)}
             </span>
           </div>
         )}
 
+        {/* Title */}
+        <p className="text-[12px] font-bold text-[#0f0f0f] leading-snug mb-1.5">
+          {task.title}
+        </p>
+
+        {/* Client chip */}
+        {clientName && (
+          <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md mb-1.5">
+            {clientName}
+          </span>
+        )}
+
+        {/* Description */}
+        {task.description && (
+          <p className="text-[10px] text-[#94a3b8] line-clamp-2 leading-relaxed mb-2">
+            {task.description}
+          </p>
+        )}
+
         {/* Assignee */}
         {task.assignee && (
-          <div className="flex items-center gap-1 mt-1.5">
-            <User className="w-3 h-3 text-[#c0c0c0] flex-shrink-0" />
-            <span className="text-[10px] text-[#a0a0a0] truncate">{task.assignee}</span>
+          <div className="flex items-center gap-1 mb-2">
+            <User className="w-2.5 h-2.5 text-[#d1d5db] flex-shrink-0" />
+            <span className="text-[10px] text-[#9ca3af] truncate">{task.assignee}</span>
           </div>
         )}
 
-        {/* Bottom: priority + status pill */}
-        <div className="flex items-center justify-between mt-2 gap-1">
-          <span
-            className="text-[9px] font-semibold uppercase tracking-wide"
-            style={{ color: priCfg.color }}
-          >
-            {priCfg.label}
-          </span>
-          <StatusPill
-            status={task.status}
-            onChange={s => onStatusChange(task.id, s)}
-          />
+        {/* Footer: overdue + status pill */}
+        <div className="border-t border-[#f1f5f9] pt-2 mt-1 flex items-center justify-between gap-2">
+          {overdueAndOpen ? (
+            <div className="flex items-center gap-1 min-w-0">
+              <AlertCircle className="w-2.5 h-2.5 text-red-400 flex-shrink-0" />
+              <span className="text-[9px] text-red-500 font-bold truncate">
+                {task.due_date ? formatDate(task.due_date) : 'Atrasada'}
+              </span>
+            </div>
+          ) : (
+            <div />
+          )}
+          <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
         </div>
+
       </div>
     </div>
   )
@@ -245,18 +249,23 @@ function DayColumn({
   onAddTask: (day: Date) => void
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const today    = isToday(day)
-  const dayLabel = format(day, 'EEE', { locale: ptBR })
-  const dayNum   = format(day, 'd')
-  const monthAbbr = format(day, 'MMM', { locale: ptBR })
+  const today      = isToday(day)
+  const dayOfWeek  = day.getDay()
+  const isWeekend  = dayOfWeek === 0 || dayOfWeek === 6
+  const dayLabel   = format(day, 'EEE', { locale: ptBR })
+  const dayNum     = format(day, 'd')
+  const monthAbbr  = format(day, 'MMM', { locale: ptBR })
 
   return (
     <div
-      className={`flex flex-col flex-1 min-w-[170px] rounded-2xl border shadow-sm transition-all duration-150 overflow-hidden
-        ${isDragOver
-          ? 'border-[#94a3b8] bg-[#f0f4f8]'
-          : 'border-[#e2e8f0] bg-white'}
-      `}
+      className={[
+        'flex flex-col flex-1 min-w-[158px] rounded-2xl overflow-hidden transition-all duration-150',
+        today
+          ? 'border border-[#0f0f0f] shadow-lg'
+          : isDragOver
+            ? 'border border-blue-300 shadow-md'
+            : 'border border-[#e2e8f0] shadow-sm',
+      ].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -269,37 +278,54 @@ function DayColumn({
       }}
     >
       {/* Column header */}
-      <div className={`
-        px-3 py-3 border-b flex items-center justify-between flex-shrink-0
-        ${today ? 'bg-[#0f0f0f] border-[#0f0f0f]' : 'bg-white border-[#f0f4f8]'}
-      `}>
+      <div className={[
+        'px-3 py-2.5 flex items-center justify-between flex-shrink-0',
+        today
+          ? 'bg-gradient-to-b from-[#1c1c1e] to-[#0f0f0f]'
+          : isWeekend
+            ? 'bg-[#f7f7f8] border-b border-[#ebebeb]'
+            : 'bg-white border-b border-[#f0f4f8]',
+      ].join(' ')}>
         <div>
-          <p className={`text-[10px] font-semibold uppercase tracking-wider ${today ? 'text-white/60' : 'text-[#9ca3af]'}`}>
+          <p className={`text-[9px] font-black uppercase tracking-[0.12em] mb-0.5 ${
+            today ? 'text-white/45' : isWeekend ? 'text-[#b0b0b0]' : 'text-[#9ca3af]'
+          }`}>
             {dayLabel}
           </p>
-          <p className={`text-[22px] font-bold leading-tight tabular-nums ${today ? 'text-white' : 'text-[#0f0f0f]'}`}>
-            {dayNum}
-            <span className={`text-[10px] font-normal ml-1 ${today ? 'text-white/50' : 'text-[#c7d2e0]'}`}>
+          <div className="flex items-baseline gap-1">
+            <span className={`text-[23px] font-black leading-none tabular-nums ${
+              today ? 'text-white' : isWeekend ? 'text-[#b8b8b8]' : 'text-[#0f0f0f]'
+            }`}>
+              {dayNum}
+            </span>
+            <span className={`text-[10px] font-medium capitalize ${
+              today ? 'text-white/40' : 'text-[#c7d2e0]'
+            }`}>
               {monthAbbr}
             </span>
-          </p>
+          </div>
         </div>
+
         <div className="flex flex-col items-end gap-1.5">
           {tasks.length > 0 && (
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
-              today ? 'bg-white/20 text-white' : 'bg-[#f0f4f8] text-[#6b7280]'
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center tabular-nums ${
+              today
+                ? 'bg-white/15 text-white'
+                : isWeekend
+                  ? 'bg-[#e8e8e8] text-[#9ca3af]'
+                  : 'bg-[#f0f4f8] text-[#6b7280]'
             }`}>
               {tasks.length}
             </span>
           )}
           <button
             onClick={() => onAddTask(day)}
-            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
               today
-                ? 'bg-white/20 hover:bg-white/30 text-white'
-                : 'bg-[#f0f4f8] hover:bg-[#e2e8f0] text-[#6b7280] hover:text-[#0f0f0f]'
+                ? 'bg-white/15 hover:bg-white/30 text-white'
+                : 'text-[#94a3b8] hover:bg-[#e8edf3] hover:text-[#374151]'
             }`}
-            title={`Nova tarefa para ${format(day, 'dd/MM')}`}
+            title={`Nova tarefa — ${format(day, 'dd/MM')}`}
           >
             <Plus className="w-3 h-3" />
           </button>
@@ -307,39 +333,57 @@ function DayColumn({
       </div>
 
       {/* Task list */}
-      <div className="flex-1 p-2.5 min-h-[380px] overflow-y-auto">
+      <div className={[
+        'flex-1 p-2 min-h-[360px] overflow-y-auto transition-colors duration-100',
+        isDragOver
+          ? 'bg-blue-50/50'
+          : today
+            ? 'bg-white'
+            : isWeekend
+              ? 'bg-[#fafafa]'
+              : 'bg-white',
+      ].join(' ')}>
         <div className="space-y-2">
           <AnimatePresence>
             {tasks.map(task => (
-              <TaskCard
+              <motion.div
                 key={task.id}
-                task={task}
-                dragging={draggingId === task.id}
-                onStatusChange={onStatusChange}
-                onDelete={onDelete}
-                onEdit={onEdit}
-                onView={onView}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-              />
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.14 }}
+              >
+                <TaskCard
+                  task={task}
+                  dragging={draggingId === task.id}
+                  onStatusChange={onStatusChange}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onView={onView}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                />
+              </motion.div>
             ))}
           </AnimatePresence>
         </div>
 
         {tasks.length === 0 && !isDragOver && (
-          <div className="flex flex-col items-center justify-center py-8 mt-2">
-            <div className="w-7 h-7 rounded-full bg-[#f0f4f8] flex items-center justify-center mb-2">
-              <Plus className="w-3.5 h-3.5 text-[#c7d2e0]" />
-            </div>
-            <p className="text-[10px] text-[#c7d2e0] text-center leading-relaxed">
-              Sem tarefas
-            </p>
-          </div>
+          <button
+            onClick={() => onAddTask(day)}
+            className="w-full flex flex-col items-center justify-center py-7 mt-1 rounded-xl border-2 border-dashed border-[#e8edf3] hover:border-[#c7d2e0] hover:bg-[#f8fafc] transition-all group"
+          >
+            <Plus className="w-4 h-4 text-[#d1d5db] group-hover:text-[#94a3b8] transition-colors mb-1" />
+            <span className="text-[10px] font-medium text-[#d1d5db] group-hover:text-[#94a3b8] transition-colors">
+              Adicionar
+            </span>
+          </button>
         )}
 
         {isDragOver && (
-          <div className="flex items-center justify-center h-16 mt-2 rounded-xl border-2 border-dashed border-[#94a3b8] bg-[#f0f4f8]/50">
-            <p className="text-[11px] text-[#6b7280] font-medium">Soltar aqui</p>
+          <div className="flex items-center justify-center h-16 mt-2 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/60">
+            <p className="text-[11px] text-blue-500 font-semibold">Soltar aqui</p>
           </div>
         )}
       </div>
@@ -366,16 +410,18 @@ function NoDateSection({
   if (tasks.length === 0) return null
 
   return (
-    <div className="mt-6">
+    <div className="mt-5 flex-shrink-0">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 mb-3 group"
       >
-        <LayoutList className="w-3.5 h-3.5 text-[#a0a0a0]" />
-        <p className="text-[12px] font-semibold text-[#737373] group-hover:text-[#0f0f0f] transition-colors">
+        <div className="w-5 h-5 rounded-md bg-[#f3f4f6] flex items-center justify-center">
+          <LayoutList className="w-3 h-3 text-[#9ca3af]" />
+        </div>
+        <p className="text-[12px] font-bold text-[#4b5563] group-hover:text-[#0f0f0f] transition-colors">
           Sem data definida
         </p>
-        <span className="text-[10px] text-[#b0b0b0] bg-[#f0f0f0] px-1.5 py-0.5 rounded-full">
+        <span className="text-[10px] font-bold text-[#9ca3af] bg-[#f3f4f6] px-1.5 py-0.5 rounded-full">
           {tasks.length}
         </span>
         <ChevronLeft className={`w-3 h-3 text-[#c0c0c0] transition-transform ${open ? '-rotate-90' : 'rotate-0'}`} />
@@ -389,19 +435,23 @@ function NoDateSection({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2">
+            <div
+              className="flex gap-2.5 overflow-x-auto pb-2"
+              style={{ scrollbarWidth: 'thin' }}
+            >
               {tasks.map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  dragging={draggingId === task.id}
-                  onStatusChange={onStatusChange}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  onView={onView}
-                  onDragStart={onDragStart}
-                  onDragEnd={onDragEnd}
-                />
+                <div key={task.id} className="flex-shrink-0 w-[190px]">
+                  <TaskCard
+                    task={task}
+                    dragging={draggingId === task.id}
+                    onStatusChange={onStatusChange}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                    onView={onView}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                  />
+                </div>
               ))}
             </div>
           </motion.div>
@@ -633,14 +683,9 @@ function TaskDialog({
   const set = (k: keyof TaskForm, v: unknown) =>
     setForm(p => ({ ...p, [k]: v }))
 
-  // ── Sync form whenever the dialog opens or the target task changes ──────────
-  // Radix UI does NOT call onOpenChange(true) when the parent sets open=true
-  // programmatically, so we use useEffect instead of onOpenChange for init.
   useEffect(() => {
     if (!open) return
-
     if (editingTask) {
-      // Edit mode — fill every field from the existing task
       setForm({
         title:        editingTask.title,
         description:  editingTask.description || '',
@@ -653,13 +698,10 @@ function TaskDialog({
         client_id:    editingTask.client_id,
       })
     } else {
-      // Create mode — blank form, optionally pre-fill date from column "+"
       setForm({ ...blankForm, due_date: prefillDate })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingTask?.id])
-  // ── editingTask?.id as dep: re-runs when a DIFFERENT task is selected,
-  //    but NOT on every render (avoids resetting while user types)
 
   const handleClose = () => {
     onClose()
@@ -735,7 +777,6 @@ function TaskDialog({
             </div>
           </div>
 
-          {/* Date + Time on the same row */}
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Data"
@@ -760,7 +801,6 @@ function TaskDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Responsável — dropdown de membros da equipe */}
             <div>
               <label className="block text-[11px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
                 Responsável
@@ -848,7 +888,7 @@ export function Tasks() {
   const { toast } = useToast()
 
   // Week navigation
-  const [weekBase, setWeekBase]   = useState(() => new Date())
+  const [weekBase, setWeekBase] = useState(() => new Date())
   const weekStart = startOfWeek(weekBase, { weekStartsOn: 1 })
   const weekEnd   = endOfWeek(weekBase,   { weekStartsOn: 1 })
   const days      = eachDayOfInterval({ start: weekStart, end: weekEnd })
@@ -856,7 +896,7 @@ export function Tasks() {
   // Drag state
   const [draggingId, setDraggingId] = useState<string | null>(null)
 
-  // Dialog state — handles both create and edit
+  // Dialog state
   const [dialogOpen, setDialogOpen]   = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [prefillDate, setPrefillDate] = useState('')
@@ -866,6 +906,12 @@ export function Tasks() {
   const handleViewTask = (task: Task) => setViewingTask(task)
 
   const weekLabel = `${format(weekStart, "d 'de' MMM", { locale: ptBR })} – ${format(weekEnd, "d 'de' MMM", { locale: ptBR })}`
+
+  // Metrics
+  const doneCount       = tasks.filter(t => t.status === 'concluido').length
+  const inProgressCount = tasks.filter(t => t.status === 'em_andamento').length
+  const overdueCount    = tasks.filter(t => isOverdue(t.due_date) && t.status !== 'concluido').length
+  const progressPct     = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0
 
   // Tasks by day — sorted by due_time (nulls last)
   const tasksByDay = (day: Date) => {
@@ -882,7 +928,7 @@ export function Tasks() {
 
   const tasksWithoutDate = tasks.filter(t => !t.due_date)
 
-  // Drag and drop — updates due_date
+  // Drag and drop
   const handleDropOnDay = async (taskId: string, day: Date) => {
     const task = tasks.find(t => t.id === taskId)
     const dateStr = format(day, 'yyyy-MM-dd')
@@ -894,7 +940,6 @@ export function Tasks() {
     }
   }
 
-  // Status change from card pill
   const handleStatusChange = async (taskId: string, status: TaskStatus) => {
     try {
       await updateTask.mutateAsync({ id: taskId, status })
@@ -903,7 +948,6 @@ export function Tasks() {
     }
   }
 
-  // Delete
   const handleDelete = async (taskId: string) => {
     try {
       await deleteTask.mutateAsync(taskId)
@@ -913,27 +957,23 @@ export function Tasks() {
     }
   }
 
-  // Open create dialog pre-filled to a day
   const handleAddTask = (day: Date) => {
     setEditingTask(null)
     setPrefillDate(format(day, 'yyyy-MM-dd'))
     setDialogOpen(true)
   }
 
-  // Open create dialog without a day
   const handleNewTask = () => {
     setEditingTask(null)
     setPrefillDate('')
     setDialogOpen(true)
   }
 
-  // Open edit dialog from card pencil
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
     setDialogOpen(true)
   }
 
-  // Create
   const handleCreate = async (form: TaskForm) => {
     if (!form.title.trim() || !user) return
     try {
@@ -956,7 +996,6 @@ export function Tasks() {
     }
   }
 
-  // Update
   const handleUpdate = async (taskId: string, form: TaskForm) => {
     try {
       await updateTask.mutateAsync({
@@ -978,10 +1017,6 @@ export function Tasks() {
     }
   }
 
-  const overdueCount = tasks.filter(
-    t => isOverdue(t.due_date) && t.status !== 'concluido'
-  ).length
-
   return (
     <div className="flex flex-col h-full bg-[#f5f7fb]">
       <Header
@@ -991,7 +1026,7 @@ export function Tasks() {
         action={
           <button
             onClick={handleNewTask}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold transition-all hover:opacity-85 active:scale-95 shadow-sm"
             style={{ background: '#0f0f0f', color: '#ffffff' }}
           >
             <Plus className="w-3.5 h-3.5" /> Nova tarefa
@@ -1000,54 +1035,92 @@ export function Tasks() {
       />
 
       <div className="p-4 md:p-6 flex-1 overflow-hidden flex flex-col min-h-0">
-        {/* ── Week navigation ─────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 mb-5 flex-shrink-0">
-          <button
-            onClick={() => setWeekBase(d => subWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-[#e2e8f0] bg-white flex items-center justify-center text-[#6b7280] hover:border-[#c7d2e0] hover:text-[#0f0f0f] transition-all shadow-sm"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
 
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-3.5 h-3.5 text-[#9ca3af]" />
-            <span className="text-[13px] font-semibold text-[#0f0f0f] capitalize">
-              {weekLabel}
-            </span>
+        {/* ── Week navigation + metrics ───────────────────────────────────── */}
+        <div className="flex items-center gap-3 mb-5 flex-shrink-0 flex-wrap">
+
+          {/* Week nav pill */}
+          <div className="flex items-center bg-white border border-[#e2e8f0] rounded-xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => setWeekBase(d => subWeeks(d, 1))}
+              className="w-8 h-8 flex items-center justify-center text-[#9ca3af] hover:text-[#0f0f0f] hover:bg-[#f5f7fb] transition-all border-r border-[#f0f4f8]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-1.5 px-4">
+              <CalendarDays className="w-3.5 h-3.5 text-[#9ca3af]" />
+              <span className="text-[13px] font-bold text-[#0f0f0f] capitalize whitespace-nowrap">
+                {weekLabel}
+              </span>
+            </div>
+            <button
+              onClick={() => setWeekBase(d => addWeeks(d, 1))}
+              className="w-8 h-8 flex items-center justify-center text-[#9ca3af] hover:text-[#0f0f0f] hover:bg-[#f5f7fb] transition-all border-l border-[#f0f4f8]"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
-          <button
-            onClick={() => setWeekBase(d => addWeeks(d, 1))}
-            className="w-8 h-8 rounded-lg border border-[#e2e8f0] bg-white flex items-center justify-center text-[#6b7280] hover:border-[#c7d2e0] hover:text-[#0f0f0f] transition-all shadow-sm"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          {/* Hoje — only shown when the current week is not visible */}
           {!days.some(d => isToday(d)) && (
             <button
               onClick={() => setWeekBase(new Date())}
-              className="px-2.5 py-1 text-[11px] font-medium text-[#6b7280] border border-[#e2e8f0] bg-white rounded-lg hover:bg-[#f0f4f8] hover:text-[#0f0f0f] transition-colors shadow-sm"
+              className="px-3 py-1.5 text-[11px] font-bold rounded-xl border border-[#e2e8f0] bg-white text-[#374151] hover:border-[#0f0f0f] hover:text-[#0f0f0f] transition-colors shadow-sm"
             >
               Hoje
             </button>
           )}
 
-          {/* Summary */}
-          <div className="ml-auto flex items-center gap-4 text-[11px] text-[#9ca3af]">
-            <span>{tasks.length} tarefa{tasks.length !== 1 ? 's' : ''}</span>
-            {overdueCount > 0 && (
-              <span className="flex items-center gap-1 text-red-500 font-medium">
-                <AlertCircle className="w-3 h-3" />
-                {overdueCount} atrasada{overdueCount !== 1 ? 's' : ''}
+          {/* Metrics */}
+          <div className="ml-auto flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-4 text-[12px]">
+              <span className="text-[#6b7280]">
+                <span className="font-bold text-[#0f0f0f]">{tasks.length}</span>
+                {' '}tarefa{tasks.length !== 1 ? 's' : ''}
               </span>
+
+              {inProgressCount > 0 && (
+                <span className="flex items-center gap-1.5 text-blue-600 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  {inProgressCount} em andamento
+                </span>
+              )}
+
+              {doneCount > 0 && (
+                <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {doneCount} concluída{doneCount !== 1 ? 's' : ''}
+                </span>
+              )}
+
+              {overdueCount > 0 && (
+                <span className="flex items-center gap-1 text-red-500 font-semibold">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {overdueCount} atrasada{overdueCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+
+            {tasks.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-1.5 bg-[#e8edf3] rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-emerald-400 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                  />
+                </div>
+                <span className="text-[11px] font-bold text-emerald-600 tabular-nums">
+                  {progressPct}%
+                </span>
+              </div>
             )}
           </div>
         </div>
 
         {/* ── Weekly columns ──────────────────────────────────────────────── */}
         <div className="overflow-x-auto flex-1 min-h-0">
-          <div className="flex gap-3 h-full" style={{ minWidth: '1190px' }}>
+          <div className="flex gap-2.5 h-full" style={{ minWidth: '1120px' }}>
             {days.map(day => (
               <DayColumn
                 key={day.toISOString()}
