@@ -9,7 +9,7 @@ import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
-  Save, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
+  Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
   LayoutGrid, Film,
 } from 'lucide-react'
@@ -931,9 +931,15 @@ function DayItemCard({
             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
             <p className="font-medium text-white text-sm break-words">{item.title}</p>
           </div>
-          <p className="text-xs text-gray-500 mb-1 ml-3.5">
-            {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
-          </p>
+          <div className="flex items-center gap-2 ml-3.5 mb-1">
+            <p className="text-xs text-gray-500">
+              {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
+            </p>
+            {item.sent_to_client
+              ? <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">✓ Enviado ao cliente</span>
+              : <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/20">Rascunho</span>
+            }
+          </div>
           {item.client && (
             <div className="flex items-center gap-1 ml-3.5 mb-1">
               <Building2 className="w-3 h-3 text-gray-500 flex-shrink-0" />
@@ -1503,7 +1509,7 @@ export function Planner() {
 
   // ── Salvar: cria ou atualiza ───────────────────────────────────────────────
 
-  const handleSave = async () => {
+  const handleSave = async (sendToClient: boolean = false) => {
     if (!form.title.trim() || !user) return
 
     // FIX: captura qualquer URL digitada mas não adicionada com o botão "+"
@@ -1527,7 +1533,8 @@ export function Planner() {
           scheduled_date: form.scheduled_date,
           scheduled_time: form.scheduled_time || null,
           ig_post_type: form.ig_post_type,
-          approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
+          sent_to_client: sendToClient ? true : (editingItem?.sent_to_client ?? false),
+          approval_status: sendToClient && form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : (editingItem?.approval_status ?? null),
         })
         // Deletar mídias IG removidas
         for (const att of igMediaToDelete) {
@@ -1589,7 +1596,7 @@ export function Planner() {
             allLinks.map(url => ({ planner_id: editingItem.id, user_id: user.id, url, label: null }))
           )
         }
-        toast('Post atualizado!', 'success')
+        toast(sendToClient ? 'Post enviado ao cliente!' : 'Post salvo!', 'success')
       } else {
         const created = await createItem.mutateAsync({
           user_id: user.id,
@@ -1603,7 +1610,8 @@ export function Planner() {
           ig_post_type: form.ig_post_type,
           content_id: null,
           asset_id: linkedAsset?.id ?? null,
-          approval_status: form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
+          sent_to_client: sendToClient,
+          approval_status: sendToClient && form.status !== 'publicado' && form.client_id ? 'pendente_aprovacao' : null,
           client_feedback: null,
           reviewed_at: null,
           reviewed_by: null,
@@ -1658,7 +1666,7 @@ export function Planner() {
             allLinks.map(url => ({ planner_id: created.id, user_id: user.id, url, label: null }))
           )
         }
-        toast('Item adicionado ao planejamento!', 'success')
+        toast(sendToClient ? 'Post enviado ao cliente!' : 'Post salvo internamente!', 'success')
       }
 
       // FIX: força refetch DEPOIS que todos os dados (incluindo links) foram salvos.
@@ -2509,17 +2517,31 @@ export function Planner() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setOpen(false); resetForm() }}>Cancelar</Button>
-            <Button variant="premium" onClick={handleSave} disabled={createItem.isPending || updateItem.isPending || isUploading || !form.title.trim()}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => { setOpen(false); resetForm() }} className="sm:mr-auto">Cancelar</Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSave(false)}
+              disabled={createItem.isPending || updateItem.isPending || isUploading || !form.title.trim()}
+            >
+              {isUploading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+              ) : (
+                <><Save className="w-4 h-4" /> Salvar</>
+              )}
+            </Button>
+            <Button
+              variant="premium"
+              onClick={() => handleSave(true)}
+              disabled={createItem.isPending || updateItem.isPending || isUploading || !form.title.trim() || !form.client_id}
+              title={!form.client_id ? 'Selecione um cliente para enviar' : ''}
+            >
               {isUploading ? (
                 uploadProgress
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando {uploadProgress.current}/{uploadProgress.total}...</>
-                  : <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
-              ) : editingItem ? (
-                <><Save className="w-4 h-4" /> Salvar alterações</>
+                  : <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
               ) : (
-                <><Save className="w-4 h-4" /> Adicionar</>
+                <><Send className="w-4 h-4" /> Salvar e enviar ao cliente</>
               )}
             </Button>
           </DialogFooter>

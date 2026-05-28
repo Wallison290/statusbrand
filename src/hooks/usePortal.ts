@@ -60,6 +60,7 @@ export function usePortalPlanner() {
           '*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,sort_order,is_ig_media,created_at), links:planner_links(id,url,label,created_at)'
         )
         .eq('client_id', clientId!)
+        .eq('sent_to_client', true)
         .order('scheduled_date', { ascending: true })
       if (error) throw error
       return data as PlannerItem[]
@@ -220,6 +221,95 @@ export function useSubmitApproval() {
         .update({
           approval_status,
           client_feedback: client_feedback.trim() || null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user!.id,
+        })
+        .eq('id', plannerId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['portal-planner'] })
+    },
+  })
+}
+
+// Computa o approval_status geral a partir dos status parciais de arte e copy
+function computeOverallStatus(
+  art: ApprovalStatus | null,
+  copy: ApprovalStatus | null,
+): ApprovalStatus {
+  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
+  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
+  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
+  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
+  if (statuses.length > 0 && statuses.every(s => s === 'aprovado')) return 'aprovado'
+  return 'pendente_aprovacao'
+}
+
+export function useSubmitPartialApproval() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      plannerId,
+      field,          // 'art' | 'copy'
+      status,
+      feedback,
+      currentArtStatus,
+      currentCopyStatus,
+    }: {
+      plannerId: string
+      field: 'art' | 'copy'
+      status: ApprovalStatus
+      feedback: string
+      currentArtStatus: ApprovalStatus | null
+      currentCopyStatus: ApprovalStatus | null
+    }) => {
+      const artStatus  = field === 'art'  ? status : currentArtStatus
+      const copyStatus = field === 'copy' ? status : currentCopyStatus
+      const overallStatus = computeOverallStatus(artStatus, copyStatus)
+
+      const updatePayload: Record<string, any> = {
+        approval_status: overallStatus,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user!.id,
+      }
+
+      if (field === 'art') {
+        updatePayload.art_approval_status = status
+        updatePayload.art_feedback = feedback.trim() || null
+      } else {
+        updatePayload.copy_approval_status = status
+        updatePayload.copy_feedback = feedback.trim() || null
+      }
+
+      const { error } = await supabase
+        .from('planner')
+        .update(updatePayload)
+        .eq('id', plannerId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['portal-planner'] })
+    },
+  })
+}
+
+export function useApproveAll() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ plannerId }: { plannerId: string }) => {
+      const { error } = await supabase
+        .from('planner')
+        .update({
+          approval_status: 'aprovado',
+          art_approval_status: 'aprovado',
+          copy_approval_status: 'aprovado',
+          art_feedback: null,
+          copy_feedback: null,
           reviewed_at: new Date().toISOString(),
           reviewed_by: user!.id,
         })

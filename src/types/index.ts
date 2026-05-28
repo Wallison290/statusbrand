@@ -218,10 +218,19 @@ export interface PlannerItem {
   scheduled_time?: string | null
   status: PlannerStatus
   notes: string | null
+  // Controle de envio ao cliente
+  sent_to_client?: boolean | null
+  // Aprovação geral (legado + calculada)
   approval_status: ApprovalStatus | null
   client_feedback: string | null
   reviewed_at: string | null
   reviewed_by: string | null
+  // Aprovação separada — Arte (imagem/vídeo)
+  art_approval_status?: ApprovalStatus | null
+  art_feedback?: string | null
+  // Aprovação separada — Copy (texto/legenda)
+  copy_approval_status?: ApprovalStatus | null
+  copy_feedback?: string | null
   asset_id?: string | null
   ig_post_type?: 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS' | null
   ig_scheduled?: boolean

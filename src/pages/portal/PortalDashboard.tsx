@@ -21,7 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
-  usePortalClient, usePortalPlanner, usePortalContents, useSubmitApproval,
+  usePortalClient, usePortalPlanner, usePortalContents,
+  useSubmitPartialApproval, useApproveAll,
   usePortalMaterials, usePortalSupportContacts,
   usePortalContentAssets, usePortalBrandDNA, usePortalPayments,
 } from '@/hooks/usePortal'
@@ -158,6 +159,123 @@ function DayTooltip({ state }: { state: HoverState }) {
   )
 }
 
+// ─── Bloco de aprovação parcial (Arte ou Copy) ───────────────────────────────
+
+interface PartialApprovalBlockProps {
+  label: string
+  description: string
+  status: ApprovalStatus | null
+  pending: ApprovalStatus | null
+  feedback: string
+  isBusy: boolean
+  busyThis: boolean
+  onAction: (s: ApprovalStatus) => void
+  onFeedbackChange: (v: string) => void
+  onCancelPending: () => void
+}
+
+function PartialApprovalBlock({
+  label, description, status, pending, feedback, isBusy, busyThis, onAction, onFeedbackChange, onCancelPending,
+}: PartialApprovalBlockProps) {
+  const resolved = status || 'pendente_aprovacao'
+  const isDecided = resolved !== 'pendente_aprovacao' && resolved !== 'ajuste_realizado'
+  const needsFeedback = pending === 'ajuste_solicitado' || pending === 'reprovado'
+
+  return (
+    <div className={`rounded-xl border p-3.5 ${approvalBg[resolved]}`}>
+      {/* header */}
+      <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
+        <div>
+          <p className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">{label}</p>
+          <p className="text-[10px] text-gray-400">{description}</p>
+        </div>
+        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-semibold ${approvalBg[resolved]} ${approvalText[resolved]}`}>
+          {approvalIcons[resolved]}
+          {approvalLabels[resolved]}
+        </div>
+      </div>
+
+      {/* Feedback já salvo */}
+      {status && (status === 'ajuste_solicitado' || status === 'reprovado') && feedback && !pending && (
+        <div className="mb-2.5 p-2 bg-white/80 border border-black/[0.06] rounded-lg">
+          <div className="flex items-center gap-1 mb-1">
+            <MessageSquare className="w-3 h-3 text-gray-400" />
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide">Comentário</span>
+          </div>
+          <p className="text-xs text-gray-600 leading-relaxed break-words select-text">{feedback}</p>
+        </div>
+      )}
+
+      {/* Caixa de feedback inline */}
+      {needsFeedback && (
+        <div className="mb-2.5">
+          <textarea
+            value={feedback}
+            onChange={e => onFeedbackChange(e.target.value)}
+            placeholder={`Descreva o que precisa ajustar na ${label.toLowerCase()}...`}
+            rows={2}
+            className="w-full text-xs rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+          />
+          <button onClick={onCancelPending} className="text-[11px] text-gray-400 hover:text-gray-600 mt-1 transition-colors">Cancelar</button>
+        </div>
+      )}
+
+      {/* Botões de ação */}
+      {!isDecided && (
+        <div className="flex gap-1.5 flex-wrap">
+          <button
+            onClick={() => onAction('aprovado')}
+            disabled={isBusy}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-green-50 text-green-900 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {busyThis && pending === null
+              ? <span className="w-3 h-3 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+              : <CheckCircle2 className="w-3 h-3" />}
+            Aprovar
+          </button>
+          <button
+            onClick={() => {
+              if (pending !== 'ajuste_solicitado') { onAction('ajuste_solicitado'); return }
+              onAction('ajuste_solicitado')
+            }}
+            disabled={isBusy}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-orange-50 text-orange-900 hover:bg-orange-100 border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {busyThis && pending === 'ajuste_solicitado'
+              ? <span className="w-3 h-3 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+              : <AlertCircle className="w-3 h-3" />}
+            {pending === 'ajuste_solicitado' ? 'Confirmar ajuste' : 'Solicitar ajuste'}
+          </button>
+          <button
+            onClick={() => onAction('reprovado')}
+            disabled={isBusy}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-50 text-red-900 hover:bg-red-100 border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {busyThis && pending === 'reprovado'
+              ? <span className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              : <XCircle className="w-3 h-3" />}
+            {pending === 'reprovado' ? 'Confirmar reprovação' : 'Reprovar'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Helper: recalcular status geral no cliente (espelha lógica do hook) ─────
+
+function computeClientOverall(
+  art: ApprovalStatus | null,
+  copy: ApprovalStatus | null,
+): ApprovalStatus {
+  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
+  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
+  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
+  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
+  if (statuses.length > 0 && statuses.every(s => s === 'aprovado')) return 'aprovado'
+  return 'pendente_aprovacao'
+}
+
 // ─── Item Detail View ─────────────────────────────────────────────────────────
 
 function ItemDetailView({
@@ -178,39 +296,99 @@ function ItemDetailView({
 
   const [notesExpanded, setNotesExpanded] = useState(false)
 
-  const submitApproval = useSubmitApproval()
+  const submitPartial = useSubmitPartialApproval()
+  const approveAll = useApproveAll()
   const { toast } = useToast()
 
   const [localStatus, setLocalStatus] = useState<ApprovalStatus>(
     (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
   )
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<ApprovalStatus | null>(null)
+  const [localArtStatus, setLocalArtStatus] = useState<ApprovalStatus | null>(
+    (item.art_approval_status as ApprovalStatus) || null
+  )
+  const [localCopyStatus, setLocalCopyStatus] = useState<ApprovalStatus | null>(
+    (item.copy_approval_status as ApprovalStatus) || null
+  )
+
+  // Feedback inline por campo (art / copy)
+  const [artFeedback, setArtFeedback]   = useState(item.art_feedback || '')
+  const [copyFeedback, setCopyFeedback] = useState(item.copy_feedback || '')
+  // Qual campo está aguardando feedback (para mostrar a caixa)
+  const [artPending, setArtPending]   = useState<ApprovalStatus | null>(null)
+  const [copyPending, setCopyPending] = useState<ApprovalStatus | null>(null)
+
+  const [busyField, setBusyField] = useState<'all' | 'art' | 'copy' | null>(null)
 
   useEffect(() => {
     setLocalStatus((item.approval_status || 'pendente_aprovacao') as ApprovalStatus)
-    setSuccessMsg(null)
-    setPendingAction(null)
+    setLocalArtStatus((item.art_approval_status as ApprovalStatus) || null)
+    setLocalCopyStatus((item.copy_approval_status as ApprovalStatus) || null)
+    setArtFeedback(item.art_feedback || '')
+    setCopyFeedback(item.copy_feedback || '')
+    setArtPending(null)
+    setCopyPending(null)
+    setBusyField(null)
     setMediaIdx(0)
     setNotesExpanded(false)
   }, [item.id])
 
-  const handleApproval = async (status: ApprovalStatus) => {
-    setPendingAction(status)
+  const handleApproveAll = async () => {
+    setBusyField('all')
     try {
-      await submitApproval.mutateAsync({ plannerId: item.id, approval_status: status, client_feedback: '' })
-      setLocalStatus(status)
-      setSuccessMsg(approvalLabels[status] + ' com sucesso.')
-      toast(approvalLabels[status] + '!', 'success')
+      await approveAll.mutateAsync({ plannerId: item.id })
+      setLocalStatus('aprovado')
+      setLocalArtStatus('aprovado')
+      setLocalCopyStatus('aprovado')
+      toast('Tudo aprovado!', 'success')
     } catch (err: any) {
       toast(err.message, 'error')
     } finally {
-      setPendingAction(null)
+      setBusyField(null)
     }
   }
 
-  const isDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
-  const isBusy = submitApproval.isPending
+  const handlePartial = async (field: 'art' | 'copy', status: ApprovalStatus, feedback: string) => {
+    // Se precisar de feedback e não tiver sido confirmado ainda, mostra a caixa
+    const needsFeedback = status === 'ajuste_solicitado' || status === 'reprovado'
+    if (needsFeedback) {
+      if (field === 'art') {
+        if (artPending !== status) { setArtPending(status); return }
+      } else {
+        if (copyPending !== status) { setCopyPending(status); return }
+      }
+    }
+    setBusyField(field)
+    try {
+      await submitPartial.mutateAsync({
+        plannerId: item.id,
+        field,
+        status,
+        feedback: field === 'art' ? artFeedback : copyFeedback,
+        currentArtStatus: localArtStatus,
+        currentCopyStatus: localCopyStatus,
+      })
+      if (field === 'art') {
+        setLocalArtStatus(status)
+        setArtPending(null)
+        // recalcula geral
+        const overall = computeClientOverall(status, localCopyStatus)
+        setLocalStatus(overall)
+      } else {
+        setLocalCopyStatus(status)
+        setCopyPending(null)
+        const overall = computeClientOverall(localArtStatus, status)
+        setLocalStatus(overall)
+      }
+      toast(`${field === 'art' ? 'Arte' : 'Copy'}: ${approvalLabels[status]}!`, 'success')
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setBusyField(null)
+    }
+  }
+
+  const isBusy = busyField !== null
+  const overallDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
@@ -348,59 +526,63 @@ function ItemDetailView({
               )}
 
               {/* ── Seção de Aprovação ── */}
-              <div className={`rounded-xl border p-4 ${approvalBg[localStatus]}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
-                  <p className={`text-xs font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
-                  {item.reviewed_at && !successMsg && (
-                    <span className="text-[10px] text-gray-500 ml-auto">
-                      {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                  )}
+              <div className="space-y-3">
+
+                {/* Status geral + Aprovar tudo */}
+                <div className={`rounded-xl border p-3.5 ${approvalBg[localStatus]}`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
+                      <p className={`text-xs font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
+                      {item.reviewed_at && (
+                        <span className="text-[10px] text-gray-400">
+                          · {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                        </span>
+                      )}
+                    </div>
+                    {!overallDecided && (
+                      <button
+                        onClick={handleApproveAll}
+                        disabled={isBusy}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 border border-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                      >
+                        {busyField === 'all'
+                          ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        Aprovar tudo
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {successMsg && (
-                  <div className="mb-3 flex items-center gap-2 p-2.5 bg-white/80 border border-black/[0.06] rounded-lg">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                    <p className="text-xs text-gray-900 font-medium">{successMsg}</p>
-                  </div>
-                )}
+                {/* Arte */}
+                <PartialApprovalBlock
+                  label="Arte"
+                  description="Imagem, vídeo ou carrossel"
+                  status={localArtStatus}
+                  pending={artPending}
+                  feedback={artFeedback}
+                  isBusy={isBusy}
+                  busyThis={busyField === 'art'}
+                  onAction={(s) => handlePartial('art', s, artFeedback)}
+                  onFeedbackChange={setArtFeedback}
+                  onCancelPending={() => setArtPending(null)}
+                />
 
-                {item.client_feedback && localStatus !== 'pendente_aprovacao' && !successMsg && (
-                  <div className="mb-3 p-2.5 bg-white/80 border border-black/[0.06] rounded-lg">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <MessageSquare className="w-3 h-3 text-gray-400" />
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Seu comentário</span>
-                    </div>
-                    <p className="text-xs text-gray-600 leading-relaxed break-words select-text">{item.client_feedback}</p>
-                  </div>
-                )}
+                {/* Copy */}
+                <PartialApprovalBlock
+                  label="Copy"
+                  description="Legenda e texto do post"
+                  status={localCopyStatus}
+                  pending={copyPending}
+                  feedback={copyFeedback}
+                  isBusy={isBusy}
+                  busyThis={busyField === 'copy'}
+                  onAction={(s) => handlePartial('copy', s, copyFeedback)}
+                  onFeedbackChange={setCopyFeedback}
+                  onCancelPending={() => setCopyPending(null)}
+                />
 
-                {!isDecided && (
-                  <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => handleApproval('aprovado')} disabled={isBusy}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-green-50 text-green-900 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                      {pendingAction === 'aprovado'
-                        ? <span className="w-3.5 h-3.5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                        : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      Aprovar
-                    </button>
-                    <button onClick={() => handleApproval('ajuste_solicitado')} disabled={isBusy}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-orange-50 text-orange-900 hover:bg-orange-100 border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                      {pendingAction === 'ajuste_solicitado'
-                        ? <span className="w-3.5 h-3.5 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
-                        : <AlertCircle className="w-3.5 h-3.5" />}
-                      Solicitar ajuste
-                    </button>
-                    <button onClick={() => handleApproval('reprovado')} disabled={isBusy}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-50 text-red-900 hover:bg-red-100 border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                      {pendingAction === 'reprovado'
-                        ? <span className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                        : <XCircle className="w-3.5 h-3.5" />}
-                      Reprovar
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Comentários */}
