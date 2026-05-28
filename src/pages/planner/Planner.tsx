@@ -103,6 +103,30 @@ function computeOverallApproval(
   return 'pendente_aprovacao'
 }
 
+// Notifica o usuário portal do cliente que o ajuste foi realizado
+async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
+  if (!clientId) return
+  try {
+    // Busca o user_id do usuário portal vinculado ao cliente
+    const { data: portalUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('linked_client_id', clientId)
+      .eq('role', 'client')
+      .maybeSingle()
+    if (!portalUser?.id) return
+
+    await (supabase as any).from('notifications').insert({
+      user_id:   portalUser.id,
+      client_id: clientId,
+      type:      'ADJUSTMENT_DONE',
+      title:     'Ajuste realizado pela agência',
+      message:   'A agência corrigiu o conteúdo e está aguardando sua aprovação.',
+      link:      `/portal`,
+    })
+  } catch {/* silencioso */}
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
@@ -753,10 +777,32 @@ function PlannerItemView({
   const updateItem = useUpdatePlannerItem()
   const { toast }  = useToast()
 
+  // Status efetivo: calcula a partir dos parciais quando disponíveis
+  const artPartial  = (item as any).art_approval_status  as ApprovalStatus | null
+  const copyPartial = (item as any).copy_approval_status as ApprovalStatus | null
+  const effectiveStatus: ApprovalStatus = (artPartial || copyPartial)
+    ? computeOverallApproval(artPartial, copyPartial)
+    : ((localApprovalStatus ?? item.approval_status) as ApprovalStatus ?? 'pendente_aprovacao')
+
+  // Auto-corrige o DB se os parciais dizem ajuste_realizado mas o overall ainda está errado
+  useEffect(() => {
+    if (
+      artPartial === 'ajuste_realizado' &&
+      copyPartial === 'ajuste_realizado' &&
+      item.approval_status !== 'ajuste_realizado'
+    ) {
+      updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' } as any)
+        .then(() => notifyClientAdjustmentDone(item.client_id, item.id))
+        .catch(() => {/* silencioso */})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artPartial, copyPartial, item.approval_status, item.id])
+
   const handleMarkAdjustmentDone = async () => {
     try {
       await updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' })
       setLocalApprovalStatus('ajuste_realizado')
+      await notifyClientAdjustmentDone(item.client_id, item.id)
       toast('Ajuste marcado como realizado.', 'success')
     } catch (err: any) { toast(err.message, 'error') }
   }
@@ -939,9 +985,9 @@ function PlannerItemView({
 
                   {/* Status geral + data */}
                   <div className="flex items-center gap-2 px-0.5 flex-wrap">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
-                    <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
-                      {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[effectiveStatus]}`} />
+                    <span className={`text-xs font-medium ${approvalTextColor[effectiveStatus]}`}>
+                      {approvalLabel[effectiveStatus]}
                     </span>
                     {item.reviewed_at && (
                       <span className="text-[10px] text-gray-400 ml-auto">
@@ -989,6 +1035,9 @@ function PlannerItemView({
                                   art_approval_status: 'ajuste_realizado',
                                   approval_status: newOverall,
                                 } as any)
+                                if (newOverall === 'ajuste_realizado') {
+                                  await notifyClientAdjustmentDone(item.client_id, item.id)
+                                }
                                 toast('Ajuste de Arte marcado como realizado.', 'success')
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
@@ -1044,6 +1093,9 @@ function PlannerItemView({
                                   copy_approval_status: 'ajuste_realizado',
                                   approval_status: newOverall,
                                 } as any)
+                                if (newOverall === 'ajuste_realizado') {
+                                  await notifyClientAdjustmentDone(item.client_id, item.id)
+                                }
                                 toast('Ajuste de Copy marcado como realizado.', 'success')
                               } catch (err: any) { toast(err.message, 'error') }
                             }}

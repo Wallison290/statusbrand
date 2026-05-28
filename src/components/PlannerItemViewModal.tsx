@@ -326,6 +326,27 @@ function computeOverallApproval(
   return 'pendente_aprovacao'
 }
 
+async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
+  if (!clientId) return
+  try {
+    const { data: portalUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('linked_client_id', clientId)
+      .eq('role', 'client')
+      .maybeSingle()
+    if (!portalUser?.id) return
+    await (supabase as any).from('notifications').insert({
+      user_id:   portalUser.id,
+      client_id: clientId,
+      type:      'ADJUSTMENT_DONE',
+      title:     'Ajuste realizado pela agência',
+      message:   'A agência corrigiu o conteúdo e está aguardando sua aprovação.',
+      link:      `/portal`,
+    })
+  } catch {/* silencioso */}
+}
+
 // ─── Bloco de status Arte / Copy para a agência ───────────────────────────────
 
 const approvalBg: Record<ApprovalStatus, string> = {
@@ -626,6 +647,9 @@ export function PlannerItemViewModal({
                       art_approval_status: 'ajuste_realizado',
                       approval_status: newOverall,
                     } as any)
+                    if (newOverall === 'ajuste_realizado') {
+                      await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
+                    }
                     toast('Ajuste de Arte marcado como realizado.', 'success')
                   }}
                   isPending={updateItem.isPending}
@@ -647,6 +671,9 @@ export function PlannerItemViewModal({
                       copy_approval_status: 'ajuste_realizado',
                       approval_status: newOverall,
                     } as any)
+                    if (newOverall === 'ajuste_realizado') {
+                      await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
+                    }
                     toast('Ajuste de Copy marcado como realizado.', 'success')
                   }}
                   isPending={updateItem.isPending}
