@@ -96,6 +96,15 @@ function StatusPill({
   )
 }
 
+// ─── Priority accent colors ───────────────────────────────────────────────────
+
+const PRIORITY_ACCENT: Record<TaskPriority, string> = {
+  urgente: '#ef4444',
+  alta:    '#f59e0b',
+  media:   '#3b82f6',
+  baixa:   '#d1d5db',
+}
+
 // ─── Task card ────────────────────────────────────────────────────────────────
 
 function TaskCard({
@@ -124,7 +133,13 @@ function TaskCard({
     : false
 
   const clientName = (task.client as any)?.company_name
-  const priCfg = PRIORITY_CFG[task.priority]
+  const priCfg  = PRIORITY_CFG[task.priority]
+  const accent  = overdueAndOpen ? '#ef4444' : PRIORITY_ACCENT[task.priority]
+
+  const timeClient = [
+    task.due_time ? task.due_time.slice(0, 5) : null,
+    clientName || null,
+  ].filter(Boolean).join(' · ')
 
   return (
     <div
@@ -140,90 +155,87 @@ function TaskCard({
       }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
       className={[
-        'relative bg-white rounded-xl border border-l-[3px] select-none cursor-pointer group',
-        'transition-all duration-150 hover:shadow-md hover:-translate-y-[1px]',
-        priCfg.borderClass,
-        overdueAndOpen ? 'border-red-100 border-t-red-100 border-r-red-100 border-b-red-100' : 'border-[#eaecf0]',
-        dragging ? 'opacity-40 scale-[0.97] shadow-none' : 'shadow-sm',
+        'relative w-full text-left rounded-xl border border-[#e2e8f0] bg-white',
+        'hover:bg-[#f8fafc] hover:border-[#d0d8e8] transition-all overflow-hidden shadow-sm',
+        'cursor-pointer select-none group',
+        dragging ? 'opacity-40' : '',
       ].join(' ')}
     >
-      <div className="p-2.5">
+      <div className="flex">
+        {/* Left accent bar — same pattern as Planner */}
+        <div
+          className="w-[4px] flex-shrink-0 rounded-l-xl"
+          style={{ backgroundColor: accent }}
+        />
 
-        {/* Row 1: Priority pill + action buttons */}
-        <div className="flex items-center justify-between mb-2">
-          <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${priCfg.pillBg} ${priCfg.pillText}`}>
-            {task.priority === 'urgente' && '⚡ '}{priCfg.label}
-          </span>
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={e => { e.stopPropagation(); onEdit(task) }}
-              className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-[#374151] hover:bg-[#f5f5f5] transition-colors"
-              title="Editar"
-            >
-              <Pencil className="w-3 h-3" />
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); onDelete(task.id) }}
-              className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-red-400 hover:bg-red-50 transition-colors"
-              title="Excluir"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
+        {/* Card content */}
+        <div className="flex-1 min-w-0 p-3">
 
-        {/* Time badge */}
-        {task.due_time && (
-          <div className="flex items-center gap-1 mb-1.5">
-            <Clock className="w-2.5 h-2.5 text-[#94a3b8] flex-shrink-0" />
-            <span className="text-[11px] font-bold text-[#334155] tabular-nums">
-              {task.due_time.slice(0, 5)}
-            </span>
-          </div>
-        )}
+          {/* Time + client (muted row) */}
+          {timeClient && (
+            <p className="text-[10px] text-[#9ca3af] mb-1 font-medium tracking-wide">
+              {timeClient}
+            </p>
+          )}
 
-        {/* Title */}
-        <p className="text-[12px] font-bold text-[#0f0f0f] leading-snug mb-1.5">
-          {task.title}
-        </p>
-
-        {/* Client chip */}
-        {clientName && (
-          <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md mb-1.5">
-            {clientName}
-          </span>
-        )}
-
-        {/* Description */}
-        {task.description && (
-          <p className="text-[10px] text-[#94a3b8] line-clamp-2 leading-relaxed mb-2">
-            {task.description}
+          {/* Title */}
+          <p className="text-[12px] font-semibold text-[#0f0f0f] leading-snug mb-2 line-clamp-2">
+            {task.title}
           </p>
-        )}
 
-        {/* Assignee */}
-        {task.assignee && (
-          <div className="flex items-center gap-1 mb-2">
-            <User className="w-2.5 h-2.5 text-[#d1d5db] flex-shrink-0" />
-            <span className="text-[10px] text-[#9ca3af] truncate">{task.assignee}</span>
+          {/* Description */}
+          {task.description && (
+            <p className="text-[11px] text-[#9ca3af] line-clamp-2 leading-relaxed mb-2">
+              {task.description}
+            </p>
+          )}
+
+          {/* Bottom row: priority + assignee + status */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md flex-shrink-0 ${priCfg.pillBg} ${priCfg.pillText}`}>
+              {priCfg.label}
+            </span>
+            {task.assignee && (
+              <span className="text-[10px] text-[#9ca3af] truncate flex-1 min-w-0">
+                {task.assignee}
+              </span>
+            )}
+            <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
+              <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
+            </div>
           </div>
-        )}
 
-        {/* Footer: overdue + status pill */}
-        <div className="border-t border-[#f1f5f9] pt-2 mt-1 flex items-center justify-between gap-2">
-          {overdueAndOpen ? (
-            <div className="flex items-center gap-1 min-w-0">
+          {/* Overdue row */}
+          {overdueAndOpen && (
+            <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-red-50">
               <AlertCircle className="w-2.5 h-2.5 text-red-400 flex-shrink-0" />
-              <span className="text-[9px] text-red-500 font-bold truncate">
+              <span className="text-[9px] text-red-500 font-bold">
                 {task.due_date ? formatDate(task.due_date) : 'Atrasada'}
               </span>
             </div>
-          ) : (
-            <div />
           )}
-          <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
         </div>
 
+        {/* Action buttons — top-right, visible on hover */}
+        <div
+          className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={e => e.stopPropagation()}
+        >
+          <button
+            onClick={() => onEdit(task)}
+            className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-[#374151] hover:bg-white/90 transition-colors"
+            title="Editar"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => onDelete(task.id)}
+            className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-red-400 hover:bg-white/90 transition-colors"
+            title="Excluir"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -232,13 +244,14 @@ function TaskCard({
 // ─── Day column ───────────────────────────────────────────────────────────────
 
 function DayColumn({
-  day, tasks, draggingId,
+  day, tasks, draggingId, isLast,
   onDrop, onDragStart, onDragEnd,
   onStatusChange, onDelete, onEdit, onView, onAddTask,
 }: {
   day: Date
   tasks: Task[]
   draggingId: string | null
+  isLast: boolean
   onDrop: (taskId: string, day: Date) => void
   onDragStart: (id: string) => void
   onDragEnd: () => void
@@ -249,23 +262,21 @@ function DayColumn({
   onAddTask: (day: Date) => void
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const today      = isToday(day)
-  const dayOfWeek  = day.getDay()
-  const isWeekend  = dayOfWeek === 0 || dayOfWeek === 6
-  const dayLabel   = format(day, 'EEE', { locale: ptBR })
-  const dayNum     = format(day, 'd')
-  const monthAbbr  = format(day, 'MMM', { locale: ptBR })
+  const today     = isToday(day)
+  const dayOfWeek = day.getDay()
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+  // "Quarta" — capitalize first word only
+  const fullLabel = format(day, 'EEEE', { locale: ptBR })
+  const dayName   = fullLabel.charAt(0).toUpperCase() + fullLabel.slice(1).split('-')[0]
+  const dayNum    = format(day, 'd')
+  const monthAbbr = format(day, 'MMM', { locale: ptBR })
 
   return (
     <div
-      className={[
-        'flex flex-col flex-1 min-w-[158px] rounded-2xl overflow-hidden transition-all duration-150',
-        today
-          ? 'border border-[#0f0f0f] shadow-lg'
-          : isDragOver
-            ? 'border border-blue-300 shadow-md'
-            : 'border border-[#e2e8f0] shadow-sm',
-      ].join(' ')}
+      className={`flex-shrink-0 w-[252px] px-3 transition-colors duration-100 ${
+        !isLast ? 'border-r border-[#e8edf5]' : ''
+      } ${isDragOver ? 'bg-blue-50/30' : ''}`}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -277,54 +288,33 @@ function DayColumn({
         if (id) onDrop(id, day)
       }}
     >
-      {/* Column header */}
-      <div className={[
-        'px-3 py-2.5 flex items-center justify-between flex-shrink-0',
-        today
-          ? 'bg-gradient-to-b from-[#1c1c1e] to-[#0f0f0f]'
-          : isWeekend
-            ? 'bg-[#f7f7f8] border-b border-[#ebebeb]'
-            : 'bg-white border-b border-[#f0f4f8]',
-      ].join(' ')}>
+      {/* Column header — Planner style */}
+      <div className="flex items-start justify-between pb-3 mb-3 border-b border-[#f0f4f8]">
         <div>
-          <p className={`text-[9px] font-black uppercase tracking-[0.12em] mb-0.5 ${
-            today ? 'text-white/45' : isWeekend ? 'text-[#b0b0b0]' : 'text-[#9ca3af]'
-          }`}>
-            {dayLabel}
-          </p>
-          <div className="flex items-baseline gap-1">
-            <span className={`text-[23px] font-black leading-none tabular-nums ${
-              today ? 'text-white' : isWeekend ? 'text-[#b8b8b8]' : 'text-[#0f0f0f]'
-            }`}>
-              {dayNum}
-            </span>
-            <span className={`text-[10px] font-medium capitalize ${
-              today ? 'text-white/40' : 'text-[#c7d2e0]'
-            }`}>
-              {monthAbbr}
-            </span>
+          <div className="flex items-center gap-1.5">
+            <p className={`text-[13px] font-bold ${isWeekend ? 'text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
+              {dayName}
+            </p>
+            {today && (
+              <span className="text-[9px] font-black px-1.5 py-0.5 bg-[#0f0f0f] text-white rounded-full uppercase tracking-wide">
+                Hoje
+              </span>
+            )}
           </div>
+          <p className="text-[11px] text-[#9ca3af] mt-0.5 capitalize">
+            {dayNum} {monthAbbr}
+          </p>
         </div>
 
-        <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-1.5 mt-0.5">
           {tasks.length > 0 && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center tabular-nums ${
-              today
-                ? 'bg-white/15 text-white'
-                : isWeekend
-                  ? 'bg-[#e8e8e8] text-[#9ca3af]'
-                  : 'bg-[#f0f4f8] text-[#6b7280]'
-            }`}>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f0f4f8] text-[#6b7280] tabular-nums">
               {tasks.length}
             </span>
           )}
           <button
             onClick={() => onAddTask(day)}
-            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-              today
-                ? 'bg-white/15 hover:bg-white/30 text-white'
-                : 'text-[#94a3b8] hover:bg-[#e8edf3] hover:text-[#374151]'
-            }`}
+            className="w-5 h-5 rounded-full bg-[#f0f4f8] hover:bg-[#e2e8f0] text-[#9ca3af] hover:text-[#374151] flex items-center justify-center transition-colors"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}
           >
             <Plus className="w-3 h-3" />
@@ -333,56 +323,42 @@ function DayColumn({
       </div>
 
       {/* Task list */}
-      <div className={[
-        'flex-1 p-2 min-h-[360px] overflow-y-auto transition-colors duration-100',
-        isDragOver
-          ? 'bg-blue-50/50'
-          : today
-            ? 'bg-white'
-            : isWeekend
-              ? 'bg-[#fafafa]'
-              : 'bg-white',
-      ].join(' ')}>
-        <div className="space-y-2">
-          <AnimatePresence>
-            {tasks.map(task => (
-              <motion.div
-                key={task.id}
-                layout
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.14 }}
-              >
-                <TaskCard
-                  task={task}
-                  dragging={draggingId === task.id}
-                  onStatusChange={onStatusChange}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  onView={onView}
-                  onDragStart={onDragStart}
-                  onDragEnd={onDragEnd}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+      <div className="space-y-2 min-h-[420px]">
+        <AnimatePresence>
+          {tasks.map(task => (
+            <motion.div
+              key={task.id}
+              layout
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.14 }}
+            >
+              <TaskCard
+                task={task}
+                dragging={draggingId === task.id}
+                onStatusChange={onStatusChange}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onView={onView}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
         {tasks.length === 0 && !isDragOver && (
           <button
             onClick={() => onAddTask(day)}
-            className="w-full flex flex-col items-center justify-center py-7 mt-1 rounded-xl border-2 border-dashed border-[#e8edf3] hover:border-[#c7d2e0] hover:bg-[#f8fafc] transition-all group"
+            className="w-full text-center py-5 text-[11px] text-[#d1d5db] hover:text-[#94a3b8] transition-colors"
           >
-            <Plus className="w-4 h-4 text-[#d1d5db] group-hover:text-[#94a3b8] transition-colors mb-1" />
-            <span className="text-[10px] font-medium text-[#d1d5db] group-hover:text-[#94a3b8] transition-colors">
-              Adicionar
-            </span>
+            + Adicionar tarefa
           </button>
         )}
 
         {isDragOver && (
-          <div className="flex items-center justify-center h-16 mt-2 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/60">
+          <div className="h-14 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/40 flex items-center justify-center">
             <p className="text-[11px] text-blue-500 font-semibold">Soltar aqui</p>
           </div>
         )}
@@ -410,15 +386,13 @@ function NoDateSection({
   if (tasks.length === 0) return null
 
   return (
-    <div className="mt-5 flex-shrink-0">
+    <div className="mt-5 pt-4 border-t border-[#e8edf5] flex-shrink-0">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 mb-3 group"
       >
-        <div className="w-5 h-5 rounded-md bg-[#f3f4f6] flex items-center justify-center">
-          <LayoutList className="w-3 h-3 text-[#9ca3af]" />
-        </div>
-        <p className="text-[12px] font-bold text-[#4b5563] group-hover:text-[#0f0f0f] transition-colors">
+        <LayoutList className="w-3.5 h-3.5 text-[#9ca3af]" />
+        <p className="text-[13px] font-bold text-[#4b5563] group-hover:text-[#0f0f0f] transition-colors">
           Sem data definida
         </p>
         <span className="text-[10px] font-bold text-[#9ca3af] bg-[#f3f4f6] px-1.5 py-0.5 rounded-full">
@@ -435,12 +409,9 @@ function NoDateSection({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div
-              className="flex gap-2.5 overflow-x-auto pb-2"
-              style={{ scrollbarWidth: 'thin' }}
-            >
+            <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
               {tasks.map(task => (
-                <div key={task.id} className="flex-shrink-0 w-[190px]">
+                <div key={task.id} className="flex-shrink-0 w-[252px]">
                   <TaskCard
                     task={task}
                     dragging={draggingId === task.id}
@@ -1120,13 +1091,14 @@ export function Tasks() {
 
         {/* ── Weekly columns ──────────────────────────────────────────────── */}
         <div className="overflow-x-auto flex-1 min-h-0">
-          <div className="flex gap-2.5 h-full" style={{ minWidth: '1120px' }}>
-            {days.map(day => (
+          <div className="flex h-full" style={{ minWidth: `${7 * 252}px` }}>
+            {days.map((day, di) => (
               <DayColumn
                 key={day.toISOString()}
                 day={day}
                 tasks={tasksByDay(day)}
                 draggingId={draggingId}
+                isLast={di === 6}
                 onDrop={handleDropOnDay}
                 onDragStart={setDraggingId}
                 onDragEnd={() => setDraggingId(null)}
