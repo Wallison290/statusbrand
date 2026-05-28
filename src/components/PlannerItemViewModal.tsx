@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ImageIcon, Video, Music, FileText, File,
   ExternalLink, Link2, Building2, Pencil, Trash2, Check,
@@ -345,8 +345,8 @@ function ApprovalFieldBlock({
         </div>
       </div>
 
-      {/* Feedback do cliente */}
-      {feedback && (status === 'ajuste_solicitado' || status === 'reprovado') && (
+      {/* Feedback do cliente — visível enquanto a agência precisar de contexto */}
+      {feedback && status !== 'aprovado' && status !== 'pendente_aprovacao' && (
         <div className="mt-2 flex items-start gap-2 bg-black/20 rounded-lg px-2.5 py-2">
           <span className="text-[10px] text-gray-500 flex-shrink-0 mt-0.5">Cliente:</span>
           <p className="text-xs text-gray-200 leading-relaxed break-words select-text flex-1">"{feedback}"</p>
@@ -392,6 +392,12 @@ export function PlannerItemViewModal({
   const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
     item.approval_status as ApprovalStatus | null
   )
+
+  // Sincroniza o estado local quando o item prop atualiza (ex: Realtime traz novos dados)
+  useEffect(() => {
+    setLocalApprovalStatus(item.approval_status as ApprovalStatus | null)
+    setNewStatus(item.status as PlannerStatus)
+  }, [item.approval_status, item.status, item.art_approval_status, item.copy_approval_status])
 
   const updateItem = useUpdatePlannerItem()
   const deleteItem = useDeletePlannerItem()

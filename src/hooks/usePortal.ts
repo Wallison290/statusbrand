@@ -291,7 +291,9 @@ export function useSubmitPartialApproval() {
       if (error) throw error
     },
     onSuccess: () => {
+      // Invalida tanto o portal (cliente) quanto o planner (agência)
       qc.invalidateQueries({ queryKey: ['portal-planner'] })
+      qc.invalidateQueries({ queryKey: ['planner'] })
     },
   })
 }
@@ -318,6 +320,7 @@ export function useApproveAll() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['portal-planner'] })
+      qc.invalidateQueries({ queryKey: ['planner'] })
     },
   })
 }
