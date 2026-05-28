@@ -174,6 +174,14 @@ interface PartialApprovalBlockProps {
   onCancelPending: () => void
 }
 
+const approvalDot: Record<ApprovalStatus, string> = {
+  pendente_aprovacao: 'bg-yellow-400',
+  aprovado:           'bg-green-500',
+  ajuste_solicitado:  'bg-orange-400',
+  ajuste_realizado:   'bg-blue-400',
+  reprovado:          'bg-red-500',
+}
+
 function PartialApprovalBlock({
   label, description, status, pending, feedback, isBusy, busyThis, onAction, onFeedbackChange, onCancelPending,
 }: PartialApprovalBlockProps) {
@@ -182,79 +190,90 @@ function PartialApprovalBlock({
   const needsFeedback = pending === 'ajuste_solicitado' || pending === 'reprovado'
 
   return (
-    <div className={`rounded-xl border p-3.5 ${approvalBg[resolved]}`}>
-      {/* header */}
-      <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
-        <div>
-          <p className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">{label}</p>
-          <p className="text-[10px] text-gray-400">{description}</p>
+    <div className="space-y-2.5">
+      {/* Label + status atual */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{label}</span>
+          <span className="text-[9px] text-gray-300">·</span>
+          <span className="text-[10px] text-gray-400">{description}</span>
         </div>
-        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[10px] font-semibold ${approvalBg[resolved]} ${approvalText[resolved]}`}>
-          {approvalIcons[resolved]}
+        <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${approvalText[resolved]}`}>
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[resolved]}`} />
           {approvalLabels[resolved]}
         </div>
       </div>
 
-      {/* Feedback já salvo */}
-      {status && (status === 'ajuste_solicitado' || status === 'reprovado') && feedback && !pending && (
-        <div className="mb-2.5 p-2 bg-white/80 border border-black/[0.06] rounded-lg">
-          <div className="flex items-center gap-1 mb-1">
-            <MessageSquare className="w-3 h-3 text-gray-400" />
-            <span className="text-[10px] text-gray-400 uppercase tracking-wide">Comentário</span>
-          </div>
-          <p className="text-xs text-gray-600 leading-relaxed break-words select-text">{feedback}</p>
-        </div>
-      )}
-
-      {/* Caixa de feedback inline */}
-      {needsFeedback && (
-        <div className="mb-2.5">
-          <textarea
-            value={feedback}
-            onChange={e => onFeedbackChange(e.target.value)}
-            placeholder={`Descreva o que precisa ajustar na ${label.toLowerCase()}...`}
-            rows={2}
-            className="w-full text-xs rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
-          />
-          <button onClick={onCancelPending} className="text-[11px] text-gray-400 hover:text-gray-600 mt-1 transition-colors">Cancelar</button>
-        </div>
-      )}
-
-      {/* Botões de ação */}
+      {/* Chips de ação — só quando não decidido */}
       {!isDecided && (
         <div className="flex gap-1.5 flex-wrap">
+          {/* Aprovar */}
           <button
             onClick={() => onAction('aprovado')}
             disabled={isBusy}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-green-50 text-green-900 hover:bg-green-100 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              ${resolved === 'aprovado'
+                ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                : 'bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50'}`}
           >
-            {busyThis && pending === null
-              ? <span className="w-3 h-3 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+            {busyThis && !pending
+              ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
               : <CheckCircle2 className="w-3 h-3" />}
             Aprovar
           </button>
+
+          {/* Solicitar ajuste */}
           <button
-            onClick={() => {
-              if (pending !== 'ajuste_solicitado') { onAction('ajuste_solicitado'); return }
-              onAction('ajuste_solicitado')
-            }}
+            onClick={() => onAction('ajuste_solicitado')}
             disabled={isBusy}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-orange-50 text-orange-900 hover:bg-orange-100 border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              ${pending === 'ajuste_solicitado'
+                ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
+                : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}
           >
             {busyThis && pending === 'ajuste_solicitado'
-              ? <span className="w-3 h-3 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+              ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
               : <AlertCircle className="w-3 h-3" />}
-            {pending === 'ajuste_solicitado' ? 'Confirmar ajuste' : 'Solicitar ajuste'}
+            {pending === 'ajuste_solicitado' ? 'Confirmar' : 'Solicitar ajuste'}
           </button>
+
+          {/* Reprovar */}
           <button
             onClick={() => onAction('reprovado')}
             disabled={isBusy}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-50 text-red-900 hover:bg-red-100 border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              ${pending === 'reprovado'
+                ? 'bg-red-500 border-red-500 text-white shadow-sm'
+                : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}
           >
             {busyThis && pending === 'reprovado'
-              ? <span className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
               : <XCircle className="w-3 h-3" />}
-            {pending === 'reprovado' ? 'Confirmar reprovação' : 'Reprovar'}
+            {pending === 'reprovado' ? 'Confirmar' : 'Reprovar'}
+          </button>
+        </div>
+      )}
+
+      {/* Feedback já salvo */}
+      {status && (status === 'ajuste_solicitado' || status === 'reprovado') && feedback && !pending && (
+        <div className="flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+          <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+          <p className="text-[11px] text-gray-600 leading-relaxed break-words select-text">{feedback}</p>
+        </div>
+      )}
+
+      {/* Textarea inline para feedback */}
+      {needsFeedback && (
+        <div className="space-y-1.5">
+          <textarea
+            value={feedback}
+            onChange={e => onFeedbackChange(e.target.value)}
+            placeholder={`O que precisa ajustar na ${label.toLowerCase()}?`}
+            rows={2}
+            className="w-full text-[11px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none transition-all"
+          />
+          <button onClick={onCancelPending} className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">
+            Cancelar
           </button>
         </div>
       )}
@@ -526,62 +545,64 @@ function ItemDetailView({
               )}
 
               {/* ── Seção de Aprovação ── */}
-              <div className="space-y-3">
+              <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
 
-                {/* Status geral + Aprovar tudo */}
-                <div className={`rounded-xl border p-3.5 ${approvalBg[localStatus]}`}>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
-                      <p className={`text-xs font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
-                      {item.reviewed_at && (
-                        <span className="text-[10px] text-gray-400">
-                          · {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                        </span>
-                      )}
-                    </div>
-                    {!overallDecided && (
-                      <button
-                        onClick={handleApproveAll}
-                        disabled={isBusy}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 border border-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                      >
-                        {busyField === 'all'
-                          ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          : <CheckCircle2 className="w-3.5 h-3.5" />}
-                        Aprovar tudo
-                      </button>
+                {/* Header: status geral + aprovar tudo */}
+                <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#fafafa] border-b border-gray-100">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[localStatus]}`} />
+                    <p className={`text-[12px] font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
+                    {item.reviewed_at && (
+                      <span className="text-[10px] text-gray-400 truncate hidden sm:block">
+                        · {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </span>
                     )}
                   </div>
+                  {!overallDecided && (
+                    <button
+                      onClick={handleApproveAll}
+                      disabled={isBusy}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-green-500 text-white hover:bg-green-600 border border-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0"
+                    >
+                      {busyField === 'all'
+                        ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      Aprovar tudo
+                    </button>
+                  )}
                 </div>
 
                 {/* Arte */}
-                <PartialApprovalBlock
-                  label="Arte"
-                  description="Imagem, vídeo ou carrossel"
-                  status={localArtStatus}
-                  pending={artPending}
-                  feedback={artFeedback}
-                  isBusy={isBusy}
-                  busyThis={busyField === 'art'}
-                  onAction={(s) => handlePartial('art', s, artFeedback)}
-                  onFeedbackChange={setArtFeedback}
-                  onCancelPending={() => setArtPending(null)}
-                />
+                <div className="px-4 py-3.5 border-b border-gray-100">
+                  <PartialApprovalBlock
+                    label="Arte"
+                    description="Imagem, vídeo ou carrossel"
+                    status={localArtStatus}
+                    pending={artPending}
+                    feedback={artFeedback}
+                    isBusy={isBusy}
+                    busyThis={busyField === 'art'}
+                    onAction={(s) => handlePartial('art', s, artFeedback)}
+                    onFeedbackChange={setArtFeedback}
+                    onCancelPending={() => setArtPending(null)}
+                  />
+                </div>
 
                 {/* Copy */}
-                <PartialApprovalBlock
-                  label="Copy"
-                  description="Legenda e texto do post"
-                  status={localCopyStatus}
-                  pending={copyPending}
-                  feedback={copyFeedback}
-                  isBusy={isBusy}
-                  busyThis={busyField === 'copy'}
-                  onAction={(s) => handlePartial('copy', s, copyFeedback)}
-                  onFeedbackChange={setCopyFeedback}
-                  onCancelPending={() => setCopyPending(null)}
-                />
+                <div className="px-4 py-3.5">
+                  <PartialApprovalBlock
+                    label="Copy"
+                    description="Legenda e texto do post"
+                    status={localCopyStatus}
+                    pending={copyPending}
+                    feedback={copyFeedback}
+                    isBusy={isBusy}
+                    busyThis={busyField === 'copy'}
+                    onAction={(s) => handlePartial('copy', s, copyFeedback)}
+                    onFeedbackChange={setCopyFeedback}
+                    onCancelPending={() => setCopyPending(null)}
+                  />
+                </div>
 
               </div>
 
