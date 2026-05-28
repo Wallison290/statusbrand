@@ -211,10 +211,7 @@ function PartialApprovalBlock({
           <button
             onClick={() => onAction('aprovado')}
             disabled={isBusy}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
-              ${resolved === 'aprovado'
-                ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                : 'bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50'}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50"
           >
             {busyThis && !pending
               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
