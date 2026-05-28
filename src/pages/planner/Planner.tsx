@@ -1347,85 +1347,27 @@ export function Planner() {
   const { toast } = useToast()
 
   // ── Auto-agendamento Instagram ─────────────────────────────────────────────
-  // Agenda apenas quando AMBOS arte e copy estão aprovados (ou aprovação total).
-  // - "Aprovar tudo" define approval_status='aprovado' + art=aprovado + copy=aprovado
-  // - Aprovação parcial: só agenda se art_approval_status E copy_approval_status = 'aprovado'
-  // - Se nenhum dos campos parciais foi preenchido (fluxo legado), usa apenas approval_status
-  const schedulingInProgress = useRef(new Set<string>())
+  // MOVIDO PARA TRIGGER NO BANCO (migration 041_auto_schedule_instagram_trigger.sql)
+  // O agendamento agora ocorre automaticamente no servidor quando o cliente aprova,
+  // independente de quem está com o sistema aberto.
+  // Este efeito apenas exibe um toast informativo quando detecta um item recém-agendado.
+  const notifiedScheduled = useRef(new Set<string>())
 
   useEffect(() => {
-    if (!items || !user) return
-    const toSchedule = items.filter(item => {
-      if (!item.ig_post_type || item.ig_scheduled || !item.client_id) return false
-      if (schedulingInProgress.current.has(item.id)) return false
-
-      const overallApproved = item.approval_status === 'aprovado'
-      const hasPartialFields = item.art_approval_status != null || item.copy_approval_status != null
-
-      if (hasPartialFields) {
-        // Com aprovação parcial: ambos devem estar aprovados
-        return (
-          item.art_approval_status === 'aprovado' &&
-          item.copy_approval_status === 'aprovado'
-        )
-      }
-
-      // Sem campos parciais (legado ou "Aprovar tudo"): usa approval_status geral
-      return overallApproved
-    })
-    if (toSchedule.length === 0) return
-
-    toSchedule.forEach(async (item) => {
-      schedulingInProgress.current.add(item.id)
-      try {
-        // Busca conta Instagram do cliente
-        if (!item.client_id) { schedulingInProgress.current.delete(item.id); return }
-        const { data: igAccountData } = await (supabase as any)
-          .from('instagram_accounts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('client_id', item.client_id)
-          .eq('is_active', true)
-          .maybeSingle()
-        const igAccount = igAccountData as { id: string } | null
-
-        if (!igAccount) { schedulingInProgress.current.delete(item.id); return }
-
-        // Mídias IG ordenadas (com fallback para imagens/vídeos regulares)
-        const igMediaExpl = (item.attachments ?? [])
-          .filter(a => a.is_ig_media)
-          .sort((a, b) => a.sort_order - b.sort_order)
-        const igMediaFall = (item.attachments ?? [])
-          .filter(a => isImageAttachment(a) || isVideoAttachment(a))
-        const igMedia = igMediaExpl.length > 0 ? igMediaExpl : igMediaFall
-
-        if (igMedia.length === 0) { schedulingInProgress.current.delete(item.id); return }
-
-        const mediaUrls  = igMedia.map(a => a.file_url)
-        const timeStr    = item.scheduled_time || '12:00'
-        const scheduledAt = new Date(`${item.scheduled_date}T${timeStr}:00`).toISOString()
-
-        // Cria post agendado
-        const { error } = await (supabase as any).from('scheduled_posts').insert({
-          user_id:      user.id,
-          ig_account_id: igAccount.id,
-          client_id:    item.client_id,
-          post_type:    item.ig_post_type,
-          caption:      item.notes ?? '',
-          media_urls:   mediaUrls,
-          scheduled_at: scheduledAt,
-          status:       'scheduled',
-        })
-        if (error) throw error
-
-        // Marca como agendado
-        await (supabase as any).from('planner').update({ ig_scheduled: true }).eq('id', item.id)
-        await qc.invalidateQueries({ queryKey: ['planner'] })
-        await qc.invalidateQueries({ queryKey: ['scheduled_posts'] })
-        toast(`"${item.title}" agendado no Instagram! 🚀`, 'success')
-      } catch (err) {
-        console.error('Auto-schedule error:', item.id, err)
-        schedulingInProgress.current.delete(item.id)
+    if (!items) return
+    items.forEach(item => {
+      if (item.ig_scheduled && !notifiedScheduled.current.has(item.id)) {
+        // Só notifica se o item foi aprovado recentemente (reviewed_at nas últimas 2 minutos)
+        if (item.reviewed_at) {
+          const reviewedAt = new Date(item.reviewed_at).getTime()
+          const twoMinutesAgo = Date.now() - 2 * 60 * 1000
+          if (reviewedAt > twoMinutesAgo) {
+            notifiedScheduled.current.add(item.id)
+            toast(`"${item.title}" agendado no Instagram! 🚀`, 'success')
+          } else {
+            notifiedScheduled.current.add(item.id) // marca sem notificar
+          }
+        }
       }
     })
   }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
