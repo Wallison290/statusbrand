@@ -60,7 +60,7 @@ export function usePortalPlanner() {
           '*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,sort_order,is_ig_media,created_at), links:planner_links(id,url,label,created_at)'
         )
         .eq('client_id', clientId!)
-        .eq('sent_to_client', true)
+        .eq('sent_to_client' as any, true)
         .order('scheduled_date', { ascending: true })
       if (error) throw error
       return data as PlannerItem[]
@@ -284,7 +284,7 @@ export function useSubmitPartialApproval() {
         updatePayload.copy_feedback = feedback.trim() || null
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('planner')
         .update(updatePayload)
         .eq('id', plannerId)
@@ -302,7 +302,7 @@ export function useApproveAll() {
 
   return useMutation({
     mutationFn: async ({ plannerId }: { plannerId: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('planner')
         .update({
           approval_status: 'aprovado',
