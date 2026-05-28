@@ -430,18 +430,102 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
 
   // Ajuste solicitado — cliente pediu correções
   if (item.approval_status === 'ajuste_solicitado') {
+    const hasPartial = item.art_approval_status || item.copy_approval_status
     return (
-      <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
-            <Pencil className="w-3 h-3 text-white" />
+      <div className="space-y-2">
+        <p className="text-[10px] text-gray-500 uppercase tracking-wide">Ajuste solicitado pelo cliente</p>
+
+        {hasPartial ? (
+          <>
+            {/* Arte */}
+            {item.art_approval_status && (
+              <div className={`p-2.5 rounded-xl border ${
+                item.art_approval_status === 'aprovado'
+                  ? 'bg-green-50 border-green-200'
+                  : item.art_approval_status === 'ajuste_solicitado'
+                  ? 'bg-orange-50 border-orange-200'
+                  : item.art_approval_status === 'reprovado'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase">Arte</span>
+                  <span className={`text-[10px] font-semibold ${
+                    item.art_approval_status === 'aprovado' ? 'text-green-700'
+                    : item.art_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
+                    : item.art_approval_status === 'reprovado' ? 'text-red-700'
+                    : 'text-blue-700'
+                  }`}>
+                    {item.art_approval_status === 'aprovado' ? '✓ Aprovado'
+                      : item.art_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
+                      : item.art_approval_status === 'reprovado' ? '✗ Reprovado'
+                      : '↻ Ajuste realizado'}
+                  </span>
+                </div>
+                {item.art_feedback && (
+                  <p className="text-[11px] text-gray-700 leading-relaxed">
+                    <span className="font-medium">Cliente:</span> "{item.art_feedback}"
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Copy */}
+            {item.copy_approval_status && (
+              <div className={`p-2.5 rounded-xl border ${
+                item.copy_approval_status === 'aprovado'
+                  ? 'bg-green-50 border-green-200'
+                  : item.copy_approval_status === 'ajuste_solicitado'
+                  ? 'bg-orange-50 border-orange-200'
+                  : item.copy_approval_status === 'reprovado'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase">Copy</span>
+                  <span className={`text-[10px] font-semibold ${
+                    item.copy_approval_status === 'aprovado' ? 'text-green-700'
+                    : item.copy_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
+                    : item.copy_approval_status === 'reprovado' ? 'text-red-700'
+                    : 'text-blue-700'
+                  }`}>
+                    {item.copy_approval_status === 'aprovado' ? '✓ Aprovado'
+                      : item.copy_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
+                      : item.copy_approval_status === 'reprovado' ? '✗ Reprovado'
+                      : '↻ Ajuste realizado'}
+                  </span>
+                </div>
+                {item.copy_feedback && (
+                  <p className="text-[11px] text-gray-700 leading-relaxed">
+                    <span className="font-medium">Cliente:</span> "{item.copy_feedback}"
+                  </p>
+                )}
+              </div>
+            )}
+
+            <p className="text-[11px] text-orange-700 leading-relaxed px-0.5">
+              Realize as correções, edite o post e reenvie para aprovação.
+            </p>
+          </>
+        ) : (
+          <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
+                <Pencil className="w-3 h-3 text-white" />
+              </div>
+              <p className="text-xs font-semibold text-orange-800">Ajuste solicitado</p>
+            </div>
+            {item.client_feedback && (
+              <p className="text-[11px] text-orange-700 leading-relaxed">
+                <span className="font-medium">Cliente:</span> "{item.client_feedback}"
+              </p>
+            )}
+            <p className="text-[11px] text-orange-700 leading-relaxed">
+              Realize as correções, edite o post e reenvie para aprovação.
+              O agendamento ocorrerá automaticamente após a nova aprovação.
+            </p>
           </div>
-          <p className="text-xs font-semibold text-orange-800">Ajuste solicitado pelo cliente</p>
-        </div>
-        <p className="text-[11px] text-orange-700 leading-relaxed">
-          O cliente solicitou alterações neste {ptLabel}. Realize as correções, edite o post e reenvie para aprovação.
-          O agendamento ocorrerá automaticamente após a nova aprovação.
-        </p>
+        )}
       </div>
     )
   }

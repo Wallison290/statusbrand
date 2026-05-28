@@ -311,6 +311,65 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
   )
 }
 
+// ─── Bloco de status Arte / Copy para a agência ───────────────────────────────
+
+const approvalBg: Record<ApprovalStatus, string> = {
+  pendente_aprovacao: 'border-yellow-500/20 bg-yellow-500/5',
+  aprovado:           'border-green-500/20 bg-green-500/5',
+  ajuste_solicitado:  'border-orange-500/20 bg-orange-500/5',
+  ajuste_realizado:   'border-blue-500/20 bg-blue-500/5',
+  reprovado:          'border-red-500/20 bg-red-500/5',
+}
+
+function ApprovalFieldBlock({
+  label, status, feedback, showAction, onMarkDone, isPending,
+}: {
+  label: string
+  status: ApprovalStatus
+  feedback: string | null
+  showAction: boolean
+  onMarkDone: () => Promise<void>
+  isPending: boolean
+}) {
+  return (
+    <div className={`rounded-xl border p-3 ${approvalBg[status]}`}>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[status]}`} />
+          <span className={`text-[11px] font-semibold ${approvalTextColor[status]}`}>
+            {approvalLabel[status]}
+          </span>
+        </div>
+      </div>
+
+      {/* Feedback do cliente */}
+      {feedback && (status === 'ajuste_solicitado' || status === 'reprovado') && (
+        <div className="mt-2 flex items-start gap-2 bg-black/20 rounded-lg px-2.5 py-2">
+          <span className="text-[10px] text-gray-500 flex-shrink-0 mt-0.5">Cliente:</span>
+          <p className="text-xs text-gray-200 leading-relaxed break-words select-text flex-1">"{feedback}"</p>
+        </div>
+      )}
+
+      {/* Botão ajuste realizado */}
+      {showAction && status === 'ajuste_solicitado' && (
+        <button
+          onClick={onMarkDone}
+          disabled={isPending}
+          className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+        >
+          {isPending
+            ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            : <Check className="w-3 h-3" />}
+          Marcar ajuste de {label} como realizado
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function PlannerItemViewModal({
@@ -513,32 +572,68 @@ export function PlannerItemViewModal({
             </div>
           )}
 
-          {/* Resposta do cliente */}
+          {/* Resposta do cliente — Arte e Copy separados */}
           {item.approval_status && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Resposta do Cliente</p>
-              <div className="flex items-center gap-2 mb-2">
+            <div className="space-y-2">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide">Resposta do Cliente</p>
+
+              {/* Status geral + data */}
+              <div className="flex items-center gap-2 px-1">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
                 <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
                   {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
                 </span>
                 {item.reviewed_at && (
                   <span className="text-[10px] text-gray-600 ml-auto">
-                    {format(parseISO(item.reviewed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                   </span>
                 )}
               </div>
-              {item.client_feedback && (
-                <p className="text-xs text-[#0f0f0f] leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words select-text">
+
+              {/* Arte */}
+              {item.art_approval_status && (
+                <ApprovalFieldBlock
+                  label="Arte"
+                  status={item.art_approval_status as ApprovalStatus}
+                  feedback={item.art_feedback ?? null}
+                  showAction={showAgencyActions}
+                  onMarkDone={async () => {
+                    await updateItem.mutateAsync({ id: item.id, art_approval_status: 'ajuste_realizado' } as any)
+                    toast('Ajuste de Arte marcado como realizado.', 'success')
+                  }}
+                  isPending={updateItem.isPending}
+                />
+              )}
+
+              {/* Copy */}
+              {item.copy_approval_status && (
+                <ApprovalFieldBlock
+                  label="Copy"
+                  status={item.copy_approval_status as ApprovalStatus}
+                  feedback={item.copy_feedback ?? null}
+                  showAction={showAgencyActions}
+                  onMarkDone={async () => {
+                    await updateItem.mutateAsync({ id: item.id, copy_approval_status: 'ajuste_realizado' } as any)
+                    toast('Ajuste de Copy marcado como realizado.', 'success')
+                  }}
+                  isPending={updateItem.isPending}
+                />
+              )}
+
+              {/* Fallback legado: feedback geral quando não há campos parciais */}
+              {!item.art_approval_status && !item.copy_approval_status && item.client_feedback && (
+                <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words select-text">
                   "{item.client_feedback}"
                 </p>
               )}
-              {/* Botão "Ajuste realizado" — aparece apenas quando status é ajuste_solicitado e agência pode agir */}
-              {showAgencyActions && (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
+
+              {/* Botão legado "Ajuste realizado" — só quando não usa campos parciais */}
+              {showAgencyActions && !item.art_approval_status && !item.copy_approval_status &&
+                (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
                 <button
                   onClick={handleMarkAdjustmentDone}
                   disabled={updateItem.isPending}
-                  className="mt-3 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+                  className="mt-1 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
                 >
                   {updateItem.isPending
                     ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
