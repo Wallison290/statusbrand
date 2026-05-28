@@ -60,7 +60,7 @@ export function usePortalPlanner() {
           '*, client:clients(id,company_name), attachments:planner_attachments(id,file_name,file_type,file_url,file_size,sort_order,is_ig_media,created_at), links:planner_links(id,url,label,created_at)'
         )
         .eq('client_id', clientId!)
-        .or('sent_to_client.eq.true,sent_to_client.is.null' as any)
+        .eq('sent_to_client' as any, true)
         .order('scheduled_date', { ascending: true })
       if (error) throw error
       return data as PlannerItem[]
