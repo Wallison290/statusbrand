@@ -333,10 +333,15 @@ function ItemDetailView({
   const [copyPending, setCopyPending]   = useState<ApprovalStatus | null>(null)
   const [busyField, setBusyField]       = useState<'all' | 'art' | 'copy' | null>(null)
 
-  // Per-slide approval state (carousel)
-  const [slideApprovals, setSlideApprovals] = useState<Record<string, 'aprovado' | 'reprovado' | null>>(() => {
-    const m: Record<string, 'aprovado' | 'reprovado' | null> = {}
-    mediaItems.forEach(s => { m[s.id] = (item.art_approval_status === 'aprovado') ? 'aprovado' : null })
+  // Per-slide approval state (carousel) — inclui ajuste_solicitado e feedback por slide
+  type SlideDecision = {
+    status: 'aprovado' | 'ajuste_solicitado' | 'reprovado' | null
+    feedback: string
+    pendingStatus: 'ajuste_solicitado' | 'reprovado' | null
+  }
+  const [slideDecisions, setSlideDecisions] = useState<Record<string, SlideDecision>>(() => {
+    const m: Record<string, SlideDecision> = {}
+    mediaItems.forEach(s => { m[s.id] = { status: null, feedback: '', pendingStatus: null } })
     return m
   })
 
@@ -352,9 +357,9 @@ function ItemDetailView({
     setMediaIdx(0)
     setNotesExpanded(false)
     setExpandedSection('partes')
-    const m: Record<string, 'aprovado' | 'reprovado' | null> = {}
-    mediaItems.forEach(s => { m[s.id] = (item.art_approval_status === 'aprovado') ? 'aprovado' : null })
-    setSlideApprovals(m)
+    const m: Record<string, SlideDecision> = {}
+    mediaItems.forEach(s => { m[s.id] = { status: null, feedback: '', pendingStatus: null } })
+    setSlideDecisions(m)
   }, [item.id])
 
   const isBusy        = busyField !== null
@@ -408,19 +413,59 @@ function ItemDetailView({
     finally { setBusyField(null) }
   }
 
-  const handleSlideAction = async (slideId: string, status: 'aprovado' | 'reprovado') => {
-    const next = { ...slideApprovals, [slideId]: status }
-    setSlideApprovals(next)
-    const statuses = mediaItems.map(m => next[m.id])
-    if (!statuses.every(s => s !== null)) return  // ainda há slides sem decisão
-    const aggregate: ApprovalStatus = statuses.every(s => s === 'aprovado') ? 'aprovado' : 'reprovado'
-    const repSlides = mediaItems.filter(m => next[m.id] === 'reprovado').map((_, i) => `Arte ${mediaItems.findIndex(x => x.id === mediaItems.filter(m => next[m.id] === 'reprovado')[i]?.id) + 1}`).join(', ')
+  // Seleciona status para o slide atual — se precisa feedback, entra em modo pendente
+  const handleSlideStatus = (slideId: string, status: 'aprovado' | 'ajuste_solicitado' | 'reprovado') => {
+    const needsFeedback = status === 'ajuste_solicitado' || status === 'reprovado'
+    setSlideDecisions(prev => ({
+      ...prev,
+      [slideId]: {
+        ...prev[slideId],
+        pendingStatus: needsFeedback ? status : null,
+        status: needsFeedback ? prev[slideId].status : status,
+      }
+    }))
+  }
+
+  // Confirma decisão do slide (com ou sem feedback) e verifica se todos estão decididos
+  const confirmSlideDecision = async (slideId: string) => {
+    const decision = slideDecisions[slideId]
+    const finalStatus = decision.pendingStatus ?? decision.status!
+    const updatedDecisions = {
+      ...slideDecisions,
+      [slideId]: { status: finalStatus, feedback: decision.feedback.trim(), pendingStatus: null }
+    }
+    setSlideDecisions(updatedDecisions)
+
+    // Se todos os slides têm decisão confirmada, submete
+    const allDecided = mediaItems.every(m => {
+      const d = updatedDecisions[m.id]
+      return d.status !== null && d.pendingStatus === null
+    })
+    if (!allDecided) return
+
+    // Agrega: prioridade reprovado > ajuste_solicitado > aprovado
+    const statuses = mediaItems.map(m => updatedDecisions[m.id].status!)
+    const aggregate: ApprovalStatus = statuses.every(s => s === 'aprovado') ? 'aprovado'
+      : statuses.some(s => s === 'reprovado') ? 'reprovado'
+      : 'ajuste_solicitado'
+
+    // Feedback estruturado por slide (JSON) para a agência ver com detalhes
+    const feedbackData = mediaItems.map((m, i) => ({
+      slide: i + 1,
+      status: updatedDecisions[m.id].status!,
+      feedback: updatedDecisions[m.id].feedback,
+    }))
+
     setBusyField('art')
     try {
-      await submitPartial.mutateAsync({ plannerId: item.id, field: 'art', status: aggregate, feedback: aggregate === 'reprovado' ? `Slides reprovados: ${repSlides}` : '', currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus })
+      await submitPartial.mutateAsync({
+        plannerId: item.id, field: 'art', status: aggregate,
+        feedback: JSON.stringify(feedbackData),
+        currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus,
+      })
       setLocalArtStatus(aggregate)
       setLocalStatus(computeClientOverall(aggregate, localCopyStatus))
-      toast(`Arte: ${approvalLabels[aggregate]}!`, 'success')
+      toast('Carrossel avaliado! ✓', 'success')
     } catch (err: any) { toast(err.message, 'error') }
     finally { setBusyField(null) }
   }
@@ -490,17 +535,19 @@ function ItemDetailView({
                 <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
                   <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                     {mediaItems.map((m, i) => {
-                      const ss = slideApprovals[m.id]
+                      const sd = slideDecisions[m.id]
+                      const ss = sd?.status
                       return (
                         <button key={m.id} onClick={() => setMediaIdx(i)}
                           className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all
-                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'}`}>
+                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'}`}>
                           {m.kind === 'image'
                             ? <img src={m.file_url} className="w-full h-full object-cover" />
                             : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-3 h-3 text-gray-400" /></div>}
                           <div className="absolute bottom-0 right-0 bg-black/50 text-[7px] px-0.5 leading-3 rounded-tl" style={{ color: '#fff' }}>{i + 1}</div>
-                          {ss === 'aprovado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                          {ss === 'reprovado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
                         </button>
                       )
                     })}
@@ -681,39 +728,159 @@ function ItemDetailView({
                             <span className={`text-[11px] font-semibold ${approvalText[displayArtStatus]}`}>{approvalLabels[displayArtStatus]}</span>
                           </div>
                         ) : isCarousel ? (
-                          /* Carrossel: thumb + botões por slide */
-                          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                            {mediaItems.map((slide, i) => {
-                              const ss = slideApprovals[slide.id]
+                          /* Carrossel: seletor por slide sincronizado com o painel esquerdo */
+                          <div className="space-y-3">
+                            {/* Barra de progresso dos slides */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {mediaItems.map((slide, i) => {
+                                const sd = slideDecisions[slide.id]
+                                const ss = sd?.status
+                                const isPending = sd?.pendingStatus !== null
+                                const isActive = i === mediaIdx
+                                const dotColor = ss === 'aprovado' ? 'bg-green-500'
+                                  : ss === 'ajuste_solicitado' ? 'bg-orange-400'
+                                  : ss === 'reprovado' ? 'bg-red-500'
+                                  : isPending ? 'bg-yellow-400'
+                                  : 'bg-gray-200'
+                                return (
+                                  <button key={slide.id} onClick={() => setMediaIdx(i)}
+                                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border transition-all
+                                      ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+                                    Slide {i + 1}
+                                  </button>
+                                )
+                              })}
+                            </div>
+
+                            {/* Controles do slide atual */}
+                            {(() => {
+                              const slide = mediaItems[mediaIdx]
+                              if (!slide) return null
+                              const sd = slideDecisions[slide.id]
+                              const ss = sd?.status
+                              const pending = sd?.pendingStatus
+                              const needsFeedback = pending === 'ajuste_solicitado' || pending === 'reprovado'
+                              const isConfirmed = ss !== null && pending === null
+
                               return (
-                                <div key={slide.id} className="flex-shrink-0 w-[88px]">
-                                  <div onClick={() => setMediaIdx(i)}
-                                    className={`relative w-full aspect-square rounded-xl overflow-hidden border-2 mb-1.5 cursor-pointer transition-all
-                                      ${ss === 'aprovado' ? 'border-green-400' : ss === 'reprovado' ? 'border-red-400' : i === mediaIdx ? 'border-blue-400' : 'border-gray-200 hover:border-gray-300'}`}>
-                                    {slide.kind === 'image'
-                                      ? <img src={slide.file_url} className="w-full h-full object-cover" />
-                                      : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
-                                    <div className="absolute bottom-0.5 right-0.5 bg-black/50 text-[8px] px-1 rounded leading-4" style={{ color: '#fff' }}>{i + 1}</div>
-                                    {ss === 'aprovado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                                    {ss === 'reprovado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <button onClick={() => handleSlideAction(slide.id, 'aprovado')} disabled={isBusy}
-                                      className={`flex-1 flex items-center justify-center gap-0.5 py-1 rounded-lg text-[9px] font-semibold border transition-all disabled:opacity-50
-                                        ${ss === 'aprovado' ? 'bg-green-500 border-green-500' : 'bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:bg-green-50'}`}
-                                      style={ss === 'aprovado' ? { color: '#fff' } : {}}>
-                                      <CheckCircle2 className="w-2.5 h-2.5" /> Aprovar
-                                    </button>
-                                    <button onClick={() => handleSlideAction(slide.id, 'reprovado')} disabled={isBusy}
-                                      className={`flex-1 flex items-center justify-center gap-0.5 py-1 rounded-lg text-[9px] font-semibold border transition-all disabled:opacity-50
-                                        ${ss === 'reprovado' ? 'bg-red-500 border-red-500' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50'}`}
-                                      style={ss === 'reprovado' ? { color: '#fff' } : {}}>
-                                      <XCircle className="w-2.5 h-2.5" /> Reprovar
-                                    </button>
-                                  </div>
+                                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 space-y-2.5">
+                                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                                    Slide {mediaIdx + 1} de {mediaItems.length}
+                                    {isConfirmed && (
+                                      <span className={`ml-2 font-semibold ${ss === 'aprovado' ? 'text-green-600' : ss === 'ajuste_solicitado' ? 'text-orange-600' : 'text-red-600'}`}>
+                                        · {ss === 'aprovado' ? 'Aprovado' : ss === 'ajuste_solicitado' ? 'Ajuste solicitado' : 'Reprovado'}
+                                      </span>
+                                    )}
+                                  </p>
+
+                                  {isConfirmed ? (
+                                    /* Slide já decidido — mostra status + botão para alterar */
+                                    <div className="space-y-1.5">
+                                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[11px] font-semibold
+                                        ${ss === 'aprovado' ? 'bg-green-50 border-green-200 text-green-700'
+                                          : ss === 'ajuste_solicitado' ? 'bg-orange-50 border-orange-200 text-orange-700'
+                                          : 'bg-red-50 border-red-200 text-red-700'}`}>
+                                        {ss === 'aprovado' ? <CheckCircle2 className="w-3.5 h-3.5" />
+                                          : ss === 'ajuste_solicitado' ? <AlertCircle className="w-3.5 h-3.5" />
+                                          : <XCircle className="w-3.5 h-3.5" />}
+                                        {ss === 'aprovado' ? 'Aprovado' : ss === 'ajuste_solicitado' ? 'Ajuste solicitado' : 'Reprovado'}
+                                      </div>
+                                      {sd.feedback && (
+                                        <div className="flex items-start gap-1.5 px-2.5 py-2 bg-white border border-gray-100 rounded-lg">
+                                          <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                                          <p className="text-[11px] text-gray-600">{sd.feedback}</p>
+                                        </div>
+                                      )}
+                                      <button onClick={() => setSlideDecisions(prev => ({ ...prev, [slide.id]: { status: null, feedback: '', pendingStatus: null } }))}
+                                        className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">
+                                        Alterar decisão
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    /* Slide aguardando decisão */
+                                    <div className="space-y-2">
+                                      <div className="flex gap-1.5 flex-wrap">
+                                        <button onClick={async () => {
+                                            // Aprovar não precisa de feedback — confirma direto
+                                            const updatedDecisions = {
+                                              ...slideDecisions,
+                                              [slide.id]: { status: 'aprovado' as const, feedback: '', pendingStatus: null }
+                                            }
+                                            setSlideDecisions(updatedDecisions)
+                                            const allDecided = mediaItems.every(m => updatedDecisions[m.id]?.status !== null && updatedDecisions[m.id]?.pendingStatus === null)
+                                            if (!allDecided) return
+                                            const statuses = mediaItems.map(m => updatedDecisions[m.id].status!)
+                                            const aggregate: ApprovalStatus = statuses.every(s => s === 'aprovado') ? 'aprovado' : statuses.some(s => s === 'reprovado') ? 'reprovado' : 'ajuste_solicitado'
+                                            const feedbackData = mediaItems.map((m, i) => ({ slide: i + 1, status: updatedDecisions[m.id].status!, feedback: updatedDecisions[m.id].feedback }))
+                                            setBusyField('art')
+                                            try {
+                                              await submitPartial.mutateAsync({ plannerId: item.id, field: 'art', status: aggregate, feedback: JSON.stringify(feedbackData), currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus })
+                                              setLocalArtStatus(aggregate); setLocalStatus(computeClientOverall(aggregate, localCopyStatus))
+                                              toast('Carrossel avaliado! ✓', 'success')
+                                            } catch (err: any) { toast(err.message, 'error') }
+                                            finally { setBusyField(null) }
+                                          }} disabled={isBusy}
+                                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                                          <CheckCircle2 className="w-3 h-3" /> Aprovar
+                                        </button>
+                                        <button onClick={() => handleSlideStatus(slide.id, 'ajuste_solicitado')} disabled={isBusy}
+                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
+                                            ${pending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}>
+                                          <AlertCircle className="w-3 h-3" /> Solicitar ajuste
+                                        </button>
+                                        <button onClick={() => handleSlideStatus(slide.id, 'reprovado')} disabled={isBusy}
+                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
+                                            ${pending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}>
+                                          <XCircle className="w-3 h-3" /> Reprovar
+                                        </button>
+                                      </div>
+                                      {needsFeedback && (
+                                        <div className="space-y-2">
+                                          <textarea
+                                            value={sd.feedback}
+                                            onChange={e => setSlideDecisions(prev => ({ ...prev, [slide.id]: { ...prev[slide.id], feedback: e.target.value } }))}
+                                            placeholder={pending === 'ajuste_solicitado' ? 'O que precisa ajustar neste slide?' : 'Por que este slide foi reprovado?'}
+                                            rows={2}
+                                            className="w-full text-[11px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                                          />
+                                          <div className="flex items-center gap-2">
+                                            <button onClick={() => confirmSlideDecision(slide.id)} disabled={isBusy}
+                                              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-all disabled:opacity-50
+                                                ${pending === 'ajuste_solicitado' ? 'bg-orange-500 border-orange-500' : 'bg-red-500 border-red-500'}`}
+                                              style={{ color: '#fff' }}>
+                                              {isBusy ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                              Confirmar
+                                            </button>
+                                            <button onClick={() => setSlideDecisions(prev => ({ ...prev, [slide.id]: { ...prev[slide.id], pendingStatus: null } }))}
+                                              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">
+                                              Cancelar
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {!needsFeedback && (
+                                        <button onClick={() => confirmSlideDecision(slide.id)} disabled={isBusy || sd.status === null}
+                                          className="text-[10px] text-blue-500 hover:text-blue-700 font-medium transition-colors disabled:opacity-0">
+                                          Confirmar e ir para próximo
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               )
-                            })}
+                            })()}
+
+                            {/* Resumo + contador de progresso */}
+                            {(() => {
+                              const decided = mediaItems.filter(m => slideDecisions[m.id]?.status !== null && slideDecisions[m.id]?.pendingStatus === null).length
+                              const total = mediaItems.length
+                              return decided > 0 && decided < total ? (
+                                <p className="text-[10px] text-gray-400">
+                                  {decided} de {total} slides avaliados · navegue pelos slides para avaliar todos
+                                </p>
+                              ) : null
+                            })()}
                           </div>
                         ) : (
                           /* Arte única */

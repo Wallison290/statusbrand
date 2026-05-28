@@ -103,6 +103,17 @@ function computeOverallApproval(
   return 'pendente_aprovacao'
 }
 
+// Parseia feedback de carrossel (JSON por slide) — retorna null se for texto simples
+type CarouselSlide = { slide: number; status: 'aprovado' | 'ajuste_solicitado' | 'reprovado'; feedback: string }
+function parseCarouselFeedback(feedback: string | null | undefined): CarouselSlide[] | null {
+  if (!feedback) return null
+  try {
+    const data = JSON.parse(feedback)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0].slide === 'number') return data as CarouselSlide[]
+    return null
+  } catch { return null }
+}
+
 // Notifica o usuário portal do cliente que o ajuste foi realizado
 async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
   if (!clientId) return
@@ -999,7 +1010,8 @@ function PlannerItemView({
                   {/* ── Arte ── */}
                   {(item as any).art_approval_status && (() => {
                     const artStatus = (item as any).art_approval_status as ApprovalStatus
-                    const artFeedback = (item as any).art_feedback as string | null
+                    const artFeedbackRaw = (item as any).art_feedback as string | null
+                    const carouselSlides = parseCarouselFeedback(artFeedbackRaw)
                     const bgMap: Record<ApprovalStatus, string> = {
                       pendente_aprovacao: 'border-yellow-200 bg-yellow-50',
                       aprovado:           'border-green-200 bg-green-50',
@@ -1007,10 +1019,21 @@ function PlannerItemView({
                       ajuste_realizado:   'border-blue-200 bg-blue-50',
                       reprovado:          'border-red-200 bg-red-50',
                     }
+                    const slideDot: Record<string, string> = {
+                      aprovado: 'bg-green-500', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-500'
+                    }
+                    const slideText: Record<string, string> = {
+                      aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-700', reprovado: 'text-red-700'
+                    }
+                    const slideLabel: Record<string, string> = {
+                      aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado'
+                    }
                     return (
                       <div className={`rounded-xl border p-3 ${bgMap[artStatus]}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Arte</p>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                            Arte{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
+                          </p>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[artStatus]}`} />
                             <span className={`text-[11px] font-semibold ${approvalTextColor[artStatus]}`}>
@@ -1018,12 +1041,33 @@ function PlannerItemView({
                             </span>
                           </div>
                         </div>
-                        {artFeedback && artStatus !== 'aprovado' && artStatus !== 'pendente_aprovacao' && (
+
+                        {/* Carrossel: mostra por slide */}
+                        {carouselSlides ? (
+                          <div className="mt-2 space-y-1.5">
+                            {carouselSlides.map(s => (
+                              <div key={s.slide} className="flex flex-col gap-1 bg-white/70 rounded-lg px-2.5 py-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-300'}`} />
+                                  <span className="text-[10px] font-semibold text-gray-500">Slide {s.slide}</span>
+                                  <span className={`text-[10px] font-semibold ml-auto ${slideText[s.status] ?? 'text-gray-500'}`}>
+                                    {slideLabel[s.status] ?? s.status}
+                                  </span>
+                                </div>
+                                {s.feedback && (
+                                  <p className="text-[11px] text-gray-600 leading-relaxed pl-3 break-words">"{s.feedback}"</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : artFeedbackRaw && artStatus !== 'aprovado' && artStatus !== 'pendente_aprovacao' ? (
+                          /* Feedback texto simples (legado) */
                           <div className="mt-2 flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
                             <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">Cliente:</span>
-                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{artFeedback}"</p>
+                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{artFeedbackRaw}"</p>
                           </div>
-                        )}
+                        ) : null}
+
                         {(artStatus === 'ajuste_solicitado' || artStatus === 'reprovado') && (
                           <button
                             onClick={async () => {
