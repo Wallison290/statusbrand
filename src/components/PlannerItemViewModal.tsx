@@ -311,6 +311,21 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
   )
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function computeOverallApproval(
+  art: ApprovalStatus | null,
+  copy: ApprovalStatus | null,
+): ApprovalStatus {
+  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
+  if (statuses.length === 0) return 'pendente_aprovacao'
+  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
+  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
+  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
+  if (statuses.every(s => s === 'aprovado')) return 'aprovado'
+  return 'pendente_aprovacao'
+}
+
 // ─── Bloco de status Arte / Copy para a agência ───────────────────────────────
 
 const approvalBg: Record<ApprovalStatus, string> = {
@@ -604,7 +619,13 @@ export function PlannerItemViewModal({
                   feedback={item.art_feedback ?? null}
                   showAction={showAgencyActions}
                   onMarkDone={async () => {
-                    await updateItem.mutateAsync({ id: item.id, art_approval_status: 'ajuste_realizado' } as any)
+                    const newCopyStatus = item.copy_approval_status as ApprovalStatus | null
+                    const newOverall = computeOverallApproval('ajuste_realizado', newCopyStatus)
+                    await updateItem.mutateAsync({
+                      id: item.id,
+                      art_approval_status: 'ajuste_realizado',
+                      approval_status: newOverall,
+                    } as any)
                     toast('Ajuste de Arte marcado como realizado.', 'success')
                   }}
                   isPending={updateItem.isPending}
@@ -619,7 +640,13 @@ export function PlannerItemViewModal({
                   feedback={item.copy_feedback ?? null}
                   showAction={showAgencyActions}
                   onMarkDone={async () => {
-                    await updateItem.mutateAsync({ id: item.id, copy_approval_status: 'ajuste_realizado' } as any)
+                    const newArtStatus = item.art_approval_status as ApprovalStatus | null
+                    const newOverall = computeOverallApproval(newArtStatus, 'ajuste_realizado')
+                    await updateItem.mutateAsync({
+                      id: item.id,
+                      copy_approval_status: 'ajuste_realizado',
+                      approval_status: newOverall,
+                    } as any)
                     toast('Ajuste de Copy marcado como realizado.', 'success')
                   }}
                   isPending={updateItem.isPending}

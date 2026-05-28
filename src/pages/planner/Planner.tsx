@@ -89,6 +89,20 @@ const approvalLabel: Record<ApprovalStatus, string> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Recalcula o approval_status geral com base nos status parciais Arte e Copy
+function computeOverallApproval(
+  art: ApprovalStatus | null,
+  copy: ApprovalStatus | null,
+): ApprovalStatus {
+  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
+  if (statuses.length === 0) return 'pendente_aprovacao'
+  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
+  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
+  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
+  if (statuses.every(s => s === 'aprovado')) return 'aprovado'
+  return 'pendente_aprovacao'
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
@@ -968,7 +982,13 @@ function PlannerItemView({
                           <button
                             onClick={async () => {
                               try {
-                                await updateItem.mutateAsync({ id: item.id, art_approval_status: 'ajuste_realizado' } as any)
+                                const newCopyStatus = (item as any).copy_approval_status as ApprovalStatus | null
+                                const newOverall = computeOverallApproval('ajuste_realizado', newCopyStatus)
+                                await updateItem.mutateAsync({
+                                  id: item.id,
+                                  art_approval_status: 'ajuste_realizado',
+                                  approval_status: newOverall,
+                                } as any)
                                 toast('Ajuste de Arte marcado como realizado.', 'success')
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
@@ -1017,7 +1037,13 @@ function PlannerItemView({
                           <button
                             onClick={async () => {
                               try {
-                                await updateItem.mutateAsync({ id: item.id, copy_approval_status: 'ajuste_realizado' } as any)
+                                const newArtStatus = (item as any).art_approval_status as ApprovalStatus | null
+                                const newOverall = computeOverallApproval(newArtStatus, 'ajuste_realizado')
+                                await updateItem.mutateAsync({
+                                  id: item.id,
+                                  copy_approval_status: 'ajuste_realizado',
+                                  approval_status: newOverall,
+                                } as any)
                                 toast('Ajuste de Copy marcado como realizado.', 'success')
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
