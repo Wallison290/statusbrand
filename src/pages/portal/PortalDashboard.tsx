@@ -297,25 +297,27 @@ function computeClientOverall(
 function ItemDetailView({
   item, open, onClose,
 }: { item: PlannerItem; open: boolean; onClose: () => void }) {
-  // Carrossel: imagens + vídeos no painel esquerdo
-  const mediaItems = [
+  const submitPartial = useSubmitPartialApproval()
+  const approveAll   = useApproveAll()
+  const { toast }    = useToast()
+
+  // Mídias (imagens + vídeos, ordenadas por sort_order)
+  const mediaItems = useMemo(() => [
     ...(item.attachments?.filter(a => a.file_type.startsWith('image/')) || []).map(a => ({ ...a, kind: 'image' as const })),
     ...(item.attachments?.filter(a => a.file_type.startsWith('video/')) || []).map(a => ({ ...a, kind: 'video' as const })),
-  ]
+  ].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)), [item.attachments])
+
   const otherAttachments = item.attachments?.filter(
     (a: PlannerAttachment) => !a.file_type.startsWith('image/') && !a.file_type.startsWith('video/')
   ) || []
 
-  const [mediaIdx, setMediaIdx] = useState(0)
-  const currentMedia = mediaItems[mediaIdx] ?? null
-  const hasMedia = mediaItems.length > 0
-
+  const isCarousel = mediaItems.length > 1
+  const [mediaIdx, setMediaIdx]       = useState(0)
+  const currentMedia                   = mediaItems[mediaIdx] ?? null
   const [notesExpanded, setNotesExpanded] = useState(false)
+  const [expandedSection, setExpandedSection] = useState<'completa' | 'partes'>('partes')
 
-  const submitPartial = useSubmitPartialApproval()
-  const approveAll = useApproveAll()
-  const { toast } = useToast()
-
+  // Approval state
   const [localStatus, setLocalStatus] = useState<ApprovalStatus>(
     (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
   )
@@ -325,15 +327,17 @@ function ItemDetailView({
   const [localCopyStatus, setLocalCopyStatus] = useState<ApprovalStatus | null>(
     (item.copy_approval_status as ApprovalStatus) || null
   )
-
-  // Feedback inline por campo (art / copy)
   const [artFeedback, setArtFeedback]   = useState(item.art_feedback || '')
   const [copyFeedback, setCopyFeedback] = useState(item.copy_feedback || '')
-  // Qual campo está aguardando feedback (para mostrar a caixa)
-  const [artPending, setArtPending]   = useState<ApprovalStatus | null>(null)
-  const [copyPending, setCopyPending] = useState<ApprovalStatus | null>(null)
+  const [copyPending, setCopyPending]   = useState<ApprovalStatus | null>(null)
+  const [busyField, setBusyField]       = useState<'all' | 'art' | 'copy' | null>(null)
 
-  const [busyField, setBusyField] = useState<'all' | 'art' | 'copy' | null>(null)
+  // Per-slide approval state (carousel)
+  const [slideApprovals, setSlideApprovals] = useState<Record<string, 'aprovado' | 'reprovado' | null>>(() => {
+    const m: Record<string, 'aprovado' | 'reprovado' | null> = {}
+    mediaItems.forEach(s => { m[s.id] = (item.art_approval_status === 'aprovado') ? 'aprovado' : null })
+    return m
+  })
 
   useEffect(() => {
     setLocalStatus((item.approval_status || 'pendente_aprovacao') as ApprovalStatus)
@@ -341,147 +345,184 @@ function ItemDetailView({
     setLocalCopyStatus((item.copy_approval_status as ApprovalStatus) || null)
     setArtFeedback(item.art_feedback || '')
     setCopyFeedback(item.copy_feedback || '')
-    setArtPending(null)
     setCopyPending(null)
     setBusyField(null)
     setMediaIdx(0)
     setNotesExpanded(false)
+    setExpandedSection('partes')
+    const m: Record<string, 'aprovado' | 'reprovado' | null> = {}
+    mediaItems.forEach(s => { m[s.id] = (item.art_approval_status === 'aprovado') ? 'aprovado' : null })
+    setSlideApprovals(m)
   }, [item.id])
+
+  const isBusy        = busyField !== null
+  const overallDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
+  const artResolved   = (localArtStatus  || 'pendente_aprovacao') as ApprovalStatus
+  const copyResolved  = (localCopyStatus || 'pendente_aprovacao') as ApprovalStatus
+  const artDecided    = artResolved  !== 'pendente_aprovacao' && artResolved  !== 'ajuste_realizado'
+  const copyDecided   = copyResolved !== 'pendente_aprovacao' && copyResolved !== 'ajuste_realizado'
+  const copyNeedsFeedback = copyPending === 'ajuste_solicitado' || copyPending === 'reprovado'
+
+  // ── Handlers ──
 
   const handleApproveAll = async () => {
     setBusyField('all')
     try {
       await approveAll.mutateAsync({ plannerId: item.id })
-      setLocalStatus('aprovado')
-      setLocalArtStatus('aprovado')
-      setLocalCopyStatus('aprovado')
-      toast('Tudo aprovado!', 'success')
-    } catch (err: any) {
-      toast(err.message, 'error')
-    } finally {
-      setBusyField(null)
-    }
+      setLocalStatus('aprovado'); setLocalArtStatus('aprovado'); setLocalCopyStatus('aprovado')
+      const all: Record<string, 'aprovado' | 'reprovado' | null> = {}
+      mediaItems.forEach(s => { all[s.id] = 'aprovado' })
+      setSlideApprovals(all)
+      toast('Tudo aprovado! 🎉', 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+    finally { setBusyField(null) }
   }
 
-  const handlePartial = async (field: 'art' | 'copy', status: ApprovalStatus, feedback: string) => {
-    // Se precisar de feedback e não tiver sido confirmado ainda, mostra a caixa
-    const needsFeedback = status === 'ajuste_solicitado' || status === 'reprovado'
-    if (needsFeedback) {
-      if (field === 'art') {
-        if (artPending !== status) { setArtPending(status); return }
-      } else {
-        if (copyPending !== status) { setCopyPending(status); return }
-      }
-    }
-    setBusyField(field)
+  const handleArtAction = async (status: 'aprovado' | 'reprovado') => {
+    setBusyField('art')
     try {
-      await submitPartial.mutateAsync({
-        plannerId: item.id,
-        field,
-        status,
-        feedback: field === 'art' ? artFeedback : copyFeedback,
-        currentArtStatus: localArtStatus,
-        currentCopyStatus: localCopyStatus,
-      })
-      if (field === 'art') {
-        setLocalArtStatus(status)
-        setArtPending(null)
-        // recalcula geral
-        const overall = computeClientOverall(status, localCopyStatus)
-        setLocalStatus(overall)
-      } else {
-        setLocalCopyStatus(status)
-        setCopyPending(null)
-        const overall = computeClientOverall(localArtStatus, status)
-        setLocalStatus(overall)
-      }
-      toast(`${field === 'art' ? 'Arte' : 'Copy'}: ${approvalLabels[status]}!`, 'success')
-    } catch (err: any) {
-      toast(err.message, 'error')
-    } finally {
-      setBusyField(null)
-    }
+      await submitPartial.mutateAsync({ plannerId: item.id, field: 'art', status, feedback: '', currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus })
+      setLocalArtStatus(status)
+      setLocalStatus(computeClientOverall(status, localCopyStatus))
+      toast(`Arte: ${approvalLabels[status]}!`, 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+    finally { setBusyField(null) }
   }
 
-  const isBusy = busyField !== null
-  const overallDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
+  const handleSlideAction = async (slideId: string, status: 'aprovado' | 'reprovado') => {
+    const next = { ...slideApprovals, [slideId]: status }
+    setSlideApprovals(next)
+    const statuses = mediaItems.map(m => next[m.id])
+    if (!statuses.every(s => s !== null)) return  // ainda há slides sem decisão
+    const aggregate: ApprovalStatus = statuses.every(s => s === 'aprovado') ? 'aprovado' : 'reprovado'
+    const repSlides = mediaItems.filter(m => next[m.id] === 'reprovado').map((_, i) => `Arte ${mediaItems.findIndex(x => x.id === mediaItems.filter(m => next[m.id] === 'reprovado')[i]?.id) + 1}`).join(', ')
+    setBusyField('art')
+    try {
+      await submitPartial.mutateAsync({ plannerId: item.id, field: 'art', status: aggregate, feedback: aggregate === 'reprovado' ? `Slides reprovados: ${repSlides}` : '', currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus })
+      setLocalArtStatus(aggregate)
+      setLocalStatus(computeClientOverall(aggregate, localCopyStatus))
+      toast(`Arte: ${approvalLabels[aggregate]}!`, 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+    finally { setBusyField(null) }
+  }
+
+  const handleCopyAction = async (status: ApprovalStatus) => {
+    const needsFeedback = status === 'ajuste_solicitado' || status === 'reprovado'
+    if (needsFeedback && copyPending !== status) { setCopyPending(status); return }
+    setBusyField('copy')
+    try {
+      await submitPartial.mutateAsync({ plannerId: item.id, field: 'copy', status, feedback: copyFeedback, currentArtStatus: localArtStatus, currentCopyStatus: localCopyStatus })
+      setLocalCopyStatus(status); setCopyPending(null)
+      setLocalStatus(computeClientOverall(localArtStatus, status))
+      toast(`Copy: ${approvalLabels[status]}!`, 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+    finally { setBusyField(null) }
+  }
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
-      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden bg-white flex flex-col h-[90vh]">
-        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col" style={{ maxHeight: '92vh' }}>
+        <div className="flex flex-col lg:flex-row overflow-hidden" style={{ height: '92vh' }}>
 
-          {/* ══ ESQUERDA: Mídia — preenche todo o painel ══ */}
-          {hasMedia && (
-            <div className="lg:w-1/2 flex-shrink-0 relative bg-gray-200 overflow-hidden h-[45vw] lg:h-full">
-              {currentMedia?.kind === 'image' ? (
-                <img src={currentMedia.file_url} alt={currentMedia.file_name}
-                  className="absolute inset-0 w-full h-full object-cover" />
-              ) : currentMedia?.kind === 'video' ? (
-                <video key={currentMedia.file_url} src={currentMedia.file_url}
-                  autoPlay muted loop playsInline controls
-                  className="absolute inset-0 w-full h-full object-cover" />
-              ) : null}
-
-              {mediaItems.length > 1 && (
-                <>
-                  <button onClick={() => setMediaIdx(i => Math.max(0, i - 1))} disabled={mediaIdx === 0}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))} disabled={mediaIdx === mediaItems.length - 1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              {mediaItems.length > 1 && (
-                <div className="absolute bottom-3 left-0 right-0 z-10 flex items-center justify-center gap-1.5">
-                  {mediaItems.map((_, i) => (
-                    <button key={i} onClick={() => setMediaIdx(i)}
-                      className={`rounded-full transition-all ${i === mediaIdx ? 'w-2 h-2 bg-white shadow' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`} />
-                  ))}
-                  <span className="ml-1.5 text-[10px] text-white font-semibold drop-shadow">{mediaIdx + 1}/{mediaItems.length}</span>
+          {/* ══ ESQUERDA: Prévia ══ */}
+          {mediaItems.length > 0 && (
+            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-[#f7f7f7] border-r border-gray-100">
+              {/* Badge "Prévia do post" */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-white border-b border-gray-100 flex-shrink-0">
+                <div className="w-5 h-5 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
+                  <ImageIcon className="w-3 h-3 text-gray-500" />
                 </div>
-              )}
+                <span className="text-[11px] font-medium text-gray-600">Prévia do post</span>
+              </div>
 
-              {currentMedia && (
-                <a href={currentMedia.file_url} target="_blank" rel="noopener noreferrer"
-                  className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/80 hover:text-white transition-all">
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+              {/* Mídia principal */}
+              <div className="flex-1 relative min-h-0">
+                {currentMedia?.kind === 'image' ? (
+                  <img src={currentMedia.file_url} alt={currentMedia.file_name}
+                    className="absolute inset-0 w-full h-full object-contain" />
+                ) : currentMedia?.kind === 'video' ? (
+                  <video key={currentMedia.file_url} src={currentMedia.file_url}
+                    autoPlay muted loop playsInline controls
+                    className="absolute inset-0 w-full h-full object-contain" />
+                ) : null}
+                {/* Setas de navegação */}
+                {isCarousel && (
+                  <>
+                    <button onClick={() => setMediaIdx(i => Math.max(0, i - 1))} disabled={mediaIdx === 0}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30">
+                      <ChevronLeft className="w-4 h-4 text-gray-700" />
+                    </button>
+                    <button onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))} disabled={mediaIdx === mediaItems.length - 1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30">
+                      <ChevronRight className="w-4 h-4 text-gray-700" />
+                    </button>
+                  </>
+                )}
+                {currentMedia && (
+                  <a href={currentMedia.file_url} target="_blank" rel="noopener noreferrer"
+                    className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/25 hover:bg-black/40 flex items-center justify-center transition-all">
+                    <ExternalLink className="w-3 h-3" style={{ color: '#fff' }} />
+                  </a>
+                )}
+              </div>
+
+              {/* Thumbnails de slides (carrossel) */}
+              {isCarousel && (
+                <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {mediaItems.map((m, i) => {
+                      const ss = slideApprovals[m.id]
+                      return (
+                        <button key={m.id} onClick={() => setMediaIdx(i)}
+                          className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all
+                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'}`}>
+                          {m.kind === 'image'
+                            ? <img src={m.file_url} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-3 h-3 text-gray-400" /></div>}
+                          <div className="absolute bottom-0 right-0 bg-black/50 text-[7px] px-0.5 leading-3 rounded-tl" style={{ color: '#fff' }}>{i + 1}</div>
+                          {ss === 'aprovado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'reprovado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2">
+                    ℹ️ Esse post contém {mediaItems.length} artes (imagem, vídeo ou carrossel)
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* ══ DIREITA: Informações + Aprovação ══ */}
-          <div className={`flex flex-col overflow-hidden bg-white ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-gray-200' : 'w-full'} flex-1`}>
+          {/* ══ DIREITA: Info + Aprovação ══ */}
+          <div className="flex flex-col flex-1 overflow-hidden bg-white min-w-0">
 
-            {/* Header fixo */}
-            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-200">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                    <span className="text-[11px] text-gray-500">
-                      {format(parseISO(item.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
-                      {item.scheduled_time && ` · ${item.scheduled_time.slice(0, 5)}`}
-                    </span>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-[11px] text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
-                    <span className="text-gray-300">·</span>
-                    <span className={`text-[11px] font-semibold ${statusTextColors[item.status as PlannerStatus]}`}>
-                      {statusLabels[item.status as PlannerStatus]}
-                    </span>
+            {/* Header */}
+            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <span className="text-[11px] text-gray-500">
+                    {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {item.scheduled_time && ` às ${item.scheduled_time.slice(0, 5)}`}
+                  </span>
+                  <span className="text-gray-200">·</span>
+                  <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[localStatus]}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[localStatus]}`} />
+                    {approvalLabels[localStatus]}
                   </div>
-                  <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
                 </div>
                 <button onClick={onClose}
-                  className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all flex-shrink-0">
+                  className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all flex-shrink-0">
                   <X className="w-3.5 h-3.5" />
                 </button>
+              </div>
+              <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md font-medium">
+                  {statusLabels[item.status as PlannerStatus]}
+                </span>
+                <span className="text-[10px] text-gray-400">{contentTypeLabels[item.content_type as ContentType]}</span>
               </div>
             </div>
 
@@ -491,17 +532,32 @@ function ItemDetailView({
               {/* Legenda */}
               {item.notes && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Legenda</p>
-                  <div className="relative">
-                    <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
-                      {item.notes}
-                    </p>
-                    {item.notes.length > 200 && (
-                      <button onClick={() => setNotesExpanded(v => !v)}
-                        className="text-[12px] text-gray-500 hover:text-gray-700 mt-1.5 font-medium transition-colors">
-                        {notesExpanded ? 'ver menos' : 'ver mais'}
-                      </button>
-                    )}
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">Legenda</p>
+                  <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-3' : ''}`}>
+                    {item.notes}
+                  </p>
+                  {item.notes.length > 120 && (
+                    <button onClick={() => setNotesExpanded(v => !v)}
+                      className="text-[12px] text-blue-500 hover:text-blue-700 mt-0.5 font-medium transition-colors">
+                      {notesExpanded ? 'ver menos' : 'ver mais'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Links */}
+              {item.links && item.links.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">Links</p>
+                  <div className="space-y-1.5">
+                    {item.links.map(link => (
+                      <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-100 rounded-lg hover:bg-gray-100 transition-colors">
+                        <Link2 className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                        <span className="text-xs text-blue-600 truncate flex-1">{link.label || link.url}</span>
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
@@ -509,11 +565,11 @@ function ItemDetailView({
               {/* Outros anexos */}
               {otherAttachments.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Anexos</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">Anexos</p>
                   <div className="space-y-1.5">
                     {otherAttachments.map((att: PlannerAttachment) => (
                       <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-100 rounded-lg hover:bg-gray-100 transition-colors">
                         <FileTypeIcon type={att.file_type} size="md" />
                         <span className="text-xs text-gray-700 truncate flex-1">{att.file_name}</span>
                         {att.file_size && <span className="text-[10px] text-gray-400 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
@@ -524,43 +580,19 @@ function ItemDetailView({
                 </div>
               )}
 
-              {/* Links */}
-              {item.links && item.links.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Links</p>
-                  <div className="space-y-1.5">
-                    {item.links.map(link => (
-                      <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
-                        <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                        <span className="text-xs text-blue-600 flex-1 min-w-0 break-all">{link.label || link.url}</span>
-                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Seção de Aprovação ── */}
+              {/* ── Aprovação do cliente ── */}
               <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
 
-                {/* Header: status geral + aprovar tudo */}
-                <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#fafafa] border-b border-gray-100">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[localStatus]}`} />
-                    <p className={`text-[12px] font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</p>
-                    {item.reviewed_at && (
-                      <span className="text-[10px] text-gray-400 truncate hidden sm:block">
-                        · {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                      </span>
-                    )}
+                {/* Card header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div>
+                    <p className="text-[13px] font-semibold text-gray-800">Aprovação do cliente</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Escolha como deseja aprovar este post.</p>
                   </div>
                   {!overallDecided && (
-                    <button
-                      onClick={handleApproveAll}
-                      disabled={isBusy}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-green-600 text-white hover:bg-green-700 border border-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0" style={{ color: '#ffffff' }}
-                    >
+                    <button onClick={handleApproveAll} disabled={isBusy}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold bg-green-600 hover:bg-green-700 border border-green-700 disabled:opacity-50 transition-all flex-shrink-0"
+                      style={{ color: '#ffffff' }}>
                       {busyField === 'all'
                         ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         : <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -569,38 +601,204 @@ function ItemDetailView({
                   )}
                 </div>
 
-                {/* Arte */}
-                <div className="px-4 py-3.5 border-b border-gray-100">
-                  <PartialApprovalBlock
-                    label="Arte"
-                    description="Imagem, vídeo ou carrossel"
-                    status={localArtStatus}
-                    pending={artPending}
-                    feedback={artFeedback}
-                    isBusy={isBusy}
-                    busyThis={busyField === 'art'}
-                    onAction={(s) => handlePartial('art', s, artFeedback)}
-                    onFeedbackChange={setArtFeedback}
-                    onCancelPending={() => setArtPending(null)}
-                  />
+                {/* ─ Opção 1: Aprovação completa ─ */}
+                <div className="border-b border-gray-100">
+                  <button
+                    onClick={() => setExpandedSection(s => s === 'completa' ? 'partes' : 'completa')}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
+                    <div className="w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-gray-800">Aprovação completa</p>
+                      <p className="text-[11px] text-gray-400">Aprova todas as artes e textos do post de uma vez.</p>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${expandedSection === 'completa' ? 'rotate-90' : ''}`} />
+                  </button>
+                  {expandedSection === 'completa' && (
+                    <div className="px-4 pb-3.5">
+                      {overallDecided ? (
+                        <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${approvalBg[localStatus]}`}>
+                          <span className={approvalText[localStatus]}>{approvalIcons[localStatus]}</span>
+                          <span className={`text-[12px] font-semibold ${approvalText[localStatus]}`}>{approvalLabels[localStatus]}</span>
+                        </div>
+                      ) : (
+                        <button onClick={handleApproveAll} disabled={isBusy}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-all"
+                          style={{ color: '#ffffff' }}>
+                          {busyField === 'all'
+                            ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            : <CheckCircle2 className="w-4 h-4" />}
+                          Aprovar tudo de uma vez
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Copy */}
-                <div className="px-4 py-3.5">
-                  <PartialApprovalBlock
-                    label="Copy"
-                    description="Legenda e texto do post"
-                    status={localCopyStatus}
-                    pending={copyPending}
-                    feedback={copyFeedback}
-                    isBusy={isBusy}
-                    busyThis={busyField === 'copy'}
-                    onAction={(s) => handlePartial('copy', s, copyFeedback)}
-                    onFeedbackChange={setCopyFeedback}
-                    onCancelPending={() => setCopyPending(null)}
-                  />
-                </div>
+                {/* ─ Opção 2: Aprovação por partes ─ */}
+                <div>
+                  <button
+                    onClick={() => setExpandedSection(s => s === 'partes' ? 'completa' : 'partes')}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
+                    <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-gray-800">Aprovação por partes</p>
+                      <p className="text-[11px] text-gray-400">Aprove ou reprove cada arte ou texto individualmente.</p>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${expandedSection === 'partes' ? 'rotate-90' : ''}`} />
+                  </button>
 
+                  {expandedSection === 'partes' && (
+                    <div className="px-4 pb-4 space-y-4 border-t border-gray-50">
+
+                      {/* ── ARTE ── */}
+                      <div className="pt-3">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Arte</span>
+                            <span className="text-[9px] text-gray-300">·</span>
+                            <span className="text-[10px] text-gray-400">Imagem, vídeo ou carrossel</span>
+                          </div>
+                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[artResolved]}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[artResolved]}`} />
+                            {approvalLabels[artResolved]}
+                          </div>
+                        </div>
+
+                        {artDecided ? (
+                          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[artResolved]}`}>
+                            <span className={approvalText[artResolved]}>{approvalIcons[artResolved]}</span>
+                            <span className={`text-[11px] font-semibold ${approvalText[artResolved]}`}>{approvalLabels[artResolved]}</span>
+                          </div>
+                        ) : isCarousel ? (
+                          /* Carrossel: thumb + botões por slide */
+                          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                            {mediaItems.map((slide, i) => {
+                              const ss = slideApprovals[slide.id]
+                              return (
+                                <div key={slide.id} className="flex-shrink-0 w-[88px]">
+                                  <div onClick={() => setMediaIdx(i)}
+                                    className={`relative w-full aspect-square rounded-xl overflow-hidden border-2 mb-1.5 cursor-pointer transition-all
+                                      ${ss === 'aprovado' ? 'border-green-400' : ss === 'reprovado' ? 'border-red-400' : i === mediaIdx ? 'border-blue-400' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    {slide.kind === 'image'
+                                      ? <img src={slide.file_url} className="w-full h-full object-cover" />
+                                      : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
+                                    <div className="absolute bottom-0.5 right-0.5 bg-black/50 text-[8px] px-1 rounded leading-4" style={{ color: '#fff' }}>{i + 1}</div>
+                                    {ss === 'aprovado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                                    {ss === 'reprovado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <button onClick={() => handleSlideAction(slide.id, 'aprovado')} disabled={isBusy}
+                                      className={`flex-1 flex items-center justify-center gap-0.5 py-1 rounded-lg text-[9px] font-semibold border transition-all disabled:opacity-50
+                                        ${ss === 'aprovado' ? 'bg-green-500 border-green-500' : 'bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:bg-green-50'}`}
+                                      style={ss === 'aprovado' ? { color: '#fff' } : {}}>
+                                      <CheckCircle2 className="w-2.5 h-2.5" /> Aprovar
+                                    </button>
+                                    <button onClick={() => handleSlideAction(slide.id, 'reprovado')} disabled={isBusy}
+                                      className={`flex-1 flex items-center justify-center gap-0.5 py-1 rounded-lg text-[9px] font-semibold border transition-all disabled:opacity-50
+                                        ${ss === 'reprovado' ? 'bg-red-500 border-red-500' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:bg-red-50'}`}
+                                      style={ss === 'reprovado' ? { color: '#fff' } : {}}>
+                                      <XCircle className="w-2.5 h-2.5" /> Reprovar
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          /* Arte única */
+                          <div className="flex gap-1.5">
+                            <button onClick={() => handleArtAction('aprovado')} disabled={isBusy}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                              {busyField === 'art' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                              Aprovar
+                            </button>
+                            <button onClick={() => handleArtAction('reprovado')} disabled={isBusy}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50 transition-all disabled:opacity-50">
+                              <XCircle className="w-3 h-3" /> Reprovar
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Feedback arte salvo */}
+                        {artFeedback && (artResolved === 'reprovado' || artResolved === 'ajuste_solicitado') && (
+                          <div className="mt-2 flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+                            <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-[11px] text-gray-600 leading-relaxed">{artFeedback}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="h-px bg-gray-100" />
+
+                      {/* ── COPY ── */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Copy</span>
+                            <span className="text-[9px] text-gray-300">·</span>
+                            <span className="text-[10px] text-gray-400">Legenda e texto do post</span>
+                          </div>
+                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[copyResolved]}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[copyResolved]}`} />
+                            {approvalLabels[copyResolved]}
+                          </div>
+                        </div>
+
+                        {copyDecided ? (
+                          <div>
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${approvalBg[copyResolved]}`}>
+                              <span className={approvalText[copyResolved]}>{approvalIcons[copyResolved]}</span>
+                              <span className={`text-[11px] font-semibold ${approvalText[copyResolved]}`}>{approvalLabels[copyResolved]}</span>
+                            </div>
+                            {copyFeedback && (copyResolved === 'ajuste_solicitado' || copyResolved === 'reprovado') && (
+                              <div className="mt-2 flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+                                <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-[11px] text-gray-600 leading-relaxed">{copyFeedback}</p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex gap-1.5 flex-wrap">
+                              <button onClick={() => handleCopyAction('aprovado')} disabled={isBusy}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                                {busyField === 'copy' && !copyPending ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                Aprovar
+                              </button>
+                              <button onClick={() => handleCopyAction('ajuste_solicitado')} disabled={isBusy}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
+                                  ${copyPending === 'ajuste_solicitado' ? 'bg-orange-500 border-orange-500' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}
+                                style={copyPending === 'ajuste_solicitado' ? { color: '#fff' } : {}}>
+                                {busyField === 'copy' && copyPending === 'ajuste_solicitado' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <AlertCircle className="w-3 h-3" />}
+                                {copyPending === 'ajuste_solicitado' ? 'Confirmar' : 'Solicitar ajuste'}
+                              </button>
+                              <button onClick={() => handleCopyAction('reprovado')} disabled={isBusy}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
+                                  ${copyPending === 'reprovado' ? 'bg-red-500 border-red-500' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}
+                                style={copyPending === 'reprovado' ? { color: '#fff' } : {}}>
+                                {busyField === 'copy' && copyPending === 'reprovado' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                {copyPending === 'reprovado' ? 'Confirmar' : 'Reprovar'}
+                              </button>
+                            </div>
+                            {copyNeedsFeedback && (
+                              <div className="space-y-1.5">
+                                <textarea value={copyFeedback} onChange={e => setCopyFeedback(e.target.value)}
+                                  placeholder="O que precisa ajustar na copy?" rows={2}
+                                  className="w-full text-[11px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none" />
+                                <button onClick={() => setCopyPending(null)} className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">Cancelar</button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Comentários */}
