@@ -359,8 +359,11 @@ function ItemDetailView({
   const overallDecided = localStatus !== 'pendente_aprovacao' && localStatus !== 'ajuste_realizado'
   const artResolved   = (localArtStatus  || 'pendente_aprovacao') as ApprovalStatus
   const copyResolved  = (localCopyStatus || 'pendente_aprovacao') as ApprovalStatus
-  const artDecided    = artResolved  !== 'pendente_aprovacao' && artResolved  !== 'ajuste_realizado'
-  const copyDecided   = copyResolved !== 'pendente_aprovacao' && copyResolved !== 'ajuste_realizado'
+  // Quando o status geral é ajuste_realizado, a agência fez o ajuste e o cliente precisa
+  // reavaliar — nenhuma parte deve ser considerada "decidida" neste estado
+  const needsReview = localStatus === 'ajuste_realizado'
+  const artDecided  = !needsReview && artResolved  !== 'pendente_aprovacao' && artResolved  !== 'ajuste_realizado'
+  const copyDecided = !needsReview && copyResolved !== 'pendente_aprovacao' && copyResolved !== 'ajuste_realizado'
   const copyNeedsFeedback = copyPending === 'ajuste_solicitado' || copyPending === 'reprovado'
 
   // ── Handlers ──
