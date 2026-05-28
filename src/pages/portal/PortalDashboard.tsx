@@ -391,9 +391,9 @@ function ItemDetailView({
     try {
       await approveAll.mutateAsync({ plannerId: item.id })
       setLocalStatus('aprovado'); setLocalArtStatus('aprovado'); setLocalCopyStatus('aprovado')
-      const all: Record<string, 'aprovado' | 'reprovado' | null> = {}
-      mediaItems.forEach(s => { all[s.id] = 'aprovado' })
-      setSlideApprovals(all)
+      const all: Record<string, SlideDecision> = {}
+      mediaItems.forEach(s => { all[s.id] = { status: 'aprovado', feedback: '', pendingStatus: null } })
+      setSlideDecisions(all)
       toast('Tudo aprovado! 🎉', 'success')
     } catch (err: any) { toast(err.message, 'error') }
     finally { setBusyField(null) }
