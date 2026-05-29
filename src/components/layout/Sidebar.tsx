@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -87,7 +87,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
+      <nav
+        className="flex-1 py-2 px-2 space-y-0.5 overflow-y-auto"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+      >
         {navItems.map((item) => {
           const active =
             location.pathname === item.href ||
@@ -100,7 +103,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
               <Link key={item.href} to={item.href}>
                 <div
                   title={collapsed ? item.label : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group bg-gradient-to-r from-[#f5f3ff] to-[#ede9fe] border border-[#ddd6fe] hover:from-[#ede9fe] hover:to-[#ddd6fe]"
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group bg-gradient-to-r from-[#f5f3ff] to-[#ede9fe] border border-[#ddd6fe] hover:from-[#ede9fe] hover:to-[#ddd6fe]"
                 >
                   <item.icon
                     className="w-[15px] h-[15px] flex-shrink-0 text-[#6366f1]"
@@ -126,7 +129,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                 title={collapsed ? item.label : undefined}
                 style={active ? { color: '#ffffff' } : undefined}
                 className={cn(
-                  'flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group',
+                  'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group',
                   active
                     ? 'bg-[#0f0f0f] font-medium'
                     : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
@@ -153,11 +156,11 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       {/* Assinatura + uso da IA */}
       <div className="px-2 pb-1">
         <Link to="/assinatura">
-          <div className={`rounded-xl px-2.5 py-2.5 transition-colors ${
+          <div className={`rounded-xl px-2.5 py-2 transition-colors ${
             aiWarning ? 'bg-amber-50 border border-amber-200' : 'bg-[#fafafa] hover:bg-[#f5f5f5]'
           }`}>
             {!collapsed ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-500' : 'text-[#94a3b8]'}`} />
@@ -169,7 +172,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                     {aiUsed}/{aiLimit} IA
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#e8e8e8] overflow-hidden">
+                <div className="h-1 rounded-full bg-[#e8e8e8] overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-400' : 'bg-[#0f0f0f]'
@@ -186,9 +189,9 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </div>
 
       {/* Profile + sign out */}
-      <div className="p-2 border-t border-[#f0f0f0] space-y-1">
+      <div className="px-2 pb-2 pt-1 border-t border-[#f0f0f0] space-y-0.5">
         {!collapsed && profile && (
-          <div className="px-2.5 py-2 rounded-xl bg-[#fafafa] mb-1">
+          <div className="px-2.5 py-1.5 rounded-xl bg-[#fafafa]">
             <p className="text-[12px] font-medium text-[#0f0f0f] truncate">
               {profile.full_name || 'Usuário'}
             </p>
@@ -197,7 +200,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         )}
         <button
           onClick={() => signOut()}
-          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-[#a0a0a0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] transition-colors duration-150"
+          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#a0a0a0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] transition-colors duration-150"
         >
           <LogOut className="w-[15px] h-[15px] flex-shrink-0 text-[#c0c0c0]" />
           {!collapsed && <span>Sair</span>}

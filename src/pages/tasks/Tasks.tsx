@@ -283,11 +283,9 @@ function DayColumn({
   return (
     <div
       className={[
-        'flex-shrink-0 w-[252px] flex flex-col rounded-2xl border transition-colors duration-100 overflow-hidden',
-        today
-          ? 'border-[#0f0f0f]/10 bg-[#eef1f8] shadow-sm'
-          : 'border-[#e2e8f4] bg-[#eef1f8]',
-        isDragOver ? '!border-blue-300 !bg-blue-50/40' : '',
+        'flex-shrink-0 w-[252px] flex flex-col rounded-2xl border transition-colors duration-100 overflow-hidden shadow-sm',
+        today ? 'border-[#d4d4d4]' : 'border-[#e8e8e8]',
+        isDragOver ? '!border-blue-300 !bg-blue-50/20' : 'bg-white',
       ].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
@@ -301,35 +299,32 @@ function DayColumn({
       }}
     >
       {/* Column header */}
-      <div className={[
-        'flex items-center justify-between px-3 py-2.5 border-b',
-        today ? 'bg-[#0f0f0f] border-transparent' : 'bg-[#e4eaf5] border-[#d8e0f0]',
-      ].join(' ')}>
-        <div className="flex items-center gap-2">
-          <div>
-            <p className={`text-[13px] font-bold leading-none ${today ? 'text-white' : isWeekend ? 'text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#f0f0f0]">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <p className={`text-[13px] font-bold leading-none ${isWeekend ? 'text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
               {dayName}
             </p>
-            <p className={`text-[11px] mt-0.5 capitalize ${today ? 'text-white/60' : 'text-[#9ca3af]'}`}>
-              {dayNum} {monthAbbr}
-            </p>
+            {today && (
+              <span className="text-[9px] font-black px-1.5 py-0.5 bg-[#0f0f0f] text-white rounded-full uppercase tracking-wide leading-none">
+                Hoje
+              </span>
+            )}
           </div>
-          {today && (
-            <span className="text-[9px] font-black px-1.5 py-0.5 bg-white/20 text-white rounded-full uppercase tracking-wide">
-              Hoje
-            </span>
-          )}
+          <p className="text-[11px] mt-0.5 capitalize text-[#9ca3af]">
+            {dayNum} {monthAbbr}
+          </p>
         </div>
 
         <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${today ? 'bg-white/20 text-white' : 'bg-[#d0daf0] text-[#5b6a90]'}`}>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums bg-[#f0f0f0] text-[#737373]">
               {tasks.length}
             </span>
           )}
           <button
             onClick={() => onAddTask(day)}
-            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${today ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#d0daf0] hover:bg-[#bfcce8] text-[#6b7aaa] hover:text-[#374151]'}`}
+            className="w-5 h-5 rounded-full bg-[#f0f0f0] hover:bg-[#e0e0e0] text-[#9ca3af] hover:text-[#374151] flex items-center justify-center transition-colors"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}
           >
             <Plus className="w-3 h-3" />
