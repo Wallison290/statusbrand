@@ -347,6 +347,19 @@ async function notifyClientAdjustmentDone(clientId: string | null, plannerId: st
   } catch {/* silencioso */}
 }
 
+// ─── Helpers: parse carousel JSON feedback ───────────────────────────────────
+
+type CarouselSlide = { slide: number; status: 'aprovado' | 'ajuste_solicitado' | 'reprovado'; feedback: string }
+
+function parseCarouselFeedback(feedback: string | null | undefined): CarouselSlide[] | null {
+  if (!feedback) return null
+  try {
+    const data = JSON.parse(feedback)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0].slide === 'number') return data as CarouselSlide[]
+    return null
+  } catch { return null }
+}
+
 // ─── Bloco de status Arte / Copy para a agência ───────────────────────────────
 
 const approvalBg: Record<ApprovalStatus, string> = {
@@ -355,6 +368,16 @@ const approvalBg: Record<ApprovalStatus, string> = {
   ajuste_solicitado:  'border-orange-500/20 bg-orange-500/5',
   ajuste_realizado:   'border-blue-500/20 bg-blue-500/5',
   reprovado:          'border-red-500/20 bg-red-500/5',
+}
+
+const slideDot: Record<string, string> = {
+  aprovado: 'bg-green-400', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-400',
+}
+const slideTextColor: Record<string, string> = {
+  aprovado: 'text-green-400', ajuste_solicitado: 'text-orange-400', reprovado: 'text-red-400',
+}
+const slideLabel: Record<string, string> = {
+  aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado',
 }
 
 function ApprovalFieldBlock({
@@ -367,11 +390,15 @@ function ApprovalFieldBlock({
   onMarkDone: () => Promise<void>
   isPending: boolean
 }) {
+  const carouselSlides = parseCarouselFeedback(feedback)
+
   return (
     <div className={`rounded-xl border p-3 ${approvalBg[status]}`}>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+            {label}{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[status]}`} />
@@ -381,12 +408,33 @@ function ApprovalFieldBlock({
         </div>
       </div>
 
-      {/* Feedback do cliente — visível enquanto a agência precisar de contexto */}
-      {feedback && status !== 'aprovado' && status !== 'pendente_aprovacao' && (
-        <div className="mt-2 flex items-start gap-2 bg-black/20 rounded-lg px-2.5 py-2">
-          <span className="text-[10px] text-gray-500 flex-shrink-0 mt-0.5">Cliente:</span>
-          <p className="text-xs text-gray-200 leading-relaxed break-words select-text flex-1">"{feedback}"</p>
-        </div>
+      {/* Feedback do cliente */}
+      {status !== 'aprovado' && status !== 'pendente_aprovacao' && (
+        carouselSlides ? (
+          /* Carrossel: por slide */
+          <div className="mt-2 space-y-1.5">
+            {carouselSlides.map(s => (
+              <div key={s.slide} className="bg-black/20 rounded-lg px-2.5 py-1.5 space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-400'}`} />
+                  <span className="text-[10px] font-semibold text-gray-400">Slide {s.slide}</span>
+                  <span className={`text-[10px] font-semibold ml-auto ${slideTextColor[s.status] ?? 'text-gray-400'}`}>
+                    {slideLabel[s.status] ?? s.status}
+                  </span>
+                </div>
+                {s.feedback && (
+                  <p className="text-xs text-gray-300 leading-relaxed break-words pl-3">"{s.feedback}"</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : feedback ? (
+          /* Texto simples (legado) */
+          <div className="mt-2 flex items-start gap-2 bg-black/20 rounded-lg px-2.5 py-2">
+            <span className="text-[10px] text-gray-500 flex-shrink-0 mt-0.5">Cliente:</span>
+            <p className="text-xs text-gray-200 leading-relaxed break-words select-text flex-1">"{feedback}"</p>
+          </div>
+        ) : null
       )}
 
       {/* Botão ajuste realizado */}
