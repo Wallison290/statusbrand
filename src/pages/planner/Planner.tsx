@@ -2119,9 +2119,9 @@ export function Planner() {
           ).sort((a, b) => b.scheduled_date.localeCompare(a.scheduled_date))
 
           return (
-            <div>
+            <div className="max-w-2xl mx-auto">
               {/* ── Cabeçalho de perfil ── */}
-              <div className="flex items-center gap-5 mb-5 max-w-lg">
+              <div className="flex items-center gap-5 mb-5">
                 {/* Avatar */}
                 <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#e0e0e0]">
                   {selectedClient?.logo_url ? (
@@ -2180,7 +2180,7 @@ export function Planner() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-0.5 max-w-lg">
+                <div className="grid grid-cols-3 gap-0.5 max-w-2xl">
                   {feedItems.map(item => {
                     // Pega a primeira imagem IG ou qualquer imagem do item
                     const igImages = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/'))
@@ -2269,7 +2269,7 @@ export function Planner() {
               )}
 
               {/* Legenda de status */}
-              <div className="flex gap-3 mt-4 flex-wrap max-w-lg">
+              <div className="flex gap-3 mt-4 flex-wrap max-w-2xl">
                 {(Object.entries(approvalDot) as [ApprovalStatus, string][]).map(([status, dot]) => (
                   <div key={status} className="flex items-center gap-1.5 text-[11px] text-[#737373]">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
