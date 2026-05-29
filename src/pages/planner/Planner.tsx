@@ -487,37 +487,53 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
         {hasPartial ? (
           <>
             {/* Arte */}
-            {item.art_approval_status && (
-              <div className={`p-2.5 rounded-xl border ${
-                item.art_approval_status === 'aprovado'
-                  ? 'bg-green-50 border-green-200'
-                  : item.art_approval_status === 'ajuste_solicitado'
-                  ? 'bg-orange-50 border-orange-200'
-                  : item.art_approval_status === 'reprovado'
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-blue-50 border-blue-200'
-              }`}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">Arte</span>
-                  <span className={`text-[10px] font-semibold ${
-                    item.art_approval_status === 'aprovado' ? 'text-green-700'
-                    : item.art_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
-                    : item.art_approval_status === 'reprovado' ? 'text-red-700'
-                    : 'text-blue-700'
-                  }`}>
-                    {item.art_approval_status === 'aprovado' ? '✓ Aprovado'
-                      : item.art_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
-                      : item.art_approval_status === 'reprovado' ? '✗ Reprovado'
-                      : '↻ Ajuste realizado'}
-                  </span>
+            {item.art_approval_status && (() => {
+              const artSlides = parseCarouselFeedback((item as any).art_feedback)
+              const statusColor = item.art_approval_status === 'aprovado' ? 'bg-green-50 border-green-200'
+                : item.art_approval_status === 'ajuste_solicitado' ? 'bg-orange-50 border-orange-200'
+                : item.art_approval_status === 'reprovado' ? 'bg-red-50 border-red-200'
+                : 'bg-blue-50 border-blue-200'
+              const statusTextCls = item.art_approval_status === 'aprovado' ? 'text-green-700'
+                : item.art_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
+                : item.art_approval_status === 'reprovado' ? 'text-red-700' : 'text-blue-700'
+              const statusStr = item.art_approval_status === 'aprovado' ? '✓ Aprovado'
+                : item.art_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
+                : item.art_approval_status === 'reprovado' ? '✗ Reprovado' : '↻ Ajuste realizado'
+              const slideDotCls: Record<string, string> = { aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-700', reprovado: 'text-red-700' }
+              const slideLabelStr: Record<string, string> = { aprovado: '✓ Aprovado', ajuste_solicitado: '⚠ Ajuste solicitado', reprovado: '✗ Reprovado' }
+              return (
+                <div className={`p-2.5 rounded-xl border ${statusColor}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-gray-600 uppercase">
+                      Arte{artSlides ? ` · Carrossel (${artSlides.length} slides)` : ''}
+                    </span>
+                    <span className={`text-[10px] font-semibold ${statusTextCls}`}>{statusStr}</span>
+                  </div>
+                  {artSlides ? (
+                    /* Carrossel: por slide */
+                    <div className="space-y-1 mt-1">
+                      {artSlides.map(s => (
+                        <div key={s.slide} className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-gray-500 font-medium">Slide {s.slide}:</span>
+                            <span className={`text-[10px] font-semibold ${slideDotCls[s.status] ?? 'text-gray-600'}`}>
+                              {slideLabelStr[s.status] ?? s.status}
+                            </span>
+                          </div>
+                          {s.feedback && (
+                            <p className="text-[11px] text-gray-700 leading-relaxed pl-3">"{s.feedback}"</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (item as any).art_feedback ? (
+                    <p className="text-[11px] text-gray-700 leading-relaxed">
+                      <span className="font-medium">Cliente:</span> "{(item as any).art_feedback}"
+                    </p>
+                  ) : null}
                 </div>
-                {item.art_feedback && (
-                  <p className="text-[11px] text-gray-700 leading-relaxed">
-                    <span className="font-medium">Cliente:</span> "{item.art_feedback}"
-                  </p>
-                )}
-              </div>
-            )}
+              )
+            })()}
 
             {/* Copy */}
             {item.copy_approval_status && (
