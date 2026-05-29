@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react'
 import {
   ImageIcon, Video, Music, FileText, File,
   ExternalLink, Link2, Building2, Pencil, Trash2, Check,
-  Instagram, Calendar, Loader2, AlertCircle,
+  Instagram, Loader2, AlertCircle, ChevronLeft, ChevronRight, X,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { useUpdatePlannerItem, useDeletePlannerItem } from '@/hooks/usePlanner'
 import { useToast } from '@/components/ui/toast'
 import { contentTypeLabels } from '@/utils/formatters'
@@ -21,30 +20,41 @@ import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType, Approv
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const statusColors: Record<PlannerStatus, string> = {
-  ideia: 'bg-purple-500', producao: 'bg-blue-500', revisao: 'bg-yellow-500',
-  aprovado: 'bg-green-500', publicado: 'bg-emerald-500',
+const statusPillStyle: Record<PlannerStatus, string> = {
+  ideia:     'bg-purple-50 text-purple-700 border-purple-200',
+  producao:  'bg-blue-50 text-blue-700 border-blue-200',
+  revisao:   'bg-yellow-50 text-yellow-700 border-yellow-200',
+  aprovado:  'bg-green-50 text-green-700 border-green-200',
+  publicado: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 }
-const statusTextColors: Record<PlannerStatus, string> = {
-  ideia: 'text-purple-400', producao: 'text-blue-400', revisao: 'text-yellow-400',
-  aprovado: 'text-green-400', publicado: 'text-emerald-400',
+const statusDot: Record<PlannerStatus, string> = {
+  ideia: 'bg-purple-500', producao: 'bg-blue-500', revisao: 'bg-yellow-400',
+  aprovado: 'bg-green-500', publicado: 'bg-emerald-500',
 }
 const statusLabels: Record<PlannerStatus, string> = {
   ideia: 'Ideia', producao: 'Produção', revisao: 'Revisão',
   aprovado: 'Aprovado', publicado: 'Publicado',
 }
+
 const approvalDot: Record<ApprovalStatus, string> = {
-  pendente_aprovacao: 'bg-yellow-400', aprovado: 'bg-green-400',
-  ajuste_solicitado: 'bg-orange-400', ajuste_realizado: 'bg-blue-400', reprovado: 'bg-red-400',
+  pendente_aprovacao: 'bg-yellow-400', aprovado: 'bg-green-500',
+  ajuste_solicitado: 'bg-orange-400', ajuste_realizado: 'bg-blue-400', reprovado: 'bg-red-500',
 }
 const approvalTextColor: Record<ApprovalStatus, string> = {
-  pendente_aprovacao: 'text-yellow-400', aprovado: 'text-green-400',
-  ajuste_solicitado: 'text-orange-400', ajuste_realizado: 'text-blue-400', reprovado: 'text-red-400',
+  pendente_aprovacao: 'text-yellow-600', aprovado: 'text-green-600',
+  ajuste_solicitado: 'text-orange-600', ajuste_realizado: 'text-blue-600', reprovado: 'text-red-600',
 }
 const approvalLabel: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação', aprovado: 'Aprovado pelo cliente',
   ajuste_solicitado: 'Ajuste solicitado', ajuste_realizado: 'Ajuste realizado — aguardando revisão',
   reprovado: 'Reprovado pelo cliente',
+}
+const approvalBg: Record<ApprovalStatus, string> = {
+  pendente_aprovacao: 'bg-yellow-50 border-yellow-200',
+  aprovado:           'bg-green-50 border-green-200',
+  ajuste_solicitado:  'bg-orange-50 border-orange-200',
+  ajuste_realizado:   'bg-blue-50 border-blue-200',
+  reprovado:          'bg-red-50 border-red-200',
 }
 
 const PLANNER_STATUSES: { value: PlannerStatus; label: string }[] = [
@@ -65,11 +75,131 @@ function formatFileSize(bytes: number): string {
 
 function FileTypeIcon({ type, size = 'sm' }: { type: string; size?: 'sm' | 'md' }) {
   const cls = size === 'md' ? 'w-4 h-4' : 'w-3 h-3'
-  if (type.startsWith('image/')) return <ImageIcon className={`${cls} text-blue-400`} />
-  if (type.startsWith('video/')) return <Video     className={`${cls} text-purple-400`} />
-  if (type.startsWith('audio/')) return <Music     className={`${cls} text-green-400`} />
-  if (type === 'application/pdf') return <FileText className={`${cls} text-red-400`} />
+  if (type.startsWith('image/')) return <ImageIcon className={`${cls} text-blue-500`} />
+  if (type.startsWith('video/')) return <Video     className={`${cls} text-purple-500`} />
+  if (type.startsWith('audio/')) return <Music     className={`${cls} text-green-500`} />
+  if (type === 'application/pdf') return <FileText className={`${cls} text-red-500`} />
   return <File className={`${cls} text-gray-400`} />
+}
+
+function computeOverallApproval(art: ApprovalStatus | null, copy: ApprovalStatus | null): ApprovalStatus {
+  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
+  if (statuses.length === 0) return 'pendente_aprovacao'
+  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
+  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
+  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
+  if (statuses.every(s => s === 'aprovado')) return 'aprovado'
+  return 'pendente_aprovacao'
+}
+
+async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
+  if (!clientId) return
+  try {
+    const { data: portalUser } = await supabase
+      .from('profiles').select('id')
+      .eq('linked_client_id', clientId).eq('role', 'client').maybeSingle()
+    if (!portalUser?.id) return
+    await (supabase as any).from('notifications').insert({
+      user_id:   portalUser.id,
+      client_id: clientId,
+      type:      'ADJUSTMENT_DONE',
+      title:     'Ajuste realizado pela agência',
+      message:   'A agência corrigiu o conteúdo e está aguardando sua aprovação.',
+      link:      `/portal`,
+    })
+  } catch {/* silencioso */}
+}
+
+type CarouselSlide = { slide: number; status: 'aprovado' | 'ajuste_solicitado' | 'reprovado'; feedback: string }
+
+function parseCarouselFeedback(feedback: string | null | undefined): CarouselSlide[] | null {
+  if (!feedback) return null
+  try {
+    const data = JSON.parse(feedback)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0].slide === 'number') return data as CarouselSlide[]
+    return null
+  } catch { return null }
+}
+
+const slideDotCls: Record<string, string> = {
+  aprovado: 'bg-green-500', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-500',
+}
+const slideTextCls: Record<string, string> = {
+  aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-700', reprovado: 'text-red-700',
+}
+const slideLabelStr: Record<string, string> = {
+  aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado',
+}
+
+// ─── Approval Field Block ─────────────────────────────────────────────────────
+
+function ApprovalFieldBlock({
+  label, status, feedback, showAction, onMarkDone, isPending,
+}: {
+  label: string
+  status: ApprovalStatus
+  feedback: string | null
+  showAction: boolean
+  onMarkDone: () => Promise<void>
+  isPending: boolean
+}) {
+  const carouselSlides = parseCarouselFeedback(feedback)
+
+  return (
+    <div className={`rounded-xl border p-3 ${approvalBg[status]}`}>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+          {label}{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[status]}`} />
+          <span className={`text-[11px] font-semibold ${approvalTextColor[status]}`}>
+            {approvalLabel[status]}
+          </span>
+        </div>
+      </div>
+
+      {/* Feedback do cliente */}
+      {status !== 'aprovado' && status !== 'pendente_aprovacao' && (
+        carouselSlides ? (
+          <div className="mt-2 space-y-1.5">
+            {carouselSlides.map(s => (
+              <div key={s.slide} className="bg-white/70 rounded-lg px-2.5 py-1.5 space-y-0.5 border border-white">
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDotCls[s.status] ?? 'bg-gray-400'}`} />
+                  <span className="text-[10px] font-semibold text-gray-500">Slide {s.slide}</span>
+                  <span className={`text-[10px] font-semibold ml-auto ${slideTextCls[s.status] ?? 'text-gray-500'}`}>
+                    {slideLabelStr[s.status] ?? s.status}
+                  </span>
+                </div>
+                {s.feedback && (
+                  <p className="text-xs text-gray-700 leading-relaxed break-words pl-3">"{s.feedback}"</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : feedback ? (
+          <div className="mt-2 bg-white/70 rounded-lg px-2.5 py-2 border border-white">
+            <p className="text-xs text-gray-700 leading-relaxed break-words select-text">"{feedback}"</p>
+          </div>
+        ) : null
+      )}
+
+      {/* Botão ajuste realizado */}
+      {showAction && (status === 'ajuste_solicitado' || status === 'reprovado') && (
+        <button
+          onClick={onMarkDone}
+          disabled={isPending}
+          className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-colors disabled:opacity-50"
+        >
+          {isPending
+            ? <span className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            : <Check className="w-3 h-3" />}
+          Marcar ajuste de {label} como realizado
+        </button>
+      )}
+    </div>
+  )
 }
 
 // ─── Instagram Schedule Section ───────────────────────────────────────────────
@@ -102,40 +232,29 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
   const imageAttachments = item.attachments?.filter(a => a.file_type.startsWith('image/')) ?? []
   const videoAttachments = item.attachments?.filter(a => a.file_type.startsWith('video/')) ?? []
 
-  const [postType, setPostType]     = useState<PostType>('IMAGE')
-  const [caption, setCaption]       = useState(item.notes ?? '')
+  const [postType, setPostType]       = useState<PostType>('IMAGE')
+  const [caption, setCaption]         = useState(item.notes ?? '')
   const [scheduledAt, setScheduledAt] = useState('')
   const [scheduledTime, setScheduledTime] = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
-  const [publishing, setPublishing] = useState(false)
-  const [success, setSuccess]       = useState(false)
+  const [publishing, setPublishing]   = useState(false)
+  const [success, setSuccess]         = useState(false)
 
-  // Pré-preenche data com a data do item
   const defaultDate = item.scheduled_date
 
   const handleSchedule = async () => {
     if (!igAccount || !user) return
     const date = scheduledAt || defaultDate
-    if (!date || !scheduledTime) {
-      toast('Preencha a data e horário.', 'error')
-      return
-    }
+    if (!date || !scheduledTime) { toast('Preencha a data e horário.', 'error'); return }
     const attachments = postType === 'REELS' ? videoAttachments : imageAttachments
-    if (attachments.length === 0) {
-      toast('Este post não tem mídia anexada no planejador.', 'error')
-      return
-    }
-
+    if (attachments.length === 0) { toast('Este post não tem mídia anexada.', 'error'); return }
     setPublishing(true)
     try {
-      // Faz upload das mídias para o bucket post-media
       const mediaUrls: string[] = []
       for (const att of attachments.slice(0, postType === 'CAROUSEL_ALBUM' ? 10 : 1)) {
         const publicUrl = await uploadMediaFromUrl(att.file_url, user.id)
         mediaUrls.push(publicUrl)
       }
-
       const scheduledAtISO = new Date(`${date}T${scheduledTime}:00`).toISOString()
-
       await createPost.mutateAsync({
         ig_account_id: igAccount.id,
         client_id:     item.client_id,
@@ -144,7 +263,6 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
         media_urls:    mediaUrls,
         scheduled_at:  scheduledAtISO,
       })
-
       setSuccess(true)
       toast('Post agendado no Instagram!', 'success')
     } catch (err: any) {
@@ -154,82 +272,71 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
     }
   }
 
-  if (igLoading) {
-    return (
-      <div className="flex items-center gap-2 py-3">
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
-        <span className="text-xs text-gray-400">Verificando conta Instagram...</span>
-      </div>
-    )
-  }
+  if (igLoading) return (
+    <div className="flex items-center gap-2 py-2">
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+      <span className="text-xs text-gray-500">Verificando conta Instagram...</span>
+    </div>
+  )
 
-  if (!item.client_id) {
-    return (
-      <div className="flex items-center gap-2 p-3 bg-white/3 rounded-xl border border-white/8">
-        <AlertCircle className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-        <p className="text-xs text-gray-400">Este post não está vinculado a um cliente.</p>
-      </div>
-    )
-  }
+  if (!item.client_id) return (
+    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+      <AlertCircle className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+      <p className="text-xs text-gray-500">Este post não está vinculado a um cliente.</p>
+    </div>
+  )
 
-  if (!igAccount) {
-    return (
-      <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-2">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
-          >
-            <Instagram className="w-3.5 h-3.5 text-white" />
-          </div>
-          <p className="text-xs text-gray-300 font-medium">Instagram não conectado</p>
+  if (!igAccount) return (
+    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}>
+          <Instagram className="w-3.5 h-3.5 text-white" />
         </div>
-        <p className="text-[11px] text-gray-500">
-          Acesse o perfil do cliente → aba <strong className="text-gray-400">Instagram</strong> para conectar a conta.
+        <p className="text-xs text-gray-700 font-medium">Instagram não conectado</p>
+      </div>
+      <p className="text-[11px] text-gray-500">
+        Acesse o perfil do cliente → aba <strong className="text-gray-600">Instagram</strong> para conectar a conta.
+      </p>
+    </div>
+  )
+
+  if (success) return (
+    <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+      <div>
+        <p className="text-xs font-medium text-emerald-700">Post agendado!</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          Veja o status em <strong className="text-gray-600">Instagram → Agendados</strong>.
         </p>
       </div>
-    )
-  }
-
-  if (success) {
-    return (
-      <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-        <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-        <div>
-          <p className="text-xs font-medium text-emerald-400">Post agendado!</p>
-          <p className="text-[11px] text-gray-500 mt-0.5">Veja o status em <strong className="text-gray-400">Instagram → Agendados</strong>.</p>
-        </div>
-      </div>
-    )
-  }
+    </div>
+  )
 
   const imageCount = imageAttachments.length
   const videoCount = videoAttachments.length
   const hasMedia   = imageCount > 0 || videoCount > 0
 
   return (
-    <div className="p-3 bg-white/3 rounded-xl border border-white/8 space-y-3">
+    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
       {/* Conta conectada */}
       <div className="flex items-center gap-2">
         {igAccount.profile_picture_url ? (
           <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
         ) : (
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
-          >
+          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}>
             <Instagram className="w-3.5 h-3.5 text-white" />
           </div>
         )}
-        <span className="text-xs text-gray-300 font-medium">@{igAccount.username}</span>
-        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+        <span className="text-xs text-gray-700 font-medium">@{igAccount.username}</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
           Conectado
         </span>
       </div>
 
-      {/* Alerta sem mídia */}
       {!hasMedia && (
-        <div className="flex items-center gap-2 text-[11px] text-amber-400">
+        <div className="flex items-center gap-2 text-[11px] text-amber-600">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
           Nenhuma imagem/vídeo anexado. Adicione mídia ao item no planejador.
         </div>
@@ -237,24 +344,22 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
 
       {/* Tipo do post */}
       <div>
-        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Tipo de post</p>
-        <div className="flex gap-1.5">
-          {POST_TYPE_OPTS.filter(o =>
-            o.value === 'REELS' ? videoCount > 0 : imageCount > 0
-          ).map(opt => (
+        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Tipo de post</p>
+        <div className="flex gap-1.5 flex-wrap">
+          {POST_TYPE_OPTS.filter(o => o.value === 'REELS' ? videoCount > 0 : imageCount > 0).map(opt => (
             <button
               key={opt.value}
               onClick={() => setPostType(opt.value)}
               className={`text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${
                 postType === opt.value
-                  ? 'bg-[#6366f1] text-white border-[#6366f1]'
-                  : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/20'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
               }`}
             >
               {opt.label}
-              {opt.value === 'IMAGE' && imageCount > 0 && ` (${Math.min(1, imageCount)})`}
+              {opt.value === 'IMAGE'          && imageCount > 0 && ` (${Math.min(1, imageCount)})`}
               {opt.value === 'CAROUSEL_ALBUM' && imageCount > 1 && ` (${Math.min(10, imageCount)})`}
-              {opt.value === 'REELS' && videoCount > 0 && ` (1)`}
+              {opt.value === 'REELS'          && videoCount > 0 && ` (1)`}
             </button>
           ))}
         </div>
@@ -262,199 +367,53 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
 
       {/* Legenda */}
       <div>
-        <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Legenda</p>
+        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Legenda</p>
         <textarea
           value={caption}
           onChange={e => setCaption(e.target.value)}
           rows={3}
           placeholder="Legenda do post..."
-          className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+          className="w-full text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
         />
       </div>
 
       {/* Data e hora */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Data</p>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Data</p>
           <input
             type="date"
             value={scheduledAt || defaultDate}
             onChange={e => setScheduledAt(e.target.value)}
-            className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+            className="w-full text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-indigo-400 transition-colors"
           />
         </div>
         <div>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1.5">Horário</p>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Horário</p>
           <input
             type="time"
             value={scheduledTime}
             onChange={e => setScheduledTime(e.target.value)}
-            className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-[#6366f1]/50 transition-colors"
+            className="w-full text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-indigo-400 transition-colors"
           />
         </div>
       </div>
 
-      {/* Botão */}
       <Button
         size="sm"
         onClick={handleSchedule}
         disabled={publishing || !hasMedia}
         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
       >
-        {publishing ? (
-          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Agendando...</>
-        ) : (
-          <><Instagram className="w-3.5 h-3.5" /> Agendar no Instagram</>
-        )}
+        {publishing
+          ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> Agendando...</>
+          : <><Instagram className="w-3.5 h-3.5 mr-1.5" /> Agendar no Instagram</>}
       </Button>
     </div>
   )
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function computeOverallApproval(
-  art: ApprovalStatus | null,
-  copy: ApprovalStatus | null,
-): ApprovalStatus {
-  const statuses = [art, copy].filter(Boolean) as ApprovalStatus[]
-  if (statuses.length === 0) return 'pendente_aprovacao'
-  if (statuses.some(s => s === 'reprovado')) return 'reprovado'
-  if (statuses.some(s => s === 'ajuste_solicitado')) return 'ajuste_solicitado'
-  if (statuses.some(s => s === 'ajuste_realizado')) return 'ajuste_realizado'
-  if (statuses.every(s => s === 'aprovado')) return 'aprovado'
-  return 'pendente_aprovacao'
-}
-
-async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
-  if (!clientId) return
-  try {
-    const { data: portalUser } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('linked_client_id', clientId)
-      .eq('role', 'client')
-      .maybeSingle()
-    if (!portalUser?.id) return
-    await (supabase as any).from('notifications').insert({
-      user_id:   portalUser.id,
-      client_id: clientId,
-      type:      'ADJUSTMENT_DONE',
-      title:     'Ajuste realizado pela agência',
-      message:   'A agência corrigiu o conteúdo e está aguardando sua aprovação.',
-      link:      `/portal`,
-    })
-  } catch {/* silencioso */}
-}
-
-// ─── Helpers: parse carousel JSON feedback ───────────────────────────────────
-
-type CarouselSlide = { slide: number; status: 'aprovado' | 'ajuste_solicitado' | 'reprovado'; feedback: string }
-
-function parseCarouselFeedback(feedback: string | null | undefined): CarouselSlide[] | null {
-  if (!feedback) return null
-  try {
-    const data = JSON.parse(feedback)
-    if (Array.isArray(data) && data.length > 0 && typeof data[0].slide === 'number') return data as CarouselSlide[]
-    return null
-  } catch { return null }
-}
-
-// ─── Bloco de status Arte / Copy para a agência ───────────────────────────────
-
-const approvalBg: Record<ApprovalStatus, string> = {
-  pendente_aprovacao: 'border-yellow-500/20 bg-yellow-500/5',
-  aprovado:           'border-green-500/20 bg-green-500/5',
-  ajuste_solicitado:  'border-orange-500/20 bg-orange-500/5',
-  ajuste_realizado:   'border-blue-500/20 bg-blue-500/5',
-  reprovado:          'border-red-500/20 bg-red-500/5',
-}
-
-const slideDot: Record<string, string> = {
-  aprovado: 'bg-green-400', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-400',
-}
-const slideTextColor: Record<string, string> = {
-  aprovado: 'text-green-400', ajuste_solicitado: 'text-orange-400', reprovado: 'text-red-400',
-}
-const slideLabel: Record<string, string> = {
-  aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado',
-}
-
-function ApprovalFieldBlock({
-  label, status, feedback, showAction, onMarkDone, isPending,
-}: {
-  label: string
-  status: ApprovalStatus
-  feedback: string | null
-  showAction: boolean
-  onMarkDone: () => Promise<void>
-  isPending: boolean
-}) {
-  const carouselSlides = parseCarouselFeedback(feedback)
-
-  return (
-    <div className={`rounded-xl border p-3 ${approvalBg[status]}`}>
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-            {label}{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[status]}`} />
-          <span className={`text-[11px] font-semibold ${approvalTextColor[status]}`}>
-            {approvalLabel[status]}
-          </span>
-        </div>
-      </div>
-
-      {/* Feedback do cliente */}
-      {status !== 'aprovado' && status !== 'pendente_aprovacao' && (
-        carouselSlides ? (
-          /* Carrossel: por slide */
-          <div className="mt-2 space-y-1.5">
-            {carouselSlides.map(s => (
-              <div key={s.slide} className="bg-black/20 rounded-lg px-2.5 py-1.5 space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-400'}`} />
-                  <span className="text-[10px] font-semibold text-gray-400">Slide {s.slide}</span>
-                  <span className={`text-[10px] font-semibold ml-auto ${slideTextColor[s.status] ?? 'text-gray-400'}`}>
-                    {slideLabel[s.status] ?? s.status}
-                  </span>
-                </div>
-                {s.feedback && (
-                  <p className="text-xs text-gray-300 leading-relaxed break-words pl-3">"{s.feedback}"</p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : feedback ? (
-          /* Texto simples (legado) */
-          <div className="mt-2 flex items-start gap-2 bg-black/20 rounded-lg px-2.5 py-2">
-            <span className="text-[10px] text-gray-500 flex-shrink-0 mt-0.5">Cliente:</span>
-            <p className="text-xs text-gray-200 leading-relaxed break-words select-text flex-1">"{feedback}"</p>
-          </div>
-        ) : null
-      )}
-
-      {/* Botão ajuste realizado */}
-      {showAction && (status === 'ajuste_solicitado' || status === 'reprovado') && (
-        <button
-          onClick={onMarkDone}
-          disabled={isPending}
-          className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
-        >
-          {isPending
-            ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            : <Check className="w-3 h-3" />}
-          Marcar ajuste de {label} como realizado
-        </button>
-      )}
-    </div>
-  )
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PlannerItemViewModal({
   item,
@@ -467,34 +426,41 @@ export function PlannerItemViewModal({
   onClose: () => void
   showAgencyActions?: boolean
 }) {
-  const images = item.attachments?.filter(a => a.file_type.startsWith('image/')) || []
-  const otherAttachments = item.attachments?.filter((a: PlannerAttachment) => !a.file_type.startsWith('image/')) || []
+  const allMedia = (item.attachments ?? [])
+    .filter(a => a.file_type.startsWith('image/') || a.file_type.startsWith('video/'))
+    .sort((a, b) => a.sort_order - b.sort_order)
 
+  const otherAttachments = (item.attachments ?? []).filter((a: PlannerAttachment) =>
+    !a.file_type.startsWith('image/') && !a.file_type.startsWith('video/')
+  )
+
+  const [imgIdx, setImgIdx]           = useState(0)
   const [editingStatus, setEditingStatus] = useState(false)
-  const [newStatus, setNewStatus] = useState<PlannerStatus>(item.status as PlannerStatus)
+  const [newStatus, setNewStatus]     = useState<PlannerStatus>(item.status as PlannerStatus)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [localApprovalStatus, setLocalApprovalStatus] = useState<ApprovalStatus | null>(
     item.approval_status as ApprovalStatus | null
   )
 
-  // Sincroniza o estado local quando o item prop atualiza (ex: Realtime traz novos dados)
   useEffect(() => {
     setLocalApprovalStatus(item.approval_status as ApprovalStatus | null)
     setNewStatus(item.status as PlannerStatus)
   }, [item.approval_status, item.status, item.art_approval_status, item.copy_approval_status])
 
+  useEffect(() => { setImgIdx(0) }, [item.id])
+
   const updateItem = useUpdatePlannerItem()
   const deleteItem = useDeletePlannerItem()
   const { toast } = useToast()
+
+  const currentApproval = (localApprovalStatus ?? item.approval_status) as ApprovalStatus | null
 
   const handleMarkAdjustmentDone = async () => {
     try {
       await updateItem.mutateAsync({ id: item.id, approval_status: 'ajuste_realizado' })
       setLocalApprovalStatus('ajuste_realizado')
       toast('Ajuste marcado como realizado.', 'success')
-    } catch (err: any) {
-      toast(err.message, 'error')
-    }
+    } catch (err: any) { toast(err.message, 'error') }
   }
 
   const handleStatusSave = async () => {
@@ -502,9 +468,7 @@ export function PlannerItemViewModal({
       await updateItem.mutateAsync({ id: item.id, status: newStatus })
       toast('Status atualizado!', 'success')
       setEditingStatus(false)
-    } catch (err: any) {
-      toast(err.message, 'error')
-    }
+    } catch (err: any) { toast(err.message, 'error') }
   }
 
   const handleDelete = async () => {
@@ -518,282 +482,437 @@ export function PlannerItemViewModal({
     }
   }
 
+  const handleClose = () => {
+    onClose()
+    setConfirmDelete(false)
+    setEditingStatus(false)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setConfirmDelete(false); setEditingStatus(false) } }}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <DialogTitle className="text-base leading-snug break-words min-w-0 select-text">{item.title}</DialogTitle>
-          </div>
-          <div className="flex items-center gap-2 mt-1.5 ml-4.5 flex-wrap">
-            <span className="text-xs text-gray-500">
-              {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <span className="text-gray-700">·</span>
-            <span className="text-xs text-gray-500">
-              {contentTypeLabels[item.content_type as ContentType]}
-            </span>
-            <span className="text-gray-700">·</span>
-            <span className={`text-xs font-medium ${statusTextColors[item.status as PlannerStatus]}`}>
-              {statusLabels[item.status as PlannerStatus]}
-            </span>
-          </div>
-        </DialogHeader>
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
+      <DialogContent className="w-[96vw] max-w-5xl p-0 max-h-[92vh] overflow-hidden [&>button.absolute]:hidden gap-0 rounded-2xl shadow-2xl border-0">
+        <DialogTitle className="sr-only">{item.title}</DialogTitle>
 
-        <div className="space-y-4 mt-1 min-w-0 w-full max-w-full overflow-x-hidden">
+        <div className="flex h-full max-h-[92vh] overflow-hidden rounded-2xl">
 
-          {/* Cliente */}
-          {item.client && (
-            <div className="flex items-center gap-3 p-3 bg-white/3 rounded-xl border border-white/8">
-              <Building2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Cliente</p>
-                <p className="text-sm text-white font-medium">{item.client.company_name}</p>
-              </div>
-            </div>
-          )}
+          {/* ── Coluna Esquerda: Prévia de Mídia ─────────────────────────── */}
+          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative overflow-hidden flex-shrink-0 hidden sm:flex">
 
-          {/* Status inline edit (agency only) */}
-          {showAgencyActions && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Status</p>
-              {editingStatus ? (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={newStatus}
-                    onValueChange={v => setNewStatus(v as PlannerStatus)}
+            {/* Área principal da imagem */}
+            <div className="flex-1 flex items-center justify-center relative min-h-0 overflow-hidden bg-[#e8e8e8]">
+              {allMedia.length > 0 ? (
+                <>
+                  {allMedia[imgIdx].file_type.startsWith('image/') ? (
+                    <img
+                      src={allMedia[imgIdx].file_url}
+                      alt=""
+                      className="max-w-full max-h-full object-contain"
+                      draggable={false}
+                    />
+                  ) : (
+                    <video
+                      src={allMedia[imgIdx].file_url}
+                      controls
+                      className="max-w-full max-h-full"
+                    />
+                  )}
+
+                  {/* Setas de navegação */}
+                  {allMedia.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setImgIdx(i => Math.max(0, i - 1))}
+                        disabled={imgIdx === 0}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow hover:bg-white transition-colors disabled:opacity-25"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-gray-700" />
+                      </button>
+                      <button
+                        onClick={() => setImgIdx(i => Math.min(allMedia.length - 1, i + 1))}
+                        disabled={imgIdx === allMedia.length - 1}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow hover:bg-white transition-colors disabled:opacity-25"
+                      >
+                        <ChevronRight className="w-4 h-4 text-gray-700" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Contador de slides */}
+                  {allMedia.length > 1 && (
+                    <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[11px] text-gray-600 bg-white/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium shadow-sm">
+                      {imgIdx + 1}/{allMedia.length}
+                    </span>
+                  )}
+
+                  {/* Botão abrir em nova aba */}
+                  <a
+                    href={allMedia[imgIdx].file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow hover:bg-white transition-colors"
                   >
-                    <SelectTrigger className="h-8 text-xs flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLANNER_STATUSES.map(s => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" onClick={handleStatusSave} disabled={updateItem.isPending}>
-                    Salvar
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setEditingStatus(false); setNewStatus(item.status as PlannerStatus) }}>
-                    Cancelar
-                  </Button>
-                </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-600" />
+                  </a>
+                </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                  <span className={`text-sm font-medium ${statusTextColors[item.status as PlannerStatus]}`}>
-                    {statusLabels[item.status as PlannerStatus]}
-                  </span>
+                <div className="flex flex-col items-center gap-2 text-gray-400">
+                  <ImageIcon className="w-10 h-10 opacity-40" />
+                  <p className="text-sm">Sem mídia</p>
+                </div>
+              )}
+            </div>
+
+            {/* Tira de thumbnails */}
+            {allMedia.length > 1 && (
+              <div className="flex gap-1.5 p-2.5 bg-gray-200/80 overflow-x-auto flex-shrink-0 scrollbar-thin">
+                {allMedia.map((m, i) => (
                   <button
-                    onClick={() => setEditingStatus(true)}
-                    className="ml-auto flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors"
+                    key={m.id}
+                    onClick={() => setImgIdx(i)}
+                    className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                      i === imgIdx
+                        ? 'border-indigo-500 shadow-md'
+                        : 'border-transparent hover:border-gray-300'
+                    }`}
                   >
-                    <Pencil className="w-3 h-3" /> Alterar
+                    {m.file_type.startsWith('image/') ? (
+                      <img src={m.file_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                        <Video className="w-4 h-4 text-gray-500" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Rodapé com nome do arquivo */}
+            {allMedia.length > 0 && (
+              <div className="px-3 py-1.5 bg-gray-200/50 flex-shrink-0 border-t border-gray-200">
+                <p className="text-[10px] text-gray-400 truncate">
+                  {allMedia[imgIdx].file_name}
+                  {allMedia[imgIdx].file_size ? ` · ${formatFileSize(allMedia[imgIdx].file_size!)}` : ''}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Coluna Direita: Detalhes ──────────────────────────────────── */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+
+            {/* Cabeçalho fixo */}
+            <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex-shrink-0">
+              {/* Linha superior: cliente + ações */}
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  {item.client && (
+                    <>
+                      <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      <span className="text-xs text-gray-400 truncate">{item.client.company_name}</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  {showAgencyActions && !editingStatus && (
+                    <button
+                      onClick={() => setEditingStatus(true)}
+                      title="Editar status"
+                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={handleClose}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Notas */}
-          {item.notes && (
-            <div className="p-3 bg-white/3 rounded-xl border border-white/8">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Notas</p>
-              <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap break-words select-text">{item.notes}</p>
-            </div>
-          )}
-
-          {/* Imagens */}
-          {images.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Imagens</p>
-              <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                {images.map(img => (
-                  <a key={img.id} href={img.file_url} target="_blank" rel="noopener noreferrer"
-                    className="block w-full max-w-full overflow-hidden rounded-xl border border-white/8 hover:border-white/20 transition-colors">
-                    <img src={img.file_url} alt={img.file_name} className="w-full max-w-full object-contain max-h-[60vh]" />
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/3">
-                      <ImageIcon className="w-3 h-3 text-blue-400" />
-                      <span className="text-[10px] text-gray-400 truncate flex-1">{img.file_name}</span>
-                      <ExternalLink className="w-3 h-3 text-gray-600" />
-                    </div>
-                  </a>
-                ))}
               </div>
-            </div>
-          )}
 
-          {/* Outros anexos */}
-          {otherAttachments.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Anexos</p>
-              <div className="space-y-1.5">
-                {otherAttachments.map((att: PlannerAttachment) => (
-                  <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 max-w-full overflow-hidden">
-                    <FileTypeIcon type={att.file_type} size="md" />
-                    <span className="text-xs text-gray-300 truncate flex-1">{att.file_name}</span>
-                    {att.file_size && (
-                      <span className="text-[10px] text-gray-600 flex-shrink-0">{formatFileSize(att.file_size)}</span>
-                    )}
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+              {/* Título */}
+              <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words select-text mb-2">
+                {item.title}
+              </h2>
 
-          {/* Links */}
-          {item.links && item.links.length > 0 && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2">Links</p>
-              <div className="space-y-1.5">
-                {item.links.map(link => (
-                  <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/3 border border-white/8 rounded-xl hover:border-white/20 hover:bg-white/5 transition-colors min-w-0 overflow-hidden">
-                    <Link2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                    <span className="text-xs text-blue-300 flex-1 min-w-0 break-all">{link.label || link.url}</span>
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Resposta do cliente — Arte e Copy separados */}
-          {item.approval_status && (
-            <div className="space-y-2">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide">Resposta do Cliente</p>
-
-              {/* Status geral + data */}
-              <div className="flex items-center gap-2 px-1">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`} />
-                <span className={`text-xs font-medium ${approvalTextColor[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}`}>
-                  {approvalLabel[(localApprovalStatus ?? item.approval_status) as ApprovalStatus]}
+              {/* Meta: data · tipo · status · aprovação */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs text-gray-500">
+                  {format(parseISO(item.scheduled_date), "dd 'de' MMM", { locale: ptBR })}
+                  {item.scheduled_time && (
+                    <> · {item.scheduled_time.slice(0, 5)}</>
+                  )}
                 </span>
-                {item.reviewed_at && (
-                  <span className="text-[10px] text-gray-600 ml-auto">
-                    {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                <span className="text-gray-200">·</span>
+                <span className="text-xs text-gray-400">
+                  {contentTypeLabels[item.content_type as ContentType]}
+                </span>
+                <span className="text-gray-200">·</span>
+
+                {/* Status pill / edit inline */}
+                {editingStatus ? (
+                  <div className="flex items-center gap-1.5">
+                    <Select value={newStatus} onValueChange={v => setNewStatus(v as PlannerStatus)}>
+                      <SelectTrigger className="h-6 text-xs px-2 py-0 min-w-[90px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLANNER_STATUSES.map(s => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      className="h-6 text-xs px-2 py-0"
+                      onClick={handleStatusSave}
+                      disabled={updateItem.isPending}
+                    >
+                      Salvar
+                    </Button>
+                    <button
+                      onClick={() => { setEditingStatus(false); setNewStatus(item.status as PlannerStatus) }}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusPillStyle[item.status as PlannerStatus]}`}>
+                    {statusLabels[item.status as PlannerStatus]}
                   </span>
                 )}
+
+                {/* Approval status inline */}
+                {currentApproval && (
+                  <>
+                    <span className="text-gray-200">·</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${approvalDot[currentApproval]}`} />
+                      <span className={`text-xs font-medium ${approvalTextColor[currentApproval]}`}>
+                        {approvalLabel[currentApproval]}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Conteúdo rolável */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+              {/* Legenda */}
+              {item.notes && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Legenda</p>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words select-text">
+                    {item.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Mídia (mobile: painel esquerdo oculto) */}
+              {allMedia.length > 0 && (
+                <div className="sm:hidden">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Mídia</p>
+                  <div className={`grid gap-2 ${allMedia.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {allMedia.map(m => (
+                      <a key={m.id} href={m.file_url} target="_blank" rel="noopener noreferrer"
+                        className="block rounded-xl overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
+                        {m.file_type.startsWith('image/') ? (
+                          <img src={m.file_url} alt={m.file_name} className="w-full object-cover max-h-48" />
+                        ) : (
+                          <video src={m.file_url} controls className="w-full" />
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Outros anexos */}
+              {otherAttachments.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Anexos</p>
+                  <div className="space-y-1.5">
+                    {otherAttachments.map((att: PlannerAttachment) => (
+                      <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <FileTypeIcon type={att.file_type} size="md" />
+                        <span className="text-xs text-gray-700 truncate flex-1">{att.file_name}</span>
+                        {att.file_size && (
+                          <span className="text-[10px] text-gray-400 flex-shrink-0">{formatFileSize(att.file_size)}</span>
+                        )}
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {item.links && item.links.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Links</p>
+                  <div className="space-y-1.5">
+                    {item.links.map(link => (
+                      <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        <Link2 className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                        <span className="text-xs text-indigo-600 flex-1 min-w-0 break-all">{link.label || link.url}</span>
+                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Resposta do cliente ─────────────────────────────────── */}
+              {item.approval_status && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Resposta do Cliente</p>
+
+                  {/* Status geral + timestamp */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${approvalDot[currentApproval ?? 'pendente_aprovacao']}`} />
+                    <span className={`text-xs font-medium ${approvalTextColor[currentApproval ?? 'pendente_aprovacao']}`}>
+                      {approvalLabel[currentApproval ?? 'pendente_aprovacao']}
+                    </span>
+                    {item.reviewed_at && (
+                      <span className="text-[10px] text-gray-400 ml-auto">
+                        {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Arte */}
+                    {item.art_approval_status && (
+                      <ApprovalFieldBlock
+                        label="Arte"
+                        status={item.art_approval_status as ApprovalStatus}
+                        feedback={item.art_feedback ?? null}
+                        showAction={showAgencyActions}
+                        onMarkDone={async () => {
+                          const newCopyStatus = item.copy_approval_status as ApprovalStatus | null
+                          const newOverall = computeOverallApproval('ajuste_realizado', newCopyStatus)
+                          await updateItem.mutateAsync({
+                            id: item.id,
+                            art_approval_status: 'ajuste_realizado',
+                            approval_status: newOverall,
+                          } as any)
+                          if (newOverall === 'ajuste_realizado') {
+                            await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
+                          }
+                          toast('Ajuste de Arte marcado como realizado.', 'success')
+                        }}
+                        isPending={updateItem.isPending}
+                      />
+                    )}
+
+                    {/* Copy */}
+                    {item.copy_approval_status && (
+                      <ApprovalFieldBlock
+                        label="Copy"
+                        status={item.copy_approval_status as ApprovalStatus}
+                        feedback={item.copy_feedback ?? null}
+                        showAction={showAgencyActions}
+                        onMarkDone={async () => {
+                          const newArtStatus = item.art_approval_status as ApprovalStatus | null
+                          const newOverall = computeOverallApproval(newArtStatus, 'ajuste_realizado')
+                          await updateItem.mutateAsync({
+                            id: item.id,
+                            copy_approval_status: 'ajuste_realizado',
+                            approval_status: newOverall,
+                          } as any)
+                          if (newOverall === 'ajuste_realizado') {
+                            await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
+                          }
+                          toast('Ajuste de Copy marcado como realizado.', 'success')
+                        }}
+                        isPending={updateItem.isPending}
+                      />
+                    )}
+
+                    {/* Fallback: feedback geral (posts legados sem Arte/Copy parcial) */}
+                    {!item.art_approval_status && !item.copy_approval_status && item.client_feedback && (
+                      <div className="bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
+                        <p className="text-xs text-gray-700 leading-relaxed break-words select-text">
+                          "{item.client_feedback}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Botão legado ajuste realizado */}
+                    {showAgencyActions && !item.art_approval_status && !item.copy_approval_status &&
+                      currentApproval === 'ajuste_solicitado' && (
+                      <button
+                        onClick={handleMarkAdjustmentDone}
+                        disabled={updateItem.isPending}
+                        className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                      >
+                        {updateItem.isPending
+                          ? <span className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          : <Check className="w-3 h-3" />}
+                        Ajuste realizado
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Agendar no Instagram ────────────────────────────────── */}
+              {showAgencyActions && (
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <Instagram className="w-3 h-3" /> Agendar no Instagram
+                  </p>
+                  <InstagramScheduleSection item={item} />
+                </div>
+              )}
+
+              {/* ── Comentários ────────────────────────────────────────── */}
+              <div>
+                <PlannerCommentsThread plannerId={item.id} role="agency" />
               </div>
 
-              {/* Arte */}
-              {item.art_approval_status && (
-                <ApprovalFieldBlock
-                  label="Arte"
-                  status={item.art_approval_status as ApprovalStatus}
-                  feedback={item.art_feedback ?? null}
-                  showAction={showAgencyActions}
-                  onMarkDone={async () => {
-                    const newCopyStatus = item.copy_approval_status as ApprovalStatus | null
-                    const newOverall = computeOverallApproval('ajuste_realizado', newCopyStatus)
-                    await updateItem.mutateAsync({
-                      id: item.id,
-                      art_approval_status: 'ajuste_realizado',
-                      approval_status: newOverall,
-                    } as any)
-                    if (newOverall === 'ajuste_realizado') {
-                      await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
-                    }
-                    toast('Ajuste de Arte marcado como realizado.', 'success')
-                  }}
-                  isPending={updateItem.isPending}
-                />
-              )}
-
-              {/* Copy */}
-              {item.copy_approval_status && (
-                <ApprovalFieldBlock
-                  label="Copy"
-                  status={item.copy_approval_status as ApprovalStatus}
-                  feedback={item.copy_feedback ?? null}
-                  showAction={showAgencyActions}
-                  onMarkDone={async () => {
-                    const newArtStatus = item.art_approval_status as ApprovalStatus | null
-                    const newOverall = computeOverallApproval(newArtStatus, 'ajuste_realizado')
-                    await updateItem.mutateAsync({
-                      id: item.id,
-                      copy_approval_status: 'ajuste_realizado',
-                      approval_status: newOverall,
-                    } as any)
-                    if (newOverall === 'ajuste_realizado') {
-                      await notifyClientAdjustmentDone(item.client_id ?? null, item.id)
-                    }
-                    toast('Ajuste de Copy marcado como realizado.', 'success')
-                  }}
-                  isPending={updateItem.isPending}
-                />
-              )}
-
-              {/* Fallback legado: feedback geral quando não há campos parciais */}
-              {!item.art_approval_status && !item.copy_approval_status && item.client_feedback && (
-                <p className="text-xs text-gray-300 leading-relaxed bg-white/5 rounded-lg px-3 py-2 break-words select-text">
-                  "{item.client_feedback}"
-                </p>
-              )}
-
-              {/* Botão legado "Ajuste realizado" — só quando não usa campos parciais */}
-              {showAgencyActions && !item.art_approval_status && !item.copy_approval_status &&
-                (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
-                <button
-                  onClick={handleMarkAdjustmentDone}
-                  disabled={updateItem.isPending}
-                  className="mt-1 flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
-                >
-                  {updateItem.isPending
-                    ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    : <Check className="w-3 h-3" />}
-                  Ajuste realizado
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Agendar no Instagram */}
-          {showAgencyActions && (
-            <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <Instagram className="w-3 h-3" /> Agendar no Instagram
-              </p>
-              <InstagramScheduleSection item={item} />
-            </div>
-          )}
-
-          {/* Thread de comentários */}
-          <PlannerCommentsThread plannerId={item.id} role="agency" />
-        </div>
-
-        <DialogFooter className="flex flex-wrap gap-2">
-          {showAgencyActions && (
-            <>
-              {confirmDelete ? (
-                <div className="flex items-center gap-2 mr-auto">
-                  <span className="text-[12px] text-gray-400">Confirmar exclusão?</span>
-                  <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)}>Não</Button>
-                  <Button
-                    size="sm"
-                    onClick={handleDelete}
-                    disabled={deleteItem.isPending}
-                    className="bg-red-500/15 text-red-400 border-red-500/20 hover:bg-red-500/25"
-                  >
-                    Sim, excluir
-                  </Button>
+              {/* ── Excluir ────────────────────────────────────────────── */}
+              {showAgencyActions && (
+                <div className="pt-3 border-t border-gray-100">
+                  {confirmDelete ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 mr-1">Confirmar exclusão?</span>
+                      <button
+                        onClick={() => setConfirmDelete(false)}
+                        className="text-xs text-gray-500 hover:text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                      >
+                        Não
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleteItem.isPending}
+                        className="text-xs text-red-600 px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        Sim, excluir
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDelete(true)}
+                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Excluir item
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="mr-auto flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-red-400 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Excluir
-                </button>
               )}
-            </>
-          )}
-          <Button variant="outline" onClick={onClose}>Fechar</Button>
-        </DialogFooter>
+
+            </div>
+          </div>
+
+        </div>
       </DialogContent>
     </Dialog>
   )
