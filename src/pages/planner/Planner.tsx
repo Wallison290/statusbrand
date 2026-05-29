@@ -1440,6 +1440,9 @@ export function Planner() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [linkedAsset, setLinkedAsset] = useState<ContentAsset | null>(null)
 
+  // Modo de visualização
+  const [viewMode, setViewMode] = useState<'mensal' | 'feed'>('mensal')
+
   // Filtro por cliente
   const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null)
 
@@ -1933,6 +1936,32 @@ export function Planner() {
       />
 
       <div className="p-4 md:p-6">
+        {/* ── Toggle de visualização ───────────────────────────────────────────── */}
+        <div className="flex items-center gap-1.5 mb-4 p-1 bg-[#f0f0f0] rounded-xl w-fit">
+          <button
+            onClick={() => setViewMode('mensal')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+              viewMode === 'mensal'
+                ? 'bg-white text-[#0f0f0f] shadow-sm'
+                : 'text-[#737373] hover:text-[#0f0f0f]'
+            }`}
+          >
+            <CalendarDays className="w-3.5 h-3.5" />
+            Calendário
+          </button>
+          <button
+            onClick={() => setViewMode('feed')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+              viewMode === 'feed'
+                ? 'bg-white text-[#0f0f0f] shadow-sm'
+                : 'text-[#737373] hover:text-[#0f0f0f]'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            Feed
+          </button>
+        </div>
+
         {/* ── Filtros compactos ────────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
 
@@ -2080,8 +2109,180 @@ export function Planner() {
 
         </div>
 
+        {/* ── Feed View ────────────────────────────────────────────────────────── */}
+        {viewMode === 'feed' && (() => {
+          const selectedClient = (clients || []).find(c => c.id === selectedClientFilter) ?? null
+          // Itens do cliente selecionado, ordenados por data
+          const feedItems = (selectedClientFilter
+            ? (items || []).filter(i => i.client_id === selectedClientFilter)
+            : (items || [])
+          ).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+
+          return (
+            <div>
+              {/* ── Cabeçalho de perfil ── */}
+              <div className="flex items-center gap-6 mb-6 px-1">
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#e0e0e0]">
+                  {selectedClient?.logo_url ? (
+                    <img src={selectedClient.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">
+                        {selectedClient ? selectedClient.company_name[0].toUpperCase() : '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info do perfil */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <h2 className="text-lg font-semibold text-[#0f0f0f] truncate">
+                      {selectedClient ? selectedClient.company_name : 'Todos os clientes'}
+                    </h2>
+                    {!selectedClient && (
+                      <span className="text-xs text-[#737373] bg-[#f0f0f0] px-2 py-0.5 rounded-full">
+                        Selecione um cliente para ver o perfil
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-[#0f0f0f]">{feedItems.length}</p>
+                      <p className="text-[11px] text-[#737373]">posts planejados</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-[#0f0f0f]">
+                        {feedItems.filter(i => i.status === 'publicado').length}
+                      </p>
+                      <p className="text-[11px] text-[#737373]">publicados</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-[#0f0f0f]">
+                        {feedItems.filter(i => i.approval_status === 'aprovado').length}
+                      </p>
+                      <p className="text-[11px] text-[#737373]">aprovados</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Grade estilo Instagram (3 colunas) ── */}
+              {feedItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#f0f0f0] flex items-center justify-center mb-3">
+                    <LayoutGrid className="w-7 h-7 text-[#c0c0c0]" />
+                  </div>
+                  <p className="text-sm font-medium text-[#737373]">Nenhum conteúdo planejado</p>
+                  <p className="text-xs text-[#9ca3af] mt-1">
+                    {selectedClientFilter ? 'Crie posts no calendário para visualizar o feed' : 'Selecione um cliente para ver o feed'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-0.5">
+                  {feedItems.map(item => {
+                    // Pega a primeira imagem IG ou qualquer imagem do item
+                    const igImages = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/'))
+                    const anyImages = (item.attachments ?? []).filter(a => a.file_type.startsWith('image/'))
+                    const cover = igImages[0] ?? anyImages[0] ?? null
+
+                    // Cor de status para placeholder
+                    const statusBg: Record<PlannerStatus, string> = {
+                      ideia: 'from-purple-100 to-purple-200',
+                      producao: 'from-blue-100 to-blue-200',
+                      revisao: 'from-yellow-100 to-yellow-200',
+                      aprovado: 'from-green-100 to-green-200',
+                      publicado: 'from-emerald-100 to-emerald-200',
+                    }
+                    const bg = statusBg[item.status as PlannerStatus] ?? 'from-gray-100 to-gray-200'
+
+                    // Ícone de tipo de conteúdo
+                    const isCarousel = item.content_type === 'carrossel' || (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/')).length > 1
+                    const isReel = item.content_type === 'reels' || (item.attachments ?? []).some(a => a.file_type.startsWith('video/'))
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => openItemView(item)}
+                        className="relative aspect-square group overflow-hidden focus:outline-none"
+                      >
+                        {cover ? (
+                          // Com imagem
+                          <>
+                            <img
+                              src={cover.file_url}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {/* Overlay hover */}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity text-center px-2">
+                                <p className="text-white text-[11px] font-semibold leading-snug line-clamp-2 drop-shadow">{item.title}</p>
+                                <p className="text-white/80 text-[10px] mt-0.5 drop-shadow">
+                                  {format(parseISO(item.scheduled_date), 'dd/MM', { locale: ptBR })}
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          // Sem imagem — placeholder informativo
+                          <div className={`w-full h-full bg-gradient-to-br ${bg} flex flex-col items-center justify-center p-2 group-hover:opacity-90 transition-opacity`}>
+                            <div className={`w-6 h-6 rounded-full mb-1.5 flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
+                            <p className="text-[10px] font-semibold text-[#374151] text-center leading-tight line-clamp-2">{item.title}</p>
+                            <p className="text-[9px] text-[#737373] mt-1">
+                              {format(parseISO(item.scheduled_date), 'dd/MM', { locale: ptBR })}
+                            </p>
+                            <p className="text-[9px] text-[#9ca3af]">{contentTypeLabels[item.content_type as ContentType]}</p>
+                          </div>
+                        )}
+
+                        {/* Badges: carrossel / reel / status aprovação */}
+                        <div className="absolute top-1 right-1 flex items-center gap-0.5">
+                          {isCarousel && !isReel && (
+                            <span className="w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
+                              <LayoutGrid className="w-2.5 h-2.5 text-white" />
+                            </span>
+                          )}
+                          {isReel && (
+                            <span className="w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
+                              <Film className="w-2.5 h-2.5 text-white" />
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Badge de aprovação (canto inferior esquerdo) */}
+                        {item.approval_status && (
+                          <div className="absolute bottom-1 left-1">
+                            <div className={`w-2.5 h-2.5 rounded-full border border-white/80 ${approvalDot[item.approval_status as ApprovalStatus]}`} />
+                          </div>
+                        )}
+
+                        {/* Data (canto inferior direito) */}
+                        <div className="absolute bottom-1 right-1 text-[9px] text-white/80 font-medium drop-shadow leading-none bg-black/30 px-1 py-0.5 rounded">
+                          {format(parseISO(item.scheduled_date), 'dd/MM')}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Legenda de status */}
+              <div className="flex gap-3 mt-5 flex-wrap">
+                {(Object.entries(approvalDot) as [ApprovalStatus, string][]).map(([status, dot]) => (
+                  <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
+                    <div className={`w-2 h-2 rounded-full ${dot}`} />
+                    {approvalLabel[status]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-4">
+        {viewMode === 'mensal' && <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[#0f0f0f] capitalize">
             {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
@@ -2094,10 +2295,10 @@ export function Planner() {
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </div>}
 
         {/* Calendar grid */}
-        <DndContext
+        {viewMode === 'mensal' && <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -2165,17 +2366,19 @@ export function Planner() {
             </div>
           ) : null}
         </DragOverlay>
-        </DndContext>
+        </DndContext>}
 
-        {/* Legend */}
-        <div className="flex gap-3 mt-4 flex-wrap">
-          {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([status, color]) => (
-            <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
-              <div className={`w-2 h-2 rounded-full ${color}`} />
-              {statusLabels[status]}
-            </div>
-          ))}
-        </div>
+        {/* Legend (apenas calendário) */}
+        {viewMode === 'mensal' && (
+          <div className="flex gap-3 mt-4 flex-wrap">
+            {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([status, color]) => (
+              <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
+                <div className={`w-2 h-2 rounded-full ${color}`} />
+                {statusLabels[status]}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Hover Tooltip */}
