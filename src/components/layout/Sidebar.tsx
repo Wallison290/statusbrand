@@ -29,9 +29,20 @@ const navItems = [
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-      <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center overflow-hidden">
-        <img src="/logo-icon.png" alt="Kairo Hub" className="w-full h-full object-contain select-none" draggable={false} />
-      </div>
+      <div
+        className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
+        style={{
+          WebkitMaskImage: `url('/logo-icon.png')`,
+          WebkitMaskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskImage: `url('/logo-icon.png')`,
+          maskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%)',
+        }}
+      />
 
       {!collapsed && (
         <motion.div
