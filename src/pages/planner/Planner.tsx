@@ -479,118 +479,18 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
 
   // Ajuste solicitado — cliente pediu correções
   if (item.approval_status === 'ajuste_solicitado') {
-    const hasPartial = item.art_approval_status || item.copy_approval_status
     return (
-      <div className="space-y-2">
-        <p className="text-[10px] text-gray-500 uppercase tracking-wide">Ajuste solicitado pelo cliente</p>
-
-        {hasPartial ? (
-          <>
-            {/* Arte */}
-            {item.art_approval_status && (() => {
-              const artSlides = parseCarouselFeedback((item as any).art_feedback)
-              const statusColor = item.art_approval_status === 'aprovado' ? 'bg-green-50 border-green-200'
-                : item.art_approval_status === 'ajuste_solicitado' ? 'bg-orange-50 border-orange-200'
-                : item.art_approval_status === 'reprovado' ? 'bg-red-50 border-red-200'
-                : 'bg-blue-50 border-blue-200'
-              const statusTextCls = item.art_approval_status === 'aprovado' ? 'text-green-700'
-                : item.art_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
-                : item.art_approval_status === 'reprovado' ? 'text-red-700' : 'text-blue-700'
-              const statusStr = item.art_approval_status === 'aprovado' ? '✓ Aprovado'
-                : item.art_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
-                : item.art_approval_status === 'reprovado' ? '✗ Reprovado' : '↻ Ajuste realizado'
-              const slideDotCls: Record<string, string> = { aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-700', reprovado: 'text-red-700' }
-              const slideLabelStr: Record<string, string> = { aprovado: '✓ Aprovado', ajuste_solicitado: '⚠ Ajuste solicitado', reprovado: '✗ Reprovado' }
-              return (
-                <div className={`p-2.5 rounded-xl border ${statusColor}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-gray-600 uppercase">
-                      Arte{artSlides ? ` · Carrossel (${artSlides.length} slides)` : ''}
-                    </span>
-                    <span className={`text-[10px] font-semibold ${statusTextCls}`}>{statusStr}</span>
-                  </div>
-                  {artSlides ? (
-                    /* Carrossel: por slide */
-                    <div className="space-y-1 mt-1">
-                      {artSlides.map(s => (
-                        <div key={s.slide} className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-gray-500 font-medium">Slide {s.slide}:</span>
-                            <span className={`text-[10px] font-semibold ${slideDotCls[s.status] ?? 'text-gray-600'}`}>
-                              {slideLabelStr[s.status] ?? s.status}
-                            </span>
-                          </div>
-                          {s.feedback && (
-                            <p className="text-[11px] text-gray-700 leading-relaxed pl-3">"{s.feedback}"</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (item as any).art_feedback ? (
-                    <p className="text-[11px] text-gray-700 leading-relaxed">
-                      <span className="font-medium">Cliente:</span> "{(item as any).art_feedback}"
-                    </p>
-                  ) : null}
-                </div>
-              )
-            })()}
-
-            {/* Copy */}
-            {item.copy_approval_status && (
-              <div className={`p-2.5 rounded-xl border ${
-                item.copy_approval_status === 'aprovado'
-                  ? 'bg-green-50 border-green-200'
-                  : item.copy_approval_status === 'ajuste_solicitado'
-                  ? 'bg-orange-50 border-orange-200'
-                  : item.copy_approval_status === 'reprovado'
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-blue-50 border-blue-200'
-              }`}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">Copy</span>
-                  <span className={`text-[10px] font-semibold ${
-                    item.copy_approval_status === 'aprovado' ? 'text-green-700'
-                    : item.copy_approval_status === 'ajuste_solicitado' ? 'text-orange-700'
-                    : item.copy_approval_status === 'reprovado' ? 'text-red-700'
-                    : 'text-blue-700'
-                  }`}>
-                    {item.copy_approval_status === 'aprovado' ? '✓ Aprovado'
-                      : item.copy_approval_status === 'ajuste_solicitado' ? '⚠ Ajuste solicitado'
-                      : item.copy_approval_status === 'reprovado' ? '✗ Reprovado'
-                      : '↻ Ajuste realizado'}
-                  </span>
-                </div>
-                {item.copy_feedback && (
-                  <p className="text-[11px] text-gray-700 leading-relaxed">
-                    <span className="font-medium">Cliente:</span> "{item.copy_feedback}"
-                  </p>
-                )}
-              </div>
-            )}
-
-            <p className="text-[11px] text-orange-700 leading-relaxed px-0.5">
-              Realize as correções, edite o post e reenvie para aprovação.
-            </p>
-          </>
-        ) : (
-          <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
-                <Pencil className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-xs font-semibold text-orange-800">Ajuste solicitado</p>
-            </div>
-            {item.client_feedback && (
-              <p className="text-[11px] text-orange-700 leading-relaxed">
-                <span className="font-medium">Cliente:</span> "{item.client_feedback}"
-              </p>
-            )}
-            <p className="text-[11px] text-orange-700 leading-relaxed">
-              Realize as correções, edite o post e reenvie para aprovação.
-              O agendamento ocorrerá automaticamente após a nova aprovação.
-            </p>
+      <div className="p-3 bg-orange-50 rounded-xl border border-orange-200 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
+            <Pencil className="w-3 h-3 text-white" />
           </div>
-        )}
+          <p className="text-xs font-semibold text-orange-800">Ajustes pendentes</p>
+        </div>
+        <p className="text-[11px] text-orange-700 leading-relaxed">
+          Realize os ajustes solicitados pelo cliente e reenvie para aprovação.
+          O agendamento será liberado automaticamente após a aprovação completa.
+        </p>
       </div>
     )
   }
@@ -621,11 +521,11 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
             <X className="w-3 h-3 text-white" />
           </div>
-          <p className="text-xs font-semibold text-red-800">Conteúdo reprovado pelo cliente</p>
+          <p className="text-xs font-semibold text-red-800">Conteúdo reprovado</p>
         </div>
         <p className="text-[11px] text-red-700 leading-relaxed">
-          Este {ptLabel} foi reprovado. Revise o conteúdo, edite e reenvie para o cliente aprovar
-          antes de agendar no Instagram.
+          Revise os ajustes indicados pelo cliente e reenvie para aprovação.
+          O agendamento será liberado automaticamente após a aprovação completa.
         </p>
       </div>
     )
