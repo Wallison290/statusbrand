@@ -210,8 +210,8 @@ function TaskCard({
             )}
 
             {/* Assignee */}
-            {task.assignee && !clientName && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-[#9ca3af]">
+            {task.assignee && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#9ca3af] bg-[#f5f5f5] px-2 py-0.5 rounded-full">
                 <User className="w-2.5 h-2.5" />
                 {task.assignee}
               </span>
@@ -282,9 +282,13 @@ function DayColumn({
 
   return (
     <div
-      className={`flex-shrink-0 w-[252px] px-3 transition-colors duration-100 ${
-        !isLast ? 'border-r border-[#e8edf5]' : ''
-      } ${isDragOver ? 'bg-blue-50/30' : ''}`}
+      className={[
+        'flex-shrink-0 w-[252px] flex flex-col rounded-2xl border transition-colors duration-100 overflow-hidden',
+        today
+          ? 'border-[#0f0f0f]/10 bg-white shadow-sm'
+          : 'border-[#e8edf5] bg-white',
+        isDragOver ? 'border-blue-300 bg-blue-50/20' : '',
+      ].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -296,33 +300,36 @@ function DayColumn({
         if (id) onDrop(id, day)
       }}
     >
-      {/* Column header — Planner style */}
-      <div className="flex items-start justify-between pb-3 mb-3 border-b border-[#f0f4f8]">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className={`text-[13px] font-bold ${isWeekend ? 'text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
+      {/* Column header */}
+      <div className={[
+        'flex items-center justify-between px-3 py-2.5 border-b',
+        today ? 'bg-[#0f0f0f] border-transparent' : 'bg-[#f8f9fc] border-[#f0f4f8]',
+      ].join(' ')}>
+        <div className="flex items-center gap-2">
+          <div>
+            <p className={`text-[13px] font-bold leading-none ${today ? 'text-white' : isWeekend ? 'text-[#9ca3af]' : 'text-[#0f0f0f]'}`}>
               {dayName}
             </p>
-            {today && (
-              <span className="text-[9px] font-black px-1.5 py-0.5 bg-[#0f0f0f] text-white rounded-full uppercase tracking-wide">
-                Hoje
-              </span>
-            )}
+            <p className={`text-[11px] mt-0.5 capitalize ${today ? 'text-white/60' : 'text-[#9ca3af]'}`}>
+              {dayNum} {monthAbbr}
+            </p>
           </div>
-          <p className="text-[11px] text-[#9ca3af] mt-0.5 capitalize">
-            {dayNum} {monthAbbr}
-          </p>
+          {today && (
+            <span className="text-[9px] font-black px-1.5 py-0.5 bg-white/20 text-white rounded-full uppercase tracking-wide">
+              Hoje
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#f0f4f8] text-[#6b7280] tabular-nums">
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${today ? 'bg-white/20 text-white' : 'bg-[#e8edf5] text-[#6b7280]'}`}>
               {tasks.length}
             </span>
           )}
           <button
             onClick={() => onAddTask(day)}
-            className="w-5 h-5 rounded-full bg-[#f0f4f8] hover:bg-[#e2e8f0] text-[#9ca3af] hover:text-[#374151] flex items-center justify-center transition-colors"
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${today ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#e8edf5] hover:bg-[#d8e0ec] text-[#9ca3af] hover:text-[#374151]'}`}
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}
           >
             <Plus className="w-3 h-3" />
@@ -331,7 +338,7 @@ function DayColumn({
       </div>
 
       {/* Task list */}
-      <div className="space-y-2 min-h-[420px]">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-[380px]" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence>
           {tasks.map(task => (
             <motion.div
@@ -359,7 +366,7 @@ function DayColumn({
         {tasks.length === 0 && !isDragOver && (
           <button
             onClick={() => onAddTask(day)}
-            className="w-full text-center py-5 text-[11px] text-[#d1d5db] hover:text-[#94a3b8] transition-colors"
+            className="w-full text-center py-6 text-[11px] text-[#d1d5db] hover:text-[#94a3b8] transition-colors"
           >
             + Adicionar tarefa
           </button>
@@ -1099,7 +1106,7 @@ export function Tasks() {
 
         {/* ── Weekly columns ──────────────────────────────────────────────── */}
         <div className="overflow-x-auto flex-1 min-h-0">
-          <div className="flex h-full" style={{ minWidth: `${7 * 252}px` }}>
+          <div className="flex gap-2.5 h-full pb-2" style={{ minWidth: `${7 * 264}px` }}>
             {days.map((day, di) => (
               <DayColumn
                 key={day.toISOString()}
