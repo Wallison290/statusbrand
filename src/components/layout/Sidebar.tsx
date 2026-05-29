@@ -29,7 +29,7 @@ const navItems = [
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-      <div className="flex-shrink-0 w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center overflow-hidden">
+      <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center overflow-hidden">
         <img src="/logo-icon.png" alt="Kairo Hub" className="w-full h-full object-contain select-none" draggable={false} />
       </div>
 
