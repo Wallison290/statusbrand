@@ -285,9 +285,9 @@ function DayColumn({
       className={[
         'flex-shrink-0 w-[252px] flex flex-col rounded-2xl border transition-colors duration-100 overflow-hidden',
         today
-          ? 'border-[#0f0f0f]/10 bg-white shadow-sm'
-          : 'border-[#e8edf5] bg-white',
-        isDragOver ? 'border-blue-300 bg-blue-50/20' : '',
+          ? 'border-[#0f0f0f]/10 bg-[#eef1f8] shadow-sm'
+          : 'border-[#e2e8f4] bg-[#eef1f8]',
+        isDragOver ? '!border-blue-300 !bg-blue-50/40' : '',
       ].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => {
@@ -303,7 +303,7 @@ function DayColumn({
       {/* Column header */}
       <div className={[
         'flex items-center justify-between px-3 py-2.5 border-b',
-        today ? 'bg-[#0f0f0f] border-transparent' : 'bg-[#f8f9fc] border-[#f0f4f8]',
+        today ? 'bg-[#0f0f0f] border-transparent' : 'bg-[#e4eaf5] border-[#d8e0f0]',
       ].join(' ')}>
         <div className="flex items-center gap-2">
           <div>
@@ -323,13 +323,13 @@ function DayColumn({
 
         <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${today ? 'bg-white/20 text-white' : 'bg-[#e8edf5] text-[#6b7280]'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${today ? 'bg-white/20 text-white' : 'bg-[#d0daf0] text-[#5b6a90]'}`}>
               {tasks.length}
             </span>
           )}
           <button
             onClick={() => onAddTask(day)}
-            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${today ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#e8edf5] hover:bg-[#d8e0ec] text-[#9ca3af] hover:text-[#374151]'}`}
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${today ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#d0daf0] hover:bg-[#bfcce8] text-[#6b7aaa] hover:text-[#374151]'}`}
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}
           >
             <Plus className="w-3 h-3" />
