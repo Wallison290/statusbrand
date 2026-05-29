@@ -2182,10 +2182,13 @@ export function Planner() {
               ) : (
                 <div className="grid grid-cols-3 gap-0.5 max-w-2xl">
                   {feedItems.map(item => {
-                    // Pega a primeira imagem IG ou qualquer imagem do item
-                    const igImages = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/'))
+                    // Capa: prioriza imagem IG marcada → qualquer imagem → vídeo IG → qualquer vídeo
+                    const igImages  = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/'))
                     const anyImages = (item.attachments ?? []).filter(a => a.file_type.startsWith('image/'))
-                    const cover = igImages[0] ?? anyImages[0] ?? null
+                    const igVideos  = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('video/'))
+                    const anyVideos = (item.attachments ?? []).filter(a => a.file_type.startsWith('video/'))
+                    const coverImg  = igImages[0] ?? anyImages[0] ?? null
+                    const coverVid  = igVideos[0] ?? anyVideos[0] ?? null
 
                     // Cor de status para placeholder
                     const statusBg: Record<PlannerStatus, string> = {
@@ -2198,20 +2201,20 @@ export function Planner() {
                     const bg = statusBg[item.status as PlannerStatus] ?? 'from-gray-100 to-gray-200'
 
                     // Ícone de tipo de conteúdo
-                    const isCarousel = item.content_type === 'carrossel' || (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/')).length > 1
-                    const isReel = item.content_type === 'reels' || (item.attachments ?? []).some(a => a.file_type.startsWith('video/'))
+                    const isCarousel = item.content_type === 'carrossel' || igImages.length > 1
+                    const isReel = item.content_type === 'reels' || anyVideos.length > 0
 
                     return (
                       <button
                         key={item.id}
                         onClick={() => openItemView(item)}
-                        className="relative aspect-square group overflow-hidden focus:outline-none"
+                        className="relative aspect-square group overflow-hidden focus:outline-none bg-black"
                       >
-                        {cover ? (
-                          // Com imagem
+                        {coverImg ? (
+                          // Tem imagem → exibe imagem
                           <>
                             <img
-                              src={cover.file_url}
+                              src={coverImg.file_url}
                               alt={item.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -2225,8 +2228,29 @@ export function Planner() {
                               </div>
                             </div>
                           </>
+                        ) : coverVid ? (
+                          // Tem vídeo → exibe preview do vídeo (autoplay mudo, como Instagram)
+                          <>
+                            <video
+                              src={coverVid.file_url}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Overlay hover */}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity text-center px-2">
+                                <p className="text-white text-[11px] font-semibold leading-snug line-clamp-2 drop-shadow">{item.title}</p>
+                                <p className="text-white/80 text-[10px] mt-0.5 drop-shadow">
+                                  {format(parseISO(item.scheduled_date), 'dd/MM', { locale: ptBR })}
+                                </p>
+                              </div>
+                            </div>
+                          </>
                         ) : (
-                          // Sem imagem — placeholder informativo
+                          // Sem mídia — placeholder informativo
                           <div className={`w-full h-full bg-gradient-to-br ${bg} flex flex-col items-center justify-center p-2 group-hover:opacity-90 transition-opacity`}>
                             <div className={`w-6 h-6 rounded-full mb-1.5 flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
                             <p className="text-[10px] font-semibold text-[#374151] text-center leading-tight line-clamp-2">{item.title}</p>
