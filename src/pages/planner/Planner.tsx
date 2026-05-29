@@ -2112,23 +2112,23 @@ export function Planner() {
         {/* ── Feed View ────────────────────────────────────────────────────────── */}
         {viewMode === 'feed' && (() => {
           const selectedClient = (clients || []).find(c => c.id === selectedClientFilter) ?? null
-          // Itens do cliente selecionado, ordenados por data
+          // Itens do cliente selecionado — mais recente primeiro (topo da grade, como Instagram)
           const feedItems = (selectedClientFilter
             ? (items || []).filter(i => i.client_id === selectedClientFilter)
             : (items || [])
-          ).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+          ).sort((a, b) => b.scheduled_date.localeCompare(a.scheduled_date))
 
           return (
             <div>
               {/* ── Cabeçalho de perfil ── */}
-              <div className="flex items-center gap-6 mb-6 px-1">
+              <div className="flex items-center gap-5 mb-5 max-w-lg">
                 {/* Avatar */}
-                <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#e0e0e0]">
+                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#e0e0e0]">
                   {selectedClient?.logo_url ? (
                     <img src={selectedClient.logo_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">
+                      <span className="text-xl font-bold text-white">
                         {selectedClient ? selectedClient.company_name[0].toUpperCase() : '?'}
                       </span>
                     </div>
@@ -2137,32 +2137,32 @@ export function Planner() {
 
                 {/* Info do perfil */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2 flex-wrap">
-                    <h2 className="text-lg font-semibold text-[#0f0f0f] truncate">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <h2 className="text-sm font-semibold text-[#0f0f0f] truncate">
                       {selectedClient ? selectedClient.company_name : 'Todos os clientes'}
                     </h2>
                     {!selectedClient && (
-                      <span className="text-xs text-[#737373] bg-[#f0f0f0] px-2 py-0.5 rounded-full">
-                        Selecione um cliente para ver o perfil
+                      <span className="text-[11px] text-[#737373] bg-[#f0f0f0] px-2 py-0.5 rounded-full">
+                        Selecione um cliente
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-5">
                     <div className="text-center">
                       <p className="text-sm font-bold text-[#0f0f0f]">{feedItems.length}</p>
-                      <p className="text-[11px] text-[#737373]">posts planejados</p>
+                      <p className="text-[10px] text-[#737373]">planejados</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-bold text-[#0f0f0f]">
                         {feedItems.filter(i => i.status === 'publicado').length}
                       </p>
-                      <p className="text-[11px] text-[#737373]">publicados</p>
+                      <p className="text-[10px] text-[#737373]">publicados</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-bold text-[#0f0f0f]">
                         {feedItems.filter(i => i.approval_status === 'aprovado').length}
                       </p>
-                      <p className="text-[11px] text-[#737373]">aprovados</p>
+                      <p className="text-[10px] text-[#737373]">aprovados</p>
                     </div>
                   </div>
                 </div>
@@ -2180,7 +2180,7 @@ export function Planner() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-0.5">
+                <div className="grid grid-cols-3 gap-0.5 max-w-lg">
                   {feedItems.map(item => {
                     // Pega a primeira imagem IG ou qualquer imagem do item
                     const igImages = (item.attachments ?? []).filter(a => a.is_ig_media && a.file_type.startsWith('image/'))
@@ -2269,10 +2269,10 @@ export function Planner() {
               )}
 
               {/* Legenda de status */}
-              <div className="flex gap-3 mt-5 flex-wrap">
+              <div className="flex gap-3 mt-4 flex-wrap max-w-lg">
                 {(Object.entries(approvalDot) as [ApprovalStatus, string][]).map(([status, dot]) => (
-                  <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
-                    <div className={`w-2 h-2 rounded-full ${dot}`} />
+                  <div key={status} className="flex items-center gap-1.5 text-[11px] text-[#737373]">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
                     {approvalLabel[status]}
                   </div>
                 ))}
