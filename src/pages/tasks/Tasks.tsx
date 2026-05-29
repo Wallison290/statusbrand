@@ -21,16 +21,16 @@ import { useClients } from '@/hooks/useClients'
 import { useTeamMembers } from '@/hooks/useTeamMembers'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
-import { formatDate, isOverdue } from '@/utils/formatters'
+import { isOverdue } from '@/utils/formatters'
 import type { Task, TaskStatus, TaskPriority } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; dot: string }> = {
-  a_fazer:      { label: 'A fazer',      bg: 'bg-[#f0f0f0]',  text: 'text-[#737373]',   dot: 'bg-[#c0c0c0]'   },
-  em_andamento: { label: 'Em andamento', bg: 'bg-blue-50',    text: 'text-blue-900',    dot: 'bg-blue-400'    },
-  revisao:      { label: 'Revisão',      bg: 'bg-amber-50',   text: 'text-amber-900',   dot: 'bg-amber-400'   },
-  concluido:    { label: 'Concluído',    bg: 'bg-emerald-50', text: 'text-emerald-900', dot: 'bg-emerald-400' },
+const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; dot: string; border: string }> = {
+  a_fazer:      { label: 'A fazer',      bg: 'bg-[#f3f4f6]',   text: 'text-[#6b7280]',   dot: 'bg-[#9ca3af]',   border: 'border-[#e5e7eb]'   },
+  em_andamento: { label: 'Em andamento', bg: 'bg-blue-100',    text: 'text-blue-700',    dot: 'bg-blue-500',    border: 'border-blue-200'    },
+  revisao:      { label: 'Revisão',      bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-500',   border: 'border-amber-200'   },
+  concluido:    { label: 'Concluído',    bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500', border: 'border-emerald-200' },
 }
 
 const PRIORITY_CFG: Record<TaskPriority, {
@@ -61,7 +61,7 @@ function StatusPill({
     <div className="relative flex-shrink-0">
       <button
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer hover:opacity-80 transition-opacity ${cfg.bg} ${cfg.text}`}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer hover:opacity-80 transition-opacity border ${cfg.bg} ${cfg.text} ${cfg.border}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
         {cfg.label}
@@ -76,15 +76,15 @@ function StatusPill({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.97 }}
               transition={{ duration: 0.12 }}
-              className="absolute bottom-full mb-1.5 left-0 z-20 w-36 bg-white border border-[#e8e8e8] rounded-xl shadow-xl overflow-hidden py-1"
+              className="absolute bottom-full mb-1.5 right-0 z-20 w-40 bg-white border border-[#e8e8e8] rounded-xl shadow-xl overflow-hidden py-1.5"
             >
               {(Object.entries(STATUS_CFG) as [TaskStatus, typeof STATUS_CFG[TaskStatus]][]).map(([s, c]) => (
                 <button
                   key={s}
                   onClick={e => { e.stopPropagation(); onChange(s); setOpen(false) }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#f5f5f5] transition-colors text-left ${s === status ? 'font-bold' : ''}`}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#f5f5f5] transition-colors text-left ${s === status ? 'font-semibold' : ''}`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${c.dot}`} />
                   <span className={c.text}>{c.label}</span>
                 </button>
               ))}
@@ -136,10 +136,12 @@ function TaskCard({
   const priCfg  = PRIORITY_CFG[task.priority]
   const accent  = overdueAndOpen ? '#ef4444' : PRIORITY_ACCENT[task.priority]
 
-  const timeClient = [
-    task.due_time ? task.due_time.slice(0, 5) : null,
-    clientName || null,
-  ].filter(Boolean).join(' · ')
+  // Date formatted: "28 mai · 17:20"
+  const dateLabel = task.due_date
+    ? format(new Date(task.due_date + 'T00:00:00'), "d MMM", { locale: ptBR })
+    : null
+  const timeLabel = task.due_time ? task.due_time.slice(0, 5) : null
+  const dateTimeLine = [dateLabel, timeLabel].filter(Boolean).join(' · ')
 
   return (
     <div
@@ -155,82 +157,88 @@ function TaskCard({
       }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
       className={[
-        'relative w-full text-left rounded-xl border border-[#e2e8f0] bg-white',
-        'hover:bg-[#f8fafc] hover:border-[#d0d8e8] transition-all overflow-hidden shadow-sm',
-        'cursor-pointer select-none group',
-        dragging ? 'opacity-40' : '',
+        'relative w-full text-left rounded-2xl border border-[#ebebeb] bg-white',
+        'hover:border-[#d4d4d4] hover:shadow-md transition-all duration-150 overflow-hidden',
+        'cursor-pointer select-none group shadow-sm',
+        dragging ? 'opacity-40 scale-95' : '',
       ].join(' ')}
     >
       <div className="flex">
-        {/* Left accent bar — same pattern as Planner */}
+        {/* Left accent bar */}
         <div
-          className="w-[4px] flex-shrink-0 rounded-l-xl"
+          className="w-[3px] flex-shrink-0"
           style={{ backgroundColor: accent }}
         />
 
         {/* Card content */}
-        <div className="flex-1 min-w-0 p-3">
+        <div className="flex-1 min-w-0 px-3.5 py-3">
 
-          {/* Time + client (muted row) */}
-          {timeClient && (
-            <p className="text-[10px] text-[#9ca3af] mb-1 font-medium tracking-wide">
-              {timeClient}
-            </p>
-          )}
+          {/* Date / time row */}
+          {dateTimeLine ? (
+            <div className="flex items-center gap-1.5 mb-2">
+              <Clock className="w-3 h-3 text-[#b0b8c8] flex-shrink-0" />
+              <span className={`text-[11px] font-medium ${overdueAndOpen ? 'text-red-500' : 'text-[#a0aec0]'}`}>
+                {overdueAndOpen && <AlertCircle className="w-3 h-3 inline mr-0.5 -mt-px" />}
+                {dateTimeLine}
+                {overdueAndOpen && ' · Atrasada'}
+              </span>
+            </div>
+          ) : overdueAndOpen ? (
+            <div className="flex items-center gap-1 mb-2">
+              <AlertCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
+              <span className="text-[11px] font-medium text-red-500">Atrasada</span>
+            </div>
+          ) : null}
 
           {/* Title */}
-          <p className="text-[12px] font-semibold text-[#0f0f0f] leading-snug mb-2 line-clamp-2">
+          <p className="text-[13px] font-bold text-[#0f0f0f] leading-snug mb-3 line-clamp-2 pr-10">
             {task.title}
           </p>
 
-          {/* Description */}
-          {task.description && (
-            <p className="text-[11px] text-[#9ca3af] line-clamp-2 leading-relaxed mb-2">
-              {task.description}
-            </p>
-          )}
-
-          {/* Bottom row: priority + assignee + status */}
+          {/* Pills row */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md flex-shrink-0 ${priCfg.pillBg} ${priCfg.pillText}`}>
+            {/* Priority pill */}
+            <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>
               {priCfg.label}
             </span>
-            {task.assignee && (
-              <span className="text-[10px] text-[#9ca3af] truncate flex-1 min-w-0">
+
+            {/* Client pill */}
+            {clientName && (
+              <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">
+                {clientName}
+              </span>
+            )}
+
+            {/* Assignee */}
+            {task.assignee && !clientName && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#9ca3af]">
+                <User className="w-2.5 h-2.5" />
                 {task.assignee}
               </span>
             )}
-            <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
+
+            {/* Status pill — pushes to right */}
+            <div onClick={e => e.stopPropagation()} className="ml-auto flex-shrink-0">
               <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
             </div>
           </div>
-
-          {/* Overdue row */}
-          {overdueAndOpen && (
-            <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-red-50">
-              <AlertCircle className="w-2.5 h-2.5 text-red-400 flex-shrink-0" />
-              <span className="text-[9px] text-red-500 font-bold">
-                {task.due_date ? formatDate(task.due_date) : 'Atrasada'}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Action buttons — top-right, visible on hover */}
         <div
-          className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2.5 right-2.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={e => e.stopPropagation()}
         >
           <button
             onClick={() => onEdit(task)}
-            className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-[#374151] hover:bg-white/90 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-lg text-[#c0c0c0] hover:text-[#374151] hover:bg-[#f3f4f6] transition-colors"
             title="Editar"
           >
             <Pencil className="w-3 h-3" />
           </button>
           <button
             onClick={() => onDelete(task.id)}
-            className="w-5 h-5 flex items-center justify-center rounded-md text-[#c0c0c0] hover:text-red-400 hover:bg-white/90 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-lg text-[#c0c0c0] hover:text-red-400 hover:bg-red-50 transition-colors"
             title="Excluir"
           >
             <Trash2 className="w-3 h-3" />
