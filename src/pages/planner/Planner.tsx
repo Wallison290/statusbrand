@@ -1928,7 +1928,7 @@ export function Planner() {
               setOpen(true)
             }}
             size="sm"
-            className="bg-[#0f0f0f] hover:bg-[#1a1a1a] text-white border-0"
+            className="!bg-[#0f0f0f] hover:!bg-[#1a1a1a] !text-white !border-0 !shadow-none"
           >
             <Plus className="w-4 h-4" /> Novo post
           </Button>
