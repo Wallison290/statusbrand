@@ -3,12 +3,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
+import { useStorageUsage } from '@/hooks/useStorageUsage'
 
 const navItems = [
   { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
@@ -83,12 +84,19 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed]  = useState(false)
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
+  const { data: storage }          = useStorageUsage()
 
   const planName  = subData?.plan.name ?? 'Free'
   const aiUsed    = usage?.requests ?? 0
   const aiLimit   = usage?.limit    ?? 50
   const aiPct     = Math.min(100, Math.round((aiUsed / aiLimit) * 100))
   const aiWarning = aiPct >= 80
+
+  const stUsedGB  = storage?.usedGB  ?? 0
+  const stLimitGB = storage?.limitGB ?? 10
+  const stPct     = Math.min(100, Math.round((stUsedGB / stLimitGB) * 100))
+  const stWarning = stPct >= 80
+  const stLabel   = stUsedGB < 1 ? `${(stUsedGB * 1024).toFixed(0)} MB` : `${stUsedGB.toFixed(1)} GB`
 
   // Fecha sidebar mobile ao mudar de rota
   useEffect(() => {
@@ -181,60 +189,72 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* ── Plano + uso de IA ── */}
+      {/* ── Plano + uso de IA + Armazenamento ── */}
       <div className="px-2 pb-1 flex-shrink-0">
         <Link to="/assinatura">
           <div
             className="rounded-xl px-2.5 py-2 transition-colors hover:bg-[#161b2e]"
-            style={{ background: aiWarning ? 'rgba(245,158,11,0.1)' : '#111827', border: `1px solid ${aiWarning ? 'rgba(245,158,11,0.3)' : '#1e2535'}` }}
+            style={{ background: '#111827', border: '1px solid #1e2535' }}
           >
             {!collapsed ? (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
-                    <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-400' : 'text-white'}`}>
-                      {planName}
+              <div className="space-y-2">
+                {/* IA */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
+                      <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-400' : 'text-white'}`}>
+                        {planName}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] ${aiWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
+                      {aiUsed}/{aiLimit} IA
                     </span>
                   </div>
-                  <span className={`text-[10px] ${aiWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
-                    {aiUsed}/{aiLimit} IA
-                  </span>
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${aiPct}%`,
+                        background: aiPct >= 90 ? '#ef4444' : aiPct >= 70 ? '#f59e0b' : 'linear-gradient(90deg, #7c3aed, #6366f1)',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${aiPct}%`,
-                      background: aiPct >= 90
-                        ? '#ef4444'
-                        : aiPct >= 70
-                          ? '#f59e0b'
-                          : 'linear-gradient(90deg, #7c3aed, #6366f1)',
-                    }}
-                  />
+                {/* Storage */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <HardDrive className={`w-3 h-3 ${stWarning ? 'text-amber-400' : 'text-[#22c55e]'}`} />
+                      <span className="text-[10px] text-[#64748b]">Armazenamento</span>
+                    </div>
+                    <span className={`text-[10px] ${stWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
+                      {stLabel}/{stLimitGB} GB
+                    </span>
+                  </div>
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${stPct}%`,
+                        background: stPct >= 90 ? '#ef4444' : stPct >= 70 ? '#f59e0b' : '#22c55e',
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
-              <Zap className={`w-[15px] h-[15px] mx-auto ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
+              <div className="flex flex-col items-center gap-1.5">
+                <Zap className={`w-[15px] h-[15px] ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
+                <HardDrive className={`w-[15px] h-[15px] ${stWarning ? 'text-amber-400' : 'text-[#22c55e]'}`} />
+              </div>
             )}
           </div>
         </Link>
       </div>
 
-      {/* ── Perfil + sair ── */}
-      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] space-y-0.5 flex-shrink-0">
-        {!collapsed && profile && (
-          <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl" style={{ background: '#111827' }}>
-            <InitialsAvatar name={profile.full_name || profile.email || 'U'} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-white truncate leading-tight">
-                {profile.full_name || 'Usuário'}
-              </p>
-              <p className="text-[10px] text-[#64748b] truncate mt-0.5">{profile.email}</p>
-            </div>
-          </div>
-        )}
+      {/* ── Sair ── */}
+      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] flex-shrink-0">
         <button
           onClick={() => signOut()}
           className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#64748b] hover:bg-[#161b2e] hover:text-white transition-colors duration-150"
