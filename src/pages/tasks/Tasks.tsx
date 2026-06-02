@@ -907,7 +907,6 @@ export function Tasks() {
       <Header
         title="Tarefas"
         subtitle="Calendário semanal"
-        dark={false}
         action={
           <button
             onClick={handleNewTask}

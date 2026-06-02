@@ -605,7 +605,7 @@ export function Financial() {
 
   return (
     <div className="min-h-full bg-[#f5f7fb]">
-      <Header title="Financeiro" subtitle="Visão consolidada da receita dos clientes" dark={false} />
+      <Header title="Financeiro" subtitle="Visão consolidada da receita dos clientes" />
 
       <div className="p-4 md:p-6 space-y-6">
 

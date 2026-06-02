@@ -1597,7 +1597,6 @@ export function Library() {
         title="Biblioteca"
         subtitle="Conteúdos e recursos da sua agência"
         action={headerAction}
-        dark={false}
       />
 
       <div className="p-4 md:p-6 space-y-5">

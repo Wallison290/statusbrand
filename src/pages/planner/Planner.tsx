@@ -1915,7 +1915,6 @@ export function Planner() {
       <Header
         title="Planejamento"
         subtitle="Calendário editorial"
-        dark={false}
         action={
           <Button
             onClick={() => {

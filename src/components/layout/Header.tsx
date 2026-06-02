@@ -22,9 +22,9 @@ export function Header({ title, subtitle, action, dark = true }: HeaderProps) {
     <>
       <header className={`h-14 border-b flex items-center px-5 gap-4 sticky top-0 z-20 ${
         dark
-          ? 'bg-[#0f0f0f] border-white/10'
+          ? 'border-[#1e2535]'
           : 'bg-white border-gray-100'
-      }`}>
+      }`} style={dark ? { background: '#0b0e1a' } : undefined}>
         <div className="flex-1 min-w-0">
           <h1 className={`text-[13px] font-semibold leading-none ${dark ? 'text-white' : 'text-[#0f0f0f]'}`}>
             {title}

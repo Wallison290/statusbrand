@@ -775,7 +775,6 @@ export function Dashboard() {
       <Header
         title="Dashboard"
         subtitle="Visão geral da operação"
-        dark={false}
       />
 
       {/* ── Hero Banner inteligente ── */}
