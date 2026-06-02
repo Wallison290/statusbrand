@@ -27,38 +27,30 @@ const navItems = [
 // ── Kairo Hub logo mark ───────────────────────────────────────────────────────
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
-  return (
-    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-      <div
-        className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
-        style={{
-          WebkitMaskImage: `url('/logo-icon.png')`,
-          WebkitMaskSize: 'contain',
-          WebkitMaskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskImage: `url('/logo-icon.png')`,
-          maskSize: 'contain',
-          maskRepeat: 'no-repeat',
-          maskPosition: 'center',
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%)',
-        }}
-      />
+  if (collapsed) {
+    return (
+      <div className="flex items-center justify-center w-full">
+        <img
+          src="/logo-icon.png"
+          alt="KairoHub"
+          className="w-7 h-7 object-contain"
+        />
+      </div>
+    )
+  }
 
-      {!collapsed && (
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1 }}
-          className="leading-none min-w-0"
-        >
-          <span
-            className="block text-[13px] font-semibold text-[#0f0f0f] tracking-tight whitespace-nowrap"
-            style={{ fontFamily: "'Georgia', serif" }}
-          >
-            Kairo<span style={{ fontFamily: 'inherit', fontWeight: 700 }}>Hub</span>
-          </span>
-        </motion.div>
-      )}
-    </div>
+  return (
+    <motion.div
+      initial={false}
+      animate={{ opacity: 1 }}
+      className="flex items-center flex-1 min-w-0"
+    >
+      <img
+        src="/logo.png"
+        alt="KairoHub"
+        className="h-9 w-auto object-contain object-left"
+      />
+    </motion.div>
   )
 }
 
