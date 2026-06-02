@@ -14,9 +14,9 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
 // Mapeia Price ID do Stripe → nome do plano
 // Preencha após criar os produtos no Stripe
 const PRICE_TO_PLAN: Record<string, string> = {
-  'price_1TYsFlP29s2RNZxUOJJW67IL': 'starter',
-  'price_1TYsFpP29s2RNZxUNzOUbAPr': 'pro',
-  'price_1TYsFqP29s2RNZxUpqsRsVEw': 'agency',
+  'price_1Te09b0khDYycmTv1muADpGv': 'starter',
+  'price_1Te09f0khDYycmTvmJSGheCI': 'pro',
+  'price_1Te09n0khDYycmTvrseP5spd': 'agency',
 }
 
 Deno.serve(async (req) => {
