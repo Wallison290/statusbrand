@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { PLANS, type PlanId } from '@/config/plans'
+import { Header } from '@/components/layout/Header'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -210,11 +211,9 @@ export function Subscription() {
   )
 
   return (
+    <div>
+      <Header title="Assinatura" subtitle="Gerencie seu plano e uso da IA" />
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-      <div>
-        <h1 className="text-[22px] font-bold text-[#0f172a]">Assinatura</h1>
-        <p className="text-[13.5px] text-[#64748b] mt-1">Gerencie seu plano e uso da IA</p>
-      </div>
 
       {success && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
@@ -324,6 +323,7 @@ export function Subscription() {
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   )
 }
