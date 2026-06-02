@@ -109,7 +109,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 
       {/* ── Nav ── */}
       <nav
-        className="flex-1 py-2 px-2 space-y-0.5 overflow-y-auto"
+        className="flex-1 py-1.5 px-2 space-y-0.5 overflow-y-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
       >
         {navItems.map((item) => {
@@ -124,7 +124,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
               <Link key={item.href} to={item.href}>
                 <div
                   title={collapsed ? item.label : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group"
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
                   style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(79,70,229,0.18) 100%)', border: '1px solid rgba(124,58,237,0.3)' }}
                 >
                   <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#a78bfa]" />
@@ -152,7 +152,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
               <Link key={item.href} to={item.href}>
                 <div
                   title={collapsed ? item.label : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150"
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
                   style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
                 >
                   <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
@@ -169,7 +169,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             <Link key={item.href} to={item.href}>
               <div
                 title={collapsed ? item.label : undefined}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group text-[#94a3b8] hover:text-white hover:bg-[#161b2e]"
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group text-[#94a3b8] hover:text-white hover:bg-[#161b2e]"
               >
                 <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569] group-hover:text-white transition-colors" />
                 {!collapsed && (
@@ -182,7 +182,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </nav>
 
       {/* ── Plano + uso de IA ── */}
-      <div className="px-2 pb-1">
+      <div className="px-2 pb-1 flex-shrink-0">
         <Link to="/assinatura">
           <div
             className="rounded-xl px-2.5 py-2 transition-colors hover:bg-[#161b2e]"
@@ -223,7 +223,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </div>
 
       {/* ── Perfil + sair ── */}
-      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] space-y-0.5">
+      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] space-y-0.5 flex-shrink-0">
         {!collapsed && profile && (
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl" style={{ background: '#111827' }}>
             <InitialsAvatar name={profile.full_name || profile.email || 'U'} />
