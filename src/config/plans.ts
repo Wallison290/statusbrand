@@ -7,14 +7,15 @@ export interface Plan {
   id: PlanId
   name: string
   price: number
-  maxClients: number            // -1 = ilimitado
+  maxClients: number          // -1 = ilimitado
   aiRequestsPerMonth: number
-  storageGB: number             // armazenamento em GB
+  storageGB: number           // armazenamento em GB
   hasClientPortal: boolean
   hasReports: boolean
-  hasTeamAccess: boolean        // acesso de membros de equipe
-  instagramProfiles: number     // perfis com agendamento automático (-1 = ilimitado, 0 = sem agendamento)
+  maxTeamMembers: number      // membros de equipe (-1 = ilimitado)
+  instagramProfiles: number   // perfis com agendamento automático (-1 = ilimitado)
   supportLevel: 'email' | 'priority' | 'sla'
+  supportLabel: string        // label completo para exibição
   stripePriceId: string | null
   badge?: string
   description: string
@@ -27,105 +28,116 @@ export const PLANS: Record<PlanId, Plan> = {
     name: 'Starter',
     price: 97,
     maxClients: 5,
-    aiRequestsPerMonth: 100,
+    aiRequestsPerMonth: 150,
     storageGB: 10,
     hasClientPortal: false,
     hasReports: false,
-    hasTeamAccess: false,
-    instagramProfiles: 1,       // agendamento só para 1 perfil
+    maxTeamMembers: 1,
+    instagramProfiles: 1,
     supportLevel: 'email',
+    supportLabel: 'E-mail',
     stripePriceId: 'price_1TYsFlP29s2RNZxUOJJW67IL',
     description: 'Para quem está começando a agência',
     features: [
       'Até 5 clientes',
-      '100 requests de IA por mês',
+      '150 requests de IA por mês',
       '10 GB de armazenamento',
       'Agendamento Instagram (1 perfil)',
+      '1 usuário na equipe',
       'Planejador de conteúdo',
-      'Tarefas e notas',
-      'Financeiro básico',
-      'Biblioteca de conteúdo',
+      'Tarefas, notas e biblioteca',
       'Suporte por e-mail',
     ],
   },
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 147,
-    maxClients: 20,
-    aiRequestsPerMonth: 400,
-    storageGB: 20,
+    price: 197,
+    maxClients: 15,
+    aiRequestsPerMonth: 600,
+    storageGB: 50,
     hasClientPortal: true,
     hasReports: true,
-    hasTeamAccess: true,        // equipe no Pro também
-    instagramProfiles: -1,      // agendamento ilimitado
+    maxTeamMembers: 3,
+    instagramProfiles: 5,
     supportLevel: 'priority',
+    supportLabel: 'Prioritário (24h)',
     stripePriceId: 'price_1TYsFpP29s2RNZxUNzOUbAPr',
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
     features: [
-      'Até 20 clientes',
-      '400 requests de IA por mês',
-      '20 GB de armazenamento',
-      'Agendamento Instagram (ilimitado)',
-      'Equipe com acesso às demandas',
+      'Até 15 clientes',
+      '600 requests de IA por mês',
+      '50 GB de armazenamento',
+      'Agendamento Instagram (até 5 perfis)',
+      'Até 3 usuários na equipe',
       'IA Copilot completo',
       'Portal do cliente',
       'Relatórios mensais',
-      'Suporte prioritário',
+      'Suporte prioritário (24h)',
     ],
   },
   agency: {
     id: 'agency',
     name: 'Agency',
-    price: 297,
+    price: 397,
     maxClients: -1,
-    aiRequestsPerMonth: 1500,
-    storageGB: 30,
+    aiRequestsPerMonth: 2000,
+    storageGB: 100,
     hasClientPortal: true,
     hasReports: true,
-    hasTeamAccess: true,
-    instagramProfiles: -1,      // agendamento ilimitado
+    maxTeamMembers: -1,
+    instagramProfiles: -1,
     supportLevel: 'sla',
+    supportLabel: 'WhatsApp + SLA 4h',
     stripePriceId: 'price_1TYsFqP29s2RNZxUpqsRsVEw',
     badge: 'Ilimitado',
     description: 'Para agências consolidadas',
     features: [
       'Clientes ilimitados',
-      '1.500 requests de IA por mês',
-      '30 GB de armazenamento',
-      'Agendamento Instagram (ilimitado)',
-      'Equipe com acesso às demandas',
+      '2.000 requests de IA por mês',
+      '100 GB de armazenamento',
+      'Agendamento Instagram ilimitado',
+      'Equipe ilimitada',
+      'IA Copilot completo',
       'Portal do cliente',
       'Relatórios mensais',
-      'SLA garantido',
+      'WhatsApp + SLA 4h',
     ],
   },
 }
 
 export const PLAN_AI_LIMITS: Record<PlanId, number> = {
-  starter: 100,
-  pro:     400,
-  agency:  1500,
+  starter: 150,
+  pro:     600,
+  agency:  2000,
 }
 
 export const PLAN_STORAGE_GB: Record<PlanId, number> = {
   starter: 10,
-  pro:     20,
-  agency:  30,
+  pro:     50,
+  agency:  100,
 }
 
-/** Retorna o label de agendamento Instagram para exibição */
+/** Label legível para agendamento Instagram */
 export function instagramSchedulingLabel(planId: PlanId | string | null | undefined): string {
-  const profiles = getPlan(planId).instagramProfiles
-  if (profiles === 0)  return '—'
-  if (profiles === 1)  return '1 perfil'
-  return 'Ilimitado'
+  const n = getPlan(planId).instagramProfiles
+  if (n === -1) return 'Ilimitado'
+  if (n === 1)  return '1 perfil'
+  return `Até ${n} perfis`
 }
 
-/** Verifica se o plano tem acesso a um recurso específico */
+/** Label legível para equipe */
+export function teamMembersLabel(planId: PlanId | string | null | undefined): string {
+  const n = getPlan(planId).maxTeamMembers
+  if (n === -1) return 'Ilimitado'
+  if (n === 1)  return '1'
+  return `Até ${n}`
+}
+
+/** Verifica se o plano tem acesso a um recurso booleano */
 export function planHas(planId: PlanId | string | null | undefined, feature: keyof Pick<Plan,
-  'hasClientPortal' | 'hasReports' | 'hasTeamAccess'
+  'hasClientPortal' | 'hasReports'
 >): boolean {
   return getPlan(planId)[feature] ?? false
 }

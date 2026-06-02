@@ -290,16 +290,16 @@ export function Subscription() {
           </thead>
           <tbody className="divide-y divide-[#f8fafc]">
             {[
-              { label: 'Clientes',                  values: ['5', '20', 'Ilimitado'] },
-              { label: 'Requests IA/mês',            values: ['100', '400', '1.500'] },
-              { label: 'Armazenamento',              values: ['10 GB', '20 GB', '30 GB'] },
-              { label: 'IA Copilot',                 values: [true, true, true] },
-              { label: 'Portal cliente',             values: [false, true, true] },
-              { label: 'Relatórios',                 values: [false, true, true] },
-              { label: 'Equipe (acesso a demandas)', values: [false, true, true] },
-              { label: 'Agendamento Instagram',      values: ['1 perfil', 'Ilimitado', 'Ilimitado'] },
-              { label: 'Suporte',                    values: ['E-mail', 'Prioritário', 'SLA'] },
-              { label: 'Preço/mês',                  values: [fmtBRL(97), fmtBRL(147), fmtBRL(297)] },
+              { label: 'Clientes',              values: ['5', '15', 'Ilimitado'] },
+              { label: 'Requests IA/mês',        values: ['150', '600', '2.000'] },
+              { label: 'Armazenamento',          values: ['10 GB', '50 GB', '100 GB'] },
+              { label: 'IA Copilot',             values: [true, true, true] },
+              { label: 'Portal do cliente',      values: [false, true, true] },
+              { label: 'Relatórios',             values: [false, true, true] },
+              { label: 'Equipe (usuários)',       values: ['1', 'Até 3', 'Ilimitado'] },
+              { label: 'Agendamento Instagram',  values: ['1 perfil', 'Até 5 perfis', 'Ilimitado'] },
+              { label: 'Suporte',                values: ['E-mail', 'Prioritário (24h)', 'WhatsApp + SLA 4h'] },
+              { label: 'Preço/mês',              values: [fmtBRL(97), fmtBRL(197), fmtBRL(397)] },
             ].map(row => (
               <tr key={row.label} className="hover:bg-[#fafafa]">
                 <td className="px-5 py-3 text-[#374151]">{row.label}</td>
