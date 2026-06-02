@@ -688,11 +688,15 @@ export function ClientProfile() {
   const deleteAsset = useDeleteContentAsset()
   const { toast } = useToast()
 
-  // Toast de sucesso ao retornar do OAuth do Instagram
+  // Toast ao retornar do OAuth do Instagram
   useEffect(() => {
     if (searchParams.get('ig_connected') === 'true') {
       toast('Instagram conectado com sucesso!', 'success')
       setSearchParams(prev => { prev.delete('ig_connected'); return prev }, { replace: true })
+    }
+    if (searchParams.get('ig_error') === 'profile_limit') {
+      toast('Limite de perfis Instagram do seu plano atingido. Faça upgrade para conectar mais contas.', 'error')
+      setSearchParams(prev => { prev.delete('ig_error'); return prev }, { replace: true })
     }
   }, [searchParams])
 

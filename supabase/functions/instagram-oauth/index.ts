@@ -80,6 +80,42 @@ Deno.serve(async (req) => {
     const supabase  = createClient(SUPABASE_URL, SUPABASE_SERVICE)
     const expiresAt = new Date(Date.now() + expiresIn * 1000)
 
+    // ── 4a. Gate: verificar limite de perfis pelo plano ───────────────────────
+    const INSTAGRAM_LIMITS: Record<string, number> = {
+      starter: 1,
+      pro:     5,
+      agency:  -1, // ilimitado
+    }
+
+    // Busca o plano do usuário
+    const { data: subRow } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    const planId    = subRow?.plan ?? 'starter'
+    const maxProfiles = INSTAGRAM_LIMITS[planId] ?? 1
+
+    if (maxProfiles !== -1) {
+      // Conta perfis ATIVOS — exclui o ig_user_id atual para permitir reconexão
+      const { count } = await supabase
+        .from('instagram_accounts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .neq('ig_user_id', igUserId) // reconexão da mesma conta não conta
+
+      const activeCount = count ?? 0
+      if (activeCount >= maxProfiles) {
+        console.warn(`User ${userId} hit Instagram profile limit (plan=${planId}, limit=${maxProfiles}, active=${activeCount})`)
+        const target = clientId
+          ? `/clients/${clientId}?ig_error=profile_limit`
+          : `/instagram?error=profile_limit`
+        return redirect(target)
+      }
+    }
+
     const upsertPayload: Record<string, unknown> = {
       user_id:             userId,
       ig_user_id:          igUserId,
