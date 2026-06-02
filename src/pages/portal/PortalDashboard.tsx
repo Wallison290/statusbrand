@@ -490,17 +490,22 @@ function ItemDetailView({
 
           {/* ══ ESQUERDA: Prévia ══ */}
           {mediaItems.length > 0 && (
-            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-[#f7f7f7] border-r border-gray-100">
+            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-[#f7f7f7] border-b lg:border-b-0 lg:border-r border-gray-100">
               {/* Badge "Prévia do post" */}
               <div className="flex items-center gap-2 px-4 py-2.5 bg-white border-b border-gray-100 flex-shrink-0">
                 <div className="w-5 h-5 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
                   <ImageIcon className="w-3 h-3 text-gray-500" />
                 </div>
                 <span className="text-[11px] font-medium text-gray-600">Prévia do post</span>
+                {isCarousel && (
+                  <span className="ml-auto text-[10px] text-gray-400 font-medium">
+                    {mediaIdx + 1} / {mediaItems.length}
+                  </span>
+                )}
               </div>
 
-              {/* Mídia principal */}
-              <div className="flex-1 relative min-h-0">
+              {/* Mídia principal — h-64 fixo no mobile, flex-1 no desktop */}
+              <div className="relative bg-[#e8e8e8] h-64 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
                     className="absolute inset-0 w-full h-full object-contain" />
@@ -509,19 +514,31 @@ function ItemDetailView({
                     autoPlay muted loop playsInline controls
                     className="absolute inset-0 w-full h-full object-contain" />
                 ) : null}
+
                 {/* Setas de navegação */}
                 {isCarousel && (
                   <>
                     <button onClick={() => setMediaIdx(i => Math.max(0, i - 1))} disabled={mediaIdx === 0}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30">
-                      <ChevronLeft className="w-4 h-4 text-gray-700" />
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30 active:scale-95">
+                      <ChevronLeft className="w-5 h-5 text-gray-700" />
                     </button>
                     <button onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))} disabled={mediaIdx === mediaItems.length - 1}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30">
-                      <ChevronRight className="w-4 h-4 text-gray-700" />
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow border border-gray-200 flex items-center justify-center transition-all disabled:opacity-30 active:scale-95">
+                      <ChevronRight className="w-5 h-5 text-gray-700" />
                     </button>
                   </>
                 )}
+
+                {/* Dots indicadores */}
+                {isCarousel && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
+                    {mediaItems.map((_, i) => (
+                      <button key={i} onClick={() => setMediaIdx(i)}
+                        className={`rounded-full transition-all ${i === mediaIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`} />
+                    ))}
+                  </div>
+                )}
+
                 {currentMedia && (
                   <a href={currentMedia.file_url} target="_blank" rel="noopener noreferrer"
                     className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/25 hover:bg-black/40 flex items-center justify-center transition-all">
@@ -539,15 +556,15 @@ function ItemDetailView({
                       const ss = sd?.status
                       return (
                         <button key={m.id} onClick={() => setMediaIdx(i)}
-                          className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all
-                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'}`}>
+                          className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all
+                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300 opacity-60'}`}>
                           {m.kind === 'image'
                             ? <img src={m.file_url} className="w-full h-full object-cover" />
-                            : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-3 h-3 text-gray-400" /></div>}
-                          <div className="absolute bottom-0 right-0 bg-black/50 text-[7px] px-0.5 leading-3 rounded-tl" style={{ color: '#fff' }}>{i + 1}</div>
-                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                            : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
+                          <div className="absolute bottom-0 right-0 bg-black/50 text-[8px] px-1 leading-4 rounded-tl font-bold" style={{ color: '#fff' }}>{i + 1}</div>
+                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-3 h-3" style={{ color: '#fff' }} /></div>}
+                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
+                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
                         </button>
                       )
                     })}
