@@ -1,6 +1,6 @@
 // ── get-storage-usage: retorna uso total de armazenamento do usuário ──────────
-// Consulta storage.objects via REST API com service role para somar bytes
-// de todos os arquivos do usuário em todos os níveis de pasta.
+// Usa função SQL SECURITY DEFINER que acessa storage.objects diretamente,
+// contornando a limitação da REST API que não expõe o schema storage.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -19,15 +19,6 @@ function json(body: unknown, status = 200) {
   })
 }
 
-const BUCKETS = [
-  'client-logos',
-  'planner-attachments',
-  'content-assets',
-  'client-materials',
-  'report-attachments',
-  'task-files',
-]
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
@@ -40,37 +31,20 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authErr } = await sb.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authErr || !user) return json({ error: 'Não autorizado' }, 401)
 
-    const userId = user.id
-
-    // Consulta storage.objects via REST com schema=storage
-    // O service role pode acessar a tabela objects do schema storage
-    const bucketsFilter = BUCKETS.map(b => `"${b}"`).join(',')
-    const url = `${SUPABASE_URL}/rest/v1/objects?select=metadata&owner=eq.${userId}&bucket_id=in.(${encodeURIComponent(BUCKETS.join(','))})`
-
-    const resp = await fetch(url, {
-      headers: {
-        'apikey':        SUPABASE_SERVICE_KEY,
-        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-        'Content-Type':  'application/json',
-        'Accept-Profile': 'storage',
-      },
+    // Chama função SQL SECURITY DEFINER que acessa storage.objects
+    const { data, error } = await sb.rpc('get_user_storage_bytes', {
+      p_user_id: user.id,
     })
 
-    if (!resp.ok) {
-      const errText = await resp.text()
-      console.error('REST error:', errText)
-      // Fallback seguro: retorna 0 sem bloquear o usuário
-      return json({ usedBytes: 0, usedGB: 0, warning: 'could not fetch storage data' })
+    if (error) {
+      console.error('RPC error:', error.message)
+      return json({ error: error.message }, 400)
     }
 
-    const objects: Array<{ metadata: Record<string, unknown> | null }> = await resp.json()
+    const totalBytes = data ?? 0
+    const usedGB = totalBytes / (1024 * 1024 * 1024)
 
-    const totalBytes = objects.reduce((acc, obj) => {
-      const size = obj?.metadata?.size
-      return acc + (typeof size === 'number' ? size : 0)
-    }, 0)
-
-    return json({ usedBytes: totalBytes, usedGB: totalBytes / (1024 * 1024 * 1024) })
+    return json({ usedBytes: totalBytes, usedGB })
 
   } catch (err: any) {
     console.error('get-storage-usage error:', err.message)
