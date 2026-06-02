@@ -486,6 +486,36 @@ function ItemDetailView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col" style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}>
+
+          {/* ══ HEADER MOBILE — visível apenas em telas pequenas, sempre no topo ══ */}
+          <div className="lg:hidden flex-shrink-0 px-4 pt-3.5 pb-3 border-b border-gray-100 bg-white">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <span className="text-[11px] text-gray-500">
+                  {format(parseISO(item.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {item.scheduled_time && ` às ${item.scheduled_time.slice(0, 5)}`}
+                </span>
+                <span className="text-gray-200">·</span>
+                <div className={`flex items-center gap-1 text-[10px] font-semibold ${approvalText[localStatus]}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[localStatus]}`} />
+                  {approvalLabels[localStatus]}
+                </div>
+              </div>
+              <button onClick={onClose}
+                className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all flex-shrink-0">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md font-medium">
+                {statusLabels[item.status as PlannerStatus]}
+              </span>
+              <span className="text-[10px] text-gray-400">{contentTypeLabels[item.content_type as ContentType]}</span>
+            </div>
+          </div>
+
         <div className="flex flex-col lg:flex-row min-h-0 flex-1 overflow-hidden">
 
           {/* ══ ESQUERDA: Prévia ══ */}
@@ -580,8 +610,8 @@ function ItemDetailView({
           {/* ══ DIREITA: Info + Aprovação ══ */}
           <div className="flex flex-col flex-1 overflow-hidden bg-white min-w-0">
 
-            {/* Header */}
-            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
+            {/* Header — oculto no mobile (aparece acima no bloco dedicado) */}
+            <div className="hidden lg:block flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
