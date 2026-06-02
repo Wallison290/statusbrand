@@ -1,5 +1,6 @@
 // ── get-storage-usage: retorna uso total de armazenamento do usuário ──────────
-// Soma os bytes de todos os objetos nos 6 buckets pertencentes ao user_id
+// Consulta storage.objects via REST API com service role para somar bytes
+// de todos os arquivos do usuário em todos os níveis de pasta.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -41,31 +42,38 @@ Deno.serve(async (req) => {
 
     const userId = user.id
 
-    // Para cada bucket, listar objetos cujo prefixo começa com o userId
-    // e somar os bytes via metadata.size
-    let totalBytes = 0
+    // Consulta storage.objects via REST com schema=storage
+    // O service role pode acessar a tabela objects do schema storage
+    const bucketsFilter = BUCKETS.map(b => `"${b}"`).join(',')
+    const url = `${SUPABASE_URL}/rest/v1/objects?select=metadata&owner=eq.${userId}&bucket_id=in.(${encodeURIComponent(BUCKETS.join(','))})`
 
-    await Promise.all(
-      BUCKETS.map(async (bucket) => {
-        // Listar com prefixo userId/
-        const { data: objects, error } = await sb.storage
-          .from(bucket)
-          .list(userId, { limit: 10000, offset: 0 })
+    const resp = await fetch(url, {
+      headers: {
+        'apikey':        SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+        'Content-Type':  'application/json',
+        'Accept-Profile': 'storage',
+      },
+    })
 
-        if (error || !objects) return
+    if (!resp.ok) {
+      const errText = await resp.text()
+      console.error('REST error:', errText)
+      // Fallback seguro: retorna 0 sem bloquear o usuário
+      return json({ usedBytes: 0, usedGB: 0, warning: 'could not fetch storage data' })
+    }
 
-        for (const obj of objects) {
-          const size = (obj.metadata as any)?.size ?? 0
-          totalBytes += typeof size === 'number' ? size : 0
-        }
-      })
-    )
+    const objects: Array<{ metadata: Record<string, unknown> | null }> = await resp.json()
 
-    // Converter para GB
-    const usedGB = totalBytes / (1024 * 1024 * 1024)
+    const totalBytes = objects.reduce((acc, obj) => {
+      const size = obj?.metadata?.size
+      return acc + (typeof size === 'number' ? size : 0)
+    }, 0)
 
-    return json({ usedBytes: totalBytes, usedGB })
+    return json({ usedBytes: totalBytes, usedGB: totalBytes / (1024 * 1024 * 1024) })
+
   } catch (err: any) {
+    console.error('get-storage-usage error:', err.message)
     return json({ error: err.message }, 400)
   }
 })

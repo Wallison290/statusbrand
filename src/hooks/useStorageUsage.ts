@@ -27,7 +27,7 @@ export function useStorageUsage() {
   const query = useQuery<{ usedBytes: number; usedGB: number } | null>({
     queryKey: ['storage_usage', user?.id],
     enabled: !!user,
-    staleTime: 5 * 60_000, // 5 minutos — não precisa atualizar frequentemente
+    staleTime: 60_000, // 1 minuto
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-storage-usage', {})
       if (error || data?.error) throw new Error(data?.error ?? error?.message ?? 'Erro ao buscar uso de armazenamento')
