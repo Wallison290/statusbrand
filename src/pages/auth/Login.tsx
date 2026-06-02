@@ -56,11 +56,6 @@ export function Login() {
           className="w-full max-w-sm"
         >
 
-          {/* Mobile: logo no topo */}
-          <div className="lg:hidden mb-8 flex justify-center">
-            <img src="/logo.png" alt="Kairo Hub" className="h-10 object-contain" />
-          </div>
-
           {/* Card */}
           <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-8">
 
