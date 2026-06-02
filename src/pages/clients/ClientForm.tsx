@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCreateClient, useUpdateClient, useClient } from '@/hooks/useClients'
+import { useCreateClient, useUpdateClient, useClient, useClients } from '@/hooks/useClients'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { useSubscription } from '@/hooks/useSubscription'
 import { supabase } from '@/integrations/supabase/client'
 import type { Client } from '@/types'
 
@@ -36,6 +37,8 @@ export function ClientForm() {
   const { user } = useAuth()
   const { toast } = useToast()
   const { data: existingClient } = useClient(id || '')
+  const { data: allClients = [] } = useClients()
+  const { data: subData } = useSubscription()
   const createClient = useCreateClient()
   const updateClient = useUpdateClient()
   const [form, setForm] = useState(emptyForm)
@@ -75,6 +78,19 @@ export function ClientForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+
+    // ── Gate: limite de clientes por plano ──────────────────────────────────
+    if (!isEdit) {
+      const maxClients = subData?.plan.maxClients ?? 5
+      if (maxClients !== -1 && allClients.length >= maxClients) {
+        toast(
+          `Limite de ${maxClients} cliente${maxClients === 1 ? '' : 's'} do plano ${subData?.plan.name ?? 'atual'} atingido. Faça upgrade para adicionar mais.`,
+          'error'
+        )
+        return
+      }
+    }
+
     try {
       if (isEdit) {
         await updateClient.mutateAsync({ id: id!, ...form })

@@ -14,6 +14,11 @@ const CORS = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
+  // Planos com acesso ao portal
+  const PORTAL_PLANS = ['pro', 'agency']
+  // Planos sem acesso (bloquear convite)
+  const PLANS_WITHOUT_PORTAL = ['starter']
+
   try {
     const { email, clientId, clientName, companyName, redirectTo } = await req.json()
 
@@ -21,6 +26,27 @@ Deno.serve(async (req) => {
     if (!clientId) throw new Error('clientId é obrigatório')
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+    // ── Gate: verifica se a agência dona do cliente tem portal ativado ─────────
+    const { data: clientRow } = await sb.from('clients').select('user_id').eq('id', clientId).single()
+    if (clientRow?.user_id) {
+      const { data: sub } = await sb
+        .from('subscriptions')
+        .select('plan, status')
+        .eq('user_id', clientRow.user_id)
+        .maybeSingle()
+
+      const plan   = sub?.plan ?? 'starter'
+      const status = sub?.status ?? 'inactive'
+      const isActive = status === 'active' || status === 'trialing'
+
+      if (!isActive || PLANS_WITHOUT_PORTAL.includes(plan)) {
+        return new Response(
+          JSON.stringify({ error: 'Portal do cliente disponível apenas nos planos Pro e Agency. Faça upgrade para convidar clientes.' }),
+          { status: 403, headers: { ...CORS, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
 
     // Verifica se o usuário já existe no Auth
     const { data: existing } = await sb.auth.admin.listUsers()

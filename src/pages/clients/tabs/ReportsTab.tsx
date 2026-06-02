@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { useSubscription } from '@/hooks/useSubscription'
 import {
   useClientReports, useCreateReport, useUpdateReport,
   useDeleteReport, useAddReportAttachment, useDeleteReportAttachment,
@@ -600,6 +601,7 @@ function ReportDetail({
 
 export function ReportsTab({ clientId }: { clientId: string }) {
   const { data: reports = [], isLoading } = useClientReports(clientId)
+  const { data: subData } = useSubscription()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -609,6 +611,24 @@ export function ReportsTab({ clientId }: { clientId: string }) {
   }, [reports])
 
   const selected = reports.find(r => r.id === selectedId) ?? null
+
+  // ── Gate: Relatórios só nos planos Pro e Agency ─────────────────────────────
+  if (!subData?.plan.hasReports) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center">
+          <BarChart3 className="w-6 h-6 text-violet-400" />
+        </div>
+        <div>
+          <p className="text-[14px] font-semibold text-[#0f172a]">Relatórios disponíveis no Pro e Agency</p>
+          <p className="text-[12px] text-[#64748b] mt-1">Faça upgrade para criar e compartilhar relatórios com seus clientes.</p>
+        </div>
+        <a href="/assinatura" className="px-4 py-2 rounded-xl bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 transition-colors">
+          Ver planos
+        </a>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return <div className="py-12 text-center text-[12px] text-gray-600">Carregando...</div>

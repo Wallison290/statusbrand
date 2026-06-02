@@ -11,6 +11,7 @@ import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
 import { useClients } from '@/hooks/useClients'
 import { supabase } from '@/integrations/supabase/client'
+import { useSubscription } from '@/hooks/useSubscription'
 import { useUpdateTask, useDeleteTask as useDeleteTaskHook } from '@/hooks/useTasks'
 import {
   useTeamMembers, useTeamTasks,
@@ -2072,6 +2073,11 @@ export function TeamPage() {
   const { data: tasks   = [], isLoading: loadingTasks   } = useTeamTasks()
   const { data: clients = [] } = useClients()
   const deleteMember = useDeleteTeamMember()
+  const { data: subData } = useSubscription()
+
+  const maxTeamMembers  = subData?.plan.maxTeamMembers ?? 1
+  const activeMembers   = members.filter(m => m.is_active).length
+  const teamLimitReached = maxTeamMembers !== -1 && activeMembers >= maxTeamMembers
 
   const [tab,              setTab]         = useState<ActiveTab>('membros')
   const [showModal,        setShowModal]   = useState(false)
@@ -2115,10 +2121,22 @@ export function TeamPage() {
         subtitle={`${activeMembersWithCount.length} membro${activeMembersWithCount.length !== 1 ? 's' : ''} · ${tasks.length} tarefa${tasks.length !== 1 ? 's' : ''} delegada${tasks.length !== 1 ? 's' : ''}`}
         action={
           <button
-            onClick={() => { setEditing(undefined); setShowModal(true) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0f0f0f] text-white text-[12px] font-medium hover:bg-[#1a1a1a] transition-colors"
+            onClick={() => {
+              if (teamLimitReached) {
+                toast(`Limite do plano atingido (${maxTeamMembers} membro${maxTeamMembers === 1 ? '' : 's'}). Faça upgrade para adicionar mais.`, 'error')
+                return
+              }
+              setEditing(undefined); setShowModal(true)
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors ${
+              teamLimitReached
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-[#0f0f0f] text-white hover:bg-[#1a1a1a]'
+            }`}
+            title={teamLimitReached ? `Limite de ${maxTeamMembers} membro(s) do plano atingido` : undefined}
           >
             <UserPlus className="w-3.5 h-3.5" /> Novo membro
+            {teamLimitReached && <span className="text-[10px] ml-1 opacity-70">({activeMembers}/{maxTeamMembers})</span>}
           </button>
         }
       />

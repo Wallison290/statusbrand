@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       }, { onConflict: 'user_id' })
 
       // Ajusta limite de IA pro novo plano
-      const AI_LIMITS: Record<string, number> = { starter: 100, pro: 400, agency: 1500 }
+      const AI_LIMITS: Record<string, number> = { starter: 150, pro: 600, agency: 2000 }
       const newLimit = AI_LIMITS[plan] ?? 50
       const month    = new Date().toISOString().slice(0, 7)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,7 +7,7 @@ const OPENAI_API_KEY       = Deno.env.get('OPENAI_API_KEY') ?? ''
 const SUPABASE_URL         = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-const AI_LIMITS: Record<string, number> = { starter: 100, pro: 400, agency: 1500 }
+const AI_LIMITS: Record<string, number> = { starter: 150, pro: 600, agency: 2000 }
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
 
