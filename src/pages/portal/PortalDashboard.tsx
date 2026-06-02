@@ -300,12 +300,16 @@ function ItemDetailView({
   const submitPartial = useSubmitPartialApproval()
   const approveAll   = useApproveAll()
   const { toast }    = useToast()
-  const scrollRef    = useRef<HTMLDivElement>(null)
+  const scrollRef     = useRef<HTMLDivElement>(null)  // wrapper mobile
+  const bodyScrollRef = useRef<HTMLDivElement>(null)  // corpo desktop
 
-  // Garante que o modal sempre abre no topo (setTimeout vence o autofocus do Radix)
+  // Garante que o modal sempre abre no topo em ambos os layouts
   useEffect(() => {
     if (!open) return
-    const t = setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0 }, 0)
+    const t = setTimeout(() => {
+      if (scrollRef.current)     scrollRef.current.scrollTop = 0
+      if (bodyScrollRef.current) bodyScrollRef.current.scrollTop = 0
+    }, 0)
     return () => clearTimeout(t)
   }, [open])
 
@@ -656,7 +660,7 @@ function ItemDetailView({
             </div>
 
             {/* Corpo — sem scroll próprio no mobile (o wrapper pai rola); scroll interno apenas no desktop */}
-            <div className="px-5 py-4 space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div ref={bodyScrollRef} className="px-5 py-4 space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
 
               {/* Legenda */}
               {item.notes && (
