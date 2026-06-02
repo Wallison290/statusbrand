@@ -716,18 +716,100 @@ export function PlannerItemViewModal({
               {/* Mídia (mobile: painel esquerdo oculto) */}
               {allMedia.length > 0 && (
                 <div className="sm:hidden">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Mídia</p>
-                  <div className={`grid gap-2 ${allMedia.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {allMedia.map(m => (
-                      <a key={m.id} href={m.file_url} target="_blank" rel="noopener noreferrer"
-                        className="block rounded-xl overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
-                        {m.file_type.startsWith('image/') ? (
-                          <img src={m.file_url} alt={m.file_name} className="w-full object-cover max-h-48" />
-                        ) : (
-                          <video src={m.file_url} controls className="w-full" />
-                        )}
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Prévia do post</p>
+
+                  {/* Visualizador principal */}
+                  <div className="relative rounded-2xl overflow-hidden bg-[#f0f0f0] border border-gray-200">
+                    {/* Mídia atual */}
+                    <div className="relative w-full aspect-square flex items-center justify-center bg-[#e8e8e8]">
+                      {allMedia[imgIdx].file_type.startsWith('image/') ? (
+                        <img
+                          src={allMedia[imgIdx].file_url}
+                          alt={allMedia[imgIdx].file_name}
+                          className="w-full h-full object-contain"
+                          draggable={false}
+                        />
+                      ) : (
+                        <video
+                          src={allMedia[imgIdx].file_url}
+                          controls
+                          autoPlay={false}
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+
+                      {/* Setas de navegação */}
+                      {allMedia.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setImgIdx(i => Math.max(0, i - 1))}
+                            disabled={imgIdx === 0}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center shadow-md disabled:opacity-25 active:scale-95 transition-all"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-700" />
+                          </button>
+                          <button
+                            onClick={() => setImgIdx(i => Math.min(allMedia.length - 1, i + 1))}
+                            disabled={imgIdx === allMedia.length - 1}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center shadow-md disabled:opacity-25 active:scale-95 transition-all"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-700" />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Contador / indicador */}
+                      {allMedia.length > 1 && (
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
+                          {allMedia.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setImgIdx(i)}
+                              className={`rounded-full transition-all ${
+                                i === imgIdx
+                                  ? 'w-4 h-1.5 bg-white'
+                                  : 'w-1.5 h-1.5 bg-white/50'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Botão abrir em nova aba */}
+                      <a
+                        href={allMedia[imgIdx].file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center shadow"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-600" />
                       </a>
-                    ))}
+                    </div>
+
+                    {/* Tira de thumbnails quando carrossel */}
+                    {allMedia.length > 1 && (
+                      <div className="flex gap-1.5 p-2.5 bg-gray-200/80 overflow-x-auto">
+                        {allMedia.map((m, i) => (
+                          <button
+                            key={m.id}
+                            onClick={() => setImgIdx(i)}
+                            className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                              i === imgIdx
+                                ? 'border-indigo-500 shadow-md'
+                                : 'border-transparent opacity-60'
+                            }`}
+                          >
+                            {m.file_type.startsWith('image/') ? (
+                              <img src={m.file_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                <Video className="w-4 h-4 text-gray-500" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
