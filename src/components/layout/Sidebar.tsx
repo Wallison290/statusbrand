@@ -21,14 +21,33 @@ const navItems = [
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
   { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
-  { href: '/ai',        icon: Sparkles,         label: 'IA Copilot',  highlight: true },
+  { href: '/ai',        icon: Sparkles,         label: 'IA Copilot', highlight: true },
 ]
 
-// ── Kairo Hub logo mark ───────────────────────────────────────────────────────
+// ── Initials avatar ───────────────────────────────────────────────────────────
+
+function InitialsAvatar({ name }: { name: string }) {
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('')
+  return (
+    <div
+      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold select-none"
+      style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+    >
+      {initials}
+    </div>
+  )
+}
+
+// ── Brand mark ────────────────────────────────────────────────────────────────
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="flex items-center gap-2 flex-1 min-w-0">
+    <div className="flex items-center gap-2.5 flex-1 min-w-0">
       <img
         src="/logo-icon.png"
         alt="KairoHub"
@@ -40,10 +59,10 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
           animate={{ opacity: 1 }}
           className="min-w-0"
         >
-          <span className="block text-[15px] font-bold text-[#0f0f0f] leading-none tracking-tight whitespace-nowrap">
-            Kairo<span className="text-[#6366f1]">Hub</span>
+          <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap text-white">
+            Kairo<span className="text-[#a78bfa]">Hub</span>
           </span>
-          <span className="block text-[10px] text-[#a0a0a0] whitespace-nowrap mt-0.5 tracking-wide">
+          <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide text-[#64748b]">
             Organize. Produza. Escale.
           </span>
         </motion.div>
@@ -65,13 +84,13 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
 
-  const planName   = subData?.plan.name ?? 'Free'
-  const aiUsed     = usage?.requests ?? 0
-  const aiLimit    = usage?.limit    ?? 50
-  const aiPct      = Math.min(100, Math.round((aiUsed / aiLimit) * 100))
-  const aiWarning  = aiPct >= 80
+  const planName  = subData?.plan.name ?? 'Free'
+  const aiUsed    = usage?.requests ?? 0
+  const aiLimit   = usage?.limit    ?? 50
+  const aiPct     = Math.min(100, Math.round((aiUsed / aiLimit) * 100))
+  const aiWarning = aiPct >= 80
 
-  // Close mobile sidebar on route change
+  // Fecha sidebar mobile ao mudar de rota
   useEffect(() => {
     onMobileClose?.()
   }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -80,14 +99,15 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
     <motion.aside
       animate={{ width: collapsed ? 56 : 220 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="relative flex flex-col h-full bg-white border-r border-[#e8e8e8] overflow-hidden flex-shrink-0"
+      className="relative flex flex-col h-full overflow-hidden flex-shrink-0"
+      style={{ background: '#0b0e1a' }}
     >
-      {/* Brand header */}
-      <div className="flex items-center h-14 px-3.5 border-b border-[#e8e8e8]">
+      {/* ── Brand header ── */}
+      <div className="flex items-center h-14 px-3.5 border-b border-[#1e2535]">
         <BrandMark collapsed={collapsed} />
       </div>
 
-      {/* Nav */}
+      {/* ── Nav ── */}
       <nav
         className="flex-1 py-2 px-2 space-y-0.5 overflow-y-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
@@ -98,55 +118,62 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             (item.href !== '/' && location.pathname.startsWith(item.href))
           const isAI = 'highlight' in item && item.highlight
 
-          // Estilo especial para o item de IA
+          // IA Copilot — não ativo
           if (isAI && !active) {
             return (
               <Link key={item.href} to={item.href}>
                 <div
                   title={collapsed ? item.label : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group bg-gradient-to-r from-[#f5f3ff] to-[#ede9fe] border border-[#ddd6fe] hover:from-[#ede9fe] hover:to-[#ddd6fe]"
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group"
+                  style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(79,70,229,0.18) 100%)', border: '1px solid rgba(124,58,237,0.3)' }}
                 >
-                  <item.icon
-                    className="w-[15px] h-[15px] flex-shrink-0 text-[#6366f1]"
-                  />
+                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#a78bfa]" />
                   {!collapsed && (
-                    <span className="whitespace-nowrap text-[#4f46e5] font-medium">
-                      {item.label}
-                    </span>
-                  )}
-                  {!collapsed && (
-                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#6366f1] leading-none" style={{ color: '#ffffff' }}>
-                      novo
-                    </span>
+                    <>
+                      <span className="whitespace-nowrap text-[#c4b5fd] font-medium flex-1">
+                        {item.label}
+                      </span>
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-white"
+                        style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+                      >
+                        novo
+                      </span>
+                    </>
                   )}
                 </div>
               </Link>
             )
           }
 
+          // Item ativo
+          if (active) {
+            return (
+              <Link key={item.href} to={item.href}>
+                <div
+                  title={collapsed ? item.label : undefined}
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+                >
+                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
+                  {!collapsed && (
+                    <span className="whitespace-nowrap text-white">{item.label}</span>
+                  )}
+                </div>
+              </Link>
+            )
+          }
+
+          // Item normal inativo
           return (
             <Link key={item.href} to={item.href}>
               <div
                 title={collapsed ? item.label : undefined}
-                style={active ? { color: '#ffffff' } : undefined}
-                className={cn(
-                  'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group',
-                  active
-                    ? 'bg-[#0f0f0f] font-medium'
-                    : 'text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
-                )}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 group text-[#94a3b8] hover:text-white hover:bg-[#161b2e]"
               >
-                <item.icon
-                  style={active ? { color: '#ffffff' } : undefined}
-                  className={cn(
-                    'w-[15px] h-[15px] flex-shrink-0 transition-colors',
-                    active ? '' : 'text-[#b0b0b0] group-hover:text-[#737373]'
-                  )}
-                />
+                <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569] group-hover:text-white transition-colors" />
                 {!collapsed && (
-                  <span style={active ? { color: '#ffffff' } : undefined} className="whitespace-nowrap">
-                    {item.label}
-                  </span>
+                  <span className="whitespace-nowrap">{item.label}</span>
                 )}
               </div>
             </Link>
@@ -154,64 +181,74 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* Assinatura + uso da IA */}
+      {/* ── Plano + uso de IA ── */}
       <div className="px-2 pb-1">
         <Link to="/assinatura">
-          <div className={`rounded-xl px-2.5 py-2 transition-colors ${
-            aiWarning ? 'bg-amber-50 border border-amber-200' : 'bg-[#fafafa] hover:bg-[#f5f5f5]'
-          }`}>
+          <div
+            className="rounded-xl px-2.5 py-2 transition-colors hover:bg-[#161b2e]"
+            style={{ background: aiWarning ? 'rgba(245,158,11,0.1)' : '#111827', border: `1px solid ${aiWarning ? 'rgba(245,158,11,0.3)' : '#1e2535'}` }}
+          >
             {!collapsed ? (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-500' : 'text-[#94a3b8]'}`} />
-                    <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-700' : 'text-[#0f0f0f]'}`}>
+                    <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
+                    <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-400' : 'text-white'}`}>
                       {planName}
                     </span>
                   </div>
-                  <span className={`text-[10px] ${aiWarning ? 'text-amber-600' : 'text-[#a0a0a0]'}`}>
+                  <span className={`text-[10px] ${aiWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
                     {aiUsed}/{aiLimit} IA
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-[#e8e8e8] overflow-hidden">
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
                   <div
-                    className={`h-full rounded-full transition-all ${
-                      aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-400' : 'bg-[#0f0f0f]'
-                    }`}
-                    style={{ width: `${aiPct}%` }}
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${aiPct}%`,
+                      background: aiPct >= 90
+                        ? '#ef4444'
+                        : aiPct >= 70
+                          ? '#f59e0b'
+                          : 'linear-gradient(90deg, #7c3aed, #6366f1)',
+                    }}
                   />
                 </div>
               </div>
             ) : (
-              <Zap className={`w-[15px] h-[15px] mx-auto ${aiWarning ? 'text-amber-500' : 'text-[#c0c0c0]'}`} />
+              <Zap className={`w-[15px] h-[15px] mx-auto ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
             )}
           </div>
         </Link>
       </div>
 
-      {/* Profile + sign out */}
-      <div className="px-2 pb-2 pt-1 border-t border-[#f0f0f0] space-y-0.5">
+      {/* ── Perfil + sair ── */}
+      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] space-y-0.5">
         {!collapsed && profile && (
-          <div className="px-2.5 py-1.5 rounded-xl bg-[#fafafa]">
-            <p className="text-[12px] font-medium text-[#0f0f0f] truncate">
-              {profile.full_name || 'Usuário'}
-            </p>
-            <p className="text-[11px] text-[#a0a0a0] truncate">{profile.email}</p>
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl" style={{ background: '#111827' }}>
+            <InitialsAvatar name={profile.full_name || profile.email || 'U'} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-semibold text-white truncate leading-tight">
+                {profile.full_name || 'Usuário'}
+              </p>
+              <p className="text-[10px] text-[#64748b] truncate mt-0.5">{profile.email}</p>
+            </div>
           </div>
         )}
         <button
           onClick={() => signOut()}
-          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#a0a0a0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f] transition-colors duration-150"
+          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#64748b] hover:bg-[#161b2e] hover:text-white transition-colors duration-150"
         >
-          <LogOut className="w-[15px] h-[15px] flex-shrink-0 text-[#c0c0c0]" />
+          <LogOut className="w-[15px] h-[15px] flex-shrink-0 text-[#475569]" />
           {!collapsed && <span>Sair</span>}
         </button>
       </div>
 
-      {/* Collapse toggle — hidden on mobile since sidebar is overlay */}
+      {/* ── Botão colapsar (oculto no mobile) ── */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full border border-[#e8e8e8] bg-white hidden md:flex items-center justify-center text-[#a0a0a0] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors shadow-sm"
+        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full hidden md:flex items-center justify-center text-[#64748b] hover:text-white transition-colors shadow-lg"
+        style={{ background: '#1e2535', border: '1px solid #2d3748' }}
       >
         {collapsed
           ? <ChevronRight className="w-3 h-3" />

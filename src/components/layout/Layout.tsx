@@ -57,14 +57,9 @@ export function Layout() {
             <Menu className="w-4 h-4 text-white/70" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-white/15 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-[8px] select-none">SB</span>
-            </div>
-            <span
-              className="text-[13px] font-semibold text-white tracking-tight"
-              style={{ fontFamily: "'Georgia', serif" }}
-            >
-              Status<span style={{ fontWeight: 700 }}>Brand</span>
+            <img src="/logo-icon.png" alt="KairoHub" className="w-5 h-5 object-contain flex-shrink-0" />
+            <span className="text-[13px] font-bold text-white tracking-tight">
+              Kairo<span className="text-[#a78bfa]">Hub</span>
             </span>
           </div>
         </div>
