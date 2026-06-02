@@ -32,6 +32,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { copyToClipboard, contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
+import { checkStorageLimit } from '@/utils/storageGate'
 import type { LibraryCategory, ContentType, ContentAsset, Client, ClientMaterialWithClient, MaterialType } from '@/types'
 
 // ─── Snippet categories ───────────────────────────────────────────────────────
@@ -213,6 +214,8 @@ function AssetDetailModal({
     if (!file || !user) return
     setUploading(true)
     try {
+      const { allowed, message } = await checkStorageLimit(file.size)
+      if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); e.target.value = ''; return }
       const ext  = file.name.split('.').pop() || 'bin'
       const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
       const { error } = await supabase.storage.from('content-assets').upload(path, file)
@@ -605,6 +608,8 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
     if (!file || !user) return
     setUploading(true)
     try {
+      const { allowed, message } = await checkStorageLimit(file.size)
+      if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); return }
       const ext  = file.name.split('.').pop()
       const path = `${user.id}/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('content-assets').upload(path, file)

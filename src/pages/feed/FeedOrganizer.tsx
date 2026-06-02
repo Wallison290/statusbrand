@@ -17,6 +17,7 @@ import { useContentAssets } from '@/hooks/useContentAssets'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
+import { checkStorageLimit } from '@/utils/storageGate'
 import type { ContentAsset, Client } from '@/types'
 
 // ─── arrayMove (local) ────────────────────────────────────────────────────────
@@ -607,6 +608,8 @@ export function FeedOrganizer() {
     if (!user) return
     setIsUploading(true)
     try {
+      const { allowed, message } = await checkStorageLimit(file.size)
+      if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setIsUploading(false); return }
       const ext  = file.name.split('.').pop() || 'jpg'
       const path = `${user.id}/feed/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
       const { error } = await supabase.storage.from('content-assets').upload(path, file)

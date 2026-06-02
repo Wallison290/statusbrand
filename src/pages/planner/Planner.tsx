@@ -32,6 +32,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
+import { checkStorageLimit } from '@/utils/storageGate'
 import { useContentAssets } from '@/hooks/useContentAssets'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
@@ -1750,6 +1751,11 @@ export function Planner() {
         }
         // Upload novas mídias IG
         const igStart = existingIgMedia.length
+        if (igFiles.length > 0) {
+          const totalIgBytes = igFiles.reduce((acc, f) => acc + f.size, 0)
+          const { allowed, message } = await checkStorageLimit(totalIgBytes)
+          if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); return }
+        }
         for (let fi = 0; fi < igFiles.length; fi++) {
           const file = igFiles[fi]
           const ext  = file.name.split('.').pop() || 'bin'
@@ -1771,6 +1777,11 @@ export function Planner() {
         }
         if (linksToDelete.length > 0) {
           await supabase.from('planner_links').delete().in('id', linksToDelete.map(l => l.id))
+        }
+        if (pendingFiles.length > 0) {
+          const totalBytes = pendingFiles.reduce((acc, f) => acc + f.size, 0)
+          const { allowed, message } = await checkStorageLimit(totalBytes)
+          if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); return }
         }
         for (let fi = 0; fi < pendingFiles.length; fi++) {
           const file = pendingFiles[fi]
@@ -1816,6 +1827,11 @@ export function Planner() {
           reviewed_by: null,
         })
         // Upload mídias Instagram
+        if (igFiles.length > 0 || pendingFiles.length > 0) {
+          const totalAllBytes = [...igFiles, ...pendingFiles].reduce((acc, f) => acc + f.size, 0)
+          const { allowed, message } = await checkStorageLimit(totalAllBytes)
+          if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); return }
+        }
         for (let fi = 0; fi < igFiles.length; fi++) {
           const file = igFiles[fi]
           const ext  = file.name.split('.').pop() || 'bin'

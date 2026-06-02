@@ -18,6 +18,7 @@ import {
   useDeleteReport, useAddReportAttachment, useDeleteReportAttachment,
 } from '@/hooks/useReports'
 import { supabase } from '@/integrations/supabase/client'
+import { checkStorageLimit } from '@/utils/storageGate'
 import type { ClientReport, ReportAttachment, ReportAttachmentType } from '@/types'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -210,6 +211,8 @@ function AddAttachmentModal({
       let file_size: number | null = null
 
       if (file && !isLink) {
+        const { allowed, message } = await checkStorageLimit(file.size)
+        if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); return }
         const ext = file.name.split('.').pop() || 'bin'
         const path = `${user.id}/${reportId}/${Date.now()}.${ext}`
         const { error: upErr } = await supabase.storage.from('report-attachments').upload(path, file)

@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { useSubscription } from '@/hooks/useSubscription'
 import { supabase } from '@/integrations/supabase/client'
+import { checkStorageLimit } from '@/utils/storageGate'
 import type { Client } from '@/types'
 
 const emptyForm = {
@@ -57,6 +58,8 @@ export function ClientForm() {
     if (!file || !user) return
     setIsUploadingLogo(true)
     try {
+      const { allowed, message } = await checkStorageLimit(file.size)
+      if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); return }
       const ext = file.name.split('.').pop() || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
       const { error } = await supabase.storage

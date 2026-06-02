@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Check, Zap, Crown, Building2, Loader2, AlertTriangle, ExternalLink, RefreshCw } from 'lucide-react'
+import { Check, Zap, Crown, Building2, Loader2, AlertTriangle, ExternalLink, RefreshCw, HardDrive } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
+import { useStorageUsage } from '@/hooks/useStorageUsage'
 import { PLANS, type PlanId } from '@/config/plans'
 import { Header } from '@/components/layout/Header'
 
@@ -68,6 +69,36 @@ function UsageBar({ used, limit }: { used: number; limit: number }) {
         <p className="text-[11px] text-red-500 flex items-center gap-1">
           <AlertTriangle className="w-3 h-3" />
           Quase no limite — considere fazer upgrade
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ── Barra de armazenamento ────────────────────────────────────────────────────
+
+function StorageBar({ usedGB, limitGB }: { usedGB: number; limitGB: number }) {
+  const pct   = Math.min(100, Math.round((usedGB / limitGB) * 100))
+  const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'
+  const usedLabel = usedGB < 1 ? `${(usedGB * 1024).toFixed(0)} MB` : `${usedGB.toFixed(1)} GB`
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-[12px] text-[#64748b]">
+        <span className="flex items-center gap-1.5"><HardDrive className="w-3 h-3" /> Armazenamento usado</span>
+        <span className={pct >= 90 ? 'text-red-500 font-semibold' : ''}>{usedLabel} / {limitGB} GB</span>
+      </div>
+      <div className="h-2 rounded-full bg-[#f1f5f9] overflow-hidden">
+        <motion.div
+          className={`h-full rounded-full ${color}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        />
+      </div>
+      {pct >= 90 && (
+        <p className="text-[11px] text-red-500 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" />
+          Armazenamento quase cheio — faça upgrade para liberar espaço
         </p>
       )}
     </div>
@@ -182,6 +213,7 @@ export function Subscription() {
   const { user }                                 = useAuth()
   const { data: subData, isLoading: subLoading } = useSubscription()
   const { data: usage }                          = useAIUsage(user?.id)
+  const { data: storageUsage }                   = useStorageUsage()
   const [searchParams]                           = useSearchParams()
   const [loading, setLoading]                    = useState(false)
 
@@ -261,6 +293,7 @@ export function Subscription() {
           )}
         </div>
         {usage && <UsageBar used={usage.requests} limit={usage.limit} />}
+        {storageUsage && <StorageBar usedGB={storageUsage.usedGB} limitGB={storageUsage.limitGB} />}
       </div>
 
       {/* Cards de planos */}
