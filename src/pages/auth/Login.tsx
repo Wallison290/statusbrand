@@ -66,7 +66,7 @@ export function Login() {
 
             {/* Ícone no topo do card */}
             <div className="flex justify-center mb-5">
-              <img src="/logo-icon.png" alt="Kairo Hub" className="w-24 h-24 object-contain" />
+              <img src="/logo-icon.png" alt="Kairo Hub" className="w-44 h-44 object-contain" />
             </div>
 
             <div className="mb-6">
