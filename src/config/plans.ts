@@ -7,13 +7,13 @@ export interface Plan {
   id: PlanId
   name: string
   price: number
-  maxClients: number          // -1 = ilimitado
+  maxClients: number            // -1 = ilimitado
   aiRequestsPerMonth: number
-  storageGB: number           // armazenamento em GB
+  storageGB: number             // armazenamento em GB
   hasClientPortal: boolean
   hasReports: boolean
-  hasTeamAccess: boolean      // acesso de membros de equipe
-  hasInstagramScheduling: boolean // agendamento automático Instagram
+  hasTeamAccess: boolean        // acesso de membros de equipe
+  instagramProfiles: number     // perfis com agendamento automático (-1 = ilimitado, 0 = sem agendamento)
   supportLevel: 'email' | 'priority' | 'sla'
   stripePriceId: string | null
   badge?: string
@@ -32,7 +32,7 @@ export const PLANS: Record<PlanId, Plan> = {
     hasClientPortal: false,
     hasReports: false,
     hasTeamAccess: false,
-    hasInstagramScheduling: false,
+    instagramProfiles: 1,       // agendamento só para 1 perfil
     supportLevel: 'email',
     stripePriceId: 'price_1TYsFlP29s2RNZxUOJJW67IL',
     description: 'Para quem está começando a agência',
@@ -40,6 +40,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Até 5 clientes',
       '100 requests de IA por mês',
       '10 GB de armazenamento',
+      'Agendamento Instagram (1 perfil)',
       'Planejador de conteúdo',
       'Tarefas e notas',
       'Financeiro básico',
@@ -56,8 +57,8 @@ export const PLANS: Record<PlanId, Plan> = {
     storageGB: 20,
     hasClientPortal: true,
     hasReports: true,
-    hasTeamAccess: false,
-    hasInstagramScheduling: false,
+    hasTeamAccess: true,        // equipe no Pro também
+    instagramProfiles: -1,      // agendamento ilimitado
     supportLevel: 'priority',
     stripePriceId: 'price_1TYsFpP29s2RNZxUNzOUbAPr',
     badge: 'Mais popular',
@@ -66,6 +67,8 @@ export const PLANS: Record<PlanId, Plan> = {
       'Até 20 clientes',
       '400 requests de IA por mês',
       '20 GB de armazenamento',
+      'Agendamento Instagram (ilimitado)',
+      'Equipe com acesso às demandas',
       'IA Copilot completo',
       'Portal do cliente',
       'Relatórios mensais',
@@ -82,7 +85,7 @@ export const PLANS: Record<PlanId, Plan> = {
     hasClientPortal: true,
     hasReports: true,
     hasTeamAccess: true,
-    hasInstagramScheduling: true,
+    instagramProfiles: -1,      // agendamento ilimitado
     supportLevel: 'sla',
     stripePriceId: 'price_1TYsFqP29s2RNZxUpqsRsVEw',
     badge: 'Ilimitado',
@@ -91,8 +94,8 @@ export const PLANS: Record<PlanId, Plan> = {
       'Clientes ilimitados',
       '1.500 requests de IA por mês',
       '30 GB de armazenamento',
+      'Agendamento Instagram (ilimitado)',
       'Equipe com acesso às demandas',
-      'Agendamento automático no Instagram',
       'Portal do cliente',
       'Relatórios mensais',
       'SLA garantido',
@@ -112,9 +115,17 @@ export const PLAN_STORAGE_GB: Record<PlanId, number> = {
   agency:  30,
 }
 
+/** Retorna o label de agendamento Instagram para exibição */
+export function instagramSchedulingLabel(planId: PlanId | string | null | undefined): string {
+  const profiles = getPlan(planId).instagramProfiles
+  if (profiles === 0)  return '—'
+  if (profiles === 1)  return '1 perfil'
+  return 'Ilimitado'
+}
+
 /** Verifica se o plano tem acesso a um recurso específico */
 export function planHas(planId: PlanId | string | null | undefined, feature: keyof Pick<Plan,
-  'hasClientPortal' | 'hasReports' | 'hasTeamAccess' | 'hasInstagramScheduling'
+  'hasClientPortal' | 'hasReports' | 'hasTeamAccess'
 >): boolean {
   return getPlan(planId)[feature] ?? false
 }

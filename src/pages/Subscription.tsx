@@ -296,8 +296,8 @@ export function Subscription() {
               { label: 'IA Copilot',                 values: [true, true, true] },
               { label: 'Portal cliente',             values: [false, true, true] },
               { label: 'Relatórios',                 values: [false, true, true] },
-              { label: 'Equipe (acesso a demandas)', values: [false, false, true] },
-              { label: 'Agendamento Instagram',      values: [false, false, true] },
+              { label: 'Equipe (acesso a demandas)', values: [false, true, true] },
+              { label: 'Agendamento Instagram',      values: ['1 perfil', 'Ilimitado', 'Ilimitado'] },
               { label: 'Suporte',                    values: ['E-mail', 'Prioritário', 'SLA'] },
               { label: 'Preço/mês',                  values: [fmtBRL(97), fmtBRL(147), fmtBRL(297)] },
             ].map(row => (
