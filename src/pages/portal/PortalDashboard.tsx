@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Paperclip, Link2,
@@ -300,6 +300,12 @@ function ItemDetailView({
   const submitPartial = useSubmitPartialApproval()
   const approveAll   = useApproveAll()
   const { toast }    = useToast()
+  const scrollRef    = useRef<HTMLDivElement>(null)
+
+  // Garante que o modal sempre abre no topo
+  useEffect(() => {
+    if (open && scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [open])
 
   // Mídias (imagens + vídeos, ordenadas por sort_order)
   const mediaItems = useMemo(() => [
@@ -487,8 +493,14 @@ function ItemDetailView({
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col" style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}>
 
-          {/* ══ HEADER MOBILE — visível apenas em telas pequenas, sempre no topo ══ */}
-          <div className="lg:hidden flex-shrink-0 px-4 pt-3.5 pb-3 border-b border-gray-100 bg-white">
+        {/* Wrapper único: rola no mobile como um todo, flex-row no desktop */}
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent"
+        >
+
+          {/* ══ HEADER MOBILE — primeiro filho = topo no mobile ══ */}
+          <div className="lg:hidden px-4 pt-3.5 pb-3 border-b border-gray-100 bg-white flex-shrink-0">
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
@@ -515,8 +527,6 @@ function ItemDetailView({
               <span className="text-[10px] text-gray-400">{contentTypeLabels[item.content_type as ContentType]}</span>
             </div>
           </div>
-
-        <div className="flex flex-col lg:flex-row min-h-0 flex-1 overflow-hidden">
 
           {/* ══ ESQUERDA: Prévia ══ */}
           {mediaItems.length > 0 && (
@@ -608,7 +618,7 @@ function ItemDetailView({
           )}
 
           {/* ══ DIREITA: Info + Aprovação ══ */}
-          <div className="flex flex-col flex-1 overflow-hidden bg-white min-w-0">
+          <div className="lg:flex lg:flex-col lg:flex-1 lg:overflow-hidden bg-white min-w-0">
 
             {/* Header — oculto no mobile (aparece acima no bloco dedicado) */}
             <div className="hidden lg:block flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
@@ -639,8 +649,8 @@ function ItemDetailView({
               </div>
             </div>
 
-            {/* Corpo scrollável */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+            {/* Corpo — sem scroll próprio no mobile (o wrapper pai rola); scroll interno apenas no desktop */}
+            <div className="px-5 py-4 space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
 
               {/* Legenda */}
               {item.notes && (
