@@ -27,30 +27,28 @@ const navItems = [
 // ── Kairo Hub logo mark ───────────────────────────────────────────────────────
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
-  if (collapsed) {
-    return (
-      <div className="flex items-center justify-center w-full">
-        <img
-          src="/logo-icon.png"
-          alt="KairoHub"
-          className="w-7 h-7 object-contain"
-        />
-      </div>
-    )
-  }
-
   return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: 1 }}
-      className="flex items-center flex-1 min-w-0"
-    >
+    <div className="flex items-center gap-2 flex-1 min-w-0">
       <img
-        src="/logo.png"
+        src="/logo-icon.png"
         alt="KairoHub"
-        className="h-9 w-auto object-contain object-left"
+        className="flex-shrink-0 w-8 h-8 object-contain"
       />
-    </motion.div>
+      {!collapsed && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: 1 }}
+          className="min-w-0"
+        >
+          <span className="block text-[15px] font-bold text-[#0f0f0f] leading-none tracking-tight whitespace-nowrap">
+            Kairo<span className="text-[#6366f1]">Hub</span>
+          </span>
+          <span className="block text-[10px] text-[#a0a0a0] whitespace-nowrap mt-0.5 tracking-wide">
+            Organize. Produza. Escale.
+          </span>
+        </motion.div>
+      )}
+    </div>
   )
 }
 
