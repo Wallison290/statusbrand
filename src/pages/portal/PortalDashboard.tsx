@@ -302,9 +302,11 @@ function ItemDetailView({
   const { toast }    = useToast()
   const scrollRef    = useRef<HTMLDivElement>(null)
 
-  // Garante que o modal sempre abre no topo
+  // Garante que o modal sempre abre no topo (setTimeout vence o autofocus do Radix)
   useEffect(() => {
-    if (open && scrollRef.current) scrollRef.current.scrollTop = 0
+    if (!open) return
+    const t = setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0 }, 0)
+    return () => clearTimeout(t)
   }, [open])
 
   // Mídias (imagens + vídeos, ordenadas por sort_order)
@@ -491,7 +493,11 @@ function ItemDetailView({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col" style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}>
+      <DialogContent
+        className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col"
+        style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}
+        onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
+      >
 
         {/* Wrapper único: rola no mobile como um todo, flex-row no desktop */}
         <div
