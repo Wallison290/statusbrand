@@ -16,7 +16,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useClient, useBrandDNA, useUpsertBrandDNA, useUpdateClient, useRegisterPayment } from '@/hooks/useClients'
-import { useClientInstagramAccount, useDisconnectInstagram } from '@/hooks/useInstagram'
+import { useClientInstagramAccount, useAllInstagramAccounts, useDisconnectInstagram } from '@/hooks/useInstagram'
+import { useSubscription } from '@/hooks/useSubscription'
 import { useTasks } from '@/hooks/useTasks'
 import { usePlanner } from '@/hooks/usePlanner'
 import { useContentAssets, useCreateContentAsset, useUpdateContentAsset, useDeleteContentAsset } from '@/hooks/useContentAssets'
@@ -514,13 +515,28 @@ function buildClientOAuthUrl(userId: string, clientId: string) {
 
 function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: string }) {
   const { data: igAccount, isLoading } = useClientInstagramAccount(clientId)
+  const { data: allAccounts = [] }     = useAllInstagramAccounts()
+  const { data: subData }              = useSubscription()
   const disconnect = useDisconnectInstagram()
   const { toast } = useToast()
   const [confirming, setConfirming] = useState(false)
 
+  // Contas ativas (deduplicated por ig_user_id)
+  const activeCount = new Set(allAccounts.map(a => a.ig_user_id)).size
+  const maxProfiles = subData?.plan.instagramProfiles ?? 1
+  const limitReached = maxProfiles !== -1 && !igAccount && activeCount >= maxProfiles
+
   const handleConnect = () => {
     if (!META_APP_ID_CLIENT) {
       toast('VITE_META_APP_ID não configurado.', 'error')
+      return
+    }
+    if (limitReached) {
+      const planName = subData?.plan.name ?? 'atual'
+      toast(
+        `Limite de ${maxProfiles} perfil${maxProfiles === 1 ? '' : 's'} do plano ${planName} atingido. Faça upgrade para conectar mais contas.`,
+        'error'
+      )
       return
     }
     window.location.href = buildClientOAuthUrl(userId, clientId)
@@ -559,11 +575,27 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
           <p className="text-[12px] text-[#9ca3af] mt-1">
             Conecte a conta Business ou Creator deste cliente para agendar posts.
           </p>
+          {/* Indicador de uso do limite */}
+          {maxProfiles !== -1 && (
+            <p className={`text-[11px] mt-2 font-medium ${limitReached ? 'text-red-500' : 'text-[#6366f1]'}`}>
+              {activeCount}/{maxProfiles} perfil{maxProfiles === 1 ? '' : 's'} usados do plano {subData?.plan.name ?? ''}
+            </p>
+          )}
         </div>
-        <Button onClick={handleConnect} className="gap-2">
+        <Button
+          onClick={handleConnect}
+          disabled={limitReached}
+          className="gap-2"
+          title={limitReached ? `Limite de ${maxProfiles} perfil${maxProfiles === 1 ? '' : 's'} atingido` : undefined}
+        >
           <Instagram className="w-3.5 h-3.5" />
           Conectar Instagram
         </Button>
+        {limitReached && (
+          <p className="text-[11px] text-red-500 text-center max-w-[280px]">
+            Faça upgrade do plano para conectar mais contas de Instagram.
+          </p>
+        )}
       </div>
     )
   }
