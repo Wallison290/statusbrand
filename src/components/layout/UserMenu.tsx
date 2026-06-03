@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -227,6 +228,20 @@ export function UserMenu({ dark = true }: UserMenuProps) {
   const [open, setOpen]       = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const menuRef               = useRef<HTMLDivElement>(null)
+  const buttonRef             = useRef<HTMLButtonElement>(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
+
+  // Calcula posição do dropdown ao abrir
+  const handleToggle = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({
+        top:   rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      })
+    }
+    setOpen(v => !v)
+  }
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -269,7 +284,8 @@ export function UserMenu({ dark = true }: UserMenuProps) {
       <div ref={menuRef} className="relative">
         {/* Trigger */}
         <button
-          onClick={() => setOpen(v => !v)}
+          ref={buttonRef}
+          onClick={handleToggle}
           className={`flex items-center gap-2 ml-1 pl-2 border-l ${dark ? 'border-white/15' : 'border-[#e8e8e8]'} focus:outline-none`}
         >
           <div className="text-right hidden sm:block">
@@ -301,90 +317,98 @@ export function UserMenu({ dark = true }: UserMenuProps) {
           </div>
         </button>
 
-        {/* Dropdown */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -4 }}
-              transition={{ duration: 0.12 }}
-              className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] z-50 overflow-hidden"
-            >
-              {/* Header do menu */}
-              <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-200">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">{initial}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-[#0f172a] truncate">{rawName || 'Usuário'}</p>
-                    <p className="text-[11px] text-[#94a3b8] truncate">{user?.email}</p>
-                  </div>
-                </div>
-
-                {/* Plano atual */}
-                {planCfg && PlanIcon && (
-                  <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${planCfg.color}`}>
-                    <PlanIcon className="w-3 h-3" />
-                    Plano {planCfg.label}
-                    {subData?.isTrialing && (
-                      <span className="text-[10px] opacity-70">· {subData.trialDaysLeft}d trial</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Itens do menu */}
-              <div className="p-2">
-                <MenuItem
-                  icon={User}
-                  label="Meu Perfil"
-                  description="Foto, nome e agência"
-                  onClick={() => { setOpen(false); setShowProfile(true) }}
-                />
-                <MenuItem
-                  icon={CreditCard}
-                  label="Assinatura"
-                  description="Planos, upgrade e cobrança"
-                  onClick={() => { setOpen(false); navigate('/assinatura') }}
-                />
-
-                <div className="my-1.5 border-t border-[#f1f5f9]" />
-
-                <MenuItem
-                  icon={Key}
-                  label="Alterar Senha"
-                  description="Enviar e-mail de redefinição"
-                  onClick={handleResetPassword}
-                />
-                <MenuItem
-                  icon={HelpCircle}
-                  label="Suporte"
-                  description="Falar no WhatsApp"
-                  onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
-                />
-
-                <div className="my-1.5 border-t border-[#f1f5f9]" />
-
-                <MenuItem
-                  icon={LogOut}
-                  label="Sair"
-                  description="Encerrar sessão"
-                  onClick={handleSignOut}
-                  danger
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Dropdown via Portal — independente do overflow-hidden do pai */}
+      <AnimatePresence>
+        {open && createPortal(
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.12 }}
+            style={{
+              position: 'fixed',
+              top:      dropdownPos.top,
+              right:    dropdownPos.right,
+              zIndex:   9999,
+            }}
+            className="w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] overflow-hidden"
+          >
+            {/* Header do menu */}
+            <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-200">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">{initial}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-[#0f172a] truncate">{rawName || 'Usuário'}</p>
+                  <p className="text-[11px] text-[#94a3b8] truncate">{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Plano atual */}
+              {planCfg && PlanIcon && (
+                <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${planCfg.color}`}>
+                  <PlanIcon className="w-3 h-3" />
+                  Plano {planCfg.label}
+                  {subData?.isTrialing && (
+                    <span className="text-[10px] opacity-70">· {subData.trialDaysLeft}d trial</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Itens do menu */}
+            <div className="p-2">
+              <MenuItem
+                icon={User}
+                label="Meu Perfil"
+                description="Foto, nome e agência"
+                onClick={() => { setOpen(false); setShowProfile(true) }}
+              />
+              <MenuItem
+                icon={CreditCard}
+                label="Assinatura"
+                description="Planos, upgrade e cobrança"
+                onClick={() => { setOpen(false); navigate('/assinatura') }}
+              />
+
+              <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+              <MenuItem
+                icon={Key}
+                label="Alterar Senha"
+                description="Enviar e-mail de redefinição"
+                onClick={handleResetPassword}
+              />
+              <MenuItem
+                icon={HelpCircle}
+                label="Suporte"
+                description="Falar no WhatsApp"
+                onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
+              />
+
+              <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+              <MenuItem
+                icon={LogOut}
+                label="Sair"
+                description="Encerrar sessão"
+                onClick={handleSignOut}
+                danger
+              />
+            </div>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
 
       {/* Modal de perfil */}
       <AnimatePresence>
