@@ -101,8 +101,9 @@ export function ClientForm() {
       } else {
         const created = await createClient.mutateAsync({ ...form, user_id: user.id })
 
-        // Envia convite de acesso ao portal se tiver email cadastrado
-        if (form.email) {
+        // Envia convite de acesso ao portal se tiver email e plano com portal
+        const hasPortal = subData?.plan.hasClientPortal ?? false
+        if (form.email && hasPortal) {
           try {
             const { error: inviteError } = await supabase.functions.invoke('invite-client', {
               body: {
@@ -116,9 +117,10 @@ export function ClientForm() {
             if (inviteError) throw inviteError
             toast('Cliente cadastrado! Convite enviado para o e-mail.', 'success')
           } catch {
-            // Não bloqueia o fluxo se o convite falhar
             toast('Cliente cadastrado! (falha ao enviar convite — tente reenviar depois)', 'success')
           }
+        } else if (form.email && !hasPortal) {
+          toast('Cliente cadastrado! (Portal do cliente disponível nos planos Pro e Agency)', 'success')
         } else {
           toast('Cliente cadastrado!', 'success')
         }
@@ -210,7 +212,14 @@ export function ClientForm() {
               <Input label="Nicho *" value={form.niche} onChange={e => set('niche', e.target.value)} required placeholder="Ex: Academia / Fitness" />
               <Input label="Instagram" value={form.instagram || ''} onChange={e => set('instagram', e.target.value)} placeholder="@perfil" />
               <Input label="WhatsApp" value={form.whatsapp || ''} onChange={e => set('whatsapp', e.target.value)} placeholder="(11) 99999-9999" />
-              <Input label="Email" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="contato@empresa.com" />
+              <div>
+                <Input label="Email" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="contato@empresa.com" />
+                {form.email && !isEdit && (
+                  subData?.plan.hasClientPortal
+                    ? <p className="text-[11px] text-violet-600 mt-1">✓ Convite de acesso ao portal será enviado automaticamente.</p>
+                    : <p className="text-[11px] text-amber-600 mt-1">⚠ Portal do cliente disponível nos planos Pro e Agency.</p>
+                )}
+              </div>
               <Input label="Site" value={form.website || ''} onChange={e => set('website', e.target.value)} placeholder="https://empresa.com" />
               <Input label="Data de entrada" type="date" value={form.entry_date} onChange={e => set('entry_date', e.target.value)} />
               <div>
