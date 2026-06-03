@@ -323,99 +323,102 @@ export function UserMenu({ dark = true }: UserMenuProps) {
       </div>
 
       {/* Dropdown via Portal — independente do overflow-hidden do pai */}
-      <AnimatePresence>
-        {open && createPortal(
-          <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              top:      dropdownPos.top,
-              right:    dropdownPos.right,
-              zIndex:   9999,
-            }}
-          >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.12 }}
-            className="w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] overflow-hidden"
-          >
-            {/* Header do menu */}
-            <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-200">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">{initial}</span>
+      {createPortal(
+        <AnimatePresence>
+          {open && (
+            <div
+              ref={dropdownRef}
+              style={{
+                position: 'fixed',
+                top:      dropdownPos.top,
+                right:    dropdownPos.right,
+                zIndex:   9999,
+              }}
+            >
+              <motion.div
+                key="user-dropdown"
+                initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                transition={{ duration: 0.12 }}
+                className="w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] overflow-hidden"
+              >
+                {/* Header do menu */}
+                <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-violet-200">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">{initial}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-[#0f172a] truncate">{rawName || 'Usuário'}</p>
+                      <p className="text-[11px] text-[#94a3b8] truncate">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Plano atual */}
+                  {planCfg && PlanIcon && (
+                    <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${planCfg.color}`}>
+                      <PlanIcon className="w-3 h-3" />
+                      Plano {planCfg.label}
+                      {subData?.isTrialing && (
+                        <span className="text-[10px] opacity-70">· {subData.trialDaysLeft}d trial</span>
+                      )}
                     </div>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-[#0f172a] truncate">{rawName || 'Usuário'}</p>
-                  <p className="text-[11px] text-[#94a3b8] truncate">{user?.email}</p>
+
+                {/* Itens do menu */}
+                <div className="p-2">
+                  <MenuItem
+                    icon={User}
+                    label="Meu Perfil"
+                    description="Foto, nome e agência"
+                    onClick={() => { setOpen(false); setShowProfile(true) }}
+                  />
+                  <MenuItem
+                    icon={CreditCard}
+                    label="Assinatura"
+                    description="Planos, upgrade e cobrança"
+                    onClick={() => { setOpen(false); navigate('/assinatura') }}
+                  />
+
+                  <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+                  <MenuItem
+                    icon={Key}
+                    label="Alterar Senha"
+                    description="Enviar e-mail de redefinição"
+                    onClick={handleResetPassword}
+                  />
+                  <MenuItem
+                    icon={HelpCircle}
+                    label="Suporte"
+                    description="Falar no WhatsApp"
+                    onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
+                  />
+
+                  <div className="my-1.5 border-t border-[#f1f5f9]" />
+
+                  <MenuItem
+                    icon={LogOut}
+                    label="Sair"
+                    description="Encerrar sessão"
+                    onClick={handleSignOut}
+                    danger
+                  />
                 </div>
-              </div>
-
-              {/* Plano atual */}
-              {planCfg && PlanIcon && (
-                <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${planCfg.color}`}>
-                  <PlanIcon className="w-3 h-3" />
-                  Plano {planCfg.label}
-                  {subData?.isTrialing && (
-                    <span className="text-[10px] opacity-70">· {subData.trialDaysLeft}d trial</span>
-                  )}
-                </div>
-              )}
+              </motion.div>
             </div>
-
-            {/* Itens do menu */}
-            <div className="p-2">
-              <MenuItem
-                icon={User}
-                label="Meu Perfil"
-                description="Foto, nome e agência"
-                onClick={() => { setOpen(false); setShowProfile(true) }}
-              />
-              <MenuItem
-                icon={CreditCard}
-                label="Assinatura"
-                description="Planos, upgrade e cobrança"
-                onClick={() => { setOpen(false); navigate('/assinatura') }}
-              />
-
-              <div className="my-1.5 border-t border-[#f1f5f9]" />
-
-              <MenuItem
-                icon={Key}
-                label="Alterar Senha"
-                description="Enviar e-mail de redefinição"
-                onClick={handleResetPassword}
-              />
-              <MenuItem
-                icon={HelpCircle}
-                label="Suporte"
-                description="Falar no WhatsApp"
-                onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
-              />
-
-              <div className="my-1.5 border-t border-[#f1f5f9]" />
-
-              <MenuItem
-                icon={LogOut}
-                label="Sair"
-                description="Encerrar sessão"
-                onClick={handleSignOut}
-                danger
-              />
-            </div>
-          </motion.div>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Modal de perfil */}
       <AnimatePresence>
