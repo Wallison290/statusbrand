@@ -57,6 +57,108 @@ function TypeIcon({ type, className }: { type: string; className?: string }) {
   return <Icon className={className} />
 }
 
+// ─── Media helpers ────────────────────────────────────────────────────────────
+
+const isImageUrl = (url: string) => /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(url)
+const isVideoUrl = (url: string) => /\.(mp4|webm|mov|avi|mkv|ogv|ogg|m4v)(\?|$)/i.test(url)
+
+/** Card thumbnail: plays video silently on hover */
+function MediaThumbnail({ url, title }: { url: string; title: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  if (isImageUrl(url)) {
+    return (
+      <img
+        src={url}
+        alt={title}
+        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+      />
+    )
+  }
+
+  if (isVideoUrl(url)) {
+    return (
+      <video
+        ref={videoRef}
+        src={url}
+        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+        muted
+        playsInline
+        preload="metadata"
+        loop
+        onMouseEnter={() => videoRef.current?.play().catch(() => {})}
+        onMouseLeave={() => { if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0 } }}
+      />
+    )
+  }
+
+  // Generic file (PDF, etc.)
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <FileIcon className="w-7 h-7 text-[#b0b0b0]" />
+      <span className="text-[10px] text-[#b0b0b0]">
+        {url.split('.').pop()?.split('?')[0]?.toUpperCase() || 'ARQUIVO'}
+      </span>
+    </div>
+  )
+}
+
+/** Inline video player used in modals */
+function VideoPlayer({ url }: { url: string }) {
+  return (
+    <div className="w-full rounded-xl overflow-hidden border border-[#e8e8e8] bg-black">
+      <video
+        src={url}
+        controls
+        playsInline
+        className="w-full max-h-80 object-contain"
+        style={{ display: 'block' }}
+      />
+    </div>
+  )
+}
+
+/** Media preview for forms (upload / edit) */
+function MediaPreview({ url, onRemove }: { url: string; onRemove: () => void }) {
+  if (isVideoUrl(url)) {
+    return (
+      <div className="mt-2 relative">
+        <video
+          src={url}
+          controls
+          playsInline
+          muted
+          className="w-full h-36 object-contain rounded-lg border border-[#e8e8e8] bg-black"
+        />
+        <button
+          onClick={onRemove}
+          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[#a0a0a0] hover:text-red-500"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
+  // Image (or unknown — try img)
+  return (
+    <div className="mt-2 relative">
+      <img
+        src={url}
+        alt="preview"
+        className="w-full h-28 object-cover rounded-lg border border-[#e8e8e8]"
+        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+      />
+      <button
+        onClick={onRemove}
+        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[#a0a0a0] hover:text-red-500"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  )
+}
+
 // ─── Asset card ───────────────────────────────────────────────────────────────
 
 function AssetCard({
@@ -69,7 +171,6 @@ function AssetCard({
   onDelete: (a: ContentAsset) => void
 }) {
   const clientName = asset.client?.company_name ?? null
-  const isImage = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
 
   return (
     <motion.div
@@ -83,21 +184,7 @@ function AssetCard({
         onClick={() => onClick(asset)}
       >
         {asset.media_url ? (
-          isImage ? (
-            <img
-              src={asset.media_url}
-              alt={asset.title}
-              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-1.5">
-              <FileIcon className="w-7 h-7 text-[#b0b0b0]" />
-              <span className="text-[10px] text-[#b0b0b0]">
-                {asset.media_url.split('.').pop()?.split('?')[0]?.toUpperCase() || 'ARQUIVO'}
-              </span>
-            </div>
-          )
+          <MediaThumbnail url={asset.media_url} title={asset.title} />
         ) : (
           <TypeIcon type={asset.content_type} className="w-8 h-8 text-[#c8c8c8]" />
         )}
@@ -269,7 +356,6 @@ function AssetDetailModal({
 
   if (!asset) return null
 
-  const isImage = form.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(form.media_url)
   const clientName = clients.find(c => c.id === (form.client_id || asset.client_id))?.company_name
     ?? asset.client?.company_name
 
@@ -304,7 +390,19 @@ function AssetDetailModal({
           <div className="space-y-4 mt-1 min-w-0">
             {/* Media preview */}
             {asset.media_url && (
-              isImage ? (
+              isVideoUrl(asset.media_url) ? (
+                <div className="space-y-2">
+                  <VideoPlayer url={asset.media_url} />
+                  <a
+                    href={asset.media_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[11px] text-[#737373] hover:text-[#0f0f0f] transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Abrir em nova guia
+                  </a>
+                </div>
+              ) : isImageUrl(asset.media_url) ? (
                 <a href={asset.media_url} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-xl border border-[#e8e8e8]">
                   <img
                     src={asset.media_url}
@@ -487,21 +585,8 @@ function AssetDetailModal({
                   onChange={handleFileUpload}
                 />
               </div>
-              {form.media_url && isImage && (
-                <div className="mt-2 relative">
-                  <img
-                    src={form.media_url}
-                    alt="preview"
-                    className="w-full h-28 object-cover rounded-lg border border-[#e8e8e8]"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  />
-                  <button
-                    onClick={() => set('media_url', '')}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[#a0a0a0] hover:text-red-500"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
+              {form.media_url && (
+                <MediaPreview url={form.media_url} onRemove={() => set('media_url', '')} />
               )}
             </div>
 
@@ -741,20 +826,7 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
               <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFile} />
             </div>
             {form.media_url && (
-              <div className="mt-2 relative">
-                <img
-                  src={form.media_url}
-                  alt="preview"
-                  className="w-full h-28 object-cover rounded-lg border border-[#e8e8e8]"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-                <button
-                  onClick={() => set('media_url', '')}
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[#a0a0a0] hover:text-red-500"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
+              <MediaPreview url={form.media_url} onRemove={() => set('media_url', '')} />
             )}
           </div>
 
