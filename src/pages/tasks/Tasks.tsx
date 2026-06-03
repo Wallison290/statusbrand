@@ -479,12 +479,138 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
   )
 }
 
+// ─── Day tasks modal ──────────────────────────────────────────────────────────
+
+function DayTasksModal({
+  date, tasks, open, onClose, onView, onEdit, onDelete, onStatusChange, onAddTask,
+}: {
+  date: Date | null; tasks: Task[]; open: boolean; onClose: () => void
+  onView: (t: Task) => void; onEdit: (t: Task) => void; onDelete: (id: string) => void
+  onStatusChange: (id: string, s: TaskStatus) => void; onAddTask: (d: Date) => void
+}) {
+  if (!date) return null
+
+  const rawLabel  = format(date, "EEEE, d 'de' MMMM", { locale: ptBR })
+  const dateLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1)
+
+  // Sort tasks by time then title
+  const sorted = [...tasks].sort((a, b) => {
+    if (!a.due_time && !b.due_time) return a.title.localeCompare(b.title)
+    if (!a.due_time) return 1
+    if (!b.due_time) return -1
+    return a.due_time.localeCompare(b.due_time)
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-[15px] font-bold text-gray-900">{dateLabel}</DialogTitle>
+          <p className="text-[12px] text-gray-400 mt-0.5">
+            {sorted.length} tarefa{sorted.length !== 1 ? 's' : ''} neste dia
+          </p>
+        </DialogHeader>
+
+        <div className="space-y-2 mt-1 max-h-[52vh] overflow-y-auto pr-0.5">
+          {sorted.map(task => {
+            const pc      = PRIORITY_CFG[task.priority]
+            const sc      = STATUS_CFG[task.status]
+            const overdue = isOverdue(task.due_date) && task.status !== 'concluido'
+            const clientName = (task.client as any)?.company_name
+
+            return (
+              <div key={task.id}
+                className="group flex items-start gap-3 bg-gray-50 rounded-xl border border-gray-100 p-3 hover:border-gray-200 transition-all">
+
+                {/* Task info — click to view detail */}
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { onClose(); onView(task) }}>
+                  <p className="text-[13px] font-semibold text-gray-800 leading-snug mb-1.5">{task.title}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${pc.pillBg} ${pc.pillText}`}>{pc.label}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sc.bg} ${sc.text} ${sc.border}`}>{sc.label}</span>
+                    {clientName && <span className="text-[10px] text-gray-400">{clientName}</span>}
+                    {overdue && <span className="text-[10px] text-red-500 font-semibold">⚠ Atrasada</span>}
+                  </div>
+                  {(task.due_time || task.assignee) && (
+                    <div className="flex items-center gap-3 mt-1.5">
+                      {task.due_time && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span className="text-[11px] text-gray-500">{task.due_time.slice(0, 5)}</span>
+                        </div>
+                      )}
+                      {task.assignee && (
+                        <div className="flex items-center gap-1.5">
+                          <AvatarCircle name={task.assignee} />
+                          <span className="text-[11px] text-gray-500">{task.assignee}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status pill — inline change */}
+                <div onClick={e => e.stopPropagation()} className="flex-shrink-0 pt-0.5">
+                  <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => { onClose(); onEdit(task) }}
+                    title="Editar"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(task.id)}
+                    title="Excluir"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+
+          {sorted.length === 0 && (
+            <div className="flex flex-col items-center py-8 text-gray-400">
+              <ClipboardList className="w-8 h-8 mb-2 opacity-30" />
+              <p className="text-[13px]">Nenhuma tarefa neste dia</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="border-t border-gray-100 pt-3 gap-2 flex-row">
+          <Button variant="outline" size="sm" onClick={onClose} className="flex-shrink-0">
+            Fechar
+          </Button>
+          <Button size="sm" onClick={() => { onClose(); onAddTask(date) }}
+            className="flex-1" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Nova tarefa neste dia
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── View: Calendário mensal ──────────────────────────────────────────────────
 
-function MonthView({ tasks, onView, onAddTask }: {
-  tasks: Task[]; onView: (t: Task) => void; onAddTask: (d: Date) => void
+function MonthView({ tasks, onView, onEdit, onDelete, onStatusChange, onAddTask }: {
+  tasks: Task[]
+  onView: (t: Task) => void
+  onEdit: (t: Task) => void
+  onDelete: (id: string) => void
+  onStatusChange: (id: string, s: TaskStatus) => void
+  onAddTask: (d: Date) => void
 }) {
-  const [monthBase, setMonthBase] = useState(() => new Date())
+  const [monthBase, setMonthBase]   = useState(() => new Date())
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
+  const [dayModalOpen, setDayModalOpen] = useState(false)
+
   const firstDay  = new Date(monthBase.getFullYear(), monthBase.getMonth(), 1)
   const totalDays = getDaysInMonth(monthBase)
   const startDow  = getDay(firstDay)
@@ -500,59 +626,98 @@ function MonthView({ tasks, onView, onAddTask }: {
   const tasksByDate = (date: Date) =>
     tasks.filter(t => t.due_date === format(date, 'yyyy-MM-dd'))
 
+  const handleDayClick = (date: Date) => {
+    const dayTasks = tasksByDate(date)
+    if (dayTasks.length > 0) {
+      // Has tasks → open day modal
+      setSelectedDay(date)
+      setDayModalOpen(true)
+    } else {
+      // Empty → open new task form directly
+      onAddTask(date)
+    }
+  }
+
+  const selectedDayTasks = selectedDay ? tasksByDate(selectedDay) : []
+
   return (
-    <div className="flex-1 overflow-auto px-4 pb-4">
-      {/* Month header */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setMonthBase(m => subMonths(m, 1))}
-          className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <h2 className="text-[16px] font-bold text-gray-800 capitalize">{monthLabel}</h2>
-        <button onClick={() => setMonthBase(m => addMonths(m, 1))}
-          className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
-          <ChevronRight className="w-4 h-4" />
-        </button>
+    <>
+      <div className="flex-1 overflow-auto px-4 pb-4">
+        {/* Month header */}
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => setMonthBase(m => subMonths(m, 1))}
+            className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <h2 className="text-[16px] font-bold text-gray-800 capitalize">{monthLabel}</h2>
+          <button onClick={() => setMonthBase(m => addMonths(m, 1))}
+            className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Day header */}
+        <div className="grid grid-cols-7 mb-1">
+          {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => (
+            <div key={d} className="text-center text-[11px] font-bold text-gray-400 py-2">{d}</div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((date, i) => {
+            if (!date) return <div key={i} className="h-28 rounded-xl bg-gray-50/30" />
+            const dayTasks = tasksByDate(date)
+            const today    = isToday(date)
+            const hasTasks = dayTasks.length > 0
+            return (
+              <div key={i}
+                onClick={() => handleDayClick(date)}
+                className={[
+                  'h-28 rounded-xl border p-2 cursor-pointer transition-all',
+                  today
+                    ? 'border-violet-300 bg-violet-50/40 hover:border-violet-400'
+                    : hasTasks
+                      ? 'border-gray-200 bg-white hover:border-violet-200 hover:shadow-sm'
+                      : 'border-gray-100 bg-white hover:border-gray-200',
+                ].join(' ')}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold mb-1 ${today ? 'bg-violet-600 text-white' : 'text-gray-700'}`}>
+                  {format(date, 'd')}
+                </div>
+                <div className="space-y-0.5 overflow-hidden">
+                  {dayTasks.slice(0, 3).map(task => {
+                    const priCfg = PRIORITY_CFG[task.priority]
+                    return (
+                      <div key={task.id}
+                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md truncate ${priCfg.pillBg} ${priCfg.pillText}`}>
+                        {task.title}
+                      </div>
+                    )
+                  })}
+                  {dayTasks.length > 3 && (
+                    <p className="text-[9px] text-gray-400 font-medium pl-0.5">+{dayTasks.length - 3} mais</p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Day header */}
-      <div className="grid grid-cols-7 mb-1">
-        {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => (
-          <div key={d} className="text-center text-[11px] font-bold text-gray-400 py-2">{d}</div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((date, i) => {
-          if (!date) return <div key={i} className="h-28 rounded-xl bg-gray-50/30" />
-          const dayTasks = tasksByDate(date)
-          const today    = isToday(date)
-          return (
-            <div key={i} onClick={() => onAddTask(date)}
-              className={`h-28 rounded-xl border p-2 cursor-pointer transition-all hover:shadow-sm ${today ? 'border-violet-300 bg-violet-50/40' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold mb-1 ${today ? 'bg-violet-600 text-white' : 'text-gray-700'}`}>
-                {format(date, 'd')}
-              </div>
-              <div className="space-y-0.5 overflow-hidden">
-                {dayTasks.slice(0, 3).map(task => {
-                  const priCfg = PRIORITY_CFG[task.priority]
-                  return (
-                    <div key={task.id} onClick={e => { e.stopPropagation(); onView(task) }}
-                      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md truncate cursor-pointer ${priCfg.pillBg} ${priCfg.pillText}`}>
-                      {task.title}
-                    </div>
-                  )
-                })}
-                {dayTasks.length > 3 && (
-                  <p className="text-[9px] text-gray-400 font-medium pl-0.5">+{dayTasks.length - 3} mais</p>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
+      {/* Day tasks modal */}
+      <DayTasksModal
+        date={selectedDay}
+        tasks={selectedDayTasks}
+        open={dayModalOpen}
+        onClose={() => setDayModalOpen(false)}
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onStatusChange={onStatusChange}
+        onAddTask={onAddTask}
+      />
+    </>
   )
 }
 
@@ -1191,7 +1356,8 @@ export function Tasks() {
         )}
 
         {activeTab === 'calendario' && (
-          <MonthView tasks={tasks} onView={setViewingTask} onAddTask={handleAddTask} />
+          <MonthView tasks={tasks} onView={setViewingTask} onEdit={handleEditTask}
+            onDelete={handleDelete} onStatusChange={handleStatusChange} onAddTask={handleAddTask} />
         )}
 
         {activeTab === 'lista' && (
