@@ -196,6 +196,25 @@ export function useWeeklyFormResponses(clientId: string) {
   })
 }
 
+export function useDeleteWeeklyFormResponse(clientId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (responseId: string) => {
+      const { error } = await (supabase as any)
+        .from('weekly_form_responses')
+        .delete()
+        .eq('id', responseId)
+      if (error) {
+        const msg = (error as { message?: string }).message || JSON.stringify(error)
+        throw new Error(msg)
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['weekly-form-responses', clientId] })
+    },
+  })
+}
+
 // ── Submit response (usado tanto interno quanto público) ──────────────────────
 
 export interface SubmitFormPayload {

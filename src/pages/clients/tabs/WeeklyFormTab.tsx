@@ -17,6 +17,7 @@ import {
   useWeeklyFormConfig,
   useWeeklyFormResponses,
   useUpsertWeeklyFormConfig,
+  useDeleteWeeklyFormResponse,
   submitWeeklyFormResponse,
   resolveQuestions,
   DAY_LABELS,
@@ -60,40 +61,105 @@ function formatDateTime(iso: string) {
 function ResponseCard({
   response,
   onView,
+  onDelete,
+  deleting,
 }: {
   response: WeeklyFormResponse
   onView: () => void
+  onDelete: () => void
+  deleting?: boolean
 }) {
-  const thisWeek = getThisMonday()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const thisWeek   = getThisMonday()
   const isThisWeek = response.week_reference === thisWeek
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setConfirmDelete(true)
+  }
+
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete()
+  }
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setConfirmDelete(false)
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#e8eaf0] bg-white hover:border-violet-200 hover:bg-violet-50/30 transition-all cursor-pointer group"
-      onClick={onView}
+      exit={{ opacity: 0, x: -16 }}
+      className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+        confirmDelete
+          ? 'border-red-200 bg-red-50'
+          : 'border-[#e8eaf0] bg-white hover:border-violet-200 hover:bg-violet-50/30 cursor-pointer'
+      } group`}
+      onClick={confirmDelete ? undefined : onView}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold">
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold ${
+          confirmDelete
+            ? 'bg-red-400'
+            : 'bg-gradient-to-br from-violet-500 to-purple-600'
+        }`}>
           {response.respondent_name?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-[#0f172a] truncate">
-            {response.respondent_name}
-          </p>
-          <p className="text-[11px] text-[#94a3b8] truncate">
-            {response.respondent_role} · {formatDateTime(response.created_at)}
-          </p>
+          {confirmDelete ? (
+            <p className="text-[12px] font-semibold text-red-700">
+              Apagar este formulário?
+            </p>
+          ) : (
+            <>
+              <p className="text-[13px] font-semibold text-[#0f172a] truncate">
+                {response.respondent_name}
+              </p>
+              <p className="text-[11px] text-[#94a3b8] truncate">
+                {response.respondent_role} · {formatDateTime(response.created_at)}
+              </p>
+            </>
+          )}
         </div>
       </div>
+
       <div className="flex items-center gap-2 flex-shrink-0">
-        {isThisWeek && (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-            Esta semana
-          </span>
+        {confirmDelete ? (
+          <>
+            <button
+              onClick={handleConfirm}
+              disabled={deleting}
+              className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[11px] font-semibold transition-colors disabled:opacity-60"
+            >
+              {deleting ? 'Apagando...' : 'Sim, apagar'}
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-3 py-1 rounded-lg border border-[#e2e8f0] text-[11px] text-[#64748b] hover:bg-white transition-colors"
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <>
+            {isThisWeek && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                Esta semana
+              </span>
+            )}
+            <button
+              onClick={handleDeleteClick}
+              className="p-1.5 rounded-lg text-[#c8d4e4] hover:text-red-400 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+              title="Apagar resposta"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <Eye className="w-4 h-4 text-[#c8d4e4] group-hover:text-violet-500 transition-colors" />
+          </>
         )}
-        <Eye className="w-4 h-4 text-[#c8d4e4] group-hover:text-violet-500 transition-colors" />
       </div>
     </motion.div>
   )
@@ -355,7 +421,9 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
   const { toast } = useToast()
   const { data: config, isLoading: configLoading } = useWeeklyFormConfig(clientId)
   const { data: responses = [], isLoading: responsesLoading, refetch } = useWeeklyFormResponses(clientId)
-  const upsertConfig = useUpsertWeeklyFormConfig()
+  const upsertConfig  = useUpsertWeeklyFormConfig()
+  const deleteResponse = useDeleteWeeklyFormResponse(clientId)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const [dayOfWeek, setDayOfWeek]           = useState<number>(1)
   const [isActive, setIsActive]             = useState(true)
@@ -422,6 +490,18 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
     toast('Link copiado!', 'success')
+  }
+
+  const handleDeleteResponse = async (responseId: string) => {
+    setDeletingId(responseId)
+    try {
+      await deleteResponse.mutateAsync(responseId)
+      toast('Resposta apagada.', 'success')
+    } catch (e: any) {
+      toast(e.message || 'Erro ao apagar.', 'error')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const handleQuestionChange = (idx: number, updated: QuestionConfig) => {
@@ -681,15 +761,19 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                 <p className="text-[11px]">Compartilhe o link para começar a receber</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {responses.map(r => (
-                  <ResponseCard
-                    key={r.id}
-                    response={r}
-                    onView={() => setViewingResponse(r)}
-                  />
-                ))}
-              </div>
+              <AnimatePresence>
+                <div className="space-y-2">
+                  {responses.map(r => (
+                    <ResponseCard
+                      key={r.id}
+                      response={r}
+                      onView={() => setViewingResponse(r)}
+                      onDelete={() => handleDeleteResponse(r.id)}
+                      deleting={deletingId === r.id}
+                    />
+                  ))}
+                </div>
+              </AnimatePresence>
             )}
           </div>
         </>
