@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     const INSTAGRAM_LIMITS: Record<string, number> = {
       starter: 1,
       pro:     5,
-      agency:  -1, // ilimitado
+      agency:  20,
     }
 
     // Busca o plano do usuário
