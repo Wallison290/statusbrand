@@ -34,6 +34,7 @@ export async function streamChat(
   useWebSearch: boolean,
   onChunk: (text: string) => void,
   signal?: AbortSignal,
+  generateImage = false,
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Não autenticado')
@@ -45,7 +46,7 @@ export async function streamChat(
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ messages, systemPrompt, useWebSearch }),
+    body: JSON.stringify({ messages, systemPrompt, useWebSearch, generateImage }),
     signal,
   })
 

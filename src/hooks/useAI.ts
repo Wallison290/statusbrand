@@ -181,6 +181,18 @@ export function useAIChat(sessionId: string | null) {
 
   const clearMemoriesSaved = useCallback(() => setMemoriesSaved([]), [])
 
+  // ── Detecção de intent de geração de imagem ────────────────────────────────
+  const IMAGE_GEN_KEYWORDS = [
+    'crie uma imagem', 'gere uma imagem', 'gerar imagem', 'criar imagem',
+    'cria uma imagem', 'gera uma imagem', 'faça uma imagem', 'faz uma imagem',
+    'desenhe', 'desenha', 'ilustre', 'ilustra', 'make an image', 'generate image',
+    'create an image', 'draw me', 'dall-e',
+  ]
+  function isImageGenRequest(text: string): boolean {
+    const lower = text.toLowerCase()
+    return IMAGE_GEN_KEYWORDS.some(kw => lower.includes(kw))
+  }
+
   const sendMessage = useCallback(async (
     content: string,
     history: AIMessage[],
@@ -189,9 +201,19 @@ export function useAIChat(sessionId: string | null) {
     clientContext?: string | null,
     clientId?: string | null,
     squadPrompt?: string | null,
+    attachedImages?: string[],  // base64 data URLs
   ) => {
-    if (!content.trim()) return
+    if (!content.trim() && (!attachedImages || attachedImages.length === 0)) return
     if (isStreaming || isLoading) return
+
+    // Monta conteúdo com imagens (marcadores [[IMG:...]])
+    let fullContent = content.trim()
+    if (attachedImages && attachedImages.length > 0) {
+      const imgMarkers = attachedImages.map(url => `\n[[IMG:${url}]]`).join('')
+      fullContent = fullContent ? `${fullContent}${imgMarkers}` : imgMarkers.trim()
+    }
+
+    const generateImage = isImageGenRequest(fullContent) && !attachedImages?.length
 
     let activeSessionId = sessionId
 
@@ -199,7 +221,7 @@ export function useAIChat(sessionId: string | null) {
     if (!activeSessionId) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const title = content.slice(0, 60) + (content.length > 60 ? '…' : '')
+      const title = (content || 'Imagem').slice(0, 60) + ((content || 'Imagem').length > 60 ? '…' : '')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: session, error } = await (supabase as any)
         .from('ai_sessions')
@@ -212,11 +234,11 @@ export function useAIChat(sessionId: string | null) {
       onSessionCreated?.(session as AISession)
     }
 
-    // Salva mensagem do usuário no Supabase
+    // Salva mensagem do usuário no Supabase (com conteúdo completo incluindo marcadores de imagem)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: userMsg } = await (supabase as any)
       .from('ai_messages')
-      .insert({ session_id: activeSessionId, role: 'user', content, web_search: useWebSearch })
+      .insert({ session_id: activeSessionId, role: 'user', content: fullContent, web_search: useWebSearch })
       .select()
       .single()
 
@@ -226,10 +248,10 @@ export function useAIChat(sessionId: string | null) {
       )
     }
 
-    // Prepara histórico de chat
+    // Prepara histórico de chat (inclui mensagem atual com marcadores de imagem)
     const chatHistory = [
       ...history,
-      ...(userMsg ? [userMsg as AIMessage] : []),
+      ...(userMsg ? [userMsg as AIMessage] : [{ id: 'pending', session_id: activeSessionId!, role: 'user' as const, content: fullContent, created_at: new Date().toISOString() }]),
     ].map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
 
     // Monta system prompt composto
@@ -257,6 +279,7 @@ export function useAIChat(sessionId: string | null) {
         useWebSearch,
         (chunk) => setStreamingContent(prev => prev + chunk),
         abort.signal,
+        generateImage,
       )
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
@@ -294,7 +317,8 @@ export function useAIChat(sessionId: string | null) {
     const currentSessions = qc.getQueryData<AISession[]>(['ai_sessions']) ?? []
     const currentSession  = currentSessions.find(s => s.id === activeSessionId)
     if (currentSession?.title === 'Nova conversa') {
-      const title = content.slice(0, 60) + (content.length > 60 ? '…' : '')
+      const displayContent = content || (attachedImages?.length ? 'Análise de imagem' : 'Nova conversa')
+      const title = displayContent.slice(0, 60) + (displayContent.length > 60 ? '…' : '')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('ai_sessions').update({ title }).eq('id', activeSessionId!)
       qc.invalidateQueries({ queryKey: ['ai_sessions'] })
@@ -304,7 +328,7 @@ export function useAIChat(sessionId: string | null) {
     if (clientId && fullContent && !fullContent.startsWith('❌')) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        extractMemoriesBackground(content, fullContent, clientId, user.id, (keys) => {
+        extractMemoriesBackground(content || 'análise de imagem', fullContent, clientId, user.id, (keys) => {
           setMemoriesSaved(keys)
           qc.invalidateQueries({ queryKey: ['ai_client_memory', clientId] })
           qc.invalidateQueries({ queryKey: ['ai_client_context', clientId] })
