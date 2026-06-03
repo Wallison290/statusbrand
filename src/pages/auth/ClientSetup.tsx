@@ -18,16 +18,37 @@ export function ClientSetup() {
   const [done, setDone]               = useState(false)
 
   useEffect(() => {
-    // Supabase processa automaticamente o hash da URL de convite
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let settled = false
+
+    // Função que resolve quando a sessão chegar
+    const resolve = (session: import('@supabase/supabase-js').Session | null) => {
+      if (settled) return
+      settled = true
       if (session?.user) {
         setEmail(session.user.email ?? '')
         setChecking(false)
       } else {
-        // Sem sessão — redireciona para login
         navigate('/login', { replace: true })
       }
+    }
+
+    // 1. Ouve mudanças de auth (captura o hash processado de forma assíncrona)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      resolve(session)
     })
+
+    // 2. Verifica sessão já existente (caso o hash já foi processado antes de montar)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      resolve(session)
+    })
+
+    // 3. Fallback: se após 8s ainda não resolveu, vai para login
+    const fallback = setTimeout(() => resolve(null), 8000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(fallback)
+    }
   }, [navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
