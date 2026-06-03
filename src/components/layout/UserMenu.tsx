@@ -229,6 +229,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
   const [showProfile, setShowProfile] = useState(false)
   const menuRef               = useRef<HTMLDivElement>(null)
   const buttonRef             = useRef<HTMLButtonElement>(null)
+  const dropdownRef           = useRef<HTMLDivElement>(null)
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
 
   // Calcula posição do dropdown ao abrir
@@ -243,10 +244,12 @@ export function UserMenu({ dark = true }: UserMenuProps) {
     setOpen(v => !v)
   }
 
-  // Fecha ao clicar fora
+  // Fecha ao clicar fora — verifica tanto o botão quanto o dropdown (portal)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+      const inButton   = menuRef.current?.contains(e.target as Node)
+      const inDropdown = dropdownRef.current?.contains(e.target as Node)
+      if (!inButton && !inDropdown) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -322,17 +325,20 @@ export function UserMenu({ dark = true }: UserMenuProps) {
       {/* Dropdown via Portal — independente do overflow-hidden do pai */}
       <AnimatePresence>
         {open && createPortal(
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.12 }}
+          <div
+            ref={dropdownRef}
             style={{
               position: 'fixed',
               top:      dropdownPos.top,
               right:    dropdownPos.right,
               zIndex:   9999,
             }}
+          >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.12 }}
             className="w-64 bg-white rounded-2xl shadow-xl border border-[#f1f5f9] overflow-hidden"
           >
             {/* Header do menu */}
@@ -405,7 +411,8 @@ export function UserMenu({ dark = true }: UserMenuProps) {
                 danger
               />
             </div>
-          </motion.div>,
+          </motion.div>
+          </div>,
           document.body
         )}
       </AnimatePresence>
