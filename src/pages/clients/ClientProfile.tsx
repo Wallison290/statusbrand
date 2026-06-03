@@ -4,7 +4,7 @@ import {
   Edit, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
   Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
-  Unlink, RefreshCw,
+  Unlink, RefreshCw, Send,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -760,6 +760,7 @@ export function ClientProfile() {
   })
   const [assetFile, setAssetFile] = useState<File | null>(null)
   const [assetUploading, setAssetUploading] = useState(false)
+  const [resendingInvite, setResendingInvite] = useState(false)
 
   const resetAssetForm = () => {
     setAssetForm({ title: '', caption: '', content_type: 'post', observations: '', link_url: '' })
@@ -854,6 +855,33 @@ export function ClientProfile() {
     }
   }
 
+  // ── Reenviar convite ────────────────────────────────────────────────────────
+  const handleResendInvite = async () => {
+    if (!client?.email) {
+      toast('Este cliente não tem e-mail cadastrado.', 'error')
+      return
+    }
+    setResendingInvite(true)
+    try {
+      const { error } = await supabase.functions.invoke('invite-client', {
+        body: {
+          email: client.email,
+          clientId: client.id,
+          clientName: client.responsible_name,
+          companyName: client.company_name,
+          redirectTo: `${window.location.origin}/client-setup`,
+          resend: true,
+        },
+      })
+      if (error) throw error
+      toast('Convite reenviado com sucesso!', 'success')
+    } catch (err: any) {
+      toast(err.message || 'Erro ao reenviar convite.', 'error')
+    } finally {
+      setResendingInvite(false)
+    }
+  }
+
   // ── Loading / not found ─────────────────────────────────────────────────────
   if (isLoading) return (
     <div className="flex items-center justify-center h-full">
@@ -896,6 +924,20 @@ export function ClientProfile() {
                 <Link to="/clients" className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#e2e8f0] text-[#6b7280] hover:bg-[#f5f7fb] transition-colors">
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
+                {client.email && (
+                  <button
+                    onClick={handleResendInvite}
+                    disabled={resendingInvite}
+                    title="Reenviar convite de acesso ao portal"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#6b7280] hover:bg-[#f5f7fb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendingInvite
+                      ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      : <Send className="w-3.5 h-3.5" />
+                    }
+                    <span className="hidden sm:inline">{resendingInvite ? 'Enviando…' : 'Reenviar convite'}</span>
+                  </button>
+                )}
                 <Link to={`/clients/${id}/edit`} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#0f0f0f] hover:bg-[#f5f7fb] transition-colors">
                   <Edit className="w-3.5 h-3.5" /> Editar
                 </Link>

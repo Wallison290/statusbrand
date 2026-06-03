@@ -14,13 +14,11 @@ const CORS = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
-  // Planos com acesso ao portal
-  const PORTAL_PLANS = ['pro', 'agency']
-  // Planos sem acesso (bloquear convite)
+  // Planos sem acesso ao portal (bloquear convite)
   const PLANS_WITHOUT_PORTAL = ['starter']
 
   try {
-    const { email, clientId, clientName, companyName, redirectTo } = await req.json()
+    const { email, clientId, clientName, companyName, redirectTo, resend } = await req.json()
 
     if (!email) throw new Error('Email é obrigatório')
     if (!clientId) throw new Error('clientId é obrigatório')
@@ -48,18 +46,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Verifica se o usuário já existe no Auth
+    // ── Verifica se o usuário já existe no Auth ────────────────────────────────
     const { data: existing } = await sb.auth.admin.listUsers()
-    const alreadyExists = existing?.users?.some(u => u.email === email)
+    const existingUser = existing?.users?.find(u => u.email === email)
 
-    if (alreadyExists) {
-      // Usuário já tem acesso — não reenvia convite
-      return new Response(
-        JSON.stringify({ success: true, skipped: true, reason: 'already_exists' }),
-        { headers: { ...CORS, 'Content-Type': 'application/json' } },
-      )
+    if (existingUser) {
+      if (!resend) {
+        // Não é reenvio — retorna skipped (comportamento original)
+        return new Response(
+          JSON.stringify({ success: true, skipped: true, reason: 'already_exists' }),
+          { headers: { ...CORS, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      // É reenvio — deleta o usuário e convida novamente
+      // Seguro pois o cliente ainda não criou senha (needs_password_setup=true)
+      const { error: deleteError } = await sb.auth.admin.deleteUser(existingUser.id)
+      if (deleteError) throw deleteError
     }
 
+    // ── Envia convite ──────────────────────────────────────────────────────────
     const { data: inviteData, error } = await sb.auth.admin.inviteUserByEmail(email, {
       redirectTo: redirectTo ?? 'https://kairohub.app.br/client-setup',
       data: {
@@ -74,8 +80,6 @@ Deno.serve(async (req) => {
     if (error) throw error
 
     // Garante que o profile foi criado com role=client e linked_client_id
-    // (o trigger handle_new_user já deve fazer isso, mas esta chamada
-    //  serve como garantia em caso de race condition)
     if (inviteData?.user?.id) {
       await sb.rpc('setup_client_profile', {
         p_user_id:     inviteData.user.id,
@@ -86,7 +90,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, resent: !!resend }),
       { headers: { ...CORS, 'Content-Type': 'application/json' } },
     )
   } catch (err: any) {
