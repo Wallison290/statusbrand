@@ -110,7 +110,7 @@ export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
         <p className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">
           <span>👤</span> 1. Identificação
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div>
             <label className="text-[11px] font-medium text-[#64748b] block mb-1">
               Nome do colaborador <span className="text-red-500">*</span>
