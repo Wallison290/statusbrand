@@ -32,6 +32,7 @@ import { TeamPage } from '@/pages/team/TeamPage'
 import { InstagramPage } from '@/pages/instagram/InstagramPage'
 import { PrivacyPage } from '@/pages/PrivacyPage'
 import { TermsPage } from '@/pages/TermsPage'
+import { WeeklyFormPage } from '@/pages/public/WeeklyFormPage'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Páginas públicas sem auth */}
+      <Route path="/formulario/:token" element={<WeeklyFormPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms"   element={<TermsPage />} />
 

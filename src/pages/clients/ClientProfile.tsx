@@ -27,6 +27,7 @@ import { SupportTab } from './tabs/SupportTab'
 import { TasksTab } from './tabs/TasksTab'
 import { PlannerItemViewModal } from '@/components/PlannerItemViewModal'
 import { ReportsTab } from './tabs/ReportsTab'
+import { WeeklyFormTab } from './tabs/WeeklyFormTab'
 import { useToast } from '@/components/ui/toast'
 import { formatDate, contentTypeLabels } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
@@ -948,6 +949,7 @@ export function ClientProfile() {
             <TabsTrigger value="materials">Materiais</TabsTrigger>
             <TabsTrigger value="support">Suporte</TabsTrigger>
             <TabsTrigger value="results">Resultados</TabsTrigger>
+            <TabsTrigger value="formulario">📋 Formulário</TabsTrigger>
           </TabsList>
 
           {/* ── Visão Geral ───────────────────────────────────────────────── */}
@@ -1257,6 +1259,14 @@ export function ClientProfile() {
           {/* ── Tarefas ──────────────────────────────────────────────────── */}
           <TabsContent value="tasks">
             <TasksTab clientId={id!} />
+          </TabsContent>
+
+          {/* ── Formulário Semanal ────────────────────────────────────────── */}
+          <TabsContent value="formulario">
+            <WeeklyFormTab
+              clientId={id!}
+              clientName={client?.name || ''}
+            />
           </TabsContent>
         </Tabs>
       </div>
