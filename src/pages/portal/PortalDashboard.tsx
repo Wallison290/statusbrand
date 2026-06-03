@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useWeeklyFormConfig } from '@/hooks/useWeeklyForm'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Paperclip, Link2,
@@ -7,6 +8,7 @@ import {
   CheckCircle2, AlertCircle, XCircle, Clock, MessageSquare, X,
   LayoutDashboard, CalendarDays, FolderOpen, LifeBuoy,
   ArrowRight, Bell, Calendar, MessageCircle, Download, Eye,
+  ClipboardList, Copy,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -2602,6 +2604,63 @@ function ContentAssetDetailModal({
   )
 }
 
+// ─── Aba Formulário Semanal (portal do cliente) ───────────────────────────────
+
+function PortalFormularioTab({ token, clientName }: { token: string; clientName: string }) {
+  const { toast } = useToast()
+  const formUrl = `${window.location.origin}/formulario/${token}`
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(formUrl)
+    toast('Link copiado!', 'success')
+  }
+
+  return (
+    <div className="max-w-xl mx-auto py-6 px-2">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0f0f0f] mb-4">
+          <ClipboardList className="w-8 h-8 text-white" />
+        </div>
+        <h2 className="text-[18px] font-bold text-[#0f172a]">Formulário Semanal de Conteúdo</h2>
+        <p className="text-[13px] text-[#64748b] mt-1">
+          Preencha semanalmente para ajudar sua agência a criar conteúdos alinhados com sua realidade.
+        </p>
+      </div>
+
+      {/* Card com link */}
+      <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 mb-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider mb-2">Link do formulário</p>
+        <div className="flex items-center gap-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2.5">
+          <span className="text-[12px] text-[#374151] flex-1 truncate">{formUrl}</span>
+          <button
+            onClick={handleCopy}
+            className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0f0f0f] text-white text-[11px] font-semibold hover:bg-[#1a1a1a] transition-colors"
+          >
+            <Copy className="w-3 h-3" /> Copiar
+          </button>
+        </div>
+      </div>
+
+      {/* Botão abrir formulário */}
+      <a
+        href={formUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#0f0f0f] text-white font-semibold text-[14px] hover:bg-[#1a1a1a] transition-colors"
+      >
+        <ClipboardList className="w-4 h-4" />
+        Preencher formulário agora
+        <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+      </a>
+
+      <p className="text-center text-[11px] text-[#94a3b8] mt-4">
+        Você pode compartilhar este link com outros colaboradores da {clientName || 'sua empresa'}.
+      </p>
+    </div>
+  )
+}
+
 // ─── Main Portal Dashboard ────────────────────────────────────────────────────
 
 export function PortalDashboard() {
@@ -2616,6 +2675,8 @@ export function PortalDashboard() {
   const { data: notifications = [] } = useNotifications()
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
+  const clientId = profile?.linked_client_id ?? ''
+  const { data: formConfig } = useWeeklyFormConfig(clientId)
   const [selectedAsset, setSelectedAsset] = useState<ContentAsset | null>(null)
   const [assetModalOpen, setAssetModalOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -2744,6 +2805,11 @@ export function PortalDashboard() {
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="notas">Solicitações</TabsTrigger>
+            {formConfig?.is_active && (
+              <TabsTrigger value="formulario" className="flex items-center gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5" /> Formulário
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Aba Dashboard */}
@@ -2976,6 +3042,16 @@ export function PortalDashboard() {
           <TabsContent value="notas">
             <PortalNotesTab />
           </TabsContent>
+
+          {/* Aba Formulário */}
+          {formConfig?.is_active && (
+            <TabsContent value="formulario">
+              <PortalFormularioTab
+                token={formConfig.public_token}
+                clientName={client?.company_name || ''}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

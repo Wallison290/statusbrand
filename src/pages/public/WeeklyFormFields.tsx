@@ -89,7 +89,7 @@ export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
         <div className="grid grid-cols-1 gap-3">
           <div>
             <label className="text-[11px] font-medium text-[#64748b] block mb-1">
-              Nome do colaborador <span className="text-red-500">*</span>
+              Nome do colaborador/Cliente <span className="text-red-500">*</span>
             </label>
             <Input
               value={fields.respondentName}
