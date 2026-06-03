@@ -1265,7 +1265,7 @@ export function ClientProfile() {
           <TabsContent value="formulario">
             <WeeklyFormTab
               clientId={id!}
-              clientName={client?.name || ''}
+              clientName={client?.company_name || ''}
             />
           </TabsContent>
         </Tabs>
