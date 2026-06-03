@@ -263,7 +263,7 @@ export function useAIChat(sessionId: string | null) {
     setIsLoading(true)
     setStreamingContent('')
 
-    let fullContent = ''
+    let aiResponse = ''
 
     // Cria AbortController para poder cancelar
     const abort = new AbortController()
@@ -273,7 +273,7 @@ export function useAIChat(sessionId: string | null) {
     setIsStreaming(true)
 
     try {
-      fullContent = await streamChat(
+      aiResponse = await streamChat(
         chatHistory,
         systemContent,
         useWebSearch,
@@ -284,12 +284,12 @@ export function useAIChat(sessionId: string | null) {
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         // Cancelado pelo usuário — mantém o que foi gerado até aqui
-        fullContent = streamingContent
+        aiResponse = streamingContent
       } else {
         const errMsg = err instanceof Error ? err.message : String(err)
         // eslint-disable-next-line no-console
         console.error('[useAI] chat error:', errMsg, err)
-        fullContent = `❌ Erro: ${errMsg}`
+        aiResponse = `❌ Erro: ${errMsg}`
       }
     }
 
@@ -300,7 +300,7 @@ export function useAIChat(sessionId: string | null) {
       .insert({
         session_id: activeSessionId,
         role: 'assistant',
-        content: fullContent,
+        content: aiResponse,
         web_search: useWebSearch,
       })
       .select()
@@ -325,10 +325,10 @@ export function useAIChat(sessionId: string | null) {
     }
 
     // Extração de memória em background (só se houver cliente e resposta válida)
-    if (clientId && fullContent && !fullContent.startsWith('❌')) {
+    if (clientId && aiResponse && !aiResponse.startsWith('❌')) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        extractMemoriesBackground(content || 'análise de imagem', fullContent, clientId, user.id, (keys) => {
+        extractMemoriesBackground(content || 'análise de imagem', aiResponse, clientId, user.id, (keys) => {
           setMemoriesSaved(keys)
           qc.invalidateQueries({ queryKey: ['ai_client_memory', clientId] })
           qc.invalidateQueries({ queryKey: ['ai_client_context', clientId] })
