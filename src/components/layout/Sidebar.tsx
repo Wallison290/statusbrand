@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Bell,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationsModal } from '@/components/NotificationsModal'
+import { UserMenu } from './UserMenu'
 
 const navItems = [
   { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
@@ -80,11 +83,15 @@ interface SidebarProps {
 
 export function Sidebar({ onMobileClose }: SidebarProps) {
   const location  = useLocation()
+  const navigate  = useNavigate()
   const { signOut, profile, user } = useAuth()
-  const [collapsed, setCollapsed]  = useState(false)
+  const [collapsed, setCollapsed]       = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
   const { data: storage }          = useStorageUsage()
+  const { data: notifications = [] } = useNotifications()
+  const unreadCount = notifications.filter((n: { is_read: boolean }) => !n.is_read).length
 
   const planName  = subData?.plan.name ?? 'Free'
   const aiUsed    = usage?.requests ?? 0
@@ -188,6 +195,41 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* ── Notificações + Avatar ── */}
+      <div className={`px-2 pb-1 flex-shrink-0 border-t border-[#1e2535] pt-2 ${collapsed ? 'flex flex-col items-center gap-2' : 'flex items-center gap-2'}`}>
+        {/* Sino */}
+        <button
+          onClick={() => setShowNotifications(true)}
+          title={unreadCount > 0 ? `${unreadCount} notificação${unreadCount === 1 ? '' : 'ões'} não lida${unreadCount === 1 ? '' : 's'}` : 'Notificações'}
+          className="relative flex items-center justify-center w-8 h-8 rounded-xl hover:bg-white/10 transition-colors flex-shrink-0"
+        >
+          <Bell className="w-4 h-4 text-white/60" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] rounded-full bg-red-500 text-[8px] font-bold flex items-center justify-center px-0.5 leading-none text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Avatar + menu do usuário */}
+        {!collapsed && (
+          <div className="flex-1 min-w-0">
+            <UserMenu dark />
+          </div>
+        )}
+        {collapsed && <UserMenu dark />}
+      </div>
+
+      <NotificationsModal
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onView={(notification: { link?: string | null }) => {
+          setShowNotifications(false)
+          if (notification.link) navigate(`/planner?item=${notification.link}`)
+          else navigate('/planner')
+        }}
+      />
 
       {/* ── Plano + uso de IA + Armazenamento ── */}
       <div className="px-2 pb-1 flex-shrink-0">

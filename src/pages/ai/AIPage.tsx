@@ -1,20 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
   CalendarPlus, Check, Mic, MicOff, Paperclip, Download,
-  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2, Bell,
+  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2,
 } from 'lucide-react'
 import { cn, contentTypeLabels } from '@/utils/formatters'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
 import { useCreatePlannerItem } from '@/hooks/usePlanner'
 import { useAuth } from '@/hooks/useAuth'
-import { useNotifications } from '@/hooks/useNotifications'
-import { NotificationsModal } from '@/components/NotificationsModal'
-import { UserMenu } from '@/components/layout/UserMenu'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AI_SQUADS, type AISquad } from '@/data/aiSquads'
 import type { ContentType } from '@/types'
@@ -332,10 +328,6 @@ export function AIPage() {
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
   const { data: clients  = [] }                             = useClients()
   const { data: clientCtx }                                 = useClientContext(activeClientId)
-  const { data: notifications = [] }                        = useNotifications()
-  const [showNotifications, setShowNotifications]           = useState(false)
-  const navigate                                            = useNavigate()
-  const unreadCount = notifications.filter((n: { is_read: boolean }) => !n.is_read).length
   const deleteSession  = useDeleteSession()
   const createPlanner  = useCreatePlannerItem()
 
@@ -693,38 +685,8 @@ export function AIPage() {
               {webSearch ? 'gpt-4o-search' : 'gpt-4o'}
             </div>
 
-            {/* Divisor */}
-            <div className="w-px h-5 bg-[#e8e8e8] flex-shrink-0" />
-
-            {/* Sino de notificações */}
-            <button
-              onClick={() => setShowNotifications(true)}
-              title={unreadCount > 0 ? `${unreadCount} notificação${unreadCount === 1 ? '' : 'ões'} não lida${unreadCount === 1 ? '' : 's'}` : 'Notificações'}
-              className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#f5f5f5] text-[#737373] transition-colors flex-shrink-0"
-            >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-red-500 text-[9px] font-bold flex items-center justify-center px-0.5 leading-none text-white">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Avatar + menu */}
-            <UserMenu dark={false} />
           </div>
         </div>
-
-        {/* Modal de notificações */}
-        <NotificationsModal
-          open={showNotifications}
-          onClose={() => setShowNotifications(false)}
-          onView={(notification) => {
-            setShowNotifications(false)
-            if (notification.link) navigate(`/planner?item=${notification.link}`)
-            else navigate('/planner')
-          }}
-        />
 
         {/* Banner cliente ativo */}
         {activeClientId && clientCtx && (
