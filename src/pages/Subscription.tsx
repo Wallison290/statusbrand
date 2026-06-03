@@ -111,14 +111,14 @@ function StorageBar({ usedGB, limitGB }: { usedGB: number; limitGB: number }) {
 // ── Card de plano ─────────────────────────────────────────────────────────────
 
 function PlanCard({
-  planId, currentPlanId, hasStripe, onUpgrade, onPortal, loading,
+  planId, currentPlanId, hasStripe, onUpgrade, onPortal, loadingPlan,
 }: {
   planId: PlanId
   currentPlanId: PlanId
   hasStripe: boolean
   onUpgrade: (priceId: string) => void
   onPortal: (fallbackPriceId?: string) => void
-  loading: boolean
+  loadingPlan: string | null
 }) {
   const plan      = PLANS[planId]
   const Icon      = PLAN_ICON[planId]
@@ -182,23 +182,24 @@ function PlanCard({
 
       {isCurrent ? (
         hasStripe ? (
-          <button onClick={onPortal} disabled={loading}
+          <button onClick={() => onPortal()} disabled={!!loadingPlan}
             className="w-full py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] font-medium text-[#475569] hover:bg-[#f8fafc] transition-colors flex items-center justify-center gap-2">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+            {loadingPlan === 'portal' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
             Gerenciar assinatura
           </button>
         ) : (
           <div className="w-full py-2.5 rounded-xl bg-[#f8fafc] text-center text-[13px] text-[#94a3b8]">Plano atual</div>
         )
       ) : isDowngrade ? (
-        <button onClick={() => onPortal(plan.stripePriceId ?? undefined)} disabled={loading}
-          className="w-full py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] font-medium text-[#94a3b8] hover:bg-[#f8fafc] transition-colors">
+        <button onClick={() => onPortal(plan.stripePriceId ?? undefined)} disabled={!!loadingPlan}
+          className="w-full py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] font-medium text-[#94a3b8] hover:bg-[#f8fafc] transition-colors flex items-center justify-center gap-2">
+          {loadingPlan === plan.stripePriceId && <Loader2 className="w-4 h-4 animate-spin" />}
           Fazer downgrade
         </button>
       ) : plan.stripePriceId && !plan.stripePriceId.startsWith('CONFIGURE') ? (
-        <button onClick={() => onUpgrade(plan.stripePriceId!)} disabled={loading}
+        <button onClick={() => onUpgrade(plan.stripePriceId!)} disabled={!!loadingPlan}
           className={`w-full py-2.5 rounded-xl text-[13px] font-semibold text-white transition-all flex items-center justify-center gap-2 bg-gradient-to-r ${PLAN_GRADIENT[planId]} hover:opacity-90 active:scale-[0.98]`}>
-          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {loadingPlan === plan.stripePriceId && <Loader2 className="w-4 h-4 animate-spin" />}
           Fazer upgrade
         </button>
       ) : (
@@ -218,7 +219,7 @@ export function Subscription() {
   const { data: usage }                          = useAIUsage(user?.id)
   const { data: storageUsage }                   = useStorageUsage()
   const [searchParams]                           = useSearchParams()
-  const [loading, setLoading]                    = useState(false)
+  const [loadingPlan, setLoadingPlan]             = useState<string | null>(null)
 
   const success       = searchParams.get('success') === '1'
   const canceled      = searchParams.get('canceled') === '1'
@@ -226,17 +227,17 @@ export function Subscription() {
   const hasStripe     = !!subData?.subscription.stripe_subscription_id
 
   const handleUpgrade = async (priceId: string) => {
-    setLoading(true)
+    setLoadingPlan(priceId)
     const url = await startCheckout(priceId)
     if (url) window.location.href = url
-    setLoading(false)
+    setLoadingPlan(null)
   }
 
-  const handlePortal = async () => {
-    setLoading(true)
-    const url = await openPortal()
+  const handlePortal = async (fallbackPriceId?: string) => {
+    setLoadingPlan(fallbackPriceId ?? 'portal')
+    const url = await openPortal(fallbackPriceId)
     if (url) window.location.href = url
-    setLoading(false)
+    setLoadingPlan(null)
   }
 
   if (subLoading) return (
@@ -288,7 +289,7 @@ export function Subscription() {
             </p>
           )}
           {hasStripe && (
-            <button onClick={handlePortal} disabled={loading}
+            <button onClick={() => handlePortal()} disabled={!!loadingPlan}
               className="flex items-center gap-1.5 text-[12px] text-[#64748b] hover:text-[#0f172a] transition-colors">
               <RefreshCw className="w-3.5 h-3.5" />
               Gerenciar
@@ -305,7 +306,7 @@ export function Subscription() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {(['starter', 'pro', 'agency'] as PlanId[]).map(id => (
             <PlanCard key={id} planId={id} currentPlanId={currentPlanId}
-              hasStripe={hasStripe} onUpgrade={handleUpgrade} onPortal={handlePortal} loading={loading} />
+              hasStripe={hasStripe} onUpgrade={handleUpgrade} onPortal={handlePortal} loadingPlan={loadingPlan} />
           ))}
         </div>
       </div>
