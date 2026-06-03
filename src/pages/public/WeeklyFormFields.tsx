@@ -3,6 +3,8 @@
 
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { DEFAULT_QUESTIONS } from '@/hooks/useWeeklyForm'
+import type { QuestionConfig } from '@/hooks/useWeeklyForm'
 
 export interface FormFields {
   respondentName: string
@@ -22,63 +24,18 @@ interface Props {
   fields: FormFields
   onChange: (fields: FormFields) => void
   disabled?: boolean
+  /** Perguntas a exibir. Se omitido usa DEFAULT_QUESTIONS filtrado por enabled. */
+  questions?: QuestionConfig[]
 }
 
-const SECTIONS = [
-  {
-    key: 'qDoubts' as keyof FormFields,
-    number: 2,
-    emoji: '❓',
-    title: 'Principais dúvidas recebidas na semana',
-    question: 'Quais dúvidas os clientes mais fizeram nesta semana?',
-    placeholder: 'Descreva as dúvidas mais frequentes que você recebeu...',
-  },
-  {
-    key: 'qObjections' as keyof FormFields,
-    number: 3,
-    emoji: '🛑',
-    title: 'Objeções encontradas',
-    question: 'Houve alguma objeção recorrente durante atendimentos ou vendas?',
-    placeholder: 'Ex: preço, prazo, confiança, comparação com concorrentes...',
-  },
-  {
-    key: 'qHighlights' as keyof FormFields,
-    number: 4,
-    emoji: '🌟',
-    title: 'Temas que merecem destaque',
-    question: 'Existe algum serviço, produto ou solução que precisa receber mais visibilidade?',
-    placeholder: 'Descreva o que precisa ser mais divulgado ou destacado...',
-  },
-  {
-    key: 'qDemands' as keyof FormFields,
-    number: 5,
-    emoji: '📋',
-    title: 'Demandas do setor',
-    question: 'Seu setor identificou alguma necessidade de comunicação ou conteúdo?',
-    placeholder: 'Ex: explicar um processo, divulgar um serviço, corrigir informações, educar clientes...',
-  },
-  {
-    key: 'qCases' as keyof FormFields,
-    number: 6,
-    emoji: '💼',
-    title: 'Casos e experiências da semana',
-    question: 'Houve algum caso interessante, resultado ou situação que possa virar conteúdo?',
-    placeholder: 'Conte um caso de atendimento, resultado alcançado ou situação relevante...',
-  },
-  {
-    key: 'qTrends' as keyof FormFields,
-    number: 7,
-    emoji: '📈',
-    title: 'Tendências percebidas',
-    question: 'Você percebeu alguma tendência ou assunto muito comentado pelos clientes?',
-    placeholder: 'Descreva comportamentos, temas em alta ou padrões que você percebeu...',
-  },
-]
-
-export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
+export function WeeklyFormFields({ fields, onChange, disabled, questions }: Props) {
   const set = (key: keyof FormFields, value: string) =>
     onChange({ ...fields, [key]: value })
 
+  // Usa as perguntas passadas ou os defaults habilitados
+  const activeQuestions = (questions ?? DEFAULT_QUESTIONS).filter(q => q.enabled)
+
+  // Numera as seções dinamicamente (seção 1 = identificação, a partir de 2)
   return (
     <div className="space-y-5">
       {/* Seção 1 — Identificação */}
@@ -114,11 +71,11 @@ export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
         </div>
       </div>
 
-      {/* Seções 2–7 */}
-      {SECTIONS.map(({ key, number, emoji, title, question, placeholder }) => (
+      {/* Seções dinâmicas */}
+      {activeQuestions.map(({ key, emoji, title, question, placeholder }, idx) => (
         <div key={key} className="p-4 rounded-2xl border border-[#e2e8f0] space-y-2">
           <p className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">
-            <span>{emoji}</span> {number}. {title}
+            <span>{emoji}</span> {idx + 2}. {title}
           </p>
           <p className="text-[12px] text-[#0f172a]">{question}</p>
           <Textarea

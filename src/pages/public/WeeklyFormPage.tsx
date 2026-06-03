@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import { ClipboardList, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WeeklyFormFields, type FormFields } from './WeeklyFormFields'
-import { fetchConfigByToken, submitWeeklyFormResponse } from '@/hooks/useWeeklyForm'
+import { fetchConfigByToken, submitWeeklyFormResponse, resolveQuestions } from '@/hooks/useWeeklyForm'
+import type { WeeklyFormConfig } from '@/hooks/useWeeklyForm'
 
 // ── Error Boundary — captura qualquer crash de renderização ───────────────────
 
@@ -37,9 +38,7 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, EBState> {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ConfigWithClient = {
-  id: string
-  client_id: string
+type ConfigWithClient = WeeklyFormConfig & {
   clients: { company_name: string } | null
 }
 
@@ -246,6 +245,7 @@ function WeeklyFormInner() {
             fields={fields}
             onChange={setFields}
             disabled={saving}
+            questions={resolveQuestions(config)}
           />
 
           <div className="pt-5">

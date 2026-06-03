@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ClipboardList, Link2, Copy, Check, Power, PowerOff,
   ChevronDown, ChevronUp, Calendar, User, Clock,
-  Plus, Eye, AlertCircle,
+  Plus, Eye, AlertCircle, Pencil, Trash2, GripVertical,
+  ToggleLeft, ToggleRight, ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -15,11 +18,12 @@ import {
   useWeeklyFormResponses,
   useUpsertWeeklyFormConfig,
   submitWeeklyFormResponse,
+  resolveQuestions,
   DAY_LABELS,
+  DEFAULT_QUESTIONS,
 } from '@/hooks/useWeeklyForm'
-import type { WeeklyFormResponse } from '@/hooks/useWeeklyForm'
+import type { WeeklyFormResponse, QuestionConfig } from '@/hooks/useWeeklyForm'
 import { WeeklyFormFields } from '@/pages/public/WeeklyFormFields'
-import { supabase } from '@/integrations/supabase/client'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -28,7 +32,7 @@ interface WeeklyFormTabProps {
   clientName: string
 }
 
-// ── Status da semana atual ────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getThisMonday(): string {
   const d   = new Date()
@@ -97,7 +101,7 @@ function ResponseCard({
 
 // ── Modal de visualização de resposta ─────────────────────────────────────────
 
-const QUESTIONS: { key: keyof WeeklyFormResponse; label: string; emoji: string }[] = [
+const RESPONSE_KEYS: { key: keyof WeeklyFormResponse; label: string; emoji: string }[] = [
   { key: 'q_doubts',      label: 'Dúvidas dos clientes',          emoji: '❓' },
   { key: 'q_objections',  label: 'Objeções encontradas',          emoji: '🛑' },
   { key: 'q_highlights',  label: 'Temas que merecem destaque',    emoji: '🌟' },
@@ -126,7 +130,6 @@ function ResponseViewModal({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Identificação */}
         <div className="flex items-center gap-4 p-3 rounded-xl bg-violet-50 border border-violet-100 mb-2">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-[14px]">
             {response.respondent_name?.[0]?.toUpperCase() || '?'}
@@ -141,9 +144,8 @@ function ResponseViewModal({
           </div>
         </div>
 
-        {/* Respostas */}
         <div className="space-y-3">
-          {QUESTIONS.map(({ key, label, emoji }) => {
+          {RESPONSE_KEYS.map(({ key, label, emoji }) => {
             const value = response[key] as string | null
             if (!value) return null
             return (
@@ -167,29 +169,23 @@ function FillFormModal({
   configId,
   clientId,
   userId,
+  questions,
   onClose,
   onSuccess,
 }: {
   configId: string
   clientId: string
   userId: string
+  questions: QuestionConfig[]
   onClose: () => void
   onSuccess: () => void
 }) {
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [fields, setFields] = useState({
-    respondentName: '',
-    respondentRole: '',
-    qDoubts: '',
-    qObjections: '',
-    qHighlights: '',
-    qDemands: '',
-    qCases: '',
-    qTrends: '',
-    qFaq: '',
-    qSuggestions: '',
-    qImportant: '',
+    respondentName: '', respondentRole: '',
+    qDoubts: '', qObjections: '', qHighlights: '', qDemands: '',
+    qCases: '', qTrends: '', qFaq: '', qSuggestions: '', qImportant: '',
   })
 
   const handleSubmit = async () => {
@@ -200,21 +196,15 @@ function FillFormModal({
     setSaving(true)
     try {
       await submitWeeklyFormResponse({
-        configId,
-        clientId,
+        configId, clientId,
         respondentName: fields.respondentName,
         respondentRole: fields.respondentRole,
-        qDoubts:       fields.qDoubts,
-        qObjections:   fields.qObjections,
-        qHighlights:   fields.qHighlights,
-        qDemands:      fields.qDemands,
-        qCases:        fields.qCases,
-        qTrends:       fields.qTrends,
-        qFaq:          fields.qFaq,
-        qSuggestions:  fields.qSuggestions,
-        qImportant:    fields.qImportant,
-        isInternal:    true,
-        userId,
+        qDoubts: fields.qDoubts,       qObjections: fields.qObjections,
+        qHighlights: fields.qHighlights, qDemands: fields.qDemands,
+        qCases: fields.qCases,         qTrends: fields.qTrends,
+        qFaq: fields.qFaq,             qSuggestions: fields.qSuggestions,
+        qImportant: fields.qImportant,
+        isInternal: true, userId,
       })
       toast('Formulário enviado!', 'success')
       onSuccess()
@@ -235,7 +225,7 @@ function FillFormModal({
             Preencher Formulário Semanal
           </DialogTitle>
         </DialogHeader>
-        <WeeklyFormFields fields={fields} onChange={setFields} />
+        <WeeklyFormFields fields={fields} onChange={setFields} questions={questions} />
         <div className="flex gap-2 pt-2">
           <Button
             onClick={handleSubmit}
@@ -251,6 +241,113 @@ function FillFormModal({
   )
 }
 
+// ── Editor de pergunta individual ─────────────────────────────────────────────
+
+function QuestionEditor({
+  q,
+  index,
+  total,
+  onChange,
+}: {
+  q: QuestionConfig
+  index: number
+  total: number
+  onChange: (updated: QuestionConfig) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className={`rounded-xl border transition-colors ${q.enabled ? 'border-[#e2e8f0] bg-white' : 'border-dashed border-[#e2e8f0] bg-[#f8fafc] opacity-60'}`}>
+      {/* Header da pergunta */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <span className="text-[15px]">{q.emoji}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-semibold text-[#0f172a] truncate">{q.title}</p>
+          <p className="text-[10px] text-[#94a3b8] truncate">{q.question}</p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Toggle ativo/inativo */}
+          <button
+            onClick={() => onChange({ ...q, enabled: !q.enabled })}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+              q.enabled
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-[#f1f5f9] text-[#94a3b8] hover:bg-[#e2e8f0]'
+            }`}
+          >
+            {q.enabled ? <ToggleRight className="w-3 h-3" /> : <ToggleLeft className="w-3 h-3" />}
+            {q.enabled ? 'Ativa' : 'Oculta'}
+          </button>
+          {/* Expandir para editar */}
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="p-1.5 rounded-lg hover:bg-[#f1f5f9] transition-colors text-[#94a3b8] hover:text-[#374151]"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Campos de edição */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 space-y-2.5 border-t border-[#f1f5f9] pt-2.5">
+              {/* Emoji + Título */}
+              <div className="flex gap-2">
+                <div className="w-16">
+                  <label className="text-[10px] font-medium text-[#94a3b8] block mb-1">Emoji</label>
+                  <Input
+                    value={q.emoji}
+                    onChange={e => onChange({ ...q, emoji: e.target.value })}
+                    className="h-8 text-[13px] text-center"
+                    maxLength={2}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] font-medium text-[#94a3b8] block mb-1">Título da seção</label>
+                  <Input
+                    value={q.title}
+                    onChange={e => onChange({ ...q, title: e.target.value })}
+                    className="h-8 text-[12px]"
+                    placeholder="Ex: Dúvidas dos clientes"
+                  />
+                </div>
+              </div>
+              {/* Pergunta */}
+              <div>
+                <label className="text-[10px] font-medium text-[#94a3b8] block mb-1">Texto da pergunta</label>
+                <Textarea
+                  value={q.question}
+                  onChange={e => onChange({ ...q, question: e.target.value })}
+                  rows={2}
+                  className="text-[12px] resize-none"
+                  placeholder="Qual pergunta será exibida para o colaborador?"
+                />
+              </div>
+              {/* Placeholder */}
+              <div>
+                <label className="text-[10px] font-medium text-[#94a3b8] block mb-1">Placeholder (dica dentro do campo)</label>
+                <Input
+                  value={q.placeholder}
+                  onChange={e => onChange({ ...q, placeholder: e.target.value })}
+                  className="h-8 text-[12px]"
+                  placeholder="Texto de exemplo que aparece no campo vazio..."
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ── Componente principal ───────────────────────────────────────────────────────
 
 export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
@@ -260,33 +357,42 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
   const { data: responses = [], isLoading: responsesLoading, refetch } = useWeeklyFormResponses(clientId)
   const upsertConfig = useUpsertWeeklyFormConfig()
 
-  const [dayOfWeek, setDayOfWeek] = useState<number>(1)
-  const [isActive, setIsActive]   = useState(true)
-  const [copied, setCopied]       = useState(false)
+  const [dayOfWeek, setDayOfWeek]           = useState<number>(1)
+  const [isActive, setIsActive]             = useState(true)
+  const [copied, setCopied]                 = useState(false)
   const [viewingResponse, setViewingResponse] = useState<WeeklyFormResponse | null>(null)
-  const [showFillModal, setShowFillModal]     = useState(false)
-  const [configOpen, setConfigOpen]           = useState(false)
+  const [showFillModal, setShowFillModal]   = useState(false)
+  const [configOpen, setConfigOpen]         = useState(false)
+  // Editor de perguntas — inicializado quando abre o painel
+  const [editingQuestions, setEditingQuestions] = useState<QuestionConfig[] | null>(null)
 
-  // Sincroniza estado com config carregada
-  const currentDay    = config?.day_of_week    ?? dayOfWeek
-  const currentActive = config?.is_active      ?? isActive
-  const publicToken   = config?.public_token   ?? null
-  const publicLink    = publicToken
+  // Perguntas resolvidas do config atual
+  const resolvedQuestions = resolveQuestions(config)
+
+  const publicToken = config?.public_token ?? null
+  const publicLink  = publicToken
     ? `${window.location.origin}/formulario/${publicToken}`
     : null
 
-  // Status da semana
-  const thisMonday   = getThisMonday()
-  const thisWeekOk   = responses.some(r => r.week_reference === thisMonday)
+  const thisMonday    = getThisMonday()
+  const thisWeekOk    = responses.some(r => r.week_reference === thisMonday)
   const thisWeekCount = responses.filter(r => r.week_reference === thisMonday).length
+
+  // Abre o painel e carrega as perguntas atuais para edição
+  const handleOpenConfig = () => {
+    setEditingQuestions(resolveQuestions(config))
+    setDayOfWeek(config?.day_of_week ?? 1)
+    setConfigOpen(v => !v)
+  }
 
   const handleSaveConfig = async () => {
     try {
       await upsertConfig.mutateAsync({
         clientId,
-        dayOfWeek:  configOpen ? dayOfWeek : currentDay,
-        isActive,
-        existingId: config?.id,
+        dayOfWeek:       config ? (dayOfWeek ?? config.day_of_week) : dayOfWeek,
+        isActive:        config ? config.is_active : true,
+        existingId:      config?.id,
+        customQuestions: editingQuestions,
       })
       toast('Configuração salva!', 'success')
       setConfigOpen(false)
@@ -318,6 +424,17 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
     toast('Link copiado!', 'success')
   }
 
+  const handleQuestionChange = (idx: number, updated: QuestionConfig) => {
+    setEditingQuestions(prev => {
+      if (!prev) return prev
+      const next = [...prev]
+      next[idx] = updated
+      return next
+    })
+  }
+
+  const enabledCount = (editingQuestions ?? resolvedQuestions).filter(q => q.enabled).length
+
   if (configLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -345,6 +462,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
             size="sm"
             onClick={() => {
               if (!config) {
+                setEditingQuestions(DEFAULT_QUESTIONS)
                 setConfigOpen(true)
               } else {
                 setShowFillModal(true)
@@ -369,7 +487,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
             <p className="text-[12px] text-[#94a3b8] mt-0.5">Configure o formulário para gerar o link de preenchimento</p>
           </div>
           <Button
-            onClick={() => setConfigOpen(true)}
+            onClick={() => { setEditingQuestions(DEFAULT_QUESTIONS); setConfigOpen(true) }}
             className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-[12px]"
           >
             Configurar formulário
@@ -380,25 +498,16 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
       {/* ── Config existente ── */}
       {config && (
         <>
-          {/* Status card */}
+          {/* Status cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Status da semana */}
             <div className={`p-4 rounded-2xl border ${thisWeekOk ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
               <div className="flex items-center gap-2 mb-1">
                 <AlertCircle className={`w-4 h-4 ${thisWeekOk ? 'text-green-600' : 'text-amber-500'}`} />
-                <span className={`text-[11px] font-semibold ${thisWeekOk ? 'text-green-700' : 'text-amber-700'}`}>
-                  Esta semana
-                </span>
+                <span className={`text-[11px] font-semibold ${thisWeekOk ? 'text-green-700' : 'text-amber-700'}`}>Esta semana</span>
               </div>
-              <p className={`text-[22px] font-bold ${thisWeekOk ? 'text-green-700' : 'text-amber-600'}`}>
-                {thisWeekCount}
-              </p>
-              <p className="text-[11px] text-[#64748b]">
-                {thisWeekOk ? 'resposta(s) recebida(s)' : 'nenhuma resposta ainda'}
-              </p>
+              <p className={`text-[22px] font-bold ${thisWeekOk ? 'text-green-700' : 'text-amber-600'}`}>{thisWeekCount}</p>
+              <p className="text-[11px] text-[#64748b]">{thisWeekOk ? 'resposta(s) recebida(s)' : 'nenhuma resposta ainda'}</p>
             </div>
-
-            {/* Total */}
             <div className="p-4 rounded-2xl border border-[#e2e8f0] bg-white">
               <div className="flex items-center gap-2 mb-1">
                 <ClipboardList className="w-4 h-4 text-violet-500" />
@@ -407,16 +516,12 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
               <p className="text-[22px] font-bold text-[#0f172a]">{responses.length}</p>
               <p className="text-[11px] text-[#94a3b8]">desde o início</p>
             </div>
-
-            {/* Dia */}
             <div className="p-4 rounded-2xl border border-[#e2e8f0] bg-white">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="w-4 h-4 text-blue-500" />
                 <span className="text-[11px] font-semibold text-[#64748b]">Frequência</span>
               </div>
-              <p className="text-[14px] font-bold text-[#0f172a]">
-                Toda {DAY_LABELS[config.day_of_week]}
-              </p>
+              <p className="text-[14px] font-bold text-[#0f172a]">Toda {DAY_LABELS[config.day_of_week]}</p>
               <p className={`text-[11px] mt-0.5 font-medium ${config.is_active ? 'text-green-600' : 'text-red-500'}`}>
                 {config.is_active ? '● Ativo' : '○ Inativo'}
               </p>
@@ -445,7 +550,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                   }
                 </button>
                 <button
-                  onClick={() => setConfigOpen(v => !v)}
+                  onClick={handleOpenConfig}
                   className="text-[11px] text-violet-600 hover:text-violet-700 font-medium flex items-center gap-0.5"
                 >
                   Editar
@@ -474,7 +579,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
             </p>
           </div>
 
-          {/* Painel de configuração expandível */}
+          {/* ── Painel de configuração expandível ── */}
           <AnimatePresence>
             {configOpen && (
               <motion.div
@@ -483,15 +588,17 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="p-4 rounded-2xl border border-violet-200 bg-violet-50 space-y-3">
-                  <p className="text-[12px] font-semibold text-violet-700">Configurações do formulário</p>
-                  <div className="flex items-center gap-3">
-                    <label className="text-[12px] text-[#64748b] w-36">Dia de preenchimento</label>
+                <div className="p-4 rounded-2xl border border-violet-200 bg-violet-50 space-y-5">
+                  <p className="text-[13px] font-bold text-violet-800">Editar formulário</p>
+
+                  {/* Dia de preenchimento */}
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">Dia preferido de preenchimento</p>
                     <Select
                       value={String(dayOfWeek ?? config.day_of_week)}
                       onValueChange={v => setDayOfWeek(Number(v))}
                     >
-                      <SelectTrigger className="w-40 h-8 text-[12px]">
+                      <SelectTrigger className="w-44 h-8 text-[12px] bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -503,7 +610,37 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex gap-2">
+
+                  {/* Editor de perguntas */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">
+                        Perguntas do formulário
+                      </p>
+                      <span className="text-[10px] text-[#94a3b8]">
+                        {enabledCount} ativa{enabledCount !== 1 ? 's' : ''} de {(editingQuestions ?? resolvedQuestions).length}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {(editingQuestions ?? DEFAULT_QUESTIONS).map((q, idx) => (
+                        <QuestionEditor
+                          key={q.key}
+                          q={q}
+                          index={idx}
+                          total={(editingQuestions ?? DEFAULT_QUESTIONS).length}
+                          onChange={updated => handleQuestionChange(idx, updated)}
+                        />
+                      ))}
+                    </div>
+
+                    <p className="text-[10px] text-[#94a3b8]">
+                      💡 Clique no ícone de lápis para editar o texto de cada pergunta. Use o toggle para mostrar ou ocultar perguntas no formulário.
+                    </p>
+                  </div>
+
+                  {/* Botões */}
+                  <div className="flex gap-2 pt-1">
                     <Button
                       size="sm"
                       onClick={handleSaveConfig}
@@ -560,14 +697,16 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
 
       {/* ── Modal configuração inicial ── */}
       <Dialog open={configOpen && !config} onOpenChange={v => !v && setConfigOpen(false)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-violet-600" />
               Configurar formulário
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-5 py-2">
+
+            {/* Dia */}
             <div>
               <label className="text-[12px] font-medium text-[#64748b] block mb-1.5">
                 Dia preferido de preenchimento
@@ -591,11 +730,36 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                 Apenas informativo — o link estará sempre disponível.
               </p>
             </div>
+
+            {/* Perguntas */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] font-medium text-[#64748b]">Perguntas do formulário</label>
+                <span className="text-[10px] text-[#94a3b8]">
+                  {(editingQuestions ?? DEFAULT_QUESTIONS).filter(q => q.enabled).length} ativas
+                </span>
+              </div>
+              {(editingQuestions ?? DEFAULT_QUESTIONS).map((q, idx) => (
+                <QuestionEditor
+                  key={q.key}
+                  q={q}
+                  index={idx}
+                  total={(editingQuestions ?? DEFAULT_QUESTIONS).length}
+                  onChange={updated => handleQuestionChange(idx, updated)}
+                />
+              ))}
+            </div>
+
             <div className="flex gap-2">
               <Button
                 onClick={async () => {
                   try {
-                    await upsertConfig.mutateAsync({ clientId, dayOfWeek, isActive: true })
+                    await upsertConfig.mutateAsync({
+                      clientId,
+                      dayOfWeek,
+                      isActive: true,
+                      customQuestions: editingQuestions,
+                    })
                     toast('Formulário criado!', 'success')
                     setConfigOpen(false)
                   } catch (e: any) {
@@ -627,6 +791,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
           configId={config.id}
           clientId={clientId}
           userId={user.id}
+          questions={resolvedQuestions}
           onClose={() => setShowFillModal(false)}
           onSuccess={() => refetch()}
         />

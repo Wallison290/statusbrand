@@ -2,6 +2,78 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from './useAuth'
 
+// ── Question config ───────────────────────────────────────────────────────────
+
+export type QuestionSlot =
+  | 'qDoubts' | 'qObjections' | 'qHighlights' | 'qDemands'
+  | 'qCases'  | 'qTrends'     | 'qFaq'        | 'qSuggestions' | 'qImportant'
+
+export interface QuestionConfig {
+  key: QuestionSlot
+  enabled: boolean
+  emoji: string
+  title: string
+  question: string
+  placeholder: string
+}
+
+export const DEFAULT_QUESTIONS: QuestionConfig[] = [
+  {
+    key: 'qDoubts', enabled: true, emoji: '❓',
+    title: 'Principais dúvidas recebidas na semana',
+    question: 'Quais dúvidas os clientes mais fizeram nesta semana?',
+    placeholder: 'Descreva as dúvidas mais frequentes que você recebeu...',
+  },
+  {
+    key: 'qObjections', enabled: true, emoji: '🛑',
+    title: 'Objeções encontradas',
+    question: 'Houve alguma objeção recorrente durante atendimentos ou vendas?',
+    placeholder: 'Ex: preço, prazo, confiança, comparação com concorrentes...',
+  },
+  {
+    key: 'qHighlights', enabled: true, emoji: '🌟',
+    title: 'Temas que merecem destaque',
+    question: 'Existe algum serviço, produto ou solução que precisa receber mais visibilidade?',
+    placeholder: 'Descreva o que precisa ser mais divulgado ou destacado...',
+  },
+  {
+    key: 'qDemands', enabled: true, emoji: '📋',
+    title: 'Demandas do setor',
+    question: 'Seu setor identificou alguma necessidade de comunicação ou conteúdo?',
+    placeholder: 'Ex: explicar um processo, divulgar um serviço, corrigir informações...',
+  },
+  {
+    key: 'qCases', enabled: true, emoji: '💼',
+    title: 'Casos e experiências da semana',
+    question: 'Houve algum caso interessante, resultado ou situação que possa virar conteúdo?',
+    placeholder: 'Conte um caso de atendimento, resultado alcançado ou situação relevante...',
+  },
+  {
+    key: 'qTrends', enabled: true, emoji: '📈',
+    title: 'Tendências percebidas',
+    question: 'Você percebeu alguma tendência ou assunto muito comentado pelos clientes?',
+    placeholder: 'Descreva comportamentos, temas em alta ou padrões que você percebeu...',
+  },
+  {
+    key: 'qFaq', enabled: false, emoji: '🔁',
+    title: 'Perguntas Frequentes (FAQ)',
+    question: 'Quais perguntas foram feitas repetidamente nesta semana?',
+    placeholder: 'Liste as perguntas que você mais ouviu dos clientes...',
+  },
+  {
+    key: 'qSuggestions', enabled: false, emoji: '💡',
+    title: 'Sugestões de conteúdo',
+    question: 'Existe algum conteúdo que você acredita que deveríamos produzir?',
+    placeholder: 'Sugira temas, formatos, ideias de posts, vídeos ou outros conteúdos...',
+  },
+  {
+    key: 'qImportant', enabled: false, emoji: '🔒',
+    title: 'Informações importantes',
+    question: 'Existe alguma informação estratégica que a equipe de marketing precisa saber?',
+    placeholder: 'Compartilhe qualquer informação relevante que impacte a comunicação...',
+  },
+]
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface WeeklyFormConfig {
@@ -11,6 +83,7 @@ export interface WeeklyFormConfig {
   day_of_week: number          // 0=Dom 1=Seg … 6=Sáb
   is_active: boolean
   public_token: string
+  custom_questions: QuestionConfig[] | null
   created_at: string
   updated_at: string
 }
@@ -63,15 +136,20 @@ export function useUpsertWeeklyFormConfig() {
       dayOfWeek: number
       isActive: boolean
       existingId?: string
+      customQuestions?: QuestionConfig[] | null
     }) => {
       if (payload.existingId) {
+        const updateData: Record<string, unknown> = {
+          day_of_week: payload.dayOfWeek,
+          is_active: payload.isActive,
+          updated_at: new Date().toISOString(),
+        }
+        if (payload.customQuestions !== undefined) {
+          updateData.custom_questions = payload.customQuestions
+        }
         const { data, error } = await (supabase as any)
           .from('weekly_form_configs')
-          .update({
-            day_of_week: payload.dayOfWeek,
-            is_active: payload.isActive,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('id', payload.existingId)
           .select()
           .single()
@@ -85,6 +163,7 @@ export function useUpsertWeeklyFormConfig() {
             user_id: user!.id,
             day_of_week: payload.dayOfWeek,
             is_active: payload.isActive,
+            custom_questions: payload.customQuestions ?? null,
           })
           .select()
           .single()
@@ -188,6 +267,15 @@ function getMonday(d: Date): string {
   const diff = date.getDate() - day + (day === 0 ? -6 : 1)
   date.setDate(diff)
   return date.toISOString().slice(0, 10)
+}
+
+/** Retorna as perguntas efetivas do formulário:
+ *  usa custom_questions se configurado, senão usa os defaults. */
+export function resolveQuestions(config: WeeklyFormConfig | null | undefined): QuestionConfig[] {
+  if (config?.custom_questions && config.custom_questions.length > 0) {
+    return config.custom_questions
+  }
+  return DEFAULT_QUESTIONS
 }
 
 export const DAY_LABELS = [
