@@ -64,6 +64,8 @@ function GuestGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth()
   if (loading) return null
   if (user) {
+    // Cliente que ainda não criou senha vai para setup, não para o portal
+    if (user.user_metadata?.needs_password_setup === true) return <Navigate to="/client-setup" replace />
     if (profile?.role === 'client') return <Navigate to="/portal" replace />
     return <Navigate to="/" replace />
   }
