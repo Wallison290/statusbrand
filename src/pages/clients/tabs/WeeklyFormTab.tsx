@@ -598,7 +598,7 @@ export function WeeklyFormTab({ clientId, clientName }: WeeklyFormTabProps) {
                       value={String(dayOfWeek ?? config.day_of_week)}
                       onValueChange={v => setDayOfWeek(Number(v))}
                     >
-                      <SelectTrigger className="w-44 h-8 text-[12px] bg-white">
+                      <SelectTrigger className="w-44 h-8 text-[12px] bg-white text-[#0f0f0f]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
