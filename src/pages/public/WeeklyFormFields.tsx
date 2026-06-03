@@ -73,30 +73,6 @@ const SECTIONS = [
     question: 'Você percebeu alguma tendência ou assunto muito comentado pelos clientes?',
     placeholder: 'Descreva comportamentos, temas em alta ou padrões que você percebeu...',
   },
-  {
-    key: 'qFaq' as keyof FormFields,
-    number: 8,
-    emoji: '🔁',
-    title: 'Perguntas Frequentes (FAQ)',
-    question: 'Quais perguntas foram feitas repetidamente nesta semana?',
-    placeholder: 'Liste as perguntas que você mais ouviu dos clientes...',
-  },
-  {
-    key: 'qSuggestions' as keyof FormFields,
-    number: 9,
-    emoji: '💡',
-    title: 'Sugestões de conteúdo',
-    question: 'Existe algum conteúdo que você acredita que deveríamos produzir?',
-    placeholder: 'Sugira temas, formatos, ideias de posts, vídeos ou outros conteúdos...',
-  },
-  {
-    key: 'qImportant' as keyof FormFields,
-    number: 10,
-    emoji: '🔒',
-    title: 'Informações importantes',
-    question: 'Existe alguma informação estratégica que a equipe de marketing precisa saber?',
-    placeholder: 'Compartilhe qualquer informação relevante que impacte a comunicação...',
-  },
 ]
 
 export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
@@ -138,7 +114,7 @@ export function WeeklyFormFields({ fields, onChange, disabled }: Props) {
         </div>
       </div>
 
-      {/* Seções 2–10 */}
+      {/* Seções 2–7 */}
       {SECTIONS.map(({ key, number, emoji, title, question, placeholder }) => (
         <div key={key} className="p-4 rounded-2xl border border-[#e2e8f0] space-y-2">
           <p className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">

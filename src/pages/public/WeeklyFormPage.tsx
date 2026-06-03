@@ -129,7 +129,7 @@ function WeeklyFormInner() {
   if (pageState === 'loading') {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center animate-pulse">
+        <div className="w-12 h-12 rounded-2xl bg-[#0f0f0f] flex items-center justify-center animate-pulse">
           <ClipboardList className="w-6 h-6 text-white" />
         </div>
         <p className="text-[13px] text-[#94a3b8]">Carregando formulário...</p>
@@ -179,7 +179,7 @@ function WeeklyFormInner() {
             registradas com sucesso. A equipe de marketing já pode visualizá-las.
           </p>
           <Button
-            className="mt-6 w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white"
+            className="mt-6 w-full bg-[#0f0f0f] text-white hover:bg-[#1a1a1a]"
             onClick={() => {
               setFields(EMPTY_FIELDS)
               setPageState('form')
@@ -226,7 +226,7 @@ function WeeklyFormInner() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0f0f0f] mb-4">
             <ClipboardList className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-[20px] font-bold text-[#0f172a]">
@@ -252,7 +252,7 @@ function WeeklyFormInner() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold text-[15px] disabled:opacity-60 transition-opacity active:scale-95"
+              className="w-full h-12 rounded-xl bg-[#0f0f0f] text-white font-semibold text-[15px] disabled:opacity-60 transition-opacity active:scale-95"
             >
               {saving ? 'Enviando...' : 'Enviar formulário ✓'}
             </button>
