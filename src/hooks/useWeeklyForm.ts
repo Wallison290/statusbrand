@@ -219,7 +219,9 @@ export interface SubmitFormPayload {
 export async function submitWeeklyFormResponse(payload: SubmitFormPayload) {
   const monday = getMonday(new Date())
 
-  const { data, error } = await (supabase as any)
+  // Não usamos .select() após o insert para evitar exigir permissão de SELECT
+  // no formulário público (usuários anônimos só têm permissão de INSERT)
+  const { error } = await (supabase as any)
     .from('weekly_form_responses')
     .insert({
       config_id:       payload.configId,
@@ -239,11 +241,11 @@ export async function submitWeeklyFormResponse(payload: SubmitFormPayload) {
       is_internal:     payload.isInternal,
       user_id:         payload.userId        || null,
     })
-    .select()
-    .single()
 
-  if (error) throw error
-  return data as WeeklyFormResponse
+  if (error) {
+    const msg = (error as { message?: string }).message || JSON.stringify(error)
+    throw new Error(msg)
+  }
 }
 
 // ── Config by public token (sem auth) ────────────────────────────────────────
