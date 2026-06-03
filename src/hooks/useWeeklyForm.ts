@@ -172,12 +172,12 @@ export async function submitWeeklyFormResponse(payload: SubmitFormPayload) {
 export async function fetchConfigByToken(token: string) {
   const { data, error } = await (supabase as any)
     .from('weekly_form_configs')
-    .select('*, clients(name)')
+    .select('*, clients(company_name)')
     .eq('public_token', token)
     .eq('is_active', true)
     .maybeSingle()
   if (error) throw error
-  return data as (WeeklyFormConfig & { clients: { name: string } }) | null
+  return data as (WeeklyFormConfig & { clients: { company_name: string } }) | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ import { fetchConfigByToken, submitWeeklyFormResponse } from '@/hooks/useWeeklyF
 type ConfigWithClient = {
   id: string
   client_id: string
-  clients: { name: string }
+  clients: { company_name: string }
 }
 
 type PageState = 'loading' | 'not_found' | 'form' | 'success' | 'error'
@@ -18,6 +18,7 @@ export function WeeklyFormPage() {
   const { token } = useParams<{ token: string }>()
   const [pageState, setPageState] = useState<PageState>('loading')
   const [config, setConfig]       = useState<ConfigWithClient | null>(null)
+  const [errorMsg, setErrorMsg]   = useState<string>('')
   const [saving, setSaving]       = useState(false)
   const [fields, setFields]       = useState<FormFields>({
     respondentName: '',
@@ -41,7 +42,11 @@ export function WeeklyFormPage() {
         setConfig(data as ConfigWithClient)
         setPageState('form')
       })
-      .catch(() => setPageState('not_found'))
+      .catch((e: any) => {
+        console.error('WeeklyForm fetchConfigByToken error:', e)
+        setErrorMsg(e?.message || String(e))
+        setPageState('not_found')
+      })
   }, [token])
 
   const handleSubmit = async () => {
@@ -95,6 +100,11 @@ export function WeeklyFormPage() {
           <p className="text-[13px] text-[#64748b]">
             Este formulário não existe ou foi desativado. Entre em contato com a agência.
           </p>
+          {errorMsg && (
+            <p className="mt-4 text-[11px] text-red-400 font-mono bg-red-50 rounded-lg px-3 py-2 text-left break-all">
+              Erro técnico: {errorMsg}
+            </p>
+          )}
         </div>
       </div>
     )
@@ -174,7 +184,7 @@ export function WeeklyFormPage() {
           </h1>
           {config && (
             <p className="text-[13px] text-[#64748b] mt-1">
-              {config.clients.name}
+              {config.clients.company_name}
             </p>
           )}
           <p className="text-[12px] text-[#94a3b8] mt-2 max-w-md mx-auto">
