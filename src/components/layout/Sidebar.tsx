@@ -144,7 +144,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       <NotificationsModal
         open={showNotifications}
         onClose={() => setShowNotifications(false)}
-        onView={(notification: { link?: string }) => {
+        onView={(notification: { link?: string | null }) => {
           setShowNotifications(false)
           if (notification.link) navigate(`/planner?item=${notification.link}`)
           else navigate('/planner')
