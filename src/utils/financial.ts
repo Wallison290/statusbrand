@@ -1,22 +1,29 @@
 import type { Client, FinancialStatus } from '@/types'
 
 // Returns true when client_payments contains a 'pago' record for the current
-// billing cycle (same month as dueThisMonth, or on/after it).
+// billing cycle.
+// A payment counts for the current cycle if:
+//   1. It was made ON or AFTER the due date (paid on time / late)
+//   2. It was made BEFORE the due date (early payment) AND the due date hasn't
+//      passed yet — once the due date passes, early payments from this month no
+//      longer cover the cycle and the client becomes overdue.
 export function hasPaidCurrentCycle(
   payments: Array<{ status: string; payment_date: string }>,
   diaVencimento: number | null | undefined,
 ): boolean {
   if (!diaVencimento || payments.length === 0) return false
   const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), diaVencimento)
+  const prevDue = new Date(today.getFullYear(), today.getMonth() - 1, diaVencimento)
   return payments.some(p => {
     if (p.status !== 'pago') return false
     const paid = new Date(p.payment_date + 'T00:00:00')
-    return (
-      paid >= dueThisMonth ||
-      (paid.getFullYear() === dueThisMonth.getFullYear() &&
-        paid.getMonth() === dueThisMonth.getMonth())
-    )
+    // Paid on/after this month's due date → always counts
+    if (paid >= dueThisMonth) return true
+    // Paid early (before due date) → only counts if due date hasn't passed yet
+    if (today < dueThisMonth && paid >= prevDue) return true
+    return false
   })
 }
 
@@ -35,16 +42,18 @@ export function calcFinancialStatus(client: Client): FinancialStatus {
   const dayDue = client.dia_vencimento
 
   const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), dayDue)
+  const prevDue = new Date(today.getFullYear(), today.getMonth() - 1, dayDue)
   const lastPaid = client.last_payment_date
     ? new Date(client.last_payment_date + 'T00:00:00')
     : null
 
-  // Paid for this cycle if payment date is on/after due date OR falls within the same
-  // calendar month as the due date (covers payments made before the due day)
+  // Paid for this cycle if:
+  //   1. Payment is on/after the due date (on time or late catch-up), OR
+  //   2. Payment is before the due date (early) AND today is still before the due date.
+  //      Once the due date passes, early payments no longer cover the cycle.
   const paidThisCycle = lastPaid != null && (
     lastPaid >= dueThisMonth ||
-    (lastPaid.getFullYear() === dueThisMonth.getFullYear() &&
-      lastPaid.getMonth() === dueThisMonth.getMonth())
+    (today < dueThisMonth && lastPaid >= prevDue)
   )
 
   if (paidThisCycle) {
