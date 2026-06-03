@@ -43,8 +43,9 @@ Deno.serve(async (req) => {
     .maybeSingle()
 
   if (!sub?.stripe_customer_id) {
-    return new Response(JSON.stringify({ error: 'Nenhuma assinatura ativa encontrada.' }), {
-      status: 400, headers: { ...CORS, 'Content-Type': 'application/json' },
+    // Sem customer live — sinaliza frontend para ir ao checkout
+    return new Response(JSON.stringify({ needsCheckout: true }), {
+      status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   }
 

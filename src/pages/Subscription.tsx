@@ -26,9 +26,12 @@ async function startCheckout(priceId: string): Promise<string | null> {
   return data?.url ?? null
 }
 
-async function openPortal(): Promise<string | null> {
+async function openPortal(fallbackPriceId?: string): Promise<string | null> {
   const { data, error } = await supabase.functions.invoke('create-portal', {})
   if (error || data?.error) { alert(data?.error ?? error?.message ?? 'Erro ao abrir portal.'); return null }
+  // Se não há customer live, vai para checkout com o priceId do plano atual ou do alvo
+  if (data?.needsCheckout && fallbackPriceId) return startCheckout(fallbackPriceId)
+  if (data?.needsCheckout) { alert('Realize uma nova assinatura para gerenciar seu plano.'); return null }
   return data?.url ?? null
 }
 
@@ -114,7 +117,7 @@ function PlanCard({
   currentPlanId: PlanId
   hasStripe: boolean
   onUpgrade: (priceId: string) => void
-  onPortal: () => void
+  onPortal: (fallbackPriceId?: string) => void
   loading: boolean
 }) {
   const plan      = PLANS[planId]
@@ -188,7 +191,7 @@ function PlanCard({
           <div className="w-full py-2.5 rounded-xl bg-[#f8fafc] text-center text-[13px] text-[#94a3b8]">Plano atual</div>
         )
       ) : isDowngrade ? (
-        <button onClick={onPortal} disabled={loading}
+        <button onClick={() => onPortal(plan.stripePriceId ?? undefined)} disabled={loading}
           className="w-full py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] font-medium text-[#94a3b8] hover:bg-[#f8fafc] transition-colors">
           Fazer downgrade
         </button>
