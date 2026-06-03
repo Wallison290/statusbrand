@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Moon, Sun, SunMedium, RefreshCw } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Moon, Sun, SunMedium, RefreshCw, Bell } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import type { HeroPill } from '@/hooks/useDashboardGreeting'
 import { DashboardHeroArt } from './DashboardHeroArt'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationsModal } from '@/components/NotificationsModal'
+import { UserMenu } from '@/components/layout/UserMenu'
 
 // ── Pill (dark glassmorphism) ─────────────────────────────────────────────────
 
@@ -96,6 +99,11 @@ export function DashboardHero({
   isLoading,
   onRefresh,
 }: DashboardHeroProps) {
+
+  const navigate = useNavigate()
+  const { data: notifications = [] } = useNotifications()
+  const [showNotifications, setShowNotifications] = useState(false)
+  const unreadCount = notifications.filter((n: { is_read: boolean }) => !n.is_read).length
 
   // ── Relógio em tempo real ────────────────────────────────────────────────────
   const [now, setNow] = useState(new Date())
@@ -247,25 +255,55 @@ export function DashboardHero({
         </div>
       </div>
 
-      {/* Refresh discreto */}
-      {onRefresh && !isLoading && (
-        <motion.button
-          whileHover={{ scale: 1.12, rotate: 20 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onRefresh}
-          title="Atualizar mensagem da IA"
-          className="
-            absolute top-4 right-4 w-7 h-7
-            flex items-center justify-center rounded-full
-            transition-all
-          "
-          style={{ color: 'rgba(167,139,250,0.5)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.5)')}
+      {/* ── Canto superior direito: Sino + Avatar + Refresh ── */}
+      <div className="absolute top-3 right-3 flex items-center gap-1">
+
+        {/* Sino de notificações */}
+        <button
+          onClick={() => setShowNotifications(true)}
+          title={unreadCount > 0 ? `${unreadCount} notificação${unreadCount === 1 ? '' : 'ões'} não lida${unreadCount === 1 ? '' : 's'}` : 'Notificações'}
+          className="relative flex items-center justify-center w-8 h-8 rounded-xl transition-colors"
+          style={{ color: 'rgba(167,139,250,0.6)', background: 'rgba(255,255,255,0.05)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)' }}
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-        </motion.button>
-      )}
+          <Bell className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] rounded-full bg-red-500 text-[8px] font-bold flex items-center justify-center px-0.5 leading-none text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Avatar */}
+        <UserMenu dark />
+
+        {/* Refresh discreto */}
+        {onRefresh && !isLoading && (
+          <motion.button
+            whileHover={{ scale: 1.12, rotate: 20 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onRefresh}
+            title="Atualizar mensagem da IA"
+            className="w-7 h-7 flex items-center justify-center rounded-full transition-all"
+            style={{ color: 'rgba(167,139,250,0.5)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.5)')}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </motion.button>
+        )}
+      </div>
+
+      <NotificationsModal
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onView={(notification) => {
+          setShowNotifications(false)
+          if (notification.link) navigate(`/planner?item=${notification.link}`)
+          else navigate('/planner')
+        }}
+      />
     </motion.div>
   )
 }
