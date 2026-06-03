@@ -62,7 +62,7 @@ export const PLANS: Record<PlanId, Plan> = {
     instagramProfiles: 5,
     supportLevel: 'priority',
     supportLabel: 'Prioritário (24h)',
-    stripePriceId: 'price_1Te09f0khDYycmTvmJSGheCI',
+    stripePriceId: 'price_1Te3yB0khDYycmTvPxQfIaPL',
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
     features: [

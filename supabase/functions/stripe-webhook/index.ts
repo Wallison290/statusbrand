@@ -15,7 +15,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
 // Preencha após criar os produtos no Stripe
 const PRICE_TO_PLAN: Record<string, string> = {
   'price_1Te09b0khDYycmTv1muADpGv': 'starter',
-  'price_1Te09f0khDYycmTvmJSGheCI': 'pro',
+  'price_1Te3yB0khDYycmTvPxQfIaPL': 'pro',
   'price_1Te09n0khDYycmTvrseP5spd': 'agency',
 }
 
