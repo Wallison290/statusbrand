@@ -43,7 +43,10 @@ export function ClientSetup() {
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.updateUser({ password })
+    const { error } = await supabase.auth.updateUser({
+      password,
+      data: { needs_password_setup: false },  // marca senha como criada
+    })
     setLoading(false)
 
     if (error) {
@@ -69,9 +72,10 @@ export function ClientSetup() {
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3">
-            <span className="text-white font-bold text-lg" style={{ fontFamily: "'Georgia', serif" }}>
-              Status<span className="text-gray-400">Brand</span>
+          <div className="flex items-center gap-2.5 bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3">
+            <img src="/logo-icon.png" alt="KairoHub" className="w-6 h-6 object-contain" />
+            <span className="text-white font-bold text-lg tracking-tight">
+              Kairo<span className="text-[#a78bfa]">Hub</span>
             </span>
           </div>
         </div>

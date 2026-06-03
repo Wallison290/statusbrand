@@ -268,7 +268,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
     setOpen(false)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `https://statusbrand-snowy.vercel.app/reset-password`,
+        redirectTo: `https://kairohub.app.br/reset-password`,
       })
       if (error) throw error
       toast('E-mail de redefinição enviado!', 'success')

@@ -53,8 +53,8 @@ interface FeedClientMeta {
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'statusbrand_feed_v1'
-const META_KEY    = 'statusbrand_feed_meta_v1'
+const STORAGE_KEY = 'kairohub_feed_v1'
+const META_KEY    = 'kairohub_feed_meta_v1'
 
 function loadAll(): Record<string, FeedVersion[]> {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }

@@ -110,6 +110,10 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
   if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
   if (profile && profile.role !== 'client') return <Navigate to="/" replace />
+  // Se o cliente ainda não criou senha (chegou via convite), vai para setup
+  if (user.user_metadata?.needs_password_setup === true) {
+    return <Navigate to="/client-setup" replace />
+  }
   return <>{children}</>
 }
 

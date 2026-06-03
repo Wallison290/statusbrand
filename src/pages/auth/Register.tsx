@@ -67,7 +67,7 @@ export function Register() {
             <Input
               label="Email"
               type="email"
-              placeholder="voce@statusbrand.com"
+              placeholder="voce@kairohub.com.br"
               value={email}
               onChange={e => setEmail(e.target.value)}
               icon={<Mail className="w-4 h-4" />}

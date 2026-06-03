@@ -61,12 +61,13 @@ Deno.serve(async (req) => {
     }
 
     const { data: inviteData, error } = await sb.auth.admin.inviteUserByEmail(email, {
-      redirectTo: redirectTo ?? 'https://statusbrand-snowy.vercel.app/client-setup',
+      redirectTo: redirectTo ?? 'https://kairohub.app.br/client-setup',
       data: {
         role: 'client',
         full_name: clientName ?? '',
         company_name: companyName ?? '',
         linked_client_id: clientId,
+        needs_password_setup: true,   // flag: cliente ainda não criou senha
       },
     })
 
