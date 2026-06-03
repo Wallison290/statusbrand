@@ -21,19 +21,19 @@ import {
 import { ptBR } from 'date-fns/locale'
 import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
 
-// ─── Approval helpers (única fonte de verdade) ───────────────────────────────
+// ─── Approval helpers ────────────────────────────────────────────────────────
 //
-// Regra EXATAMENTE alinhada com o filtro "Pendentes" do Planejamento:
-//   (i.approval_status || 'pendente_aprovacao') === 'pendente_aprovacao'
+// "Aguardando aprovação do cliente" = item foi enviado para o cliente revisar
+// e ainda não foi aprovado nem reprovado definitivamente.
 //
-// O Planejamento NÃO filtra por status de produção (ideia/producao/revisao/etc.).
-// Qualquer item cujo approval_status seja null, vazio ou 'pendente_aprovacao' é "pendente".
-// Também contamos 'ajuste_realizado': o ajuste foi feito e voltou para o cliente revisar.
+// Conta: 'pendente_aprovacao' (enviado, aguardando 1ª resposta)
+//        'ajuste_realizado'   (agência fez o ajuste, cliente precisa reaprovar)
 //
-// NÃO contam: 'aprovado', 'reprovado', 'ajuste_solicitado'
-function isAwaitingApproval(item: { approval_status: string | null }): boolean {
+// NÃO conta: null / itens nunca enviados ao cliente, 'aprovado', 'reprovado',
+//            'ajuste_solicitado' (cliente pediu ajuste, não é "aguardando")
+function isAwaitingClientApproval(item: { approval_status: string | null }): boolean {
   const as = item.approval_status
-  return as !== 'aprovado' && as !== 'reprovado' && as !== 'ajuste_solicitado'
+  return as === 'pendente_aprovacao' || as === 'ajuste_realizado'
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -43,16 +43,15 @@ type PeriodMode = 'dia' | 'semana' | 'mes' | 'ano' | 'custom'
 interface DateRange { start: Date; end: Date }
 
 interface Stats {
-  total_clients:           number
-  active_clients:          number
-  pending_tasks:           number
-  overdue_tasks:           number
-  period_pending_approval: number
-  period_approved:         number
-  period_scheduled:        number
-  period_published:        number
-  period_in_production:    number
-  period_adjustments:      number
+  total_clients:              number
+  active_clients:             number
+  pending_tasks:              number
+  overdue_tasks:              number
+  period_pending_approval:    number   // approval_status = pendente_aprovacao | ajuste_realizado
+  period_approved:            number   // approval_status = aprovado
+  period_scheduled:           number   // status = aprovado (aprovado pelo cliente = agendado para publicar)
+  period_published:           number   // status = publicado
+  period_adjustments:         number   // approval_status = ajuste_solicitado
 }
 
 interface PlannerDay {
@@ -610,7 +609,7 @@ export function Dashboard() {
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [statsReady, setStatsReady]             = useState(false)
-  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0, period_in_production: 0, period_adjustments: 0 })
+  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0, period_adjustments: 0 })
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
@@ -687,15 +686,25 @@ export function Dashboard() {
     // Atrasadas: métrica global (independe do período)
     const overdue = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
 
-    // ── Derivar TODOS os contadores de aprovação a partir de plannerRes ────────
-    // Usa isAwaitingApproval() — única fonte de verdade, alinhada com o Planner
+    // ── Derivar contadores do planner ────────────────────────────────────────
     const pList = plannerRes.data || []
-    const period_pending_approval = pList.filter(isAwaitingApproval).length
-    const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
-    const period_scheduled     = pList.filter((p: any) => p.status === 'agendado').length
-    const period_published     = pList.filter((p: any) => p.status === 'publicado').length
-    const period_in_production = pList.filter((p: any) => p.status === 'producao' || p.status === 'revisao').length
-    const period_adjustments   = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado' || p.approval_status === 'reprovado').length
+
+    // Posts Agendados = status 'aprovado' (cliente aprovou → pronto para publicar)
+    // Nota: não existe status 'agendado' no sistema — 'aprovado' é o equivalente
+    const period_scheduled = pList.filter((p: any) => p.status === 'aprovado').length
+
+    // Posts Publicados = status 'publicado' (já foi ao ar)
+    const period_published = pList.filter((p: any) => p.status === 'publicado').length
+
+    // Aguardando aprovação do cliente = enviado para o cliente, sem resposta ainda
+    // (pendente_aprovacao = aguardando 1ª resposta | ajuste_realizado = ajuste feito, aguardando nova aprovação)
+    const period_pending_approval = pList.filter(isAwaitingClientApproval).length
+
+    // Aprovados no período
+    const period_approved = pList.filter((p: any) => p.approval_status === 'aprovado').length
+
+    // Ajustes solicitados = cliente pediu correções (apenas ajuste_solicitado)
+    const period_adjustments = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado').length
 
     setStatsReady(true)
     setStats({
@@ -707,7 +716,6 @@ export function Dashboard() {
       period_approved,
       period_scheduled,
       period_published,
-      period_in_production,
       period_adjustments,
     })
 
@@ -757,7 +765,7 @@ export function Dashboard() {
     setPlannerChartData([
       { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#8b5cf6' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
-      { label: 'Ag. aprovação', value: pList.filter(isAwaitingApproval).length,                 color: '#f97316' },
+      { label: 'Ag. aprovação', value: pList.filter(isAwaitingClientApproval).length,            color: '#f97316' },
       { label: 'Aprovado',      value: period_approved,                                          color: '#10b981' },
     ])
   }
@@ -803,7 +811,7 @@ export function Dashboard() {
           <KpiCard
             label="Posts Agendados"
             value={stats.period_scheduled}
-            subtitle="no período"
+            subtitle="aprovados no período"
             href="/planner"
             icon={CalendarDays}
             iconBg="bg-blue-50"
@@ -812,25 +820,25 @@ export function Dashboard() {
           <KpiCard
             label="Posts Publicados"
             value={stats.period_published}
-            subtitle="no período"
+            subtitle="publicados no período"
             href="/planner"
             icon={CheckCircle2}
             iconBg="bg-emerald-50"
             iconColor="text-emerald-700"
           />
           <KpiCard
-            label="Em Produção"
-            value={stats.period_in_production}
-            subtitle="criação e revisão"
+            label="Aguardando Aprovação do Cliente"
+            value={stats.period_pending_approval}
+            subtitle={stats.period_pending_approval > 0 ? 'aguardando retorno do cliente' : 'nenhum pendente'}
             href="/planner"
             icon={Clock}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-700"
+            iconBg="bg-amber-50"
+            iconColor="text-amber-600"
           />
           <KpiCard
             label="Ajustes Solicitados"
             value={stats.period_adjustments}
-            subtitle={stats.period_adjustments > 0 ? 'requer correção' : 'nenhum pendente'}
+            subtitle={stats.period_adjustments > 0 ? 'cliente pediu correções' : 'nenhum pendente'}
             href="/planner"
             icon={AlertTriangle}
             warning
