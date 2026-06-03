@@ -19,7 +19,6 @@ import {
   addMonths, subMonths, parseISO,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1928,31 +1927,10 @@ export function Planner() {
 
   return (
     <div className="min-h-full bg-[#f5f7fb]">
-      <Header
-        title="Planejamento"
-        subtitle="Calendário editorial"
-        action={
-          <Button
-            onClick={() => {
-              resetForm()
-              setForm(prev => ({
-                ...prev,
-                scheduled_date: format(new Date(), 'yyyy-MM-dd'),
-                client_id: selectedClientFilter ?? null,
-              }))
-              setOpen(true)
-            }}
-            size="sm"
-            className="!bg-[#0f0f0f] hover:!bg-[#1a1a1a] !text-white !border-0 !shadow-none"
-          >
-            <Plus className="w-4 h-4" /> Novo post
-          </Button>
-        }
-      />
-
       <div className="p-4 md:p-6">
-        {/* ── Toggle de visualização ───────────────────────────────────────────── */}
-        <div className="flex items-center gap-1.5 mb-4 p-1 bg-[#f0f0f0] rounded-xl w-fit">
+        {/* ── Toggle de visualização + Novo post ──────────────────────────────── */}
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex items-center gap-1.5 p-1 bg-[#f0f0f0] rounded-xl w-fit">
           <button
             onClick={() => setViewMode('mensal')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
@@ -1975,6 +1953,23 @@ export function Planner() {
             <LayoutGrid className="w-3.5 h-3.5" />
             Feed
           </button>
+        </div>
+
+          <Button
+            onClick={() => {
+              resetForm()
+              setForm(prev => ({
+                ...prev,
+                scheduled_date: format(new Date(), 'yyyy-MM-dd'),
+                client_id: selectedClientFilter ?? null,
+              }))
+              setOpen(true)
+            }}
+            size="sm"
+            className="!bg-[#0f0f0f] hover:!bg-[#1a1a1a] !text-white !border-0 !shadow-none"
+          >
+            <Plus className="w-4 h-4" /> Novo post
+          </Button>
         </div>
 
         {/* ── Filtros compactos ────────────────────────────────────────────────── */}

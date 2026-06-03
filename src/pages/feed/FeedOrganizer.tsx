@@ -10,7 +10,6 @@ import {
   Images, GripVertical, Instagram, Copy, Link2,
   Save, ArrowLeft, LayoutGrid,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
 import { useContentAssets } from '@/hooks/useContentAssets'
@@ -662,8 +661,6 @@ export function FeedOrganizer() {
   if (view === 'gallery') {
     return (
       <div className="min-h-full bg-[#f5f7fb]">
-        <Header title="Feed do Perfil" subtitle="Grid do Instagram" />
-
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
           {/* Top bar */}

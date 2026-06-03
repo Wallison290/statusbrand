@@ -7,7 +7,6 @@ import {
   Calendar, Flag, Building2, Send,
   Link as LinkIcon, Image, Film, FileText as FileIcon, Folder,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { useToast } from '@/components/ui/toast'
 import { useClients } from '@/hooks/useClients'
 import { supabase } from '@/integrations/supabase/client'
@@ -2116,34 +2115,10 @@ export function TeamPage() {
 
   return (
     <div className="min-h-full bg-[#f5f5f7]">
-      <Header
-        title="Equipe"
-        subtitle={`${activeMembersWithCount.length} membro${activeMembersWithCount.length !== 1 ? 's' : ''} · ${tasks.length} tarefa${tasks.length !== 1 ? 's' : ''} delegada${tasks.length !== 1 ? 's' : ''}`}
-        action={
-          <button
-            onClick={() => {
-              if (teamLimitReached) {
-                toast(`Limite do plano atingido (${maxTeamMembers} membro${maxTeamMembers === 1 ? '' : 's'}). Faça upgrade para adicionar mais.`, 'error')
-                return
-              }
-              setEditing(undefined); setShowModal(true)
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors ${
-              teamLimitReached
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#0f0f0f] text-white hover:bg-[#1a1a1a]'
-            }`}
-            title={teamLimitReached ? `Limite de ${maxTeamMembers} membro(s) do plano atingido` : undefined}
-          >
-            <UserPlus className="w-3.5 h-3.5" /> Novo membro
-            {teamLimitReached && <span className="text-[10px] ml-1 opacity-70">({activeMembers}/{maxTeamMembers})</span>}
-          </button>
-        }
-      />
-
       <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
 
-        {/* Tabs */}
+        {/* Tabs + Novo membro */}
+        <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1 bg-white p-1 rounded-xl w-fit border border-[#e8e8e8]">
           {([
             ['membros', Users,         'Membros'],
@@ -2160,6 +2135,26 @@ export function TeamPage() {
               <Icon className="w-3.5 h-3.5" /> {label}
             </button>
           ))}
+        </div>
+
+          <button
+            onClick={() => {
+              if (teamLimitReached) {
+                toast(`Limite do plano atingido (${maxTeamMembers} membro${maxTeamMembers === 1 ? '' : 's'}). Faça upgrade para adicionar mais.`, 'error')
+                return
+              }
+              setEditing(undefined); setShowModal(true)
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors flex-shrink-0 ${
+              teamLimitReached
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-[#0f0f0f] text-white hover:bg-[#1a1a1a]'
+            }`}
+            title={teamLimitReached ? `Limite de ${maxTeamMembers} membro(s) do plano atingido` : undefined}
+          >
+            <UserPlus className="w-3.5 h-3.5" /> Novo membro
+            {teamLimitReached && <span className="text-[10px] ml-1 opacity-70">({activeMembers}/{maxTeamMembers})</span>}
+          </button>
         </div>
 
         {/* ── Tab: Membros ── */}

@@ -5,7 +5,6 @@ import {
   Sparkles, Wand2, Copy, Download, RefreshCw, Lightbulb,
   ChevronDown, ChevronUp, Save, TrendingUp, Check
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -164,8 +163,6 @@ export function ContentGenerator() {
 
   return (
     <div>
-      <Header title="Gerador de Conteúdo" subtitle="Powered by OpenAI GPT-4o" />
-
       <div className="p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-6">
           {/* Form */}

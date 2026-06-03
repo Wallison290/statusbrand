@@ -443,7 +443,7 @@ export function AIPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-full overflow-hidden">
 
       {/* ── SIDEBAR ESCURA ── */}
       <div className={cn(

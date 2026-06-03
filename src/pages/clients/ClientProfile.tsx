@@ -6,7 +6,6 @@ import {
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
   Unlink, RefreshCw,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -869,44 +868,6 @@ export function ClientProfile() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <Header
-        title={client.company_name}
-        subtitle={client.niche}
-        action={
-          <div className="flex gap-2 items-center">
-            {/* Botão Voltar */}
-            <Link
-              to="/clients"
-              onMouseEnter={() => setBackHover(true)}
-              onMouseLeave={() => setBackHover(false)}
-              className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors"
-              style={{
-                backgroundColor: backHover ? 'rgba(255,255,255,0.15)' : 'transparent',
-                color: 'rgba(255,255,255,0.85)',
-              }}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-
-            {/* Botão Editar */}
-            <Link
-              to={`/clients/${id}/edit`}
-              onMouseEnter={() => setEditHover(true)}
-              onMouseLeave={() => setEditHover(false)}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-colors"
-              style={{
-                backgroundColor: editHover ? '#ffffff' : 'rgba(255,255,255,0.1)',
-                color: editHover ? '#0f0f0f' : '#ffffff',
-                border: editHover ? '1px solid transparent' : '1px solid rgba(255,255,255,0.4)',
-              }}
-            >
-              <Edit className="w-3.5 h-3.5" />
-              Editar
-            </Link>
-          </div>
-        }
-      />
-
       <div className="flex-1 p-4 md:p-6" style={{ background: '#f5f7fb' }}>
 
         {/* ── Profile header ───────────────────────────────────────────────── */}
@@ -928,8 +889,16 @@ export function ClientProfile() {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-[15px] font-semibold text-[#0f0f0f]">{client.company_name}</h2>
+              <h2 className="text-[15px] font-semibold text-[#0f0f0f] flex-1">{client.company_name}</h2>
               <Badge status={client.status} />
+              <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                <Link to="/clients" className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#e2e8f0] text-[#6b7280] hover:bg-[#f5f7fb] transition-colors">
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+                <Link to={`/clients/${id}/edit`} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#0f0f0f] hover:bg-[#f5f7fb] transition-colors">
+                  <Edit className="w-3.5 h-3.5" /> Editar
+                </Link>
+              </div>
             </div>
             <p className="text-[#6b7280] text-[12px] mt-0.5">{client.responsible_name} · {client.niche}</p>
             <div className="flex flex-wrap gap-3 mt-1.5">

@@ -7,7 +7,6 @@ import {
   Building2, Loader2, X, Pencil, Eye, Upload,
   ExternalLink, Tag,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1670,14 +1669,9 @@ export function Library() {
 
   return (
     <div className="min-h-full bg-[#f5f7fb]">
-      <Header
-        title="Biblioteca"
-        subtitle="Conteúdos e recursos da sua agência"
-        action={headerAction}
-      />
-
       <div className="p-4 md:p-6 space-y-5">
-        {/* Tab switcher */}
+        {/* Tab switcher + ação */}
+        <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1 bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-1 w-fit">
           {([
             ['conteudos', 'Conteúdos'],
@@ -1696,6 +1690,8 @@ export function Library() {
               {label}
             </button>
           ))}
+        </div>
+          {headerAction && <div className="flex-shrink-0">{headerAction}</div>}
         </div>
 
         {/* Tab content */}

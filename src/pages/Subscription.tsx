@@ -8,7 +8,6 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
 import { PLANS, type PlanId } from '@/config/plans'
-import { Header } from '@/components/layout/Header'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -248,7 +247,6 @@ export function Subscription() {
 
   return (
     <div>
-      <Header title="Assinatura" subtitle="Gerencie seu plano e uso da IA" />
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
 
       {success && (

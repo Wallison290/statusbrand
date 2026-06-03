@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Save, ArrowLeft, ImageIcon, X } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -136,23 +135,15 @@ export function ClientForm() {
 
   return (
     <div>
-      <Header
-        title={isEdit ? 'Editar Cliente' : 'Novo Cliente'}
-        subtitle={isEdit ? existingClient?.company_name : 'Preencha os dados do cliente'}
-        action={
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-colors"
-            style={{ color: '#ffffff', background: 'transparent' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-          >
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </button>
-        }
-      />
-
       <div className="p-4 md:p-6">
+        {/* Voltar */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#6b7280] hover:bg-[#f5f7fb] transition-colors mb-5"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
           {/* Basic info */}
           <Card>

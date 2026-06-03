@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { History, Search, Filter, Copy, Trash2, Edit3, ArrowLeft, Save, Check } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,7 +38,6 @@ export function ContentHistory() {
 
   return (
     <div>
-      <Header title="Histórico de Conteúdos" subtitle={`${contents?.length || 0} conteúdos salvos`} />
       <div className="p-4 md:p-6 space-y-4">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
@@ -175,19 +173,13 @@ export function ContentDetail() {
 
   return (
     <div>
-      <Header
-        title="Editar Conteúdo"
-        subtitle={content.term}
-        action={
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4" /></Button>
-            <Button onClick={handleSave} variant={saved ? 'success' : 'premium'} size="sm" disabled={updateContent.isPending}>
-              {saved ? <><Check className="w-4 h-4" /> Salvo</> : <><Save className="w-4 h-4" /> Salvar</>}
-            </Button>
-          </div>
-        }
-      />
       <div className="p-4 md:p-6 max-w-3xl">
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4" /></Button>
+          <Button onClick={handleSave} variant={saved ? 'success' : 'premium'} size="sm" disabled={updateContent.isPending}>
+            {saved ? <><Check className="w-4 h-4" /> Salvo</> : <><Save className="w-4 h-4" /> Salvar</>}
+          </Button>
+        </div>
         <div className="flex items-center gap-3 mb-6">
           <Badge status={content.status} />
           <span className="text-xs text-gray-500">{contentTypeLabels[content.content_type]}</span>

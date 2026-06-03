@@ -6,7 +6,6 @@ import {
   CheckCircle2, Clock, Ban, Search, ExternalLink, ChevronDown,
   CalendarDays, AlertTriangle, MessageCircle, History, X, Loader2,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -605,8 +604,6 @@ export function Financial() {
 
   return (
     <div className="min-h-full bg-[#f5f7fb]">
-      <Header title="Financeiro" subtitle="Visão consolidada da receita dos clientes" />
-
       <div className="p-4 md:p-6 space-y-6">
 
         {/* KPI Cards */}

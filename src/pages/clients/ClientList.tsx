@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Users, Instagram, Trash2, ChevronDown, Palette, Clock, CheckCircle, FileEdit, XCircle, Upload, ImageIcon } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/button'
 import { useClients, useDeleteClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/toast'
@@ -237,20 +236,6 @@ export function ClientList() {
   return (
     <div className="min-h-full flex flex-col">
 
-      {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <Header
-        title="Clientes"
-        subtitle={`${clients.length} cliente${clients.length === 1 ? '' : 's'} cadastrado${clients.length === 1 ? '' : 's'}`}
-        action={
-          <Link
-            to="/clients/new"
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-sm font-medium bg-white text-[#0f0f0f] border border-white/30 hover:bg-white/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Novo cliente
-          </Link>
-        }
-      />
-
       {/* ── Conteúdo ─────────────────────────────────────────────────────────── */}
       <div className="flex-1" style={{ background: '#f5f7fb' }}>
         <div className="px-4 sm:px-6 pt-6 pb-12 space-y-5">
@@ -258,6 +243,7 @@ export function ClientList() {
           {/* ── Toolbar ───────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px] max-w-md">
+
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
               <input
                 type="text"
@@ -292,6 +278,13 @@ export function ClientList() {
                 </>
               )}
             </div>
+
+            <Link
+              to="/clients/new"
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-[13px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1a1a1a] transition-colors flex-shrink-0"
+            >
+              <Plus className="w-4 h-4" /> Novo cliente
+            </Link>
           </div>
 
           {/* ── Filtros ───────────────────────────────────────────────────────── */}

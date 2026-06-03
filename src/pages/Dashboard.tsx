@@ -5,7 +5,6 @@ import {
   AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, BarChart3, DollarSign,
 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { DashboardHero } from '@/components/dashboard/DashboardHero'
 import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
 import { supabase } from '@/integrations/supabase/client'
@@ -778,12 +777,6 @@ export function Dashboard() {
 
   return (
     <div className="min-h-full bg-[#f5f5f7]">
-
-      {/* Header */}
-      <Header
-        title="Dashboard"
-        subtitle="Visão geral da operação"
-      />
 
       {/* ── Hero Banner inteligente ── */}
       <DashboardHero
