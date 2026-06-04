@@ -20,8 +20,8 @@ export function ClientSetup() {
   useEffect(() => {
     let settled = false
 
-    // Função que resolve quando a sessão chegar
-    const resolve = (session: import('@supabase/supabase-js').Session | null) => {
+    // Resolve positivo (sessão encontrada) ou negativo (sem sessão após timeout)
+    const resolveWith = (session: import('@supabase/supabase-js').Session | null) => {
       if (settled) return
       settled = true
       if (session?.user) {
@@ -32,18 +32,25 @@ export function ClientSetup() {
       }
     }
 
-    // 1. Ouve mudanças de auth (captura o hash processado de forma assíncrona)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      resolve(session)
+    // 1. Ouve mudanças de auth
+    //    IMPORTANTE: o Supabase v2 dispara INITIAL_SESSION imediatamente com null
+    //    enquanto o hash da URL ainda está sendo trocado por token (async).
+    //    Por isso ignoramos INITIAL_SESSION sem sessão — só navegamos para login
+    //    pelo fallback após o timeout, garantindo tempo para o token chegar.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' && !session) return  // aguarda o hash ser processado
+      resolveWith(session)
     })
 
-    // 2. Verifica sessão já existente (caso o hash já foi processado antes de montar)
+    // 2. Verifica sessão já existente (hash pode ter sido processado antes do mount)
+    //    Só resolve positivamente — o negativo fica para o fallback
     supabase.auth.getSession().then(({ data: { session } }) => {
-      resolve(session)
+      if (session) resolveWith(session)
     })
 
-    // 3. Fallback: se após 8s ainda não resolveu, vai para login
-    const fallback = setTimeout(() => resolve(null), 8000)
+    // 3. Fallback: se após 10s nenhuma sessão chegou, redireciona para login
+    //    (token expirado, link inválido, ou usuário sem convite)
+    const fallback = setTimeout(() => resolveWith(null), 10_000)
 
     return () => {
       subscription.unsubscribe()
