@@ -85,8 +85,9 @@ export function useDeleteClient() {
       const { data, error } = await supabase.functions.invoke('delete-client', {
         body: { clientId: id },
       })
-      if (error) throw error
+      // Extrai a mensagem real de erro (data.error tem prioridade sobre a mensagem genérica do SDK)
       if (data?.error) throw new Error(data.error)
+      if (error) throw new Error(error.message || 'Erro ao excluir cliente')
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['clients'] }),
   })
