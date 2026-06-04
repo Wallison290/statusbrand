@@ -110,7 +110,7 @@ export function ClientForm() {
                 clientId: created.id,
                 clientName: form.responsible_name,
                 companyName: form.company_name,
-                redirectTo: `${window.location.origin}/client-setup`,
+                redirectTo: `${window.location.origin}/auth/callback`,
               },
             })
             if (inviteError) throw inviteError

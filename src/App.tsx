@@ -13,6 +13,7 @@ import { ForgotPassword } from '@/pages/auth/ForgotPassword'
 import { ResetPassword } from '@/pages/auth/ResetPassword'
 import { ClientRegister } from '@/pages/auth/ClientRegister'
 import { ClientSetup } from '@/pages/auth/ClientSetup'
+import { AuthCallback } from '@/pages/auth/AuthCallback'
 import { Dashboard } from '@/pages/Dashboard'
 import { ClientList } from '@/pages/clients/ClientList'
 import { ClientForm } from '@/pages/clients/ClientForm'
@@ -128,6 +129,9 @@ function AppRoutes() {
       <Route path="/formulario/:token" element={<WeeklyFormPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms"   element={<TermsPage />} />
+
+      {/* Receptor de links do Supabase (convite, reset de senha, magic link) */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* Públicas */}
       <Route path="/login"           element={<GuestGuard><Login /></GuestGuard>} />

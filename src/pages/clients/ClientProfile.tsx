@@ -869,7 +869,7 @@ export function ClientProfile() {
           clientId: client.id,
           clientName: client.responsible_name,
           companyName: client.company_name,
-          redirectTo: `${window.location.origin}/client-setup`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           resend: true,
         },
       })
