@@ -227,8 +227,12 @@ export function ClientList() {
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation()
     if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return
-    await deleteClient.mutateAsync(id)
-    toast('Cliente excluído.', 'success')
+    try {
+      await deleteClient.mutateAsync(id)
+      toast('Cliente excluído.', 'success')
+    } catch (err: any) {
+      toast(err.message || 'Erro ao excluir cliente.', 'error')
+    }
   }
 
   const sortLabel = SORT_OPTIONS.find(o => o.value === sort)?.label || 'Nome (A-Z)'
