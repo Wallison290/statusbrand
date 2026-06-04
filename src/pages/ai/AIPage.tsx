@@ -673,7 +673,15 @@ export function AIPage() {
                     {AI_SQUADS.map(squad => (
                       <button
                         key={squad.id}
-                        onClick={() => { setActiveSquad(squad); setSquadPickerOpen(false) }}
+                        onClick={() => {
+                          setSquadPickerOpen(false)
+                          if (squad.id === 'diagnostico-perfil') {
+                            setActiveSquad(squad)
+                            setDiagnosticoOpen(true)
+                          } else {
+                            setActiveSquad(squad)
+                          }
+                        }}
                         className={cn('w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all', activeSquad?.id === squad.id ? 'ring-1' : 'hover:bg-[#f5f5f5]')}
                         style={activeSquad?.id === squad.id ? { backgroundColor: squad.color.bg } : {}}
                       >
@@ -742,74 +750,15 @@ export function AIPage() {
         {/* ── Área de mensagens ── */}
         <div className="flex-1 overflow-y-auto">
           {isEmpty ? (
-            /* Tela de boas-vindas */
-            <div className="flex flex-col items-center justify-start min-h-full px-6 pt-12 pb-4 overflow-y-auto">
+            /* Tela de boas-vindas — minimalista */
+            <div className="flex flex-col items-center justify-center min-h-full px-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mb-5 shadow-lg">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2 text-center">Como posso ajudar?</h1>
-              <p className="text-[13px] text-[#666] text-center max-w-md mb-8">
+              <p className="text-[13px] text-[#666] text-center max-w-md">
                 Especialista em Social Media e Marketing Digital. Ative um squad ou pergunte diretamente.
               </p>
-
-              {/* Sugestões em grade */}
-              <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-                {SUGGESTIONS.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setInput(s.text); if (s.web) setWebSearch(true); setTimeout(() => textareaRef.current?.focus(), 50) }}
-                    className="flex items-center gap-3 p-3.5 bg-white border border-[#e8e8e8] rounded-2xl text-left hover:border-[#6366f1]/40 hover:bg-[#f9f8ff] transition-all group shadow-sm"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-[#f5f3ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#ede9ff]">
-                      <s.icon className="w-4 h-4 text-[#6366f1]" />
-                    </div>
-                    <p className="text-[12px] text-[#374151] leading-snug">{s.text}</p>
-                  </button>
-                ))}
-              </div>
-
-              {/* Card destaque: Diagnóstico de Perfil */}
-              <div className="w-full max-w-2xl mb-2">
-                <button
-                  onClick={() => setDiagnosticoOpen(true)}
-                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-[#f0f0ff] to-[#faf5ff] border border-[#c4b5fd] rounded-2xl hover:shadow-md hover:border-[#a78bfa] transition-all group text-left"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center flex-shrink-0 shadow group-hover:scale-105 transition-transform">
-                    <span className="text-[22px]">🔍</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-bold text-[#3730a3]">Diagnóstico Completo de Perfil</p>
-                    <p className="text-[11.5px] text-[#6d28d9] mt-0.5">Sherlock · Vera · Nina · Max — benchmark, gargalo, oportunidades e plano de 30 dias</p>
-                  </div>
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#6366f1] flex items-center justify-center group-hover:bg-[#4f52cc] transition-colors">
-                    <ChevronDown className="w-3.5 h-3.5 text-white -rotate-90" />
-                  </div>
-                </button>
-              </div>
-
-              {/* Grid de squads */}
-              <div className="w-full max-w-2xl">
-                <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-3">Times especializados</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {AI_SQUADS.map(squad => (
-                    <button
-                      key={squad.id}
-                      onClick={() => setActiveSquad(s => s?.id === squad.id ? null : squad)}
-                      className={cn(
-                        'flex flex-col items-start gap-1.5 p-3 rounded-xl text-left border transition-all text-sm',
-                        activeSquad?.id === squad.id ? 'shadow ring-1' : 'bg-white border-[#e8e8e8] hover:border-[#c4b5fd] hover:shadow-sm',
-                      )}
-                      style={activeSquad?.id === squad.id ? { backgroundColor: squad.color.bg, borderColor: squad.color.border } : {}}
-                    >
-                      <span className="text-[16px]">{squad.emoji}</span>
-                      <div>
-                        <p className="text-[11px] font-semibold text-[#0f0f0f] leading-tight">{squad.name}</p>
-                        <p className="text-[10px] text-[#999] mt-0.5 line-clamp-2">{squad.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           ) : (
             /* Mensagens */
