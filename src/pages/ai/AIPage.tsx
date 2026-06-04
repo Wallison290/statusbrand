@@ -13,6 +13,7 @@ import { useCreatePlannerItem } from '@/hooks/usePlanner'
 import { useAuth } from '@/hooks/useAuth'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AI_SQUADS, type AISquad } from '@/data/aiSquads'
+import { DiagnosticoModal } from './DiagnosticoModal'
 import type { ContentType } from '@/types'
 import {
   useAISessions,
@@ -311,6 +312,9 @@ export function AIPage() {
   const [attachedImages, setAttachedImages]     = useState<string[]>([])
   const fileInputRef                            = useRef<HTMLInputElement>(null)
 
+  // Modal: Diagnóstico de Perfil
+  const [diagnosticoOpen, setDiagnosticoOpen]   = useState(false)
+
   // Modal: adicionar ao planejamento
   const [plannerModal, setPlannerModal] = useState<{ content: string } | null>(null)
   const [plannerForm, setPlannerForm]   = useState({
@@ -406,6 +410,22 @@ export function AIPage() {
     const encoded = await Promise.all(files.map(f => resizeAndEncode(f)))
     setAttachedImages(prev => [...prev, ...encoded].slice(0, 4)) // máx 4 imagens
     e.target.value = ''
+  }
+
+  const handleDiagnosticoStart = async (prompt: string, images: string[]) => {
+    setDiagnosticoOpen(false)
+    // Ativa o squad "Diagnóstico de Perfil"
+    const diagSquad = AI_SQUADS.find(s => s.id === 'diagnostico-perfil') ?? null
+    setActiveSquad(diagSquad)
+
+    await sendMessage(
+      prompt, messages, false,
+      (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
+      clientCtx?.contextString ?? null,
+      activeClientId,
+      diagSquad?.systemPrompt ?? null,
+      images.length > 0 ? images : undefined,
+    )
   }
 
   const handleOpenPlannerModal = (content: string) => {
@@ -748,6 +768,25 @@ export function AIPage() {
                 ))}
               </div>
 
+              {/* Card destaque: Diagnóstico de Perfil */}
+              <div className="w-full max-w-2xl mb-2">
+                <button
+                  onClick={() => setDiagnosticoOpen(true)}
+                  className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-[#f0f0ff] to-[#faf5ff] border border-[#c4b5fd] rounded-2xl hover:shadow-md hover:border-[#a78bfa] transition-all group text-left"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center flex-shrink-0 shadow group-hover:scale-105 transition-transform">
+                    <span className="text-[22px]">🔍</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-[#3730a3]">Diagnóstico Completo de Perfil</p>
+                    <p className="text-[11.5px] text-[#6d28d9] mt-0.5">Sherlock · Vera · Nina · Max — benchmark, gargalo, oportunidades e plano de 30 dias</p>
+                  </div>
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#6366f1] flex items-center justify-center group-hover:bg-[#4f52cc] transition-colors">
+                    <ChevronDown className="w-3.5 h-3.5 text-white -rotate-90" />
+                  </div>
+                </button>
+              </div>
+
               {/* Grid de squads */}
               <div className="w-full max-w-2xl">
                 <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-3">Times especializados</p>
@@ -1015,6 +1054,14 @@ export function AIPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Modal Diagnóstico de Perfil ── */}
+      {diagnosticoOpen && (
+        <DiagnosticoModal
+          onClose={() => setDiagnosticoOpen(false)}
+          onStart={handleDiagnosticoStart}
+        />
       )}
 
       {/* ── Toast memória salva ── */}
