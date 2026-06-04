@@ -45,7 +45,14 @@ Deno.serve(async (req) => {
       .eq('linked_client_id', clientId)
       .maybeSingle()
 
-    // 3. Deleta o cliente (CASCADE cuida de todos os dados relacionados)
+    // 3. Remove contas Instagram vinculadas ao cliente antes de deletar
+    // (evita violação de unique constraint ao fazer SET NULL em registros duplicados)
+    await sb
+      .from('instagram_accounts')
+      .delete()
+      .eq('client_id', clientId)
+
+    // 4. Deleta o cliente (CASCADE cuida de todos os dados relacionados)
     const { error: deleteErr } = await sb
       .from('clients')
       .delete()
