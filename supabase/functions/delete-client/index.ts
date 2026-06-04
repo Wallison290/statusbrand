@@ -64,12 +64,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, authUserDeleted: !!linkedProfile?.id }),
-      { headers: { ...CORS, 'Content-Type': 'application/json' } },
+      { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } },
     )
   } catch (err: any) {
+    // Sempre retorna 200 para que o SDK consiga ler o body com a mensagem real
     return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } },
+      JSON.stringify({ success: false, error: err.message ?? 'Erro desconhecido' }),
+      { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } },
     )
   }
 })
