@@ -146,35 +146,3 @@
   .bg-clip-text.text-transparent { color: transparent !important; }
 }
 
-/* ── Tema totalmente escuro (toggle) — reverte os overrides acima ─────────────── */
-[data-theme="dark"] {
-  .bg-\[\#09090b\]  { background-color: #09090b !important; }
-  .bg-\[\#0a0a0a\]  { background-color: #0a0a0a !important; }
-  .bg-\[\#0a0c11\]  { background-color: #0a0c11 !important; }
-  .bg-\[\#0d0f14\]  { background-color: #0d0f14 !important; }
-  .bg-\[\#0d0f18\]  { background-color: #0d0f18 !important; }
-  .bg-\[\#111113\]  { background-color: #111113 !important; }
-  .bg-\[\#12131a\]  { background-color: #12131a !important; }
-
-  .bg-white\/\[0\.02\] { background-color: rgba(255,255,255,0.02) !important; }
-  .bg-white\/\[0\.03\] { background-color: rgba(255,255,255,0.03) !important; }
-  .bg-white\/\[0\.04\] { background-color: rgba(255,255,255,0.04) !important; }
-  .bg-white\/\[0\.05\] { background-color: rgba(255,255,255,0.05) !important; }
-  .bg-white\/\[0\.06\] { background-color: rgba(255,255,255,0.06) !important; }
-  .bg-white\/\[0\.07\] { background-color: rgba(255,255,255,0.07) !important; }
-  .bg-white\/\[0\.08\] { background-color: rgba(255,255,255,0.08) !important; }
-
-  .border-white\/\[0\.05\] { border-color: rgba(255,255,255,0.05) !important; }
-  .border-white\/\[0\.08\] { border-color: rgba(255,255,255,0.08) !important; }
-  .border-white\/\[0\.10\] { border-color: rgba(255,255,255,0.10) !important; }
-  .border-white\/\[0\.12\] { border-color: rgba(255,255,255,0.12) !important; }
-  .border-white\/10 { border-color: rgba(255,255,255,0.10) !important; }
-  .border-white\/20 { border-color: rgba(255,255,255,0.20) !important; }
-
-  .text-white    { color: #ffffff !important; }
-  .text-zinc-100 { color: #f4f4f5 !important; }
-  .text-zinc-200 { color: #e4e4e7 !important; }
-  .text-zinc-300 { color: #d4d4d8 !important; }
-
-  body { background-color: #0a0c14 !important; color: #f1f5f9 !important; }
-}
