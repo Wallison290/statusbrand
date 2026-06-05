@@ -5,8 +5,8 @@ type Theme = 'light' | 'dark'
 const STORAGE_KEY = 'kairohub-theme'
 
 function applyTheme(theme: Theme) {
-  if (theme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light')
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark')
   } else {
     document.documentElement.removeAttribute('data-theme')
   }
@@ -15,7 +15,7 @@ function applyTheme(theme: Theme) {
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    return stored ?? 'dark'
+    return stored ?? 'light'
   })
 
   useEffect(() => {

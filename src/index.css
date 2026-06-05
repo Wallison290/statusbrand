@@ -64,11 +64,11 @@
   .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
 }
 
-/* ── Light-mode overrides: só quando data-theme="light" ─────────────────────── */
-/*    Dark é o padrão. Light aplica overrides para converter fundos escuros.    */
-[data-theme="light"] {
+/* ── Overrides padrão: cards e conteúdo claros, sidebar/hero permanecem escuros ── */
+/*    O app foi construído dark-first; estes overrides tornam o conteúdo claro.    */
+@layer utilities {
 
-  /* Layout shells */
+  /* Layout shells → fundo claro */
   .bg-\[\#09090b\]  { background-color: #f7f7f7 !important; }
   .bg-\[\#0a0a0a\]  { background-color: #f7f7f7 !important; }
   .bg-\[\#0a0c11\]  { background-color: #f7f7f7 !important; }
@@ -126,39 +126,55 @@
   .text-zinc-200 { color: #2a2a2a !important; }
   .text-zinc-300 { color: #3d3d3d !important; }
 
-  /* Exceptions: text-white inside colored backgrounds stays white */
-  [class*="bg-blue-"] .text-white,
-  [class*="bg-blue-"].text-white,
-  [class*="bg-emerald-"] .text-white,
-  [class*="bg-emerald-"].text-white,
-  [class*="bg-green-"] .text-white,
-  [class*="bg-green-"].text-white,
-  [class*="bg-red-"] .text-white,
-  [class*="bg-red-"].text-white,
-  [class*="bg-purple-"] .text-white,
-  [class*="bg-purple-"].text-white,
-  [class*="bg-amber-"] .text-white,
-  [class*="bg-amber-"].text-white,
-  [class*="bg-indigo-"] .text-white,
-  [class*="bg-indigo-"].text-white,
-  [class*="from-blue"] .text-white,
-  [class*="from-purple"] .text-white,
-  .bg-\[\#0f0f0f\] .text-white,
-  .bg-\[\#0f0f0f\].text-white,
-  .bg-\[\#13131f\] .text-white,
-  .bg-\[\#13131f\].text-white,
-  .sb-invert .text-white,
-  .sb-invert.text-white { color: #ffffff !important; }
+  /* Exceptions: text-white inside colored/dark backgrounds stays white */
+  [class*="bg-blue-"] .text-white,   [class*="bg-blue-"].text-white,
+  [class*="bg-emerald-"] .text-white,[class*="bg-emerald-"].text-white,
+  [class*="bg-green-"] .text-white,  [class*="bg-green-"].text-white,
+  [class*="bg-red-"] .text-white,    [class*="bg-red-"].text-white,
+  [class*="bg-purple-"] .text-white, [class*="bg-purple-"].text-white,
+  [class*="bg-amber-"] .text-white,  [class*="bg-amber-"].text-white,
+  [class*="bg-indigo-"] .text-white, [class*="bg-indigo-"].text-white,
+  [class*="from-blue"] .text-white,  [class*="from-purple"] .text-white,
+  .bg-\[\#0f0f0f\] .text-white,      .bg-\[\#0f0f0f\].text-white,
+  .bg-\[\#13131f\] .text-white,      .bg-\[\#13131f\].text-white,
+  .sb-invert .text-white,            .sb-invert.text-white { color: #ffffff !important; }
 
-  .bg-\[\#0f0f0f\].text-white { color: #ffffff !important; }
-
-  /* Radix UI Tabs: tab ativo — texto branco */
+  /* Radix UI Tabs ativo */
   [role="tab"][data-state="active"] { color: #ffffff !important; }
   [role="tab"][data-state="active"] svg { color: #ffffff !important; }
 
-  /* Gradient text clips */
   .bg-clip-text.text-transparent { color: transparent !important; }
+}
 
-  /* Background geral da página */
-  body { background-color: #f7f7f7 !important; color: #0f0f0f !important; }
+/* ── Tema totalmente escuro (toggle) — reverte os overrides acima ─────────────── */
+[data-theme="dark"] {
+  .bg-\[\#09090b\]  { background-color: #09090b !important; }
+  .bg-\[\#0a0a0a\]  { background-color: #0a0a0a !important; }
+  .bg-\[\#0a0c11\]  { background-color: #0a0c11 !important; }
+  .bg-\[\#0d0f14\]  { background-color: #0d0f14 !important; }
+  .bg-\[\#0d0f18\]  { background-color: #0d0f18 !important; }
+  .bg-\[\#111113\]  { background-color: #111113 !important; }
+  .bg-\[\#12131a\]  { background-color: #12131a !important; }
+
+  .bg-white\/\[0\.02\] { background-color: rgba(255,255,255,0.02) !important; }
+  .bg-white\/\[0\.03\] { background-color: rgba(255,255,255,0.03) !important; }
+  .bg-white\/\[0\.04\] { background-color: rgba(255,255,255,0.04) !important; }
+  .bg-white\/\[0\.05\] { background-color: rgba(255,255,255,0.05) !important; }
+  .bg-white\/\[0\.06\] { background-color: rgba(255,255,255,0.06) !important; }
+  .bg-white\/\[0\.07\] { background-color: rgba(255,255,255,0.07) !important; }
+  .bg-white\/\[0\.08\] { background-color: rgba(255,255,255,0.08) !important; }
+
+  .border-white\/\[0\.05\] { border-color: rgba(255,255,255,0.05) !important; }
+  .border-white\/\[0\.08\] { border-color: rgba(255,255,255,0.08) !important; }
+  .border-white\/\[0\.10\] { border-color: rgba(255,255,255,0.10) !important; }
+  .border-white\/\[0\.12\] { border-color: rgba(255,255,255,0.12) !important; }
+  .border-white\/10 { border-color: rgba(255,255,255,0.10) !important; }
+  .border-white\/20 { border-color: rgba(255,255,255,0.20) !important; }
+
+  .text-white    { color: #ffffff !important; }
+  .text-zinc-100 { color: #f4f4f5 !important; }
+  .text-zinc-200 { color: #e4e4e7 !important; }
+  .text-zinc-300 { color: #d4d4d8 !important; }
+
+  body { background-color: #0a0c14 !important; color: #f1f5f9 !important; }
 }
