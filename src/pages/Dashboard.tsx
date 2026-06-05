@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Users, CheckSquare, Clock,
-  AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
-  ChevronLeft, ChevronRight, BarChart3, DollarSign,
+  AlertTriangle, CalendarDays, CheckCircle2,
+  ChevronLeft, ChevronRight, DollarSign, UserCheck, TrendingUp,
 } from 'lucide-react'
 import { DashboardHero } from '@/components/dashboard/DashboardHero'
 import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
@@ -174,9 +174,10 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             onClick={() => onMode(key)}
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               mode === key
-                ? 'bg-[#0f172a] text-white shadow-sm'
+                ? 'text-white shadow-sm'
                 : 'text-[#64748b] hover:text-[#0f172a]'
             }`}
+            style={mode === key ? { background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' } : undefined}
           >
             {label}
           </button>
@@ -269,21 +270,24 @@ function KpiCard({
 
   const inner = featured ? (
     <div
-      className="h-full rounded-2xl bg-[#0f172a] p-5 flex flex-col gap-3 hover:bg-[#1e293b] transition-colors duration-200"
-      style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.18)' }}
+      className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
+      style={{
+        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+        boxShadow:  '0 4px 24px rgba(124,58,237,0.30)',
+      }}
     >
       <div className="flex items-start justify-between">
-        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-white/75" />
+        <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white/90" />
         </div>
-        <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-white/8 text-white/35 uppercase tracking-widest">
-          Total
+        <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/60 uppercase tracking-widest">
+          Ativos
         </span>
       </div>
       <div className="mt-auto">
         <p className="text-[28px] font-semibold text-white tabular-nums leading-none">{displayValue ?? value}</p>
-        <p className="text-[12px] text-white/60 mt-1.5 leading-tight">{label}</p>
-        {subtitle && <p className="text-[10px] text-white/30 mt-0.5">{subtitle}</p>}
+        <p className="text-[12px] text-white/70 mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-white/40 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   ) : (
@@ -385,11 +389,8 @@ function CalendarWidget({
             <div
               key={dayStr}
               onClick={onDayClick}
-              className={`flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none ${
-                isCurrent
-                  ? 'bg-[#0f172a]'
-                  : 'hover:bg-[#f8fafc]'
-              }`}
+              className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none hover:bg-[#f8fafc]"
+              style={isCurrent ? { background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' } : undefined}
             >
               <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#1e293b]'}`}>
                 {format(day, 'd')}
@@ -799,8 +800,25 @@ export function Dashboard() {
 
       <div className="px-6 py-6 md:px-8 md:py-7 space-y-6">
 
-        {/* KPI Cards */}
+        {/* KPI Cards — linha 1: clientes */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <KpiCard
+            label="Clientes Ativos"
+            value={stats.active_clients}
+            subtitle={`de ${stats.total_clients} total`}
+            href="/clients"
+            icon={UserCheck}
+            featured
+          />
+          <KpiCard
+            label="Total de Clientes"
+            value={stats.total_clients}
+            subtitle="na base"
+            href="/clients"
+            icon={Users}
+            iconBg="bg-violet-50"
+            iconColor="text-violet-600"
+          />
           <KpiCard
             label="Posts Agendados"
             value={stats.period_scheduled}
@@ -819,8 +837,12 @@ export function Dashboard() {
             iconBg="bg-emerald-50"
             iconColor="text-emerald-700"
           />
+        </div>
+
+        {/* KPI Cards — linha 2: conteúdo */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
-            label="Aguardando Aprovação do Cliente"
+            label="Aguardando Aprovação"
             value={stats.period_pending_approval}
             subtitle={stats.period_pending_approval > 0 ? 'aguardando retorno do cliente' : 'nenhum pendente'}
             href="/planner"
@@ -835,6 +857,25 @@ export function Dashboard() {
             href="/planner"
             icon={AlertTriangle}
             warning
+          />
+          <KpiCard
+            label="Tarefas em Aberto"
+            value={stats.pending_tasks}
+            subtitle="no período"
+            href="/tasks"
+            icon={CheckSquare}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+          />
+          <KpiCard
+            label="Tarefas Atrasadas"
+            value={stats.overdue_tasks}
+            subtitle={stats.overdue_tasks > 0 ? 'requerem atenção' : 'tudo em dia'}
+            href="/tasks"
+            icon={AlertTriangle}
+            warning={stats.overdue_tasks > 0}
+            iconBg="bg-gray-50"
+            iconColor="text-gray-400"
           />
         </div>
 
@@ -859,6 +900,12 @@ export function Dashboard() {
             <CalendarWidget
               items={plannerCalItems}
               onDayClick={() => navigate('/planner')}
+            />
+            <AlertsWidget
+              pendingApproval={stats.period_pending_approval}
+              overdueTasks={stats.overdue_tasks}
+              pendingTasks={stats.pending_tasks}
+              periodApproved={stats.period_approved}
             />
           </div>
         </div>
