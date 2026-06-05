@@ -268,6 +268,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             : <Moon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569]" />
           }
           {!collapsed && <span>{isDark ? 'Tema claro' : 'Tema escuro'}</span>}
+          {/* isDark=true → mostra "Tema claro" (para ir para light); isDark=false → mostra "Tema escuro" */}
         </button>
         <button
           onClick={() => signOut()}

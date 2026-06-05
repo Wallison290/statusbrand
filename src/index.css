@@ -64,9 +64,9 @@
   .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
 }
 
-/* ── Light-mode overrides: só quando NÃO está em dark mode ─────────────────── */
-/*    O app foi construído dark-first; estes overrides convertem para claro.    */
-:root:not([data-theme="dark"]) {
+/* ── Light-mode overrides: só quando data-theme="light" ─────────────────────── */
+/*    Dark é o padrão. Light aplica overrides para converter fundos escuros.    */
+[data-theme="light"] {
 
   /* Layout shells */
   .bg-\[\#09090b\]  { background-color: #f7f7f7 !important; }
@@ -160,19 +160,5 @@
   .bg-clip-text.text-transparent { color: transparent !important; }
 
   /* Background geral da página */
-  body { background-color: #f7f7f7; color: #0f0f0f; }
-}
-
-/* ── Dark mode: variáveis CSS ────────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --background:          15 23 42;    /* #0f172a */
-  --foreground:          248 250 252; /* #f8fafc */
-  --card:                15 23 42;
-  --card-foreground:     248 250 252;
-  --border:              30 41 59;    /* #1e293b */
-  --input:               30 41 59;
-  --muted:               30 41 59;
-  --muted-foreground:    148 163 184; /* #94a3b8 */
-
-  body { background-color: #0a0c14; color: #f1f5f9; color-scheme: dark; }
+  body { background-color: #f7f7f7 !important; color: #0f0f0f !important; }
 }
