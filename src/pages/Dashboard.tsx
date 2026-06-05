@@ -249,6 +249,17 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
+const iconBgMap: Record<string, string> = {
+  'bg-amber-50':   'rgba(245,166,35,0.15)',
+  'bg-blue-50':    'rgba(79,142,247,0.15)',
+  'bg-emerald-50': 'rgba(34,197,94,0.15)',
+  'bg-green-50':   'rgba(34,197,94,0.15)',
+  'bg-red-50':     'rgba(239,68,68,0.15)',
+  'bg-violet-50':  'rgba(139,92,246,0.15)',
+  'bg-gray-50':    'rgba(203,213,225,0.10)',
+  'bg-gray-100':   'rgba(203,213,225,0.10)',
+}
+
 function KpiCard({
   label, value, displayValue, subtitle, href, icon: Icon,
   iconBg = 'bg-gray-100', iconColor = 'text-gray-500',
@@ -265,6 +276,7 @@ function KpiCard({
   featured?:     boolean
   warning?:      boolean
 }) {
+  const iconBgStyle = iconBgMap[iconBg] ?? 'rgba(203,213,225,0.10)'
   const showWarning = warning && value > 0
 
   const inner = featured ? (
@@ -295,11 +307,14 @@ function KpiCard({
       style={{ background: '#182233', border: `1px solid ${showWarning ? 'rgba(239,68,68,0.3)' : '#1e293b'}`, boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       <div className="flex items-start justify-between">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
-          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-700' : iconColor}`} />
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{ background: showWarning ? 'rgba(239,68,68,0.15)' : iconBgStyle }}
+        >
+          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-400' : iconColor}`} />
         </div>
         {showWarning && (
-          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200">
+          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full text-red-400" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
             Atenção
           </span>
         )}
