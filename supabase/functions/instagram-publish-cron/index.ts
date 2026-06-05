@@ -181,6 +181,20 @@ Deno.serve(async (req) => {
         })
         .eq('id', post.id)
 
+      // Notifica a agência que o post foi publicado com sucesso
+      if (post.user_id) {
+        await (supabase as any).from('notifications').insert({
+          user_id:   post.user_id,
+          client_id: post.client_id ?? null,
+          type:      'POST_PUBLISHED',
+          title:     'Post publicado no Instagram ✅',
+          message:   'O conteúdo agendado foi publicado com sucesso' +
+            (post.caption ? ': "' + String(post.caption).slice(0, 60) + (post.caption.length > 60 ? '…' : '') + '"' : '.'),
+          link:      null,
+          is_read:   false,
+        })
+      }
+
       published++
       results.push({ id: post.id, status: 'published', ig_post_id: igPostId })
 
@@ -190,6 +204,19 @@ Deno.serve(async (req) => {
         .from('scheduled_posts')
         .update({ status: 'failed', error_message: msg, updated_at: new Date().toISOString() })
         .eq('id', post.id)
+
+      // Notifica a agência que o post falhou
+      if (post.user_id) {
+        await (supabase as any).from('notifications').insert({
+          user_id:   post.user_id,
+          client_id: post.client_id ?? null,
+          type:      'POST_FAILED',
+          title:     'Falha ao publicar no Instagram ❌',
+          message:   'Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.',
+          link:      null,
+          is_read:   false,
+        })
+      }
 
       results.push({ id: post.id, status: 'failed', error: msg })
     }

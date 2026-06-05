@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from './useAuth'
 import type { Task } from '@/types'
 
 export function useTasks(clientId?: string) {
@@ -35,6 +36,7 @@ export function useCreateTask() {
 
 export function useUpdateTask() {
   const qc = useQueryClient()
+  const { user } = useAuth()
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
       const { data, error } = await (supabase as any)
@@ -44,6 +46,22 @@ export function useUpdateTask() {
         .select()
         .single()
       if (error) throw error
+
+      // Notifica a agência quando uma tarefa for marcada como concluída
+      // (útil quando um colaborador conclui a tarefa)
+      if (updates.status === 'concluido' && data?.user_id && data.user_id !== user?.id) {
+        try {
+          await (supabase as any).from('notifications').insert({
+            user_id:   data.user_id,
+            client_id: data.client_id ?? null,
+            type:      'TASK_DONE',
+            title:     'Demanda concluída ✅',
+            message:   '"' + (data.title ?? 'Tarefa') + '" foi marcada como concluída.',
+            link:      null,
+          })
+        } catch { /* silencioso */ }
+      }
+
       return data as Task
     },
     onSuccess: () => {

@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import {
   Bell, CheckCircle2, XCircle, MessageSquare,
-  Clock, FileText, Check, Wrench,
+  Clock, FileText, Check, Wrench, ClipboardList,
+  Instagram, AlertTriangle, CheckCheck,
 } from 'lucide-react'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -18,12 +19,17 @@ const typeConfig: Record<
   Notification['type'],
   { Icon: React.ElementType; color: string; bg: string }
 > = {
-  NEW_CONTENT:      { Icon: FileText,      color: 'text-purple-800', bg: 'bg-purple-50'  },
-  APPROVAL_REQUEST: { Icon: Clock,         color: 'text-amber-800',  bg: 'bg-amber-50'   },
-  APPROVED:         { Icon: CheckCircle2,  color: 'text-emerald-800',bg: 'bg-emerald-50' },
-  REJECTED:         { Icon: XCircle,       color: 'text-red-800',    bg: 'bg-red-50'     },
-  COMMENT:          { Icon: MessageSquare, color: 'text-blue-800',   bg: 'bg-blue-50'    },
-  ADJUSTMENT_DONE:  { Icon: Wrench,        color: 'text-blue-800',   bg: 'bg-blue-50'    },
+  NEW_CONTENT:        { Icon: FileText,       color: 'text-purple-800',  bg: 'bg-purple-50'  },
+  APPROVAL_REQUEST:   { Icon: Clock,          color: 'text-amber-800',   bg: 'bg-amber-50'   },
+  APPROVED:           { Icon: CheckCircle2,   color: 'text-emerald-800', bg: 'bg-emerald-50' },
+  REJECTED:           { Icon: XCircle,        color: 'text-red-800',     bg: 'bg-red-50'     },
+  COMMENT:            { Icon: MessageSquare,  color: 'text-blue-800',    bg: 'bg-blue-50'    },
+  ADJUSTMENT_DONE:    { Icon: Wrench,         color: 'text-blue-800',    bg: 'bg-blue-50'    },
+  TASK_STATUS_UPDATE: { Icon: CheckCheck,     color: 'text-indigo-800',  bg: 'bg-indigo-50'  },
+  TASK_DONE:          { Icon: CheckCircle2,   color: 'text-emerald-800', bg: 'bg-emerald-50' },
+  FORM_SUBMITTED:     { Icon: ClipboardList,  color: 'text-violet-800',  bg: 'bg-violet-50'  },
+  POST_PUBLISHED:     { Icon: Instagram,      color: 'text-pink-800',    bg: 'bg-pink-50'    },
+  POST_FAILED:        { Icon: AlertTriangle,  color: 'text-red-800',     bg: 'bg-red-50'     },
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

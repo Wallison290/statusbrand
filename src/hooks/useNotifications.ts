@@ -10,6 +10,11 @@ export type NotificationType =
   | 'REJECTED'
   | 'COMMENT'
   | 'ADJUSTMENT_DONE'
+  | 'TASK_STATUS_UPDATE'
+  | 'TASK_DONE'
+  | 'FORM_SUBMITTED'
+  | 'POST_PUBLISHED'
+  | 'POST_FAILED'
 
 export interface Notification {
   id: string
