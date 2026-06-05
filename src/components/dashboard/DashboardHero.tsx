@@ -300,7 +300,8 @@ export function DashboardHero({
         onClose={() => setShowNotifications(false)}
         onView={(notification) => {
           setShowNotifications(false)
-          if (notification.link) navigate(`/planner?item=${notification.link}`)
+          if (notification.type === 'NOTE_REQUEST') navigate(notification.link || '/notes')
+          else if (notification.link) navigate(`/planner?item=${notification.link}`)
           else navigate('/planner')
         }}
       />

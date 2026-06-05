@@ -37,7 +37,7 @@ function newItem(text = ''): NoteChecklistItem {
 
 // ─── NoteCard ─────────────────────────────────────────────────────────────────
 
-function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
+export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
   const doneCount = note.checklist.filter(i => i.done).length
   const preview = note.content?.slice(0, 100) || ''
 
@@ -187,7 +187,7 @@ function ChecklistEditor({
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({
+export function NoteModal({
   note,
   clients,
   defaultClientId,

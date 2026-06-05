@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import {
   Bell, CheckCircle2, XCircle, MessageSquare,
   Clock, FileText, Check, Wrench, ClipboardList,
-  Instagram, AlertTriangle, CheckCheck,
+  Instagram, AlertTriangle, CheckCheck, Lightbulb,
 } from 'lucide-react'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -30,6 +30,7 @@ const typeConfig: Record<
   FORM_SUBMITTED:     { Icon: ClipboardList,  color: 'text-violet-800',  bg: 'bg-violet-50'  },
   POST_PUBLISHED:     { Icon: Instagram,      color: 'text-pink-800',    bg: 'bg-pink-50'    },
   POST_FAILED:        { Icon: AlertTriangle,  color: 'text-red-800',     bg: 'bg-red-50'     },
+  NOTE_REQUEST:       { Icon: Lightbulb,      color: 'text-blue-800',    bg: 'bg-blue-50'    },
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
