@@ -38,11 +38,11 @@ const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; 
 
 // ─── Priority config ───────────────────────────────────────────────────────────
 
-const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string; pillBg: string; pillText: string }> = {
-  baixa:   { label: 'Baixa',   color: '#9ca3af', pillBg: 'bg-gray-100',   pillText: 'text-gray-600'   },
-  media:   { label: 'Média',   color: '#7c3aed', pillBg: 'bg-violet-100', pillText: 'text-violet-700' },
-  alta:    { label: 'Alta',    color: '#f97316', pillBg: 'bg-orange-100', pillText: 'text-orange-700' },
-  urgente: { label: 'Urgente', color: '#ef4444', pillBg: 'bg-red-100',    pillText: 'text-red-700'    },
+const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string; pillBg: string; pillText: string; accent: string }> = {
+  baixa:   { label: 'Baixa',   color: '#9ca3af', pillBg: 'bg-gray-100',   pillText: 'text-gray-600',   accent: '#9ca3af' },
+  media:   { label: 'Média',   color: '#7c3aed', pillBg: 'bg-violet-100', pillText: 'text-violet-700', accent: '#7c3aed' },
+  alta:    { label: 'Alta',    color: '#f97316', pillBg: 'bg-orange-100', pillText: 'text-orange-700', accent: '#f97316' },
+  urgente: { label: 'Urgente', color: '#ef4444', pillBg: 'bg-red-100',    pillText: 'text-red-700',    accent: '#ef4444' },
 }
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = { urgente: 0, alta: 1, media: 2, baixa: 3 }
@@ -219,9 +219,10 @@ function TaskCard({
       }}
       onDragEnd={() => { setTimeout(() => { dragStarted.current = false }, 50); onDragEnd() }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      className={['w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 border-l-4 border-l-violet-400',
+      className={['w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100',
         'cursor-pointer hover:shadow-md transition-all duration-150 select-none',
-        dragging ? 'opacity-40 scale-95' : ''].join(' ')}>
+        dragging ? 'opacity-40 scale-95' : ''].join(' ')}
+      style={{ borderLeftWidth: 4, borderLeftColor: priCfg.accent }}>
       {(task.due_time || overdueAndOpen) && (
         <div className="flex items-center gap-1.5 mb-2.5">
           <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${overdueAndOpen ? 'text-red-400' : 'text-gray-400'}`} />
