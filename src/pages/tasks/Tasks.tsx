@@ -40,7 +40,7 @@ const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; 
 
 const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string; pillBg: string; pillText: string }> = {
   baixa:   { label: 'Baixa',   color: '#9ca3af', pillBg: 'bg-gray-100',   pillText: 'text-gray-600'   },
-  media:   { label: 'Média',   color: '#3b82f6', pillBg: 'bg-blue-100',   pillText: 'text-blue-700'   },
+  media:   { label: 'Média',   color: '#7c3aed', pillBg: 'bg-violet-100', pillText: 'text-violet-700' },
   alta:    { label: 'Alta',    color: '#f97316', pillBg: 'bg-orange-100', pillText: 'text-orange-700' },
   urgente: { label: 'Urgente', color: '#ef4444', pillBg: 'bg-red-100',    pillText: 'text-red-700'    },
 }
@@ -299,7 +299,7 @@ function DayColumn({
         </div>
         <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
-            <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold bg-orange-400 text-white">{tasks.length}</span>
+            <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold bg-violet-600 text-white">{tasks.length}</span>
           )}
           <button onClick={() => onAddTask(day)}
             className="w-7 h-7 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all border border-gray-200"
@@ -321,7 +321,7 @@ function DayColumn({
             <button onClick={() => onAddTask(day)} className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center mb-2 transition-colors">
               <Plus className="w-5 h-5 text-gray-400" />
             </button>
-            <p className="text-[12px] text-gray-400">Nenhuma tarefa</p>
+            <p className="text-[12px] text-gray-400">Adicionar tarefa</p>
           </div>
         )}
         {isDragOver && (
@@ -1238,10 +1238,10 @@ export function Tasks() {
   const showBottom = (activeTab === 'semanal' || activeTab === 'timeline') && tasksWithoutDate.length > 0
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-[#f8fafc]">
 
-      {/* ── Local header (sem o Header preto global) ─────────────────────── */}
-      <div className="flex items-center justify-between px-5 md:px-6 pt-5 pb-1 flex-shrink-0 border-b border-gray-100">
+      {/* ── Local header ─────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-5 md:px-6 pt-5 pb-1 flex-shrink-0 border-b border-gray-100 bg-white">
         <div>
           <h1 className="text-[18px] font-bold text-gray-900">Tarefas</h1>
           <p className="text-[12px] text-gray-400">Gerencie e acompanhe todas as tarefas</p>
@@ -1254,7 +1254,7 @@ export function Tasks() {
       </div>
 
       {/* ── Stats + date nav ─────────────────────────────────────────────── */}
-      <div className="px-5 md:px-6 pt-3 pb-0 flex-shrink-0">
+      <div className="px-5 md:px-6 pt-3 pb-0 flex-shrink-0 bg-white border-b border-gray-100">
         <div className="flex items-center gap-3 flex-wrap">
 
           {/* Week navigator */}
@@ -1321,7 +1321,7 @@ export function Tasks() {
       </div>
 
       {/* ── View tabs ───────────────────────────────────────────────────── */}
-      <div className="px-5 md:px-6 mt-3 border-b border-gray-100 flex-shrink-0">
+      <div className="px-5 md:px-6 mt-0 border-b border-gray-100 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             {TABS.map(({ id, label, Icon }) => (
