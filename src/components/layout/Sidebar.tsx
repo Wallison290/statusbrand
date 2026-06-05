@@ -3,13 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Sun, Moon,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
+import { useTheme } from '@/hooks/useTheme'
 
 const navItems = [
   { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
@@ -85,6 +86,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
   const { data: storage }          = useStorageUsage()
+
+  const { isDark, toggle: toggleTheme } = useTheme()
 
   const planName  = subData?.plan.name ?? 'Free'
   const aiUsed    = usage?.requests ?? 0
@@ -253,8 +256,19 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         </Link>
       </div>
 
-      {/* ── Sair ── */}
-      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] flex-shrink-0">
+      {/* ── Tema + Sair ── */}
+      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] flex-shrink-0 space-y-0.5">
+        <button
+          onClick={toggleTheme}
+          title={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#64748b] hover:bg-[#161b2e] hover:text-white transition-colors duration-150"
+        >
+          {isDark
+            ? <Sun  className="w-[15px] h-[15px] flex-shrink-0 text-[#475569]" />
+            : <Moon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569]" />
+          }
+          {!collapsed && <span>{isDark ? 'Tema claro' : 'Tema escuro'}</span>}
+        </button>
         <button
           onClick={() => signOut()}
           className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#64748b] hover:bg-[#161b2e] hover:text-white transition-colors duration-150"
