@@ -37,7 +37,7 @@ function InitialsAvatar({ name }: { name: string }) {
   return (
     <div
       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold select-none"
-      style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}
     >
       {initials}
     </div>
@@ -61,7 +61,7 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
           className="min-w-0"
         >
           <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap text-white">
-            Kairo<span className="text-[#a78bfa]">Hub</span>
+            Kairo<span className="text-[#34d399]">Hub</span>
           </span>
           <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide text-[#64748b]">
             Organize. Produza. Escale.
@@ -133,17 +133,17 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                 <div
                   title={collapsed ? item.label : undefined}
                   className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
-                  style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(79,70,229,0.18) 100%)', border: '1px solid rgba(124,58,237,0.3)' }}
+                  style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.20) 0%, rgba(4,120,87,0.14) 100%)', border: '1px solid rgba(5,150,105,0.28)' }}
                 >
-                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#a78bfa]" />
+                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#34d399]" />
                   {!collapsed && (
                     <>
-                      <span className="whitespace-nowrap text-[#c4b5fd] font-medium flex-1">
+                      <span className="whitespace-nowrap text-[#6ee7b7] font-medium flex-1">
                         {item.label}
                       </span>
                       <span
                         className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-white"
-                        style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}
                       >
                         novo
                       </span>
@@ -161,7 +161,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                 <div
                   title={collapsed ? item.label : undefined}
                   className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}
                 >
                   <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
                   {!collapsed && (
@@ -216,7 +216,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                       className="h-full rounded-full transition-all"
                       style={{
                         width: `${aiPct}%`,
-                        background: aiPct >= 90 ? '#ef4444' : aiPct >= 70 ? '#f59e0b' : 'linear-gradient(90deg, #7c3aed, #6366f1)',
+                        background: aiPct >= 90 ? '#ef4444' : aiPct >= 70 ? '#f59e0b' : 'linear-gradient(90deg, #059669, #047857)',
                       }}
                     />
                   </div>

@@ -177,7 +177,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
                 ? 'text-white shadow-sm'
                 : 'text-[#64748b] hover:text-[#0f172a]'
             }`}
-            style={mode === key ? { background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' } : undefined}
+            style={mode === key ? { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' } : undefined}
           >
             {label}
           </button>
@@ -272,7 +272,7 @@ function KpiCard({
     <div
       className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
       style={{
-        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
         boxShadow:  '0 4px 24px rgba(124,58,237,0.30)',
       }}
     >
@@ -390,7 +390,7 @@ function CalendarWidget({
               key={dayStr}
               onClick={onDayClick}
               className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none hover:bg-[#f8fafc]"
-              style={isCurrent ? { background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' } : undefined}
+              style={isCurrent ? { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' } : undefined}
             >
               <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#1e293b]'}`}>
                 {format(day, 'd')}
@@ -763,7 +763,7 @@ export function Dashboard() {
 
     // Gráfico de planejamento — "Ag. aprovação" usa isAwaitingApproval()
     setPlannerChartData([
-      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#8b5cf6' },
+      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#a3a3a3' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
       { label: 'Ag. aprovação', value: pList.filter(isAwaitingClientApproval).length,            color: '#f97316' },
       { label: 'Aprovado',      value: period_approved,                                          color: '#10b981' },
