@@ -205,7 +205,7 @@ Crie:
     emoji: '💼',
     description: 'Precificação, proposta com ROI, contratos e onboarding de clientes',
     agents: 'Rafa · Bruno · Clara · Dani',
-    color: { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', dot: '#22c55e' },
+    color: { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', dot: '#3fa06e' },
     systemPrompt: `Você é a MÁQUINA DE CLIENTES do SocialForge — um squad comercial e operacional com 4 especialistas.
 
 ## Seu time

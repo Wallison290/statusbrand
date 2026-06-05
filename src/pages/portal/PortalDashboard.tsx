@@ -1438,7 +1438,7 @@ type CardColor = 'amber' | 'green' | 'blue' | 'purple' | 'default'
 
 const cardColorMap: Record<CardColor, { icon: string; label: string; value: string; ring: string; dot: string; bar: string }> = {
   amber:   { icon: 'text-orange-800',  label: 'text-orange-900',  value: 'text-orange-900',  ring: 'border-orange-200  bg-orange-50',   dot: 'bg-orange-400',  bar: 'bg-[#f97316]' },
-  green:   { icon: 'text-green-800',   label: 'text-green-900',   value: 'text-green-900',   ring: 'border-green-200   bg-green-50',    dot: 'bg-green-500',   bar: 'bg-[#22c55e]' },
+  green:   { icon: 'text-green-800',   label: 'text-green-900',   value: 'text-green-900',   ring: 'border-green-200   bg-green-50',    dot: 'bg-green-500',   bar: 'bg-[#3fa06e]' },
   blue:    { icon: 'text-blue-800',    label: 'text-blue-900',    value: 'text-blue-900',    ring: 'border-blue-200    bg-blue-50',     dot: 'bg-blue-500',    bar: 'bg-[#3b82f6]' },
   purple:  { icon: 'text-purple-800',  label: 'text-purple-900',  value: 'text-purple-900',  ring: 'border-purple-200  bg-purple-50',   dot: 'bg-purple-500',  bar: 'bg-[#8b5cf6]' },
   default: { icon: 'text-gray-500',    label: 'text-[#737373]',   value: 'text-[#0f0f0f]',   ring: 'border-[#e8e8e8]   bg-white',      dot: 'bg-gray-400',    bar: 'bg-[#e2e8f0]' },

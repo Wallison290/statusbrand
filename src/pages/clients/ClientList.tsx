@@ -19,7 +19,7 @@ const GRADIENTS = [
   { id: 'emerald',      value: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',   preview: ['#10b981', '#06b6d4'] },
   { id: 'rose',         value: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',   preview: ['#f43f5e', '#fb923c'] },
   { id: 'indigo',       value: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',   preview: ['#4f46e5', '#7c3aed'] },
-  { id: 'lime',         value: 'linear-gradient(135deg, #84cc16 0%, #22c55e 100%)',   preview: ['#84cc16', '#22c55e'] },
+  { id: 'lime',         value: 'linear-gradient(135deg, #84cc16 0%, #3fa06e 100%)',   preview: ['#84cc16', '#3fa06e'] },
   { id: 'pink-purple',  value: 'linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%)',   preview: ['#f9a8d4', '#c084fc'] },
   { id: 'amber-orange', value: 'linear-gradient(135deg, #fcd34d 0%, #fb923c 100%)',   preview: ['#fcd34d', '#fb923c'] },
   { id: 'teal-sky',     value: 'linear-gradient(135deg, #6ee7b7 0%, #38bdf8 100%)',   preview: ['#6ee7b7', '#38bdf8'] },

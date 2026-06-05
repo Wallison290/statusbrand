@@ -229,7 +229,7 @@ function TaskDetailModal({
   const barColor = sc.color.includes('slate') ? '#94a3b8'
     : sc.color.includes('blue')  ? '#3b82f6'
     : sc.color.includes('amber') ? '#f59e0b'
-    : '#22c55e'
+    : '#3fa06e'
 
   return (
     <div
@@ -481,7 +481,7 @@ function TaskCard({
   const barColor = sc.color.includes('slate') ? '#94a3b8'
     : sc.color.includes('blue')  ? '#3b82f6'
     : sc.color.includes('amber') ? '#f59e0b'
-    : '#22c55e'
+    : '#3fa06e'
 
   return (
     <button

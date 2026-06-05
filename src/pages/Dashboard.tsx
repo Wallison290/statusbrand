@@ -175,7 +175,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               mode === key ? 'text-white shadow-sm' : 'text-[#CBD5E1] hover:text-white'
             }`}
-            style={mode === key ? { background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' } : undefined}
+            style={mode === key ? { background: 'linear-gradient(135deg, #3FA06E 0%, #1F6B4A 100%)' } : undefined}
           >
             {label}
           </button>
@@ -191,7 +191,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             setOpen(v => !v)
           }}
           className="flex items-center gap-2 text-[12px] rounded-xl px-3 py-1.5 transition-colors text-[#CBD5E1] hover:text-white"
-          style={{ background: '#101A2B', border: `1px solid ${mode === 'custom' ? '#22C55E' : '#182233'}` }}
+          style={{ background: '#101A2B', border: `1px solid ${mode === 'custom' ? '#3FA06E' : '#182233'}` }}
         >
           <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="capitalize whitespace-nowrap">{rangeLabel(mode, range)}</span>
@@ -207,7 +207,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
                   type="date"
                   value={tempS}
                   onChange={e => setTempS(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#22C55E]/40"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#3FA06E]/40"
                   style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
@@ -218,7 +218,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
                   value={tempE}
                   min={tempS}
                   onChange={e => setTempE(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#22C55E]/40"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#3FA06E]/40"
                   style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
@@ -235,7 +235,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
                 onClick={applyCustom}
                 disabled={!tempS || !tempE || tempE < tempS}
                 className="flex-1 h-8 rounded-lg text-[12px] text-white font-medium disabled:opacity-40 transition-colors"
-                style={{ background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #3FA06E 0%, #1F6B4A 100%)' }}
               >
                 Aplicar
               </button>
@@ -252,8 +252,8 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
 const iconBgMap: Record<string, string> = {
   'bg-amber-50':   'rgba(245,166,35,0.15)',
   'bg-blue-50':    'rgba(79,142,247,0.15)',
-  'bg-emerald-50': 'rgba(34,197,94,0.15)',
-  'bg-green-50':   'rgba(34,197,94,0.15)',
+  'bg-emerald-50': 'rgba(63,160,110,0.15)',
+  'bg-green-50':   'rgba(63,160,110,0.15)',
   'bg-red-50':     'rgba(239,68,68,0.15)',
   'bg-violet-50':  'rgba(139,92,246,0.15)',
   'bg-gray-50':    'rgba(203,213,225,0.10)',
@@ -283,8 +283,8 @@ function KpiCard({
     <div
       className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
       style={{
-        background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)',
-        boxShadow:  '0 4px 24px rgba(34,197,94,0.25)',
+        background: 'linear-gradient(135deg, #3FA06E 0%, #1F6B4A 100%)',
+        boxShadow:  '0 4px 24px rgba(63,160,110,0.25)',
       }}
     >
       <div className="flex items-start justify-between">
@@ -404,7 +404,7 @@ function CalendarWidget({
               key={dayStr}
               onClick={onDayClick}
               className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none"
-              style={isCurrent ? { background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' } : { background: 'transparent' }}
+              style={isCurrent ? { background: 'linear-gradient(135deg, #3FA06E 0%, #1F6B4A 100%)' } : { background: 'transparent' }}
               onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = '#101A2B' }}
               onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
@@ -477,12 +477,12 @@ function FinancialSummary({ data }: { data: FinStats }) {
       show:        true,
     },
     {
-      icon:        <CheckCircle2 className="w-4 h-4" style={{ color: '#34D399' }} />,
-      iconBgStyle: 'rgba(34,197,94,0.15)',
+      icon:        <CheckCircle2 className="w-4 h-4" style={{ color: '#5FB78F' }} />,
+      iconBgStyle: 'rgba(63,160,110,0.15)',
       label:       'Recebido',
       sub:         'pago no ciclo atual',
       value:       fmtBRL(data.received),
-      valueColor:  '#34D399',
+      valueColor:  '#5FB78F',
       show:        true,
     },
     {
@@ -565,7 +565,7 @@ function AlertsWidget({
   const allGood = pendingApproval === 0 && overdueTasks === 0
 
   const rows = [
-    { icon: CheckCircle2, label: 'Aprovados no período',  value: periodApproved,  bgStyle: 'rgba(34,197,94,0.15)',                                           iconColor: '#34D399', href: '/planner' },
+    { icon: CheckCircle2, label: 'Aprovados no período',  value: periodApproved,  bgStyle: 'rgba(63,160,110,0.15)',                                           iconColor: '#5FB78F', href: '/planner' },
     { icon: Clock,        label: 'Aguardando aprovação',  value: pendingApproval, bgStyle: pendingApproval > 0 ? 'rgba(245,166,35,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingApproval > 0 ? '#F5A623' : '#64748b', href: '/planner' },
     { icon: CheckSquare,  label: 'Tarefas em aberto',     value: pendingTasks,    bgStyle: pendingTasks    > 0 ? 'rgba(79,142,247,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingTasks    > 0 ? '#4F8EF7' : '#64748b', href: '/tasks'   },
     { icon: AlertTriangle,label: 'Tarefas atrasadas',     value: overdueTasks,    bgStyle: overdueTasks    > 0 ? 'rgba(239,68,68,0.15)'   : 'rgba(203,213,225,0.10)', iconColor: overdueTasks    > 0 ? '#f87171' : '#64748b', href: '/tasks'   },
