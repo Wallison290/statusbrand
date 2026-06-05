@@ -1912,7 +1912,7 @@ function ClientDashboardTab({
                 </p>
               </div>
               <button
-                onClick={() => onNavigate('suporte')}
+                onClick={() => onNavigate('notas')}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#e8e8e8] bg-[#f7f7f7] text-[11px] text-[#737373] font-medium hover:bg-[#f0f0f0] hover:border-[#d0d0d0] transition-all"
               >
                 <MessageCircle className="w-3.5 h-3.5" /> Solicitar reunião
@@ -1942,16 +1942,10 @@ function ClientDashboardTab({
               </div>
             </div>
             {client.main_objective && (
-              <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3 mb-3">
+              <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3">
                 {client.main_objective}
               </p>
             )}
-            <button
-              onClick={() => onNavigate('empresa')}
-              className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              Ver perfil completo <ArrowRight className="w-3 h-3" />
-            </button>
           </motion.div>
         </div>
       </div>
@@ -2796,15 +2790,10 @@ export function PortalDashboard() {
             <TabsTrigger value="planejamento">
               Planejamento ({plannerItems?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="conteudos">
-              Conteúdos ({(contents?.length || 0) + contentAssets.length})
-            </TabsTrigger>
-            <TabsTrigger value="empresa">Empresa</TabsTrigger>
+            <TabsTrigger value="notas">Solicitações/Ideias</TabsTrigger>
             <TabsTrigger value="materiais">Materiais</TabsTrigger>
-            <TabsTrigger value="suporte">Suporte</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="notas">Solicitações</TabsTrigger>
             {formConfig?.is_active && (
               <TabsTrigger value="formulario" className="flex items-center gap-1.5">
                 <ClipboardList className="w-3.5 h-3.5" /> Formulário
@@ -2839,193 +2828,9 @@ export function PortalDashboard() {
             )}
           </TabsContent>
 
-          {/* Aba Conteúdos */}
-          <TabsContent value="conteudos">
-            <div className="space-y-6">
-
-              {/* Conteúdos gerados com IA */}
-              {(contents && contents.length > 0) && (
-                <div>
-                  <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wide mb-3">Gerados com IA</p>
-                  <div className="space-y-2">
-                    {contents.map(c => (
-                      <Card key={c.id} className="hover:border-[#d0d0d0] transition-colors">
-                        <CardContent className="p-4 flex items-center gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-[#0f0f0f] text-sm truncate">{c.title || c.term}</p>
-                            {c.subtitle && <p className="text-xs text-[#737373] truncate mt-0.5">{c.subtitle}</p>}
-                            <p className="text-xs text-[#a0a0a0] mt-1">{formatRelative(c.created_at)}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Badge status={c.status} />
-                            <span className="text-xs text-[#737373]">{contentTypeLabels[c.content_type]}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Arsenal Visual (content_assets) */}
-              {contentAssets.length > 0 && (
-                <div>
-                  <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wide mb-3">Arsenal visual</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {contentAssets.map(asset => {
-                      const isImg = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
-                      return (
-                        <button
-                          key={asset.id}
-                          type="button"
-                          onClick={() => { setSelectedAsset(asset); setAssetModalOpen(true) }}
-                          className="rounded-xl border border-[#e8e8e8] bg-white overflow-hidden hover:border-[#c8c8c8] hover:shadow-sm transition-all text-left w-full"
-                        >
-                          {/* Thumbnail */}
-                          <div className="h-28 bg-[#f5f5f5] flex items-center justify-center overflow-hidden">
-                            {asset.media_url ? (
-                              isImg ? (
-                                <img
-                                  src={asset.media_url}
-                                  alt={asset.title}
-                                  className="w-full h-full object-cover"
-                                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                                />
-                              ) : (
-                                <div className="flex flex-col items-center gap-1">
-                                  <File className="w-6 h-6 text-[#b0b0b0]" />
-                                  <span className="text-[10px] text-[#b0b0b0]">Ver arquivo</span>
-                                </div>
-                              )
-                            ) : (
-                              <ImageIcon className="w-6 h-6 text-[#c8c8c8]" />
-                            )}
-                          </div>
-                          {/* Info */}
-                          <div className="p-2.5">
-                            <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{asset.title}</p>
-                            {asset.caption && (
-                              <p className="text-[10px] text-[#737373] mt-0.5 line-clamp-2 leading-relaxed">{asset.caption}</p>
-                            )}
-                            <p className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-blue-600">
-                              <Eye className="w-2.5 h-2.5" /> Ver detalhes
-                            </p>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Empty state */}
-              {(!contents || contents.length === 0) && contentAssets.length === 0 && (
-                <div className="text-center py-16">
-                  <Sparkles className="w-8 h-8 text-[#94a3b8] mx-auto mb-2" />
-                  <p className="text-[#64748b] text-sm">Nenhum conteúdo disponível ainda.</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Aba Empresa */}
-          <TabsContent value="empresa">
-            <div className="space-y-6">
-              {/* Informações gerais */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {infoFields.map(({ label, value }) => value && (
-                  <Card key={label}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">{label}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-[#737373]">{value}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-                {infoFields.every(f => !f.value) && (
-                  <div className="col-span-2 text-center py-8">
-                    <p className="text-[#a0a0a0] text-sm">Nenhuma informação estratégica cadastrada ainda.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Brand DNA */}
-              {brandDNA && (
-                brandDNA.how_brand_speaks || brandDNA.how_brand_not_speaks ||
-                brandDNA.positioning || brandDNA.ideal_language || brandDNA.mental_triggers
-              ) && (
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-px flex-1 bg-[#e8e8e8]" />
-                    <p className="text-[11px] font-semibold text-[#a0a0a0] uppercase tracking-wider px-2">Identidade da marca</p>
-                    <div className="h-px flex-1 bg-[#e8e8e8]" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {brandDNA.how_brand_speaks && (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Como a marca fala</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-[#737373]">{brandDNA.how_brand_speaks}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {brandDNA.how_brand_not_speaks && (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Como não fala</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-[#737373]">{brandDNA.how_brand_not_speaks}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {brandDNA.positioning && (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Posicionamento</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-[#737373]">{brandDNA.positioning}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {brandDNA.ideal_language && (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Linguagem ideal</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-[#737373]">{brandDNA.ideal_language}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {brandDNA.mental_triggers && (
-                      <Card className="md:col-span-2">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xs text-[#a0a0a0] uppercase tracking-wide">Gatilhos mentais</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-[#737373]">{brandDNA.mental_triggers}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
           {/* Aba Materiais */}
           <TabsContent value="materiais">
             <PortalMateriaisTab materials={materials} />
-          </TabsContent>
-
-          {/* Aba Suporte */}
-          <TabsContent value="suporte">
-            <PortalSuporteTab contacts={supportContacts} />
           </TabsContent>
 
           {/* Aba Resultados */}
