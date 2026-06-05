@@ -10,13 +10,13 @@ import type { ContentType } from '@/types'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const BAR_COLOR   = '#3FA06E'
+const BAR_COLOR   = '#2563EB'
 const GRID_COLOR  = '#1e293b'
 const AXIS_PROPS  = { fill: '#CBD5E1', fontSize: 11 } as const
 
 const DONUT_PALETTE = [
-  '#3FA06E', '#2F8F63', '#4F8EF7', '#8B5CF6',
-  '#F5A623', '#5FB78F', '#1F6B4A', '#64748b',
+  '#2563EB', '#1D4ED8', '#60A5FA', '#8B5CF6',
+  '#F5A623', '#22C55E', '#6B7280', '#64748b',
 ]
 
 const TIP_STYLE = {
@@ -29,7 +29,7 @@ const TIP_STYLE = {
     boxShadow:    '0 4px 16px rgba(0,0,0,0.3)',
     padding:      '8px 12px',
   },
-  cursor: { fill: 'rgba(63,160,110,0.05)' },
+  cursor: { fill: 'rgba(37,99,235,0.05)' },
 }
 
 // ─── PlannerBarChart ──────────────────────────────────────────────────────────
@@ -298,7 +298,7 @@ export function MetricsCarousel({
                   ? 'w-4 h-1.5'
                   : 'w-1.5 h-1.5 hover:opacity-80'
               }`}
-              style={{ background: i === activeIdx ? '#3FA06E' : '#1e293b' }}
+              style={{ background: i === activeIdx ? '#2563EB' : '#1e293b' }}
               aria-label={`Ir para slide ${i + 1}`}
             />
           ))}

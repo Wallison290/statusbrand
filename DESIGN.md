@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: KairoHub
-description: Sistema de gestão de conteúdo e planejamento para agências e criadores. Interface minimalista, profissional, com tema claro e acentos em violeta/índigo.
+description: Sistema de gestão de conteúdo e planejamento para agências e criadores. Interface minimalista, profissional, com tema escuro profundo e acento azul (#2563EB).
 
 colors:
   background: "#050816"
@@ -12,10 +12,10 @@ colors:
   foreground-muted: "#CBD5E1"
   border: "#1e293b"
   border-subtle: "#182233"
-  accent-green: "#3FA06E"
-  accent-green-medium: "#2F8F63"
-  accent-green-dark: "#1F6B4A"
-  accent-green-glow: "#5FB78F"
+  accent-primary: "#2563EB"
+  accent-primary-hover: "#1D4ED8"
+  accent-primary-dark: "#1E40AF"
+  accent-primary-glow: "#60A5FA"
   accent-purple: "#8B5CF6"
   accent-blue: "#4F8EF7"
   accent-orange: "#F5A623"
@@ -24,13 +24,13 @@ colors:
   sidebar-text: "#CBD5E1"
   sidebar-text-muted: "#64748b"
   destructive: "#ef4444"
-  success: "#3FA06E"
+  success: "#22C55E"
   warning: "#F5A623"
-  chart-primary: "#3FA06E"
+  chart-primary: "#2563EB"
   chart-grid: "#182233"
   chart-axis: "#CBD5E1"
-  status-active: "#3FA06E"
-  status-published: "#5FB78F"
+  status-active: "#22C55E"
+  status-published: "#4ADE80"
   status-production: "#4F8EF7"
   status-review: "#F5A623"
   status-rejected: "#f87171"

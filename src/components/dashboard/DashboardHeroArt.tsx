@@ -52,28 +52,28 @@ export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
           <stop offset="100%" stopColor="#150c05" />
         </radialGradient>
 
-        {/* Wooden saucer — face */}
-        <linearGradient id="art_wood_face" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#cf9d64" />
-          <stop offset="100%" stopColor="#a8733c" />
+        {/* Disco azul — face superior */}
+        <linearGradient id="art_disc" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
         </linearGradient>
 
-        {/* Wooden saucer — side depth */}
-        <linearGradient id="art_wood_side" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stopColor="#a87340" />
-          <stop offset="100%" stopColor="#845a1e" />
-        </linearGradient>
+        {/* Disco azul — glow ao redor */}
+        <radialGradient id="art_disc_glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#2563eb" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+        </radialGradient>
 
         {/* Plant pot */}
         <linearGradient id="art_pot" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#f6f2ff" />
-          <stop offset="100%" stopColor="#ece5f8" />
+          <stop offset="0%"   stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#e7edf5" />
         </linearGradient>
 
         {/* Ambient glow */}
         <radialGradient id="art_ambient" cx="40%" cy="65%" r="52%">
-          <stop offset="0%"   stopColor="#c4b5fd" stopOpacity={glowOpacity} />
-          <stop offset="100%" stopColor="#c4b5fd" stopOpacity="0"           />
+          <stop offset="0%"   stopColor="#2563eb" stopOpacity={glowOpacity} />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0"           />
         </radialGradient>
 
         {/* Mug drop shadow (neutro, aterra na pires) */}
@@ -91,7 +91,7 @@ export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
         {/* Plant shadow */}
         <filter id="art_plt_f" x="-20%" y="-10%" width="140%" height="130%">
           <feDropShadow dx="0" dy="6" stdDeviation="8"
-            floodColor="#7c3aed" floodOpacity="0.07" />
+            floodColor="#1d4ed8" floodOpacity="0.08" />
         </filter>
 
         {/* Blurs suaves p/ brilho/sombra do cilindro e vapor */}
@@ -114,33 +114,32 @@ export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
       {/* ── Ground shadow ── */}
       <ellipse cx="126" cy="208" rx="90" ry="8" fill="#00000008" />
 
-      {/* ═══════════════════ SAUCER ═══════════════════ */}
+      {/* ═══════════════════ DISCO AZUL ═══════════════════ */}
 
-      {/* Side depth */}
-      <ellipse cx="126" cy="199" rx="76" ry="13"
-        fill="url(#art_wood_side)"
+      {/* Glow azul ao redor do disco */}
+      <ellipse cx="126" cy="196" rx="98" ry="24" fill="url(#art_disc_glow)" />
+
+      {/* Profundidade / lateral */}
+      <ellipse cx="126" cy="199" rx="74" ry="13"
+        fill="#1e40af"
         filter="url(#art_sau_f)"
       />
 
-      {/* Top face */}
-      <ellipse cx="126" cy="193" rx="76" ry="12"
-        fill="url(#art_wood_face)"
+      {/* Face superior */}
+      <ellipse cx="126" cy="193" rx="74" ry="12"
+        fill="url(#art_disc)"
       />
 
-      {/* Grain lines */}
-      <path d="M76 191 Q126 187 176 191" stroke="#b88040" strokeWidth="0.9" opacity="0.38" />
-      <path d="M78 194 Q126 190 174 194" stroke="#b88040" strokeWidth="0.7" opacity="0.28" />
+      {/* Brilho superior */}
+      <ellipse cx="110" cy="190" rx="30" ry="4.5" fill="#93c5fd" opacity="0.55" filter="url(#art_blur_s)" />
 
-      {/* Highlight streak */}
-      <ellipse cx="106" cy="191" rx="21" ry="3.5" fill="#e0b87a" opacity="0.38" />
-
-      {/* Cup resting groove */}
+      {/* Aro interno */}
       <ellipse cx="126" cy="192" rx="44" ry="7.5"
-        fill="none" stroke="#9a6430" strokeWidth="1" opacity="0.32" />
+        fill="none" stroke="#1e3a8a" strokeWidth="1" opacity="0.45" />
 
-      {/* Sombra de contato da xícara sobre a pires */}
+      {/* Sombra de contato da xícara sobre o disco */}
       <ellipse cx="126" cy="190" rx="35" ry="6.5"
-        fill="#000000" opacity="0.17" filter="url(#art_blur_s)" />
+        fill="#0a1f5c" opacity="0.30" filter="url(#art_blur_s)" />
 
       {/* ═══════════════════ MUG ═══════════════════ */}
 
@@ -300,7 +299,7 @@ export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
       >
         <path
           d="M275 20 L277 27 L284 29 L277 31 L275 38 L273 31 L266 29 L273 27 Z"
-          fill="#c4b5fd" opacity="0.82"
+          fill="#93c5fd" opacity="0.82"
         />
       </motion.g>
 
@@ -308,25 +307,25 @@ export function DashboardHeroArt({ dark = false }: { dark?: boolean }) {
       <path
         d="M290 61 L291.2 65 L295.5 66.2 L291.2 67.4 L290 71.4
            L288.8 67.4 L284.5 66.2 L288.8 65 Z"
-        fill="#ddd6fe" opacity="0.52"
+        fill="#bfdbfe" opacity="0.52"
       />
 
       {/* Left floating dots */}
       <motion.circle cx="30" cy="70" r="5"
-        fill="#ede9fe" opacity="0.62"
+        fill="#dbeafe" opacity="0.62"
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.circle cx="22" cy="130" r="2.8"
-        fill="#c4b5fd" opacity="0.38"
+        fill="#93c5fd" opacity="0.38"
         animate={{ y: [0, 5, 0] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
       />
-      <circle cx="24" cy="170" r="2"   fill="#ddd6fe" opacity="0.28" />
+      <circle cx="24" cy="170" r="2"   fill="#bfdbfe" opacity="0.28" />
 
       {/* Right dots */}
-      <circle cx="298" cy="98"  r="3" fill="#ddd6fe" opacity="0.42" />
-      <circle cx="302" cy="158" r="2" fill="#c4b5fd" opacity="0.28" />
+      <circle cx="298" cy="98"  r="3" fill="#bfdbfe" opacity="0.42" />
+      <circle cx="302" cy="158" r="2" fill="#93c5fd" opacity="0.28" />
     </svg>
   )
 }
