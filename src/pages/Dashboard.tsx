@@ -801,46 +801,7 @@ export function Dashboard() {
 
       <div className="px-6 py-6 md:px-8 md:py-7 space-y-6">
 
-        {/* KPI Cards — linha 1: clientes */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard
-            label="Clientes Ativos"
-            value={stats.active_clients}
-            subtitle={`de ${stats.total_clients} total`}
-            href="/clients"
-            icon={UserCheck}
-            featured
-          />
-          <KpiCard
-            label="Total de Clientes"
-            value={stats.total_clients}
-            subtitle="na base"
-            href="/clients"
-            icon={Users}
-            iconBg="bg-violet-50"
-            iconColor="text-violet-600"
-          />
-          <KpiCard
-            label="Posts Agendados"
-            value={stats.period_scheduled}
-            subtitle="aprovados no período"
-            href="/planner"
-            icon={CalendarDays}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-700"
-          />
-          <KpiCard
-            label="Posts Publicados"
-            value={stats.period_published}
-            subtitle="publicados no período"
-            href="/planner"
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-700"
-          />
-        </div>
-
-        {/* KPI Cards — linha 2: conteúdo */}
+        {/* KPI Cards — conteúdo */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
             label="Aguardando Aprovação"
