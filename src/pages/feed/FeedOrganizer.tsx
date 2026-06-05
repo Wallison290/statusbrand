@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable,
@@ -13,6 +13,11 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
 import { useContentAssets } from '@/hooks/useContentAssets'
+import {
+  useFeeds, useFeedMeta, useCreateFeedVersion, useUpdateFeedVersion,
+  useDeleteFeedVersion, useUpsertFeedMeta,
+} from '@/hooks/useFeeds'
+import type { FeedPost, FeedVersion, FeedClientMeta } from '@/hooks/useFeeds'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
@@ -26,62 +31,6 @@ function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const [item] = result.splice(from, 1)
   result.splice(to, 0, item)
   return result
-}
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface FeedPost {
-  id: string
-  image_url: string
-  caption?: string
-  asset_id?: string
-}
-
-interface FeedVersion {
-  id: string
-  client_id: string
-  name: string
-  posts: FeedPost[]
-  created_at: string
-  updated_at: string
-}
-
-interface FeedClientMeta {
-  bio: string
-  link: string
-}
-
-// ─── localStorage helpers ─────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'kairohub_feed_v1'
-const META_KEY    = 'kairohub_feed_meta_v1'
-
-function loadAll(): Record<string, FeedVersion[]> {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
-}
-function saveAll(data: Record<string, FeedVersion[]>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-function loadVersions(userId: string, clientId: string): FeedVersion[] {
-  return loadAll()[`${userId}__${clientId}`] || []
-}
-function persistVersions(userId: string, clientId: string, versions: FeedVersion[]) {
-  const all = loadAll()
-  all[`${userId}__${clientId}`] = versions
-  saveAll(all)
-}
-function loadMeta(userId: string, clientId: string): FeedClientMeta {
-  try {
-    const all = JSON.parse(localStorage.getItem(META_KEY) || '{}')
-    return all[`${userId}__${clientId}`] || { bio: '', link: '' }
-  } catch { return { bio: '', link: '' } }
-}
-function persistMeta(userId: string, clientId: string, meta: FeedClientMeta) {
-  try {
-    const all = JSON.parse(localStorage.getItem(META_KEY) || '{}')
-    all[`${userId}__${clientId}`] = meta
-    localStorage.setItem(META_KEY, JSON.stringify(all))
-  } catch {}
 }
 
 // ─── Mini Feed Preview (gallery card) ────────────────────────────────────────
@@ -508,6 +457,13 @@ export function FeedOrganizer() {
   const { user }  = useAuth()
   const { toast } = useToast()
   const { data: clients } = useClients()
+  const { data: allVersions } = useFeeds()
+  const { data: feedMeta }    = useFeedMeta()
+
+  const createVersionMut = useCreateFeedVersion()
+  const updateVersionMut = useUpdateFeedVersion()
+  const deleteVersionMut = useDeleteFeedVersion()
+  const upsertMetaMut    = useUpsertFeedMeta()
 
   // ── View state ─────────────────────────────────────────────────────────────
   const [view,             setView]            = useState<AppView>('gallery')
@@ -515,27 +471,44 @@ export function FeedOrganizer() {
 
   // ── Editor state ───────────────────────────────────────────────────────────
   const [clientMenuOpen,  setClientMenuOpen]  = useState(false)
-  const [versions,        setVersions]        = useState<FeedVersion[]>([])
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null)
   const [activeDragId,    setActiveDragId]    = useState<string | null>(null)
   const [pickerOpen,      setPickerOpen]      = useState(false)
   const [isUploading,     setIsUploading]     = useState(false)
-  const [clientMeta,      setClientMeta]      = useState<FeedClientMeta>({ bio: '', link: '' })
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  // ── Derived from server data ────────────────────────────────────────────────
+
+  const versionsByClient = useMemo(() => {
+    const map: Record<string, FeedVersion[]> = {}
+    for (const v of allVersions ?? []) (map[v.client_id] ??= []).push(v)
+    return map
+  }, [allVersions])
+
+  const versions = selectedClientId ? (versionsByClient[selectedClientId] ?? []) : []
+  const clientMeta: FeedClientMeta =
+    (selectedClientId && feedMeta?.[selectedClientId]) || { bio: '', link: '' }
+
+  // Keep the active version valid as server data changes (create / delete / load).
+  useEffect(() => {
+    if (view !== 'editor') return
+    if (versions.length === 0) {
+      if (activeVersionId !== null) setActiveVersionId(null)
+      return
+    }
+    if (!activeVersionId || !versions.some(v => v.id === activeVersionId)) {
+      setActiveVersionId(versions[0].id)
+    }
+  }, [view, versions, activeVersionId])
 
   // ── Load / open client feed ────────────────────────────────────────────────
 
   const openEditor = useCallback((clientId: string) => {
-    if (!user) return
-    const vv   = loadVersions(user.id, clientId)
-    const meta = loadMeta(user.id, clientId)
-    setVersions(vv)
-    setActiveVersionId(vv[0]?.id ?? null)
-    setClientMeta(meta)
+    setActiveVersionId(versionsByClient[clientId]?.[0]?.id ?? null)
     setSelectedClientId(clientId)
     setView('editor')
-  }, [user])
+  }, [versionsByClient])
 
   const handleSaveAndBack = () => {
     toast('Feed salvo com sucesso!', 'success')
@@ -545,47 +518,46 @@ export function FeedOrganizer() {
   // ── Meta ───────────────────────────────────────────────────────────────────
 
   const handleMetaChange = (meta: FeedClientMeta) => {
-    if (!user || !selectedClientId) return
-    setClientMeta(meta)
-    persistMeta(user.id, selectedClientId, meta)
+    if (!selectedClientId) return
+    upsertMetaMut.mutate({ client_id: selectedClientId, ...meta })
   }
 
   // ── Versions ───────────────────────────────────────────────────────────────
 
-  const persist = (newVersions: FeedVersion[]) => {
-    if (!user || !selectedClientId) return
-    setVersions(newVersions)
-    persistVersions(user.id, selectedClientId, newVersions)
-  }
-
   const createVersion = () => {
-    if (!selectedClientId || !user) return
-    const newV: FeedVersion = {
-      id: crypto.randomUUID(), client_id: selectedClientId,
-      name: `Versão ${versions.length + 1}`, posts: [],
-      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-    }
-    const updated = [...versions, newV]
-    persist(updated)
-    setActiveVersionId(newV.id)
+    if (!selectedClientId) return
+    createVersionMut.mutate(
+      { client_id: selectedClientId, name: `Versão ${versions.length + 1}`, posts: [] },
+      {
+        onSuccess: v => setActiveVersionId(v.id),
+        onError: e => toast((e as Error).message || 'Erro ao criar versão.', 'error'),
+      },
+    )
   }
 
   const renameVersion = (id: string, name: string) =>
-    persist(versions.map(v => v.id === id ? { ...v, name, updated_at: new Date().toISOString() } : v))
+    updateVersionMut.mutate({ id, name })
 
   const deleteVersion = (id: string) => {
-    const updated = versions.filter(v => v.id !== id)
-    persist(updated)
-    if (activeVersionId === id) setActiveVersionId(updated[0]?.id ?? null)
+    if (activeVersionId === id) {
+      const remaining = versions.filter(v => v.id !== id)
+      setActiveVersionId(remaining[0]?.id ?? null)
+    }
+    deleteVersionMut.mutate(id, {
+      onError: e => toast((e as Error).message || 'Erro ao excluir versão.', 'error'),
+    })
   }
 
   const duplicateVersion = (id: string) => {
     const src = versions.find(v => v.id === id)
-    if (!src) return
-    const newV: FeedVersion = { ...src, id: crypto.randomUUID(), name: `${src.name} (cópia)`,
-      created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
-    persist([...versions, newV])
-    setActiveVersionId(newV.id)
+    if (!src || !selectedClientId) return
+    createVersionMut.mutate(
+      { client_id: selectedClientId, name: `${src.name} (cópia)`, posts: src.posts },
+      {
+        onSuccess: v => setActiveVersionId(v.id),
+        onError: e => toast((e as Error).message || 'Erro ao duplicar versão.', 'error'),
+      },
+    )
   }
 
   // ── Posts ──────────────────────────────────────────────────────────────────
@@ -593,10 +565,10 @@ export function FeedOrganizer() {
   const activeVersion = versions.find(v => v.id === activeVersionId) ?? null
   const posts = activeVersion?.posts ?? []
 
-  const updatePosts = (newPosts: FeedPost[]) =>
-    persist(versions.map(v =>
-      v.id === activeVersionId ? { ...v, posts: newPosts, updated_at: new Date().toISOString() } : v
-    ))
+  const updatePosts = (newPosts: FeedPost[]) => {
+    if (!activeVersionId) return
+    updateVersionMut.mutate({ id: activeVersionId, posts: newPosts })
+  }
 
   const addPostFromAsset = (asset: ContentAsset) => {
     if (!asset.media_url) return
@@ -644,15 +616,8 @@ export function FeedOrganizer() {
 
   // ── Gallery: clients that have feeds ──────────────────────────────────────
 
-  const clientsWithFeeds = (clients || []).filter(c => {
-    if (!user) return false
-    return loadVersions(user.id, c.id).length > 0
-  })
-
-  const clientsWithoutFeeds = (clients || []).filter(c => {
-    if (!user) return false
-    return loadVersions(user.id, c.id).length === 0
-  })
+  const clientsWithFeeds = (clients || []).filter(c => (versionsByClient[c.id]?.length ?? 0) > 0)
+  const clientsWithoutFeeds = (clients || []).filter(c => (versionsByClient[c.id]?.length ?? 0) === 0)
 
   // ══════════════════════════════════════════════════════════════════════════
   // GALLERY VIEW
@@ -726,7 +691,7 @@ export function FeedOrganizer() {
           {clientsWithFeeds.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {clientsWithFeeds.map(c => {
-                const vv = user ? loadVersions(user.id, c.id) : []
+                const vv = versionsByClient[c.id] ?? []
                 return (
                   <FeedGalleryCard
                     key={c.id}
