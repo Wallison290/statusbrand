@@ -694,8 +694,18 @@ export function ClientProfile() {
       toast('Instagram conectado com sucesso!', 'success')
       setSearchParams(prev => { prev.delete('ig_connected'); return prev }, { replace: true })
     }
-    if (searchParams.get('ig_error') === 'profile_limit') {
-      toast('Limite de perfis Instagram do seu plano atingido. Faça upgrade para conectar mais contas.', 'error')
+    const igError = searchParams.get('ig_error')
+    if (igError) {
+      const messages: Record<string, string> = {
+        profile_limit:        'Limite de perfis Instagram do seu plano atingido. Faça upgrade para conectar mais contas.',
+        auth_denied:          'Autorização negada pelo Instagram. Tente novamente e aceite as permissões solicitadas.',
+        token_exchange_failed:'Falha ao autenticar com o Instagram. Verifique se o aplicativo Meta está configurado corretamente.',
+        profile_failed:       'Não foi possível obter os dados do perfil. Certifique-se de usar uma conta Business ou Creator.',
+        save_failed:          'Erro ao salvar a conexão no banco de dados. Tente novamente.',
+        invalid_callback:     'Link de retorno inválido. Tente conectar novamente.',
+        unknown:              'Erro inesperado ao conectar o Instagram. Tente novamente.',
+      }
+      toast(messages[igError] ?? 'Erro ao conectar Instagram. Tente novamente.', 'error')
       setSearchParams(prev => { prev.delete('ig_error'); return prev }, { replace: true })
     }
   }, [searchParams])

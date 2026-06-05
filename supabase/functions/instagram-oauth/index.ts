@@ -16,8 +16,18 @@ Deno.serve(async (req) => {
   const redirect = (path: string) =>
     new Response(null, { status: 302, headers: { Location: `${APP_URL}${path}` } })
 
-  if (errParam) return redirect('/instagram?error=auth_denied')
-  if (!code || !state) return redirect('/instagram?error=invalid_callback')
+  // Extrai clientId do state cedo para redirecionar erros de volta ao perfil correto
+  const [, earlyClientId] = (state ?? '').includes('|')
+    ? (state ?? '').split('|')
+    : [state, null]
+
+  const errRedirect = (code: string) =>
+    earlyClientId
+      ? redirect(`/clients/${earlyClientId}?ig_error=${code}`)
+      : redirect(`/instagram?error=${code}`)
+
+  if (errParam) return errRedirect('auth_denied')
+  if (!code || !state) return errRedirect('invalid_callback')
 
   const redirectUri = `${SUPABASE_URL}/functions/v1/instagram-oauth`
 
@@ -38,7 +48,7 @@ Deno.serve(async (req) => {
 
     if (!shortData.access_token) {
       console.error('Short token failed:', shortData)
-      return redirect('/instagram?error=token_exchange_failed')
+      return errRedirect('token_exchange_failed')
     }
 
     const shortToken = shortData.access_token
@@ -63,7 +73,7 @@ Deno.serve(async (req) => {
 
     if (profData.error) {
       console.error('Profile failed:', profData.error)
-      return redirect('/instagram?error=profile_failed')
+      return errRedirect('profile_failed')
     }
 
     // Usa o id retornado por /me como fonte autoritativa (pode diferir do token)
@@ -136,7 +146,7 @@ Deno.serve(async (req) => {
 
     if (upsertError) {
       console.error('Upsert error:', upsertError)
-      return redirect('/instagram?error=save_failed')
+      return errRedirect('save_failed')
     }
 
     const target = clientId ? `/clients/${clientId}?ig_connected=true` : `/instagram?connected=true`
@@ -144,6 +154,6 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('OAuth error:', err)
-    return redirect('/instagram?error=unknown')
+    return errRedirect('unknown')
   }
 })
