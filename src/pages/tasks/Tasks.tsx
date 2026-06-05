@@ -219,7 +219,7 @@ function TaskCard({
       }}
       onDragEnd={() => { setTimeout(() => { dragStarted.current = false }, 50); onDragEnd() }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      className={['w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100',
+      className={['w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 border-l-4 border-l-violet-400',
         'cursor-pointer hover:shadow-md transition-all duration-150 select-none',
         dragging ? 'opacity-40 scale-95' : ''].join(' ')}>
       {(task.due_time || overdueAndOpen) && (
@@ -283,32 +283,34 @@ function DayColumn({
 
   return (
     <div
-      className={['flex-shrink-0 w-[260px] flex flex-col rounded-2xl border transition-colors overflow-hidden bg-white',
-        isDragOver ? 'border-blue-300 ring-2 ring-blue-200' : 'border-gray-100'].join(' ')}
+      className="flex-shrink-0 w-[260px] flex flex-col"
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
       onDrop={e => { e.preventDefault(); setIsDragOver(false); const id = e.dataTransfer.getData('taskId'); if (id) onDrop(id, day) }}
     >
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-50">
+      {/* Header do dia */}
+      <div className="flex items-center justify-between px-1 pb-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-[14px] font-bold text-gray-800">{dayName}</p>
+            <p className="text-[15px] font-bold text-gray-800">{dayName}</p>
             {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-gray-900 text-white rounded-full uppercase tracking-wider leading-none">Hoje</span>}
           </div>
-          <p className="text-[11px] text-gray-400 mt-0.5 capitalize">{dayNum} {monthAbbr}</p>
+          <p className="text-[12px] text-gray-400 mt-0.5">{dayNum} {monthAbbr}</p>
         </div>
         <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
-            <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold bg-violet-600 text-white">{tasks.length}</span>
+            <span className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold bg-violet-600 text-white">{tasks.length}</span>
           )}
           <button onClick={() => onAddTask(day)}
-            className="w-7 h-7 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all border border-gray-200"
+            className="w-7 h-7 rounded-full text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all border border-gray-200 bg-white hover:bg-gray-50"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}>
             <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-      <div className="flex-1 px-3 py-3 space-y-2.5 min-h-[340px] overflow-y-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
+
+      {/* Corpo — tarefas ou estado vazio */}
+      <div className="flex-1 min-h-[380px] overflow-y-auto space-y-2.5" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
         <AnimatePresence>
           {tasks.map(task => (
             <motion.div key={task.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.14 }}>
@@ -316,17 +318,20 @@ function DayColumn({
             </motion.div>
           ))}
         </AnimatePresence>
+
         {tasks.length === 0 && !isDragOver && (
-          <div className="flex flex-col items-center justify-center h-[280px]">
-            <button onClick={() => onAddTask(day)} className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center mb-2 transition-colors">
-              <Plus className="w-5 h-5 text-gray-400" />
-            </button>
-            <p className="text-[12px] text-gray-400">Adicionar tarefa</p>
-          </div>
+          <button onClick={() => onAddTask(day)}
+            className="w-full h-full min-h-[360px] rounded-2xl bg-[#f5f5f8] hover:bg-[#eeecf8] flex flex-col items-center justify-center gap-2 transition-colors group">
+            <span className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center group-hover:border-violet-200 transition-colors">
+              <Plus className="w-5 h-5 text-gray-400 group-hover:text-violet-400" />
+            </span>
+            <p className="text-[12px] text-gray-400 group-hover:text-violet-400">Adicionar tarefa</p>
+          </button>
         )}
+
         {isDragOver && (
-          <div className="h-16 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 flex items-center justify-center">
-            <p className="text-[11px] text-blue-500 font-semibold">Soltar aqui</p>
+          <div className="h-16 rounded-2xl border-2 border-dashed border-violet-300 bg-violet-50/50 flex items-center justify-center">
+            <p className="text-[11px] text-violet-500 font-semibold">Soltar aqui</p>
           </div>
         )}
       </div>
@@ -362,8 +367,8 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
           ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Navegue com as setas ou use a aba <strong>Lista</strong> para ver todas.
         </div>
       )}
-      <div className="overflow-x-auto flex-1 min-h-0 px-4">
-        <div className="flex gap-3 h-full pb-3" style={{ minWidth: `${7 * 272}px` }}>
+      <div className="overflow-x-auto flex-1 min-h-0 px-5 md:px-6">
+        <div className="flex gap-4 h-full pb-4" style={{ minWidth: `${7 * 276}px` }}>
           {days.map(day => (
             <DayColumn key={day.toISOString()} day={day} tasks={tasksByDay(day)} draggingId={draggingId}
               onDrop={onDrop} onDragStart={onDragStart} onDragEnd={onDragEnd}
