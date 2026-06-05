@@ -61,7 +61,7 @@ function PlannerBarChart({
         <BarChart data={chartData} barSize={26} barCategoryGap="38%" layout="vertical" margin={{ left: 8 }}>
           <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} horizontal={false} />
           <XAxis type="number" tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} />
-          <YAxis type="category" dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} width={80} />
+          <YAxis type="category" dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} width={120} />
           <Tooltip {...TIP_STYLE} />
           <Bar dataKey="value" fill={BAR_COLOR} radius={[0, 6, 6, 0]} name="Itens" />
         </BarChart>

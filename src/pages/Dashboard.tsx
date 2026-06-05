@@ -777,11 +777,11 @@ export function Dashboard() {
     pList.forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    // Gráfico de planejamento — "Ag. aprovação" usa isAwaitingApproval()
+    // Gráfico de planejamento — "Aguardando aprovação" usa isAwaitingClientApproval()
     setPlannerChartData([
       { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#a3a3a3' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
-      { label: 'Ag. aprovação', value: pList.filter(isAwaitingClientApproval).length,            color: '#f97316' },
+      { label: 'Aguardando aprovação', value: pList.filter(isAwaitingClientApproval).length,     color: '#f97316' },
       { label: 'Aprovado',      value: period_approved,                                          color: '#10b981' },
     ])
   }
