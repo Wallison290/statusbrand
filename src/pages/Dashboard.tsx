@@ -165,19 +165,17 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
   ]
 
   return (
-    <div className="bg-white border-b border-[#f1f5f9] px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div className="border-b px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap" style={{ background: '#0B1020', borderColor: '#182233' }}>
       {/* Period pills */}
-      <div className="flex items-center gap-0.5 bg-[#f1f5f9] rounded-xl p-1">
+      <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: '#101A2B' }}>
         {pills.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onMode(key)}
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-              mode === key
-                ? 'text-white shadow-sm'
-                : 'text-[#64748b] hover:text-[#0f172a]'
+              mode === key ? 'text-white shadow-sm' : 'text-[#CBD5E1] hover:text-white'
             }`}
-            style={mode === key ? { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' } : undefined}
+            style={mode === key ? { background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' } : undefined}
           >
             {label}
           </button>
@@ -192,51 +190,52 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             setTempE(format(customRange.end,   'yyyy-MM-dd'))
             setOpen(v => !v)
           }}
-          className={`flex items-center gap-2 text-[12px] border rounded-xl px-3 py-1.5 transition-colors ${
-            mode === 'custom'
-              ? 'text-[#0f172a] bg-white border-[#cbd5e1] font-medium'
-              : 'text-[#94a3b8] bg-white border-[#f1f5f9] hover:border-[#cbd5e1] hover:text-[#475569]'
-          }`}
+          className="flex items-center gap-2 text-[12px] rounded-xl px-3 py-1.5 transition-colors text-[#CBD5E1] hover:text-white"
+          style={{ background: '#101A2B', border: `1px solid ${mode === 'custom' ? '#22C55E' : '#182233'}` }}
         >
           <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="capitalize whitespace-nowrap">{rangeLabel(mode, range)}</span>
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl p-4 w-[260px]">
-            <p className="text-[12px] font-semibold text-gray-800 mb-3">Período personalizado</p>
+          <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl shadow-xl p-4 w-[260px]" style={{ background: '#101A2B', border: '1px solid #182233' }}>
+            <p className="text-[12px] font-semibold text-[#F8FAFC] mb-3">Período personalizado</p>
             <div className="space-y-2.5">
               <div>
-                <label className="text-[11px] text-gray-400 block mb-1">Data inicial</label>
+                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data inicial</label>
                 <input
                   type="date"
                   value={tempS}
                   onChange={e => setTempS(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#22C55E]/40"
+                  style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
               <div>
-                <label className="text-[11px] text-gray-400 block mb-1">Data final</label>
+                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data final</label>
                 <input
                   type="date"
                   value={tempE}
                   min={tempS}
                   onChange={e => setTempE(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#22C55E]/40"
+                  style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setOpen(false)}
-                className="flex-1 h-8 rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 border border-gray-100 transition-colors"
+                className="flex-1 h-8 rounded-lg text-[12px] text-[#CBD5E1] hover:text-white transition-colors"
+                style={{ border: '1px solid #182233' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={applyCustom}
                 disabled={!tempS || !tempE || tempE < tempS}
-                className="flex-1 h-8 rounded-lg text-[12px] bg-gray-900 text-white hover:bg-gray-800 transition-colors font-medium disabled:opacity-40"
+                className="flex-1 h-8 rounded-lg text-[12px] text-white font-medium disabled:opacity-40 transition-colors"
+                style={{ background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' }}
               >
                 Aplicar
               </button>
@@ -272,8 +271,8 @@ function KpiCard({
     <div
       className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
       style={{
-        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-        boxShadow:  '0 4px 24px rgba(124,58,237,0.30)',
+        background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)',
+        boxShadow:  '0 4px 24px rgba(34,197,94,0.25)',
       }}
     >
       <div className="flex items-start justify-between">
@@ -292,10 +291,8 @@ function KpiCard({
     </div>
   ) : (
     <div
-      className={`h-full rounded-2xl bg-white p-4 flex flex-col gap-3 transition-all duration-200 hover:shadow-md ${
-        showWarning ? 'border border-red-100' : 'border border-[#f1f5f9]'
-      }`}
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="h-full rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200 hover:opacity-90"
+      style={{ background: '#182233', border: `1px solid ${showWarning ? 'rgba(239,68,68,0.3)' : '#1e293b'}`, boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       <div className="flex items-start justify-between">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
@@ -308,9 +305,9 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className="text-[26px] font-semibold text-[#0f172a] tabular-nums leading-none">{displayValue ?? value}</p>
-        <p className="text-[12px] text-[#64748b] mt-1.5 leading-tight">{label}</p>
-        {subtitle && <p className="text-[10px] text-[#94a3b8] mt-0.5">{subtitle}</p>}
+        <p className="text-[26px] font-semibold text-[#F8FAFC] tabular-nums leading-none">{displayValue ?? value}</p>
+        <p className="text-[12px] text-[#CBD5E1] mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-[#64748b] mt-0.5">{subtitle}</p>}
       </div>
     </div>
   )
@@ -348,23 +345,25 @@ function CalendarWidget({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl p-5"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       {/* Month + nav */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setOffset(o => o - 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
+          style={{ background: '#101A2B' }}
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-[13px] font-semibold text-[#0f172a] capitalize">
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC] capitalize">
           {format(center, 'MMMM yyyy', { locale: ptBR })}
         </h3>
         <button
           onClick={() => setOffset(o => o + 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
+          style={{ background: '#101A2B' }}
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -389,10 +388,12 @@ function CalendarWidget({
             <div
               key={dayStr}
               onClick={onDayClick}
-              className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none hover:bg-[#f8fafc]"
-              style={isCurrent ? { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' } : undefined}
+              className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none"
+              style={isCurrent ? { background: 'linear-gradient(135deg, #22C55E 0%, #1F6B4A 100%)' } : { background: 'transparent' }}
+              onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = '#101A2B' }}
+              onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
-              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#1e293b]'}`}>
+              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#CBD5E1]'}`}>
                 {format(day, 'd')}
               </span>
               {dayItems.length > 0 && (
@@ -414,9 +415,9 @@ function CalendarWidget({
         <div className="space-y-1">
           <p className="text-[9.5px] font-semibold text-[#94a3b8] uppercase tracking-widest mb-2.5">Hoje</p>
           {todayItems.slice(0, 3).map(item => (
-            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-[#f8fafc]">
+            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl" style={{ background: '#101A2B' }}>
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-[#94a3b8]'}`} />
-              <p className="text-[11.5px] text-[#0f172a] truncate flex-1 font-medium">{item.title}</p>
+              <p className="text-[11.5px] text-[#F8FAFC] truncate flex-1 font-medium">{item.title}</p>
               <span className="text-[9.5px] text-[#94a3b8] flex-shrink-0">
                 {contentTypeLabels[item.content_type as any] ?? item.content_type}
               </span>
@@ -502,19 +503,19 @@ function FinancialSummary({ data }: { data: FinStats }) {
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#ececec] overflow-hidden"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl overflow-hidden"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[#f5f5f7] flex items-center">
-        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo financeiro</h3>
+      <div className="px-6 py-4 flex items-center" style={{ borderBottom: '1px solid #1e293b' }}>
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo financeiro</h3>
         <Link to="/financial" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
           Ver detalhes →
         </Link>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-[#f5f5f7]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: '#1e293b' }}>
         {items.map((item, i) => (
           <div key={i} className="px-6 py-5 flex flex-col gap-3">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
@@ -557,20 +558,20 @@ function AlertsWidget({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl p-5"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo operacional</h3>
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo operacional</h3>
       </div>
       <div className="space-y-0.5">
         {rows.map((row, i) => (
           <Link key={i} to={row.href}>
-            <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#f8fafc] transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors cursor-pointer hover:opacity-80" style={{ background: 'transparent' }}>
               <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${row.bg}`}>
                 <row.icon className={`w-3.5 h-3.5 ${row.color}`} />
               </div>
-              <p className="text-[11.5px] text-[#475569] flex-1 leading-snug">{row.label}</p>
+              <p className="text-[11.5px] text-[#CBD5E1] flex-1 leading-snug">{row.label}</p>
               <span className={`text-[14px] font-semibold tabular-nums ${row.color}`}>{row.value}</span>
             </div>
           </Link>
@@ -777,7 +778,7 @@ export function Dashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#f5f5f7]">
+    <div className="min-h-full" style={{ background: '#0B1020' }}>
 
       {/* ── Hero Banner inteligente ── */}
       <DashboardHero

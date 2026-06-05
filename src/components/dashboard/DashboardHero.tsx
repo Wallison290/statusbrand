@@ -134,7 +134,7 @@ export function DashboardHero({
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
       className="relative overflow-hidden rounded-b-[28px] border-b border-x border-[#1a2035] min-h-[240px]"
       style={{
-        background: 'linear-gradient(135deg, #050816 0%, #0c1120 45%, #111827 100%)',
+        background: 'linear-gradient(135deg, #050816 0%, #0B1020 45%, #101A2B 100%)',
         boxShadow:  '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
@@ -143,7 +143,7 @@ export function DashboardHero({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(5,150,105,0.14) 0%, transparent 65%)',
+            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(34,197,94,0.12) 0%, transparent 65%)',
         }}
       />
 
@@ -152,7 +152,7 @@ export function DashboardHero({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(52,211,153,0.06) 0%, transparent 62%)',
+            'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(79,142,247,0.06) 0%, transparent 62%)',
         }}
       />
 
@@ -161,7 +161,7 @@ export function DashboardHero({
         className="absolute top-0 left-0 right-0 h-px pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent 0%, rgba(5,150,105,0.5) 35%, rgba(52,211,153,0.35) 65%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0%, rgba(34,197,94,0.45) 35%, rgba(52,211,153,0.30) 65%, transparent 100%)',
         }}
       />
 
@@ -182,7 +182,7 @@ export function DashboardHero({
           <div className="flex items-center gap-2.5 mb-4">
             <ContextIcon hour={hour} />
             <p className="text-[12.5px] font-semibold capitalize tracking-wide"
-               style={{ color: '#34d399' }}>
+               style={{ color: '#22C55E' }}>
               {dateStr} • {timeStr}
             </p>
           </div>
@@ -194,8 +194,8 @@ export function DashboardHero({
             <span style={{ color: '#f1f5f9' }}>{greetingBase}</span>
             <span
               style={{
-                color:      '#34d399',
-                textShadow: '0 0 28px rgba(52,211,153,0.45)',
+                color:      '#22C55E',
+                textShadow: '0 0 28px rgba(34,197,94,0.50)',
               }}
             >
               {greetingName}
