@@ -58,13 +58,13 @@ function getBannerStyle(id: string | null | undefined): React.CSSProperties {
 // ─── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<string, { label: string; dot: string; badge: string }> = {
-  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-800 border-amber-200'       },
-  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-50 text-red-800 border-red-200'             },
-  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-50 text-blue-800 border-blue-200'          },
-  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-50 text-violet-800 border-violet-200'    },
-  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-50 text-teal-800 border-teal-200'          },
-  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-50 text-orange-800 border-orange-200'   },
+  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' },
+  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-500/10 text-amber-300 border-amber-500/25'       },
+  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-500/10 text-red-300 border-red-500/25'             },
+  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-500/10 text-blue-300 border-blue-500/25'          },
+  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-500/10 text-violet-300 border-violet-500/25'    },
+  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-500/10 text-teal-300 border-teal-500/25'          },
+  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-500/10 text-orange-300 border-orange-500/25'   },
 }
 
 const SORT_OPTIONS = [
@@ -241,39 +241,39 @@ export function ClientList() {
     <div className="min-h-full flex flex-col">
 
       {/* ── Conteúdo ─────────────────────────────────────────────────────────── */}
-      <div className="flex-1" style={{ background: '#f5f7fb' }}>
+      <div className="flex-1" style={{ background: '#0B1020' }}>
         <div className="px-4 sm:px-6 pt-6 pb-12 space-y-5">
 
           {/* ── Toolbar ───────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px] max-w-md">
 
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
               <input
                 type="text"
                 placeholder="Buscar por nome, @handle, segmento ou email..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#e2e8f0] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#b0b0b0] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/10 transition-all shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#1e293b] bg-[#182233] text-[13px] text-[#F8FAFC] placeholder:text-[#64748b] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all shadow-sm"
               />
             </div>
 
             <div className="relative">
               <button
                 onClick={() => setShowSort(o => !o)}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#e2e8f0] bg-white text-[13px] text-[#0f0f0f] hover:border-[#c0c0c0] transition-colors shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#1e293b] bg-[#182233] text-[13px] text-[#F8FAFC] hover:border-[#2563EB] transition-colors shadow-sm"
               >
-                {sortLabel} <ChevronDown className="w-3.5 h-3.5 text-[#a0a0a0]" />
+                {sortLabel} <ChevronDown className="w-3.5 h-3.5 text-[#64748b]" />
               </button>
               {showSort && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowSort(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white border border-[#e2e8f0] rounded-xl shadow-lg overflow-hidden py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-lg overflow-hidden py-1">
                     {SORT_OPTIONS.map(o => (
                       <button
                         key={o.value}
                         onClick={() => { setSort(o.value); setShowSort(false) }}
-                        className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#f5f7fb] transition-colors ${sort === o.value ? 'font-semibold text-[#4f46e5]' : 'text-[#0f0f0f]'}`}
+                        className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#182233] transition-colors ${sort === o.value ? 'font-semibold text-[#60a5fa]' : 'text-[#CBD5E1]'}`}
                       >
                         {o.label}
                       </button>
@@ -285,7 +285,7 @@ export function ClientList() {
 
             <Link
               to="/clients/new"
-              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-[13px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1a1a1a] transition-colors flex-shrink-0"
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-[13px] font-medium bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors flex-shrink-0"
             >
               <Plus className="w-4 h-4" /> Novo cliente
             </Link>
@@ -304,8 +304,8 @@ export function ClientList() {
                 onClick={() => setFilter(f.value)}
                 className={`px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all border ${
                   filter === f.value
-                    ? 'bg-[#0f0f0f] border-[#0f0f0f] shadow-sm'
-                    : 'bg-white text-[#737373] border-[#e2e8f0] hover:border-[#c0c0c0] hover:text-[#0f0f0f]'
+                    ? 'bg-[#2563EB] border-[#2563EB] shadow-sm'
+                    : 'bg-[#182233] text-[#94a3b8] border-[#1e293b] hover:border-[#2563EB] hover:text-[#F8FAFC]'
                 }`}
                 style={filter === f.value ? { color: '#ffffff' } : {}}
               >
@@ -318,15 +318,15 @@ export function ClientList() {
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-sm animate-pulse">
-                  <div className="h-28 bg-gradient-to-r from-[#f0f0f0] to-[#e8e8e8]" />
+                <div key={i} className="bg-[#182233] rounded-2xl overflow-hidden border border-[#1e293b] shadow-sm animate-pulse">
+                  <div className="h-28 bg-gradient-to-r from-[#1e293b] to-[#101A2B]" />
                   <div className="p-5 pt-10 space-y-3">
-                    <div className="h-4 bg-[#f0f0f0] rounded-lg w-3/4" />
-                    <div className="h-3 bg-[#f0f0f0] rounded-lg w-1/2" />
-                    <div className="h-3 bg-[#f0f0f0] rounded-full w-1/3" />
-                    <div className="border-t border-[#f0f0f0] pt-3 mt-4 grid grid-cols-2 gap-2">
+                    <div className="h-4 bg-[#1e293b] rounded-lg w-3/4" />
+                    <div className="h-3 bg-[#1e293b] rounded-lg w-1/2" />
+                    <div className="h-3 bg-[#1e293b] rounded-full w-1/3" />
+                    <div className="border-t border-[#1e293b] pt-3 mt-4 grid grid-cols-2 gap-2">
                       {[...Array(4)].map((_, j) => (
-                        <div key={j} className="h-12 bg-[#f5f5f5] rounded-xl" />
+                        <div key={j} className="h-12 bg-[#101A2B] rounded-xl" />
                       ))}
                     </div>
                   </div>
@@ -338,21 +338,21 @@ export function ClientList() {
           {/* ── Empty state ───────────────────────────────────────────────────── */}
           {!isLoading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white border border-[#e2e8f0] flex items-center justify-center shadow-sm">
-                <Users className="w-8 h-8 text-[#d0d0d0]" />
+              <div className="w-16 h-16 rounded-2xl bg-[#182233] border border-[#1e293b] flex items-center justify-center shadow-sm">
+                <Users className="w-8 h-8 text-[#475569]" />
               </div>
               <div className="text-center">
-                <p className="text-[15px] font-semibold text-[#0f0f0f]">
+                <p className="text-[15px] font-semibold text-[#F8FAFC]">
                   {search ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
                 </p>
-                <p className="text-[13px] text-[#a0a0a0] mt-1">
+                <p className="text-[13px] text-[#64748b] mt-1">
                   {search ? 'Tente outra busca' : 'Cadastre seu primeiro cliente agora'}
                 </p>
               </div>
               {!search && (
                 <Link
                   to="/clients/new"
-                  className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-sm font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors mt-2"
+                  className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-sm font-medium bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors mt-2"
                 >
                   <Plus className="w-4 h-4" /> Novo cliente
                 </Link>
@@ -384,7 +384,7 @@ export function ClientList() {
                       transition={{ delay: i * 0.04, duration: 0.2 }}
                       whileHover={{ y: -4, transition: { duration: 0.18 } }}
                       onClick={() => navigate(`/clients/${client.id}`)}
-                      className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm hover:shadow-xl hover:border-[#d0d8e8] transition-all cursor-pointer overflow-hidden group relative"
+                      className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm hover:shadow-xl hover:border-[#2f3b52] transition-all cursor-pointer overflow-hidden group relative"
                     >
 
                       {/* ── Banner gradiente / imagem ─────────────────────────── */}
@@ -422,19 +422,19 @@ export function ClientList() {
                               onClick={e => { e.stopPropagation(); setPickerOpen(null) }}
                             />
                             <div
-                              className="absolute top-11 left-3 z-40 bg-white rounded-2xl shadow-2xl border border-[#e2e8f0] p-3.5 w-[220px]"
+                              className="absolute top-11 left-3 z-40 bg-[#101A2B] rounded-2xl shadow-2xl border border-[#1e293b] p-3.5 w-[220px]"
                               onClick={e => e.stopPropagation()}
                             >
                               {/* Abas */}
-                              <div className="flex gap-1 mb-3 bg-[#f1f5f9] rounded-lg p-0.5">
+                              <div className="flex gap-1 mb-3 bg-[#182233] rounded-lg p-0.5">
                                 {(['cores', 'imagem'] as const).map(tab => (
                                   <button
                                     key={tab}
                                     onClick={e => { e.stopPropagation(); setPickerTab(tab) }}
                                     className={`flex-1 py-1 rounded-md text-[11px] font-semibold transition-colors capitalize ${
                                       pickerTab === tab
-                                        ? 'bg-white text-[#0f0f0f] shadow-sm'
-                                        : 'text-[#94a3b8] hover:text-[#64748b]'
+                                        ? 'bg-[#2563EB] text-white shadow-sm'
+                                        : 'text-[#94a3b8] hover:text-[#CBD5E1]'
                                     }`}
                                   >
                                     {tab === 'cores' ? '🎨 Cores' : '🖼️ Imagem'}
@@ -454,7 +454,7 @@ export function ClientList() {
                                       title={g.id}
                                     >
                                       {gradientId === g.id && !gradientId.startsWith('url:') && (
-                                        <span className="absolute inset-0 rounded-full ring-2 ring-white ring-offset-[2px] ring-offset-[#4f46e5]" />
+                                        <span className="absolute inset-0 rounded-full ring-2 ring-white ring-offset-[2px] ring-offset-[#2563EB]" />
                                       )}
                                     </button>
                                   ))}
@@ -475,13 +475,13 @@ export function ClientList() {
                                   />
                                   <button
                                     onClick={e => { e.stopPropagation(); imageInputRef.current?.click() }}
-                                    className="w-full h-20 rounded-xl border-2 border-dashed border-[#e2e8f0] hover:border-[#4f46e5] hover:bg-[#f5f3ff] flex flex-col items-center justify-center gap-1.5 transition-colors group"
+                                    className="w-full h-20 rounded-xl border-2 border-dashed border-[#1e293b] hover:border-[#2563EB] hover:bg-[#2563EB]/10 flex flex-col items-center justify-center gap-1.5 transition-colors group"
                                   >
-                                    <Upload className="w-5 h-5 text-[#94a3b8] group-hover:text-[#4f46e5] transition-colors" />
-                                    <span className="text-[11px] text-[#94a3b8] group-hover:text-[#4f46e5] transition-colors font-medium">
+                                    <Upload className="w-5 h-5 text-[#94a3b8] group-hover:text-[#60A5FA] transition-colors" />
+                                    <span className="text-[11px] text-[#94a3b8] group-hover:text-[#60A5FA] transition-colors font-medium">
                                       Clique para enviar
                                     </span>
-                                    <span className="text-[10px] text-[#cbd5e1]">JPG, PNG, WEBP</span>
+                                    <span className="text-[10px] text-[#64748b]">JPG, PNG, WEBP</span>
                                   </button>
                                   {gradientId.startsWith('url:') && (
                                     <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#64748b]">
@@ -527,7 +527,7 @@ export function ClientList() {
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
-                            <h3 className="text-[14px] font-semibold text-[#0f0f0f] leading-snug truncate">
+                            <h3 className="text-[14px] font-semibold text-[#F8FAFC] leading-snug truncate">
                               {client.company_name}
                             </h3>
                           </div>
@@ -540,7 +540,7 @@ export function ClientList() {
                         {client.instagram && (
                           <div className="flex items-center gap-1.5 ml-4 mb-2.5">
                             <Instagram className="w-3 h-3 text-pink-400 flex-shrink-0" />
-                            <span className="text-[12px] text-[#737373] truncate">
+                            <span className="text-[12px] text-[#94a3b8] truncate">
                               @{client.instagram.replace('@', '')}
                             </span>
                           </div>
@@ -548,68 +548,68 @@ export function ClientList() {
 
                         {/* Nicho */}
                         <div className="ml-4 mb-4">
-                          <span className="inline-flex items-center text-[11px] font-medium text-[#555] bg-[#f1f5f9] border border-[#e2e8f0] px-2.5 py-1 rounded-full max-w-full truncate">
+                          <span className="inline-flex items-center text-[11px] font-medium text-[#CBD5E1] bg-[#101A2B] border border-[#1e293b] px-2.5 py-1 rounded-full max-w-full truncate">
                             {client.niche}
                           </span>
                         </div>
 
-                        <div className="border-t border-[#f1f5f9] mb-3" />
+                        <div className="border-t border-[#1e293b] mb-3" />
 
                         {/* ── Métricas premium 2×2 ── */}
                         <div className="grid grid-cols-2 gap-2">
 
-                          {/* Pendentes — azul/slate suave */}
+                          {/* Pendentes — azul */}
                           <div
                             className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: '#f0f4ff', borderColor: '#c7d4f5' }}
+                            style={{ background: 'rgba(37,99,235,0.10)', borderColor: 'rgba(37,99,235,0.22)' }}
                           >
-                            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4464c4' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#2d4494' }}>
+                            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#60a5fa' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#93c5fd' }}>
                               Pendentes
                             </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#1e3a8a' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#dbeafe' }}>
                               {clientStats.pendentes}
                             </span>
                           </div>
 
-                          {/* Aprovados — verde suave */}
+                          {/* Aprovados — verde */}
                           <div
                             className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: '#f0fdf4', borderColor: '#bbf0cc' }}
+                            style={{ background: 'rgba(34,197,94,0.10)', borderColor: 'rgba(34,197,94,0.22)' }}
                           >
-                            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#16a34a' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#166534' }}>
+                            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#22c55e' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#86efac' }}>
                               Aprovados
                             </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#14532d' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#dcfce7' }}>
                               {clientStats.aprovados}
                             </span>
                           </div>
 
-                          {/* Ajustes solicitados — azul acinzentado suave */}
+                          {/* Ajustes solicitados — violeta */}
                           <div
                             className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: '#f5f7ff', borderColor: '#c5cff5' }}
+                            style={{ background: 'rgba(139,92,246,0.10)', borderColor: 'rgba(139,92,246,0.22)' }}
                           >
-                            <FileEdit className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5b73e8' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#3b4fb8' }}>
+                            <FileEdit className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#a78bfa' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#c4b5fd' }}>
                               Ajustes
                             </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#2d3d99' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#ede9fe' }}>
                               {clientStats.ajuste_solicitado}
                             </span>
                           </div>
 
-                          {/* Reprovados — vermelho rosado suave */}
+                          {/* Reprovados — vermelho */}
                           <div
                             className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: '#fff5f5', borderColor: '#fecaca' }}
+                            style={{ background: 'rgba(239,68,68,0.10)', borderColor: 'rgba(239,68,68,0.22)' }}
                           >
-                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#dc2626' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#991b1b' }}>
+                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
+                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#fca5a5' }}>
                               Reprovados
                             </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#7f1d1d' }}>
+                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#fee2e2' }}>
                               {clientStats.reprovado}
                             </span>
                           </div>
