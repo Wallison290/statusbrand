@@ -90,13 +90,13 @@ function MiniFeedPreview({ posts }: { posts: FeedPost[] }) {
   const cells = Array.from({ length: 9 }, (_, i) => posts[i] ?? null)
 
   return (
-    <div className="grid grid-cols-3 gap-[1.5px] bg-[#e2e8f0] rounded-lg overflow-hidden">
+    <div className="grid grid-cols-3 gap-[1.5px] bg-[#1e293b] rounded-lg overflow-hidden">
       {cells.map((post, i) => (
-        <div key={i} className="aspect-square bg-[#f5f7fb]">
+        <div key={i} className="aspect-square bg-[#101A2B]">
           {post ? (
             <img src={post.image_url} alt="" className="w-full h-full object-cover" draggable={false} />
           ) : (
-            <div className="w-full h-full bg-[#eef1f7]" />
+            <div className="w-full h-full bg-[#0B1020]" />
           )}
         </div>
       ))}
@@ -121,25 +121,25 @@ function FeedGalleryCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden hover:shadow-md hover:border-[#c7d2e0] transition-all duration-200"
+      className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm overflow-hidden hover:border-[#2f3b52] transition-all duration-200"
     >
       {/* Client header */}
       <div className="flex items-center gap-2.5 px-3 pt-3 pb-2">
         <div className="w-8 h-8 rounded-full p-[1.5px] flex-shrink-0"
           style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
-          <div className="w-full h-full rounded-full bg-white p-[1.5px]">
+          <div className="w-full h-full rounded-full bg-[#182233] p-[1.5px]">
             {client.logo_url ? (
               <img src={client.logo_url} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <div className="w-full h-full rounded-full bg-[#f0f4f8] flex items-center justify-center">
-                <span className="text-[11px] font-bold text-[#6b7280]">{initial}</span>
+              <div className="w-full h-full rounded-full bg-[#101A2B] flex items-center justify-center">
+                <span className="text-[11px] font-bold text-[#94a3b8]">{initial}</span>
               </div>
             )}
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-[#0f0f0f] truncate">{client.company_name}</p>
-          <p className="text-[10px] text-[#9ca3af] truncate">
+          <p className="text-[12px] font-semibold text-[#F8FAFC] truncate">{client.company_name}</p>
+          <p className="text-[10px] text-[#64748b] truncate">
             {versions.length} {versions.length === 1 ? 'versão' : 'versões'} · {posts.length} posts
           </p>
         </div>
@@ -154,24 +154,24 @@ function FeedGalleryCard({
       <div className="px-3 pb-2 flex gap-1 flex-wrap">
         {versions.slice(0, 3).map((v, i) => (
           <span key={v.id} className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-            i === 0 ? '' : 'text-[#6b7280] bg-[#f0f4f8]'
-          }`} style={i === 0 ? { background: '#0f0f0f', color: '#ffffff' } : undefined}>
+            i === 0 ? '' : 'text-[#94a3b8] bg-[#101A2B]'
+          }`} style={i === 0 ? { background: '#2563EB', color: '#ffffff' } : undefined}>
             {v.name}
           </span>
         ))}
         {versions.length > 3 && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full text-[#9ca3af] bg-[#f0f4f8]">
+          <span className="text-[10px] px-2 py-0.5 rounded-full text-[#64748b] bg-[#101A2B]">
             +{versions.length - 3}
           </span>
         )}
       </div>
 
       {/* Edit button */}
-      <div className="border-t border-[#f0f4f8] px-3 py-2">
+      <div className="border-t border-[#1e293b] px-3 py-2">
         <button
           onClick={onEdit}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
-          style={{ background: '#0f0f0f', color: '#ffffff' }}
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors hover:bg-[#1D4ED8]"
+          style={{ background: '#2563EB', color: '#ffffff' }}
         >
           <Pencil className="w-3 h-3" /> Editar feed
         </button>
@@ -201,18 +201,18 @@ function InstagramHeader({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm px-6 py-5">
+    <div className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm px-6 py-5">
       <div className="flex items-start gap-6">
         {/* Avatar */}
         <div className="flex-shrink-0">
           <div className="w-20 h-20 rounded-full p-[2px]"
             style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
-            <div className="w-full h-full rounded-full bg-white p-[2px]">
+            <div className="w-full h-full rounded-full bg-[#182233] p-[2px]">
               {client.logo_url ? (
                 <img src={client.logo_url} alt={client.company_name} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-[#f0f4f8] flex items-center justify-center">
-                  <span className="text-2xl font-bold text-[#6b7280]">{initial}</span>
+                <div className="w-full h-full rounded-full bg-[#101A2B] flex items-center justify-center">
+                  <span className="text-2xl font-bold text-[#94a3b8]">{initial}</span>
                 </div>
               )}
             </div>
@@ -222,7 +222,7 @@ function InstagramHeader({
         {/* Info */}
         <div className="flex-1 min-w-0 space-y-2.5">
           <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-[15px] font-semibold text-[#0f0f0f] leading-none">
+            <h2 className="text-[15px] font-semibold text-[#F8FAFC] leading-none">
               {client.instagram
                 ? client.instagram.replace(/^@/, '')
                 : client.company_name.toLowerCase().replace(/\s+/g, '_')}
@@ -230,7 +230,7 @@ function InstagramHeader({
             {!editingBio && (
               <button
                 onClick={() => { setEditingBio(true); setBioValue(meta.bio); setLinkValue(meta.link) }}
-                className="flex items-center gap-1 text-[11px] text-[#6b7280] hover:text-[#0f0f0f] transition-colors"
+                className="flex items-center gap-1 text-[11px] text-[#94a3b8] hover:text-[#F8FAFC] transition-colors"
               >
                 <Pencil className="w-3 h-3" /> Editar bio
               </button>
@@ -245,8 +245,8 @@ function InstagramHeader({
               { label: 'seguindo',  value: '—' },
             ].map(s => (
               <div key={s.label} className="text-center">
-                <p className="text-[13px] font-semibold text-[#0f0f0f]">{s.value}</p>
-                <p className="text-[11px] text-[#6b7280]">{s.label}</p>
+                <p className="text-[13px] font-semibold text-[#F8FAFC]">{s.value}</p>
+                <p className="text-[11px] text-[#94a3b8]">{s.label}</p>
               </div>
             ))}
           </div>
@@ -260,22 +260,22 @@ function InstagramHeader({
                 onChange={e => setBioValue(e.target.value)}
                 placeholder="Escreva a bio do cliente..."
                 rows={3}
-                className="w-full text-sm text-[#0f0f0f] border border-[#e2e8f0] rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-[#c0c0c0] bg-white"
+                className="w-full text-sm text-[#F8FAFC] border border-[#1e293b] rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] placeholder:text-[#64748b] bg-[#101A2B]"
               />
               <input
                 value={linkValue}
                 onChange={e => setLinkValue(e.target.value)}
                 placeholder="Link (ex: linktr.ee/cliente)"
-                className="w-full text-sm text-[#0f0f0f] border border-[#e2e8f0] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-[#c0c0c0] bg-white"
+                className="w-full text-sm text-[#F8FAFC] border border-[#1e293b] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] placeholder:text-[#64748b] bg-[#101A2B]"
               />
               <div className="flex items-center gap-2">
                 <button onClick={saveBio}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium"
-                  style={{ background: '#0f0f0f', color: '#ffffff' }}>
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium hover:bg-[#1D4ED8] transition-colors"
+                  style={{ background: '#2563EB', color: '#ffffff' }}>
                   <Check className="w-3.5 h-3.5" /> Salvar
                 </button>
                 <button onClick={() => setEditingBio(false)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#6b7280] border border-[#e2e8f0] hover:bg-[#f5f7fb] transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#94a3b8] border border-[#1e293b] hover:bg-[#101A2B] transition-colors">
                   <X className="w-3.5 h-3.5" /> Cancelar
                 </button>
               </div>
@@ -283,19 +283,19 @@ function InstagramHeader({
           ) : (
             <div className="space-y-0.5">
               {meta.bio ? (
-                <p className="text-sm text-[#0f0f0f] leading-relaxed whitespace-pre-wrap">{meta.bio}</p>
+                <p className="text-sm text-[#F8FAFC] leading-relaxed whitespace-pre-wrap">{meta.bio}</p>
               ) : (
-                <p className="text-sm text-[#c0c0c0] cursor-pointer hover:text-[#9ca3af] transition-colors"
+                <p className="text-sm text-[#64748b] cursor-pointer hover:text-[#94a3b8] transition-colors"
                   onClick={() => setEditingBio(true)}>
                   Clique em "Editar bio" para adicionar uma descrição...
                 </p>
               )}
               {meta.link && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Link2 className="w-3 h-3 text-blue-500" />
+                  <Link2 className="w-3 h-3 text-[#60A5FA]" />
                   <a href={meta.link.startsWith('http') ? meta.link : `https://${meta.link}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-[12px] text-blue-600 font-medium hover:underline">
+                    className="text-[12px] text-[#60A5FA] font-medium hover:underline">
                     {meta.link.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
@@ -306,8 +306,8 @@ function InstagramHeader({
       </div>
 
       {client.niche && (
-        <div className="mt-3 pt-3 border-t border-[#f0f4f8]">
-          <span className="inline-flex items-center gap-1 text-[11px] text-[#6b7280] bg-[#f0f4f8] px-2.5 py-1 rounded-full">
+        <div className="mt-3 pt-3 border-t border-[#1e293b]">
+          <span className="inline-flex items-center gap-1 text-[11px] text-[#94a3b8] bg-[#101A2B] px-2.5 py-1 rounded-full">
             <Instagram className="w-3 h-3 text-pink-500" /> {client.niche}
           </span>
         </div>
@@ -363,8 +363,8 @@ function EmptySlot({ index, onAdd }: { index: number; onAdd: () => void }) {
   return (
     <div ref={setNodeRef} onClick={onAdd}
       className={`aspect-square rounded-[2px] border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-150
-        ${isOver ? 'border-blue-400 bg-blue-50 scale-[1.03]' : 'border-[#e2e8f0] hover:border-[#94a3b8] hover:bg-[#f8fafc]'}`}>
-      <Plus className={`w-5 h-5 ${isOver ? 'text-blue-400' : 'text-[#c7d2e0]'}`} />
+        ${isOver ? 'border-[#2563EB] bg-[#2563EB]/10 scale-[1.03]' : 'border-[#1e293b] hover:border-[#2f3b52] hover:bg-[#101A2B]'}`}>
+      <Plus className={`w-5 h-5 ${isOver ? 'text-[#60A5FA]' : 'text-[#475569]'}`} />
     </div>
   )
 }
@@ -384,8 +384,8 @@ function VersionChip({ version, isActive, onClick, onRename, onDelete, onDuplica
     <div className="relative">
       <div
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer transition-all whitespace-nowrap
-          ${isActive ? 'shadow-sm' : 'bg-[#f0f4f8] text-[#6b7280] hover:bg-[#e8eef5]'}`}
-        style={isActive ? { background: '#0f0f0f', color: '#ffffff' } : undefined}
+          ${isActive ? 'shadow-sm' : 'bg-[#101A2B] text-[#94a3b8] hover:bg-[#1e293b]'}`}
+        style={isActive ? { background: '#2563EB', color: '#ffffff' } : undefined}
         onClick={onClick}
       >
         {editing ? (
@@ -395,7 +395,7 @@ function VersionChip({ version, isActive, onClick, onRename, onDelete, onDuplica
             className="bg-transparent outline-none w-20 text-[12px]" style={{ color: '#ffffff' }} />
         ) : <span>{version.name}</span>}
         <button onClick={e => { e.stopPropagation(); setMenu(m => !m) }}
-          className={`rounded-full p-0.5 ${isActive ? 'hover:bg-white/20' : 'hover:bg-[#d0d9e6]'}`}>
+          className={`rounded-full p-0.5 ${isActive ? 'hover:bg-white/20' : 'hover:bg-[#1e293b]'}`}>
           <ChevronDown className="w-3 h-3" />
         </button>
       </div>
@@ -405,18 +405,18 @@ function VersionChip({ version, isActive, onClick, onRename, onDelete, onDuplica
             <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
             <motion.div initial={{ opacity: 0, y: -4, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.95 }} transition={{ duration: 0.1 }}
-              className="absolute top-full left-0 mt-1 z-20 bg-white border border-[#e2e8f0] rounded-xl shadow-lg py-1 min-w-[140px]">
+              className="absolute top-full left-0 mt-1 z-20 bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-lg py-1 min-w-[140px]">
               <button onClick={() => { setEditing(true); setMenu(false); onClick() }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#0f0f0f] hover:bg-[#f5f7fb]">
-                <Pencil className="w-3.5 h-3.5 text-[#6b7280]" /> Renomear
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#F8FAFC] hover:bg-[#182233]">
+                <Pencil className="w-3.5 h-3.5 text-[#94a3b8]" /> Renomear
               </button>
               <button onClick={() => { onDuplicate(); setMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#0f0f0f] hover:bg-[#f5f7fb]">
-                <Copy className="w-3.5 h-3.5 text-[#6b7280]" /> Duplicar
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#F8FAFC] hover:bg-[#182233]">
+                <Copy className="w-3.5 h-3.5 text-[#94a3b8]" /> Duplicar
               </button>
-              <div className="border-t border-[#f0f4f8] my-1" />
+              <div className="border-t border-[#1e293b] my-1" />
               <button onClick={() => { onDelete(); setMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-50">
+                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/10">
                 <Trash2 className="w-3.5 h-3.5" /> Excluir
               </button>
             </motion.div>
@@ -451,11 +451,11 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader><DialogTitle>Adicionar post ao feed</DialogTitle></DialogHeader>
-        <div className="flex gap-1 p-1 bg-[#f0f4f8] rounded-xl mb-4">
+        <div className="flex gap-1 p-1 bg-[#101A2B] rounded-xl mb-4">
           {[{ id: 'arsenal', label: 'Arsenal de conteúdo', icon: Images }, { id: 'upload', label: 'Upload de imagem', icon: Upload }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id as 'arsenal' | 'upload')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium transition-all
-                ${tab === t.id ? 'bg-white text-[#0f0f0f] shadow-sm' : 'text-[#6b7280] hover:text-[#0f0f0f]'}`}>
+                ${tab === t.id ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#94a3b8] hover:text-[#F8FAFC]'}`}>
               <t.icon className="w-3.5 h-3.5" /> {t.label}
             </button>
           ))}
@@ -463,7 +463,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
         {tab === 'arsenal' ? (
           <div className="flex-1 overflow-y-auto min-h-0">
             {assets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-[#9ca3af]">
+              <div className="flex flex-col items-center justify-center py-16 text-[#64748b]">
                 <Images className="w-10 h-10 mb-3 opacity-40" />
                 <p className="text-sm">Nenhuma imagem no arsenal</p>
               </div>
@@ -471,7 +471,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {assets.map(asset => (
                   <button key={asset.id} onClick={() => { onSelect(asset); onClose() }}
-                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#0f0f0f] transition-all hover:scale-[1.02] group relative">
+                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative">
                     <img src={asset.media_url!} alt={asset.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{asset.title}</span>
@@ -484,11 +484,11 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
             <div onClick={() => fileRef.current?.click()}
-              className="w-full max-w-sm aspect-video border-2 border-dashed border-[#e2e8f0] rounded-2xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-[#0f0f0f] hover:bg-[#f8fafc] transition-all">
-              <Upload className="w-8 h-8 text-[#c7d2e0]" />
+              className="w-full max-w-sm aspect-video border-2 border-dashed border-[#1e293b] rounded-2xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-[#2563EB] hover:bg-[#2563EB]/10 transition-all">
+              <Upload className="w-8 h-8 text-[#475569]" />
               <div className="text-center">
-                <p className="text-sm text-[#6b7280] font-medium">Clique para selecionar</p>
-                <p className="text-xs text-[#9ca3af] mt-0.5">JPG, PNG, WEBP — máx. 10 MB</p>
+                <p className="text-sm text-[#94a3b8] font-medium">Clique para selecionar</p>
+                <p className="text-xs text-[#64748b] mt-0.5">JPG, PNG, WEBP — máx. 10 MB</p>
               </div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -660,14 +660,14 @@ export function FeedOrganizer() {
 
   if (view === 'gallery') {
     return (
-      <div className="min-h-full bg-[#f5f7fb]">
+      <div className="min-h-full bg-[#0B1020]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
           {/* Top bar */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h2 className="text-[15px] font-semibold text-[#0f0f0f]">Feeds criados</h2>
-              <p className="text-xs text-[#9ca3af] mt-0.5">
+              <h2 className="text-[15px] font-semibold text-[#F8FAFC]">Feeds criados</h2>
+              <p className="text-xs text-[#64748b] mt-0.5">
                 {clientsWithFeeds.length === 0
                   ? 'Nenhum feed criado ainda'
                   : `${clientsWithFeeds.length} cliente${clientsWithFeeds.length > 1 ? 's' : ''} com feed organizado`}
@@ -678,8 +678,8 @@ export function FeedOrganizer() {
             <div className="relative">
               <button
                 onClick={() => setClientMenuOpen(m => !m)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors"
-                style={{ background: '#0f0f0f', color: '#ffffff' }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#1D4ED8]"
+                style={{ background: '#2563EB', color: '#ffffff' }}
               >
                 <Plus className="w-3.5 h-3.5" /> Novo feed
               </button>
@@ -693,21 +693,21 @@ export function FeedOrganizer() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.97 }}
                       transition={{ duration: 0.12 }}
-                      className="absolute top-full right-0 mt-1 z-20 bg-white border border-[#e2e8f0] rounded-xl shadow-lg py-1 min-w-[220px] max-h-64 overflow-y-auto"
+                      className="absolute top-full right-0 mt-1 z-20 bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-lg py-1 min-w-[220px] max-h-64 overflow-y-auto"
                     >
-                      <p className="px-3 py-1.5 text-[10px] text-[#9ca3af] uppercase tracking-wide font-medium">
+                      <p className="px-3 py-1.5 text-[10px] text-[#64748b] uppercase tracking-wide font-medium">
                         Selecionar cliente
                       </p>
                       {(clients || []).length === 0 ? (
-                        <p className="px-3 py-2 text-sm text-[#9ca3af]">Nenhum cliente cadastrado</p>
+                        <p className="px-3 py-2 text-sm text-[#64748b]">Nenhum cliente cadastrado</p>
                       ) : (
                         (clients || []).map(c => (
                           <button key={c.id} onClick={() => { setClientMenuOpen(false); openEditor(c.id) }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f7fb] transition-colors">
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#F8FAFC] hover:bg-[#182233] transition-colors">
                             {c.logo_url ? (
                               <img src={c.logo_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-[#e2e8f0] flex items-center justify-center text-[10px] font-bold text-[#6b7280] flex-shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-[#1e293b] flex items-center justify-center text-[10px] font-bold text-[#94a3b8] flex-shrink-0">
                                 {c.company_name.charAt(0)}
                               </div>
                             )}
@@ -741,13 +741,13 @@ export function FeedOrganizer() {
 
           {/* Empty state */}
           {clientsWithFeeds.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-[#9ca3af]">
+            <div className="flex flex-col items-center justify-center py-20 text-[#64748b]">
               <div className="w-20 h-20 rounded-full mb-5 flex items-center justify-center"
                 style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
                 <LayoutGrid className="w-9 h-9 text-white" />
               </div>
-              <p className="text-base font-semibold text-[#6b7280]">Nenhum feed criado ainda</p>
-              <p className="text-sm mt-1 text-center max-w-xs text-[#9ca3af]">
+              <p className="text-base font-semibold text-[#CBD5E1]">Nenhum feed criado ainda</p>
+              <p className="text-sm mt-1 text-center max-w-xs text-[#64748b]">
                 Clique em "Novo feed" e selecione um cliente para começar a organizar o feed do Instagram.
               </p>
             </div>
@@ -756,17 +756,17 @@ export function FeedOrganizer() {
           {/* Clients without feeds (suggestion row) */}
           {clientsWithoutFeeds.length > 0 && clientsWithFeeds.length > 0 && (
             <div>
-              <p className="text-[11px] text-[#9ca3af] uppercase tracking-wide font-medium mb-3">
+              <p className="text-[11px] text-[#64748b] uppercase tracking-wide font-medium mb-3">
                 Clientes sem feed
               </p>
               <div className="flex flex-wrap gap-2">
                 {clientsWithoutFeeds.map(c => (
                   <button key={c.id} onClick={() => openEditor(c.id)}
-                    className="flex items-center gap-2 px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-[12px] text-[#6b7280] hover:border-[#0f0f0f] hover:text-[#0f0f0f] transition-colors shadow-sm">
+                    className="flex items-center gap-2 px-3 py-2 bg-[#182233] border border-[#1e293b] rounded-xl text-[12px] text-[#94a3b8] hover:border-[#2563EB] hover:text-[#F8FAFC] transition-colors shadow-sm">
                     {c.logo_url ? (
                       <img src={c.logo_url} alt="" className="w-5 h-5 rounded-full object-cover" />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-[#e2e8f0] flex items-center justify-center text-[9px] font-bold text-[#6b7280]">
+                      <div className="w-5 h-5 rounded-full bg-[#1e293b] flex items-center justify-center text-[9px] font-bold text-[#94a3b8]">
                         {c.company_name.charAt(0)}
                       </div>
                     )}
@@ -788,26 +788,26 @@ export function FeedOrganizer() {
   // ══════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-full bg-[#f5f7fb]">
+    <div className="min-h-full bg-[#0B1020]">
       {/* Editor top bar */}
-      <div className="flex items-center justify-between h-14 px-4 sm:px-6 bg-white border-b border-[#e2e8f0] flex-shrink-0 sticky top-0 z-10">
+      <div className="flex items-center justify-between h-14 px-4 sm:px-6 bg-[#182233] border-b border-[#1e293b] flex-shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <button onClick={handleSaveAndBack}
-            className="flex items-center gap-1.5 text-[#737373] hover:text-[#0f0f0f] transition-colors text-[13px]">
+            className="flex items-center gap-1.5 text-[#94a3b8] hover:text-[#F8FAFC] transition-colors text-[13px]">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="w-px h-5 bg-[#e2e8f0]" />
+          <div className="w-px h-5 bg-[#1e293b]" />
           <div className="flex items-center gap-2">
             {selectedClient?.logo_url ? (
               <img src={selectedClient.logo_url} alt="" className="w-6 h-6 rounded-full object-cover" />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-[#f0f4f8] flex items-center justify-center text-[10px] font-bold text-[#6b7280]">
+              <div className="w-6 h-6 rounded-full bg-[#101A2B] flex items-center justify-center text-[10px] font-bold text-[#94a3b8]">
                 {selectedClient?.company_name.charAt(0)}
               </div>
             )}
-            <span className="text-sm font-semibold text-[#0f0f0f]">{selectedClient?.company_name}</span>
+            <span className="text-sm font-semibold text-[#F8FAFC]">{selectedClient?.company_name}</span>
             {activeVersion && (
-              <span className="text-[11px] text-[#6b7280] bg-[#f0f4f8] px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-[#94a3b8] bg-[#101A2B] px-2 py-0.5 rounded-full">
                 {activeVersion.name}
               </span>
             )}
@@ -817,8 +817,8 @@ export function FeedOrganizer() {
         {/* Save button */}
         <button
           onClick={handleSaveAndBack}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors"
-          style={{ background: '#0f0f0f', color: '#ffffff' }}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#1D4ED8]"
+          style={{ background: '#2563EB', color: '#ffffff' }}
         >
           <Save className="w-3.5 h-3.5" />
           Salvar e voltar
@@ -838,10 +838,10 @@ export function FeedOrganizer() {
             />
 
             {/* Version chips */}
-            <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-4">
+            <div className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm p-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-[#9ca3af] uppercase tracking-wide font-medium mr-1">Versões</span>
-                {versions.length === 0 && <span className="text-sm text-[#9ca3af]">Nenhuma versão criada</span>}
+                <span className="text-[11px] text-[#64748b] uppercase tracking-wide font-medium mr-1">Versões</span>
+                {versions.length === 0 && <span className="text-sm text-[#64748b]">Nenhuma versão criada</span>}
                 {versions.map(v => (
                   <VersionChip key={v.id} version={v} isActive={v.id === activeVersionId}
                     onClick={() => setActiveVersionId(v.id)}
@@ -850,7 +850,7 @@ export function FeedOrganizer() {
                     onDuplicate={() => duplicateVersion(v.id)} />
                 ))}
                 <button onClick={createVersion}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium text-[#6b7280] border border-dashed border-[#d0d9e6] hover:border-[#0f0f0f] hover:text-[#0f0f0f] transition-colors">
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium text-[#94a3b8] border border-dashed border-[#1e293b] hover:border-[#2563EB] hover:text-[#F8FAFC] transition-colors">
                   <Plus className="w-3 h-3" /> Nova versão
                 </button>
               </div>
@@ -859,11 +859,11 @@ export function FeedOrganizer() {
             {/* No version */}
             {!activeVersion && (
               <div className="flex flex-col items-center justify-center py-16">
-                <GripVertical className="w-10 h-10 mb-3 text-[#c7d2e0]" />
-                <p className="text-sm font-medium text-[#6b7280]">Crie uma versão para começar</p>
+                <GripVertical className="w-10 h-10 mb-3 text-[#475569]" />
+                <p className="text-sm font-medium text-[#94a3b8]">Crie uma versão para começar</p>
                 <button onClick={createVersion}
-                  className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium"
-                  style={{ background: '#0f0f0f', color: '#ffffff' }}>
+                  className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium hover:bg-[#1D4ED8] transition-colors"
+                  style={{ background: '#2563EB', color: '#ffffff' }}>
                   <Plus className="w-3.5 h-3.5" /> Criar Versão 1
                 </button>
               </div>
@@ -871,33 +871,33 @@ export function FeedOrganizer() {
 
             {/* Grid */}
             {activeVersion && (
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f4f8]">
+              <div className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e293b]">
                   <div className="flex items-center gap-2">
                     <Instagram className="w-4 h-4 text-pink-500" />
-                    <span className="text-sm font-semibold text-[#0f0f0f]">{activeVersion.name}</span>
-                    <span className="text-xs text-[#9ca3af] bg-[#f0f4f8] px-2 py-0.5 rounded-full">
+                    <span className="text-sm font-semibold text-[#F8FAFC]">{activeVersion.name}</span>
+                    <span className="text-xs text-[#94a3b8] bg-[#101A2B] px-2 py-0.5 rounded-full">
                       3 colunas · {posts.length} posts
                     </span>
                   </div>
                   <button onClick={() => setPickerOpen(true)} disabled={isUploading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium disabled:opacity-60"
-                    style={{ background: '#0f0f0f', color: '#ffffff' }}>
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium disabled:opacity-60 hover:bg-[#1D4ED8] transition-colors"
+                    style={{ background: '#2563EB', color: '#ffffff' }}>
                     {isUploading
                       ? <><Upload className="w-3.5 h-3.5 animate-pulse" /> Enviando...</>
                       : <><Plus className="w-3.5 h-3.5" /> Adicionar post</>}
                   </button>
                 </div>
 
-                <div className="px-4 py-2 bg-[#fafbfd] border-b border-[#f0f4f8]">
-                  <p className="text-[11px] text-[#9ca3af] flex items-center gap-1.5">
+                <div className="px-4 py-2 bg-[#101A2B] border-b border-[#1e293b]">
+                  <p className="text-[11px] text-[#64748b] flex items-center gap-1.5">
                     <GripVertical className="w-3 h-3" />
                     Arraste os posts para reorganizar a ordem do feed
                   </p>
                 </div>
 
                 <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                  <div className="grid grid-cols-3 gap-[2px] p-[2px] bg-[#e2e8f0]">
+                  <div className="grid grid-cols-3 gap-[2px] p-[2px] bg-[#1e293b]">
                     {gridCells.map(({ index, post }) =>
                       post ? (
                         <DraggableCard key={post.id} post={post} index={index}
@@ -919,11 +919,11 @@ export function FeedOrganizer() {
 
                 {posts.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <Images className="w-10 h-10 mb-3 text-[#c7d2e0]" />
-                    <p className="text-sm font-medium text-[#6b7280]">Feed vazio</p>
+                    <Images className="w-10 h-10 mb-3 text-[#475569]" />
+                    <p className="text-sm font-medium text-[#94a3b8]">Feed vazio</p>
                     <button onClick={() => setPickerOpen(true)}
-                      className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium"
-                      style={{ background: '#0f0f0f', color: '#ffffff' }}>
+                      className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium hover:bg-[#1D4ED8] transition-colors"
+                      style={{ background: '#2563EB', color: '#ffffff' }}>
                       <Plus className="w-3.5 h-3.5" /> Adicionar primeiro post
                     </button>
                   </div>
