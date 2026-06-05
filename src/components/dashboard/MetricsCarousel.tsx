@@ -10,26 +10,26 @@ import type { ContentType } from '@/types'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const BAR_COLOR   = '#0f172a'
-const GRID_COLOR  = '#eef2f7'
-const AXIS_PROPS  = { fill: '#94a3b8', fontSize: 11 } as const
+const BAR_COLOR   = '#22C55E'
+const GRID_COLOR  = '#1e293b'
+const AXIS_PROPS  = { fill: '#CBD5E1', fontSize: 11 } as const
 
 const DONUT_PALETTE = [
-  '#0f172a', '#334155', '#7c3aed', '#64748b',
-  '#a78bfa', '#94a3b8', '#475569', '#c4b5fd',
+  '#22C55E', '#2F8F63', '#4F8EF7', '#8B5CF6',
+  '#F5A623', '#34D399', '#1F6B4A', '#64748b',
 ]
 
 const TIP_STYLE = {
   contentStyle: {
-    background:   '#ffffff',
-    border:       '1px solid #f1f5f9',
+    background:   '#101A2B',
+    border:       '1px solid #182233',
     borderRadius: 10,
-    color:        '#0f172a',
+    color:        '#F8FAFC',
     fontSize:     12,
-    boxShadow:    '0 4px 16px rgba(0,0,0,0.06)',
+    boxShadow:    '0 4px 16px rgba(0,0,0,0.3)',
     padding:      '8px 12px',
   },
-  cursor: { fill: 'rgba(15,23,42,0.03)' },
+  cursor: { fill: 'rgba(34,197,94,0.05)' },
 }
 
 // ─── PlannerBarChart ──────────────────────────────────────────────────────────
@@ -58,12 +58,12 @@ function PlannerBarChart({
   return (
     <div>
       <ResponsiveContainer width="100%" height={195}>
-        <BarChart data={chartData} barSize={26} barCategoryGap="38%">
-          <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} vertical={false} />
-          <XAxis dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} />
-          <YAxis tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} width={22} />
+        <BarChart data={chartData} barSize={26} barCategoryGap="38%" layout="vertical" margin={{ left: 8 }}>
+          <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} horizontal={false} />
+          <XAxis type="number" tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} />
+          <YAxis type="category" dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} width={80} />
           <Tooltip {...TIP_STYLE} />
-          <Bar dataKey="value" fill={BAR_COLOR} radius={[6, 6, 0, 0]} name="Itens" />
+          <Bar dataKey="value" fill={BAR_COLOR} radius={[0, 6, 6, 0]} name="Itens" />
         </BarChart>
       </ResponsiveContainer>
       <p className="text-center text-[11px] text-[#94a3b8] mt-1.5">
@@ -244,16 +244,17 @@ export function MetricsCarousel({
 
   return (
     <div
-      className="h-full rounded-2xl bg-white border border-[#f1f5f9] overflow-hidden"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)' }}
+      className="h-full rounded-2xl overflow-hidden"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-5 pb-3 border-b border-[#f8fafc]">
+      <div className="px-6 pt-5 pb-3" style={{ borderBottom: '1px solid #1e293b' }}>
         <div className="flex items-center gap-3">
 
           <button
             onClick={() => nav(-1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#f1f5f9] flex items-center justify-center text-[#94a3b8] hover:border-[#0f172a] hover:bg-[#0f172a] hover:text-white transition-all"
+            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
+            style={{ border: '1px solid #1e293b', background: '#101A2B' }}
             aria-label="Anterior"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -266,7 +267,7 @@ export function MetricsCarousel({
                 variants={headerVariants}
                 initial="enter" animate="center" exit="exit"
               >
-                <p className="text-[13px] font-semibold text-[#0f172a] leading-snug">
+                <p className="text-[13px] font-semibold text-[#F8FAFC] leading-snug">
                   {slide.title}
                 </p>
                 {slide.subtitle && (
@@ -278,7 +279,8 @@ export function MetricsCarousel({
 
           <button
             onClick={() => nav(1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg border border-[#f1f5f9] flex items-center justify-center text-[#94a3b8] hover:border-[#0f172a] hover:bg-[#0f172a] hover:text-white transition-all"
+            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
+            style={{ border: '1px solid #1e293b', background: '#101A2B' }}
             aria-label="Próximo"
           >
             <ChevronRight className="w-3.5 h-3.5" />
@@ -293,9 +295,10 @@ export function MetricsCarousel({
               onClick={() => goTo(i)}
               className={`rounded-full transition-all duration-200 ${
                 i === activeIdx
-                  ? 'w-4 h-1.5 bg-[#0f172a]'
-                  : 'w-1.5 h-1.5 bg-[#e2e8f0] hover:bg-[#94a3b8]'
+                  ? 'w-4 h-1.5'
+                  : 'w-1.5 h-1.5 hover:opacity-80'
               }`}
+              style={{ background: i === activeIdx ? '#22C55E' : '#1e293b' }}
               aria-label={`Ir para slide ${i + 1}`}
             />
           ))}

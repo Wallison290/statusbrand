@@ -449,7 +449,7 @@ function CalendarWidget({
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#f8fafc]">
+      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#1e293b]">
         {Object.entries(statusDotColor).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1">
             <div className={`w-1 h-1 rounded-full ${color}`} />
@@ -468,51 +468,51 @@ function CalendarWidget({
 function FinancialSummary({ data }: { data: FinStats }) {
   const items = [
     {
-      icon:       <DollarSign className="w-4 h-4 text-[#0f172a]" />,
-      iconBg:     'bg-[#f1f5f9]',
-      label:      'MRR',
-      sub:        'receita mensal recorrente',
-      value:      fmtBRL(data.mrr),
-      valueColor: 'text-[#0f172a]',
-      show:       true,
+      icon:        <DollarSign className="w-4 h-4" style={{ color: '#CBD5E1' }} />,
+      iconBgStyle: 'rgba(203,213,225,0.15)',
+      label:       'MRR',
+      sub:         'receita mensal recorrente',
+      value:       fmtBRL(data.mrr),
+      valueColor:  '#F8FAFC',
+      show:        true,
     },
     {
-      icon:       <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
-      iconBg:     'bg-emerald-50',
-      label:      'Recebido',
-      sub:        'pago no ciclo atual',
-      value:      fmtBRL(data.received),
-      valueColor: 'text-emerald-700',
-      show:       true,
+      icon:        <CheckCircle2 className="w-4 h-4" style={{ color: '#34D399' }} />,
+      iconBgStyle: 'rgba(34,197,94,0.15)',
+      label:       'Recebido',
+      sub:         'pago no ciclo atual',
+      value:       fmtBRL(data.received),
+      valueColor:  '#34D399',
+      show:        true,
     },
     {
-      icon:       <Clock className="w-4 h-4 text-amber-500" />,
-      iconBg:     'bg-amber-50',
-      label:      'Pendente',
-      sub:        'a receber no ciclo',
-      value:      fmtBRL(data.pending),
-      valueColor: data.pending > 0 ? 'text-amber-600' : 'text-[#94a3b8]',
-      show:       true,
+      icon:        <Clock className="w-4 h-4" style={{ color: data.pending > 0 ? '#F5A623' : '#64748b' }} />,
+      iconBgStyle: data.pending > 0 ? 'rgba(245,166,35,0.15)' : 'rgba(203,213,225,0.10)',
+      label:       'Pendente',
+      sub:         'a receber no ciclo',
+      value:       fmtBRL(data.pending),
+      valueColor:  data.pending > 0 ? '#F5A623' : '#94a3b8',
+      show:        true,
     },
     {
-      icon:       <AlertTriangle className="w-4 h-4 text-red-500" />,
-      iconBg:     'bg-red-50',
-      label:      'Inadimplência',
-      sub:        data.overdueCount > 0
-                    ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
-                    : 'nenhum em atraso',
-      value:      fmtBRL(data.overdueAmt),
-      valueColor: data.overdueCount > 0 ? 'text-red-600' : 'text-[#94a3b8]',
-      show:       true,
+      icon:        <AlertTriangle className="w-4 h-4" style={{ color: data.overdueCount > 0 ? '#f87171' : '#64748b' }} />,
+      iconBgStyle: data.overdueCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(203,213,225,0.10)',
+      label:       'Inadimplência',
+      sub:         data.overdueCount > 0
+                     ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
+                     : 'nenhum em atraso',
+      value:       fmtBRL(data.overdueAmt),
+      valueColor:  data.overdueCount > 0 ? '#f87171' : '#94a3b8',
+      show:        true,
     },
     {
-      icon:       <TrendingUp className="w-4 h-4 text-blue-500" />,
-      iconBg:     'bg-blue-50',
-      label:      'Ticket médio',
-      sub:        'por cliente ativo',
-      value:      fmtBRL(data.avgTicket),
-      valueColor: 'text-[#0f172a]',
-      show:       true,
+      icon:        <TrendingUp className="w-4 h-4" style={{ color: '#4F8EF7' }} />,
+      iconBgStyle: 'rgba(79,142,247,0.15)',
+      label:       'Ticket médio',
+      sub:         'por cliente ativo',
+      value:       fmtBRL(data.avgTicket),
+      valueColor:  '#F8FAFC',
+      show:        true,
     },
   ]
 
@@ -533,11 +533,11 @@ function FinancialSummary({ data }: { data: FinStats }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: '#1e293b' }}>
         {items.map((item, i) => (
           <div key={i} className="px-6 py-5 flex flex-col gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: item.iconBgStyle }}>
               {item.icon}
             </div>
             <div>
-              <p className={`text-[20px] font-bold leading-tight tabular-nums ${item.valueColor}`}>
+              <p className="text-[20px] font-bold leading-tight tabular-nums" style={{ color: item.valueColor }}>
                 {item.value}
               </p>
               <p className="text-[10.5px] font-semibold text-[#94a3b8] mt-1 uppercase tracking-wide">
@@ -565,10 +565,10 @@ function AlertsWidget({
   const allGood = pendingApproval === 0 && overdueTasks === 0
 
   const rows = [
-    { icon: CheckCircle2, label: 'Aprovados no período',    value: periodApproved,  color: 'text-emerald-800', bg: 'bg-emerald-50', href: '/planner' },
-    { icon: Clock,        label: 'Aguardando aprovação',    value: pendingApproval, color: pendingApproval > 0 ? 'text-amber-800'  : 'text-gray-400', bg: pendingApproval > 0 ? 'bg-amber-50'  : 'bg-gray-50', href: '/planner' },
-    { icon: CheckSquare,  label: 'Tarefas em aberto',       value: pendingTasks,    color: pendingTasks    > 0 ? 'text-blue-800'   : 'text-gray-400', bg: pendingTasks    > 0 ? 'bg-blue-50'   : 'bg-gray-50', href: '/tasks'   },
-    { icon: AlertTriangle,label: 'Tarefas atrasadas',       value: overdueTasks,    color: overdueTasks    > 0 ? 'text-red-800'    : 'text-gray-400', bg: overdueTasks    > 0 ? 'bg-red-50'    : 'bg-gray-50', href: '/tasks'   },
+    { icon: CheckCircle2, label: 'Aprovados no período',  value: periodApproved,  bgStyle: 'rgba(34,197,94,0.15)',                                           iconColor: '#34D399', href: '/planner' },
+    { icon: Clock,        label: 'Aguardando aprovação',  value: pendingApproval, bgStyle: pendingApproval > 0 ? 'rgba(245,166,35,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingApproval > 0 ? '#F5A623' : '#64748b', href: '/planner' },
+    { icon: CheckSquare,  label: 'Tarefas em aberto',     value: pendingTasks,    bgStyle: pendingTasks    > 0 ? 'rgba(79,142,247,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingTasks    > 0 ? '#4F8EF7' : '#64748b', href: '/tasks'   },
+    { icon: AlertTriangle,label: 'Tarefas atrasadas',     value: overdueTasks,    bgStyle: overdueTasks    > 0 ? 'rgba(239,68,68,0.15)'   : 'rgba(203,213,225,0.10)', iconColor: overdueTasks    > 0 ? '#f87171' : '#64748b', href: '/tasks'   },
   ]
 
   return (
@@ -583,11 +583,11 @@ function AlertsWidget({
         {rows.map((row, i) => (
           <Link key={i} to={row.href}>
             <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors cursor-pointer hover:opacity-80" style={{ background: 'transparent' }}>
-              <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${row.bg}`}>
-                <row.icon className={`w-3.5 h-3.5 ${row.color}`} />
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: row.bgStyle }}>
+                <row.icon className="w-3.5 h-3.5" style={{ color: row.iconColor }} />
               </div>
               <p className="text-[11.5px] text-[#CBD5E1] flex-1 leading-snug">{row.label}</p>
-              <span className={`text-[14px] font-semibold tabular-nums ${row.color}`}>{row.value}</span>
+              <span className="text-[14px] font-semibold tabular-nums" style={{ color: row.iconColor }}>{row.value}</span>
             </div>
           </Link>
         ))}
