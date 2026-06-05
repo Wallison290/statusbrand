@@ -11,7 +11,7 @@ import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
-  LayoutGrid, Film,
+  LayoutGrid, Film, ChevronDown,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -834,9 +834,31 @@ function PlannerItemView({
                     <span className="text-[#475569]">·</span>
                     <span className="text-[11px] text-[#94a3b8]">{contentTypeLabels[item.content_type as ContentType]}</span>
                     <span className="text-[#475569]">·</span>
-                    <span className={`text-[11px] font-semibold ${statusTextColors[item.status as PlannerStatus]}`}>
-                      {statusLabels[item.status as PlannerStatus]}
-                    </span>
+                    {/* Status — seletor inline: muda o status do conteúdo direto por aqui */}
+                    <div className="relative inline-flex items-center">
+                      <select
+                        value={item.status}
+                        disabled={updateItem.isPending}
+                        onChange={async (e) => {
+                          const next = e.target.value as PlannerStatus
+                          if (next === item.status) return
+                          try {
+                            await updateItem.mutateAsync({ id: item.id, status: next })
+                            toast('Status atualizado!', 'success')
+                          } catch (err: any) {
+                            toast(err.message, 'error')
+                          }
+                        }}
+                        className={`appearance-none cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-2 pr-6 py-0.5 text-[11px] font-semibold outline-none transition-colors disabled:opacity-50 ${statusTextColors[item.status as PlannerStatus]}`}
+                      >
+                        {(Object.keys(statusLabels) as PlannerStatus[]).map(s => (
+                          <option key={s} value={s} className="bg-[#0d0f14] text-[#F8FAFC]">
+                            {statusLabels[s]}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-[#94a3b8] absolute right-1.5 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
