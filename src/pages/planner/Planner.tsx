@@ -1425,6 +1425,21 @@ export function Planner() {
   const igOnDragEnd   = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
   const igOnDrop      = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
 
+  // Reordenação das mídias JÁ SALVAS (modo edição) — também ao vivo
+  const [exIgDragOver, setExIgDragOver] = useState<number | null>(null)
+  const exIgDragIdx = useRef<number | null>(null)
+  const exIgOnDragStart = useCallback((i: number) => { exIgDragIdx.current = i; setExIgDragOver(i) }, [])
+  const exIgOnDragEnter = useCallback((i: number) => {
+    const from = exIgDragIdx.current
+    if (from === null || from === i) { setExIgDragOver(i); return }
+    setExistingIgMedia(prev => {
+      const next = [...prev]; const [m] = next.splice(from, 1); next.splice(i, 0, m); return next
+    })
+    exIgDragIdx.current = i
+    setExIgDragOver(i)
+  }, [])
+  const exIgOnDragEnd = useCallback(() => { setExIgDragOver(null); exIgDragIdx.current = null }, [])
+
   const handleIgFiles = (list: FileList | null) => {
     if (!list || !form.ig_post_type) return
     const max    = form.ig_post_type === 'CAROUSEL_ALBUM' ? 10 : 1
@@ -1767,12 +1782,13 @@ export function Planner() {
           if (path) await supabase.storage.from('planner-attachments').remove([path])
           await supabase.from('planner_attachments').delete().eq('id', att.id)
         }
-        // Promover anexos de fallback para is_ig_media = true (se ainda não estavam marcados)
-        const toPromote = existingIgMedia.filter(a => !a.is_ig_media)
-        for (let i = 0; i < toPromote.length; i++) {
+        // Persiste a ordem (sort_order) de TODAS as mídias IG existentes pela posição
+        // atual no array — assim a reordenação feita na edição é salva.
+        // Também promove anexos de fallback para is_ig_media = true.
+        for (let i = 0; i < existingIgMedia.length; i++) {
           await (supabase as any).from('planner_attachments')
             .update({ is_ig_media: true, sort_order: i })
-            .eq('id', toPromote[i].id)
+            .eq('id', existingIgMedia[i].id)
         }
         // Upload novas mídias IG
         const igStart = existingIgMedia.length
@@ -2710,18 +2726,35 @@ export function Planner() {
                       </p>
                     )}
 
-                    {/* Mídias existentes (edição) */}
+                    {/* Mídias existentes (edição) — arrastáveis para reordenar */}
                     {existingIgMedia.length > 0 && (
                       isCarousel ? (
                         <div className="grid grid-cols-5 gap-1.5">
                           {existingIgMedia.map((att, i) => (
-                            <div key={att.id} className="relative aspect-square rounded-lg overflow-hidden border border-white/10">
+                            <div
+                              key={att.id}
+                              draggable
+                              onDragStart={() => exIgOnDragStart(i)}
+                              onDragEnter={() => exIgOnDragEnter(i)}
+                              onDragOver={e => e.preventDefault()}
+                              onDragEnd={exIgOnDragEnd}
+                              onDrop={exIgOnDragEnd}
+                              className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing select-none transition-all ${
+                                exIgDragOver === i
+                                  ? 'border-pink-500 scale-105'
+                                  : exIgDragIdx.current === i
+                                  ? 'border-pink-500/40 opacity-50'
+                                  : 'border-white/10 hover:border-white/20'
+                              }`}
+                            >
                               {isVideoAttachment(att)
-                                ? <video src={att.file_url} className="w-full h-full object-cover" />
-                                : <img src={att.file_url} alt="" className="w-full h-full object-cover" />
+                                ? <video src={att.file_url} className="w-full h-full object-cover pointer-events-none" />
+                                : <img src={att.file_url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
                               }
-                              <div className="absolute top-0.5 left-0.5 text-[8px] font-bold px-1 py-0.5 rounded bg-black/60 text-white">
-                                {i + 1}
+                              <div className={`absolute top-0.5 left-0.5 text-[8px] font-bold px-1 py-0.5 rounded leading-none ${
+                                i === 0 ? 'bg-pink-500 text-white' : 'bg-black/60 text-white'
+                              }`}>
+                                {i === 0 ? '★' : i + 1}
                               </div>
                               <button
                                 type="button"
