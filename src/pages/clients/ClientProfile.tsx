@@ -4,7 +4,7 @@ import {
   Edit, Instagram, Mail, Globe, Phone, ArrowLeft, Save, Brain,
   Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
-  Unlink, RefreshCw, Send,
+  Unlink, RefreshCw, Send, Lightbulb,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,6 +28,7 @@ import { TasksTab } from './tabs/TasksTab'
 import { PlannerItemViewModal } from '@/components/PlannerItemViewModal'
 import { ReportsTab } from './tabs/ReportsTab'
 import { WeeklyFormTab } from './tabs/WeeklyFormTab'
+import { RequestsIdeasTab } from './tabs/RequestsIdeasTab'
 import { useToast } from '@/components/ui/toast'
 import { formatDate, contentTypeLabels } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
@@ -997,6 +998,9 @@ export function ClientProfile() {
             <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             <TabsTrigger value="contents">Arsenal ({assets?.length || 0})</TabsTrigger>
             <TabsTrigger value="planner">Planejamento ({planner?.length || 0})</TabsTrigger>
+            <TabsTrigger value="requests" className="gap-1">
+              <Lightbulb className="w-3 h-3" />Solicitações e Ideias
+            </TabsTrigger>
             <TabsTrigger value="tasks">Tarefas ({tasks?.length || 0})</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>
             <TabsTrigger value="support">Suporte</TabsTrigger>
@@ -1306,6 +1310,11 @@ export function ClientProfile() {
           {/* ── Instagram ────────────────────────────────────────────────── */}
           <TabsContent value="instagram">
             {user && <ClientInstagramTab clientId={id!} userId={user.id} />}
+          </TabsContent>
+
+          {/* ── Solicitações e Ideias ─────────────────────────────────────── */}
+          <TabsContent value="requests">
+            <RequestsIdeasTab clientId={id!} clientName={client?.company_name || ''} />
           </TabsContent>
 
           {/* ── Tarefas ──────────────────────────────────────────────────── */}

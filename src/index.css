@@ -54,106 +54,8 @@
   ::selection { background: rgba(0,0,0,0.10); }
 }
 
-/* ── Light-mode overrides: hardcoded dark backgrounds ─────────────────────── */
-/*    The app was built dark-first; these convert the most common patterns     */
+/* ── Utility classes (always) ───────────────────────────────────────────────── */
 @layer utilities {
-
-  /* Layout shells */
-  .bg-\[\#09090b\]  { background-color: #f7f7f7 !important; }
-  .bg-\[\#0a0a0a\]  { background-color: #f7f7f7 !important; }
-  .bg-\[\#0a0c11\]  { background-color: #f7f7f7 !important; }
-  .bg-\[\#0d0f14\]  { background-color: #ffffff !important; }
-  .bg-\[\#0d0f18\]  { background-color: rgba(247,247,247,0.92) !important; }
-  .bg-\[\#111113\]  { background-color: #efefef !important; }
-  .bg-\[\#12131a\]  { background-color: #efefef !important; }
-
-  /* White-opacity surfaces → black-opacity on light bg */
-  .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,0.018) !important; }
-  .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.028) !important; }
-  .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.038) !important; }
-  .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,0.048) !important; }
-  .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.058) !important; }
-  .bg-white\/\[0\.07\] { background-color: rgba(0,0,0,0.068) !important; }
-  .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,0.078) !important; }
-
-  .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(0,0,0,0.04) !important; }
-  .hover\:bg-white\/\[0\.05\]:hover { background-color: rgba(0,0,0,0.05) !important; }
-  .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(0,0,0,0.06) !important; }
-  .hover\:bg-white\/5:hover          { background-color: rgba(0,0,0,0.05) !important; }
-
-  /* White-opacity borders → black-opacity */
-  .border-white\/\[0\.05\] { border-color: rgba(0,0,0,0.08) !important; }
-  .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.09) !important; }
-  .border-white\/\[0\.07\] { border-color: rgba(0,0,0,0.10) !important; }
-  .border-white\/\[0\.08\] { border-color: rgba(0,0,0,0.11) !important; }
-  .border-white\/\[0\.09\] { border-color: rgba(0,0,0,0.12) !important; }
-  .border-white\/\[0\.10\] { border-color: rgba(0,0,0,0.13) !important; }
-  .border-white\/\[0\.12\] { border-color: rgba(0,0,0,0.15) !important; }
-  .border-white\/\[0\.15\] { border-color: rgba(0,0,0,0.18) !important; }
-  .border-white\/\[0\.16\] { border-color: rgba(0,0,0,0.19) !important; }
-  .border-white\/6  { border-color: rgba(0,0,0,0.09) !important; }
-  .border-white\/8  { border-color: rgba(0,0,0,0.11) !important; }
-  .border-white\/10 { border-color: rgba(0,0,0,0.13) !important; }
-  .border-white\/12 { border-color: rgba(0,0,0,0.15) !important; }
-  .border-white\/15 { border-color: rgba(0,0,0,0.18) !important; }
-  .border-white\/20 { border-color: rgba(0,0,0,0.22) !important; }
-
-  .hover\:border-white\/\[0\.08\]:hover  { border-color: rgba(0,0,0,0.12) !important; }
-  .hover\:border-white\/\[0\.09\]:hover  { border-color: rgba(0,0,0,0.14) !important; }
-  .hover\:border-white\/\[0\.12\]:hover  { border-color: rgba(0,0,0,0.16) !important; }
-  .hover\:border-white\/\[0\.16\]:hover  { border-color: rgba(0,0,0,0.20) !important; }
-  .hover\:border-white\/12:hover         { border-color: rgba(0,0,0,0.16) !important; }
-  .hover\:border-white\/15:hover         { border-color: rgba(0,0,0,0.18) !important; }
-  .hover\:border-white\/20:hover         { border-color: rgba(0,0,0,0.22) !important; }
-  .hover\:border-white\/25:hover         { border-color: rgba(0,0,0,0.27) !important; }
-
-  /* Backdrop tints */
-  .bg-\[\#0d0f14\]\/90 { background-color: rgba(255,255,255,0.92) !important; }
-
-  /* ── Text: near-white on dark → dark on light ──────────────────────────── */
-  /*   Scoped to page areas to avoid breaking colored-bg button text          */
-  .text-white   { color: #0f0f0f !important; }
-  .text-zinc-100 { color: #1a1a1a !important; }
-  .text-zinc-200 { color: #2a2a2a !important; }
-  .text-zinc-300 { color: #3d3d3d !important; }
-
-  /* Exceptions: text-white inside dark/colored backgrounds stays white */
-  [class*="bg-blue-"] .text-white,
-  [class*="bg-blue-"].text-white,
-  [class*="bg-emerald-"] .text-white,
-  [class*="bg-emerald-"].text-white,
-  [class*="bg-green-"] .text-white,
-  [class*="bg-green-"].text-white,
-  [class*="bg-red-"] .text-white,
-  [class*="bg-red-"].text-white,
-  [class*="bg-purple-"] .text-white,
-  [class*="bg-purple-"].text-white,
-  [class*="bg-amber-"] .text-white,
-  [class*="bg-amber-"].text-white,
-  [class*="bg-indigo-"] .text-white,
-  [class*="bg-indigo-"].text-white,
-  [class*="from-blue"] .text-white,
-  [class*="from-purple"] .text-white,
-  /* Sidebar active item (dark bg) */
-  .bg-\[\#0f0f0f\] .text-white,
-  .bg-\[\#0f0f0f\].text-white,
-  /* Tooltip/preview dark cards */
-  .bg-\[\#13131f\] .text-white,
-  .bg-\[\#13131f\].text-white,
-  .sb-invert .text-white,
-  .sb-invert.text-white { color: #ffffff !important; }
-
-  /* Self: when bg-[#0f0f0f] is the item itself (nav active state) */
-  .bg-\[\#0f0f0f\].text-white { color: #ffffff !important; }
-
-  /* ── Radix UI Tabs: tab ativo com fundo preto — texto SEMPRE branco ─── */
-  [role="tab"][data-state="active"] { color: #ffffff !important; }
-  [role="tab"][data-state="active"] svg { color: #ffffff !important; }
-
-  /* Gradient text clips that were white-on-dark → now dark-on-light */
-  .bg-clip-text.text-transparent { color: transparent !important; }
-
-  /* ── Utility classes ──────────────────────────────────────────────────── */
   .bg-white\/3   { background-color: rgba(0,0,0,0.02); }
   .bg-white\/4   { background-color: rgba(0,0,0,0.03); }
 
@@ -161,3 +63,24 @@
   .line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
   .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
 }
+
+/* ── Nova paleta dark — fundo escuro profundo, verde como marca ─────────────── */
+@layer utilities {
+  /* Layout shells → nova paleta escura */
+  .bg-\[\#09090b\]  { background-color: #0B1020 !important; }
+  .bg-\[\#0a0a0a\]  { background-color: #0B1020 !important; }
+  .bg-\[\#0a0c11\]  { background-color: #0B1020 !important; }
+  .bg-\[\#0d0f14\]  { background-color: #182233 !important; }
+  .bg-\[\#0d0f18\]  { background-color: #101A2B !important; }
+  .bg-\[\#111113\]  { background-color: #101A2B !important; }
+  .bg-\[\#12131a\]  { background-color: #101A2B !important; }
+
+  /* Radix UI Tabs ativo */
+  [role="tab"][data-state="active"] { color: #ffffff !important; }
+  [role="tab"][data-state="active"] svg { color: #ffffff !important; }
+
+  .bg-clip-text.text-transparent { color: transparent !important; }
+
+  body { background-color: #050816; color: #F8FAFC; }
+}
+

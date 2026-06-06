@@ -67,7 +67,7 @@ function ContextIcon({ hour }: { hour: number }) {
       ? { Icon: Sun,       bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.22)',  color: '#fbbf24' }
       : hour < 18
         ? { Icon: SunMedium, bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.22)',  color: '#60a5fa' }
-        : { Icon: Moon,      bg: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.24)', color: '#a78bfa' }
+        : { Icon: Moon,      bg: 'rgba(37,99,235,0.14)',   border: 'rgba(37,99,235,0.24)',   color: '#60a5fa' }
 
   return (
     <div
@@ -134,25 +134,25 @@ export function DashboardHero({
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
       className="relative overflow-hidden rounded-b-[28px] border-b border-x border-[#1a2035] min-h-[240px]"
       style={{
-        background: 'linear-gradient(135deg, #050816 0%, #0c1120 45%, #111827 100%)',
+        background: 'linear-gradient(135deg, #050816 0%, #0B1020 45%, #101A2B 100%)',
         boxShadow:  '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
-      {/* ── Glow roxo — esquerda ── */}
+      {/* ── Glow verde — esquerda ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(109,40,217,0.16) 0%, transparent 65%)',
+            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(37,99,235,0.14) 0%, transparent 65%)',
         }}
       />
 
-      {/* ── Glow azul — direita-inferior (muito sutil) ── */}
+      {/* ── Glow verde — direita-inferior (muito sutil) ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(59,130,246,0.07) 0%, transparent 62%)',
+            'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(79,142,247,0.06) 0%, transparent 62%)',
         }}
       />
 
@@ -161,7 +161,7 @@ export function DashboardHero({
         className="absolute top-0 left-0 right-0 h-px pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.5) 35%, rgba(99,102,241,0.4) 65%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.45) 35%, rgba(96,165,250,0.30) 65%, transparent 100%)',
         }}
       />
 
@@ -182,7 +182,7 @@ export function DashboardHero({
           <div className="flex items-center gap-2.5 mb-4">
             <ContextIcon hour={hour} />
             <p className="text-[12.5px] font-semibold capitalize tracking-wide"
-               style={{ color: '#8b7cf6' }}>
+               style={{ color: '#60a5fa' }}>
               {dateStr} • {timeStr}
             </p>
           </div>
@@ -194,8 +194,8 @@ export function DashboardHero({
             <span style={{ color: '#f1f5f9' }}>{greetingBase}</span>
             <span
               style={{
-                color:      '#a78bfa',
-                textShadow: '0 0 28px rgba(167,139,250,0.55)',
+                color:      '#2563EB',
+                textShadow: '0 0 28px rgba(37,99,235,0.50)',
               }}
             >
               {greetingName}
@@ -263,7 +263,7 @@ export function DashboardHero({
           onClick={() => setShowNotifications(true)}
           title={unreadCount > 0 ? `${unreadCount} notificação${unreadCount === 1 ? '' : 'ões'} não lida${unreadCount === 1 ? '' : 's'}` : 'Notificações'}
           className="relative flex items-center justify-center w-8 h-8 rounded-xl transition-colors"
-          style={{ color: 'rgba(167,139,250,0.6)', background: 'rgba(255,255,255,0.05)' }}
+          style={{ color: 'rgba(148,163,184,0.7)', background: 'rgba(255,255,255,0.05)' }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)' }}
         >
@@ -286,9 +286,9 @@ export function DashboardHero({
             onClick={onRefresh}
             title="Atualizar mensagem da IA"
             className="w-7 h-7 flex items-center justify-center rounded-full transition-all"
-            style={{ color: 'rgba(167,139,250,0.5)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.5)')}
+            style={{ color: 'rgba(148,163,184,0.45)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#60a5fa')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(148,163,184,0.45)')}
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </motion.button>
@@ -300,7 +300,8 @@ export function DashboardHero({
         onClose={() => setShowNotifications(false)}
         onView={(notification) => {
           setShowNotifications(false)
-          if (notification.link) navigate(`/planner?item=${notification.link}`)
+          if (notification.type === 'NOTE_REQUEST') navigate(notification.link || '/notes')
+          else if (notification.link) navigate(`/planner?item=${notification.link}`)
           else navigate('/planner')
         }}
       />

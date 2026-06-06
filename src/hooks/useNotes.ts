@@ -155,6 +155,28 @@ export function useCreatePortalNote() {
         .select('*, client:clients(id, company_name)')
         .single()
       if (error) throw error
+
+      // Notify the owning agency that the client submitted a request/idea.
+      try {
+        const clientId = profile!.linked_client_id!
+        const { data: clientRow } = await (supabase.from('clients') as any)
+          .select('user_id, company_name')
+          .eq('id', clientId)
+          .single()
+        if (clientRow?.user_id) {
+          await (supabase.from('notifications') as any).insert({
+            user_id:   clientRow.user_id,
+            client_id: clientId,
+            type:      'NOTE_REQUEST',
+            title:     'Nova solicitação/ideia',
+            message:   `${clientRow.company_name ?? 'O cliente'} enviou: ${payload.title || 'Sem título'}`,
+            link:      `/clients/${clientId}`,
+          })
+        }
+      } catch {
+        // Silencioso: a criação da nota nunca deve falhar por causa da notificação.
+      }
+
       return parseNote(data)
     },
     onSuccess: () => {

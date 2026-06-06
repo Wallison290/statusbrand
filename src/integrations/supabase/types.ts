@@ -776,6 +776,54 @@ export interface Database {
         }
         Relationships: []
       }
+      feeds: {
+        Row: {
+          id: string
+          user_id: string
+          client_id: string
+          name: string
+          posts: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          client_id: string
+          name: string
+          posts?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          posts?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feed_meta: {
+        Row: {
+          user_id: string
+          client_id: string
+          bio: string
+          link: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          client_id: string
+          bio?: string
+          link?: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string
+          link?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

@@ -411,9 +411,9 @@ export function PortalNotesTab() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-[15px] font-semibold text-[#0f0f0f]">Notas e Solicitações</h2>
+          <h2 className="text-[15px] font-semibold text-[#0f0f0f]">Solicitações e Ideias</h2>
           <p className="text-[12px] text-[#a0a0a0] mt-0.5">
-            Troque notas e solicitações com sua agência
+            Solicite conteúdos e compartilhe ideias com sua agência
           </p>
         </div>
         <button

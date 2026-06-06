@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Users, CheckSquare, Clock,
-  AlertTriangle, TrendingUp, CalendarDays, CheckCircle2,
-  ChevronLeft, ChevronRight, BarChart3, DollarSign,
+  AlertTriangle, CalendarDays, CheckCircle2,
+  ChevronLeft, ChevronRight, DollarSign, UserCheck, TrendingUp,
 } from 'lucide-react'
 import { DashboardHero } from '@/components/dashboard/DashboardHero'
 import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
@@ -165,18 +165,17 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
   ]
 
   return (
-    <div className="bg-white border-b border-[#f1f5f9] px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div className="border-b px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap" style={{ background: '#0B1020', borderColor: '#182233' }}>
       {/* Period pills */}
-      <div className="flex items-center gap-0.5 bg-[#f1f5f9] rounded-xl p-1">
+      <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: '#101A2B' }}>
         {pills.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onMode(key)}
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-              mode === key
-                ? 'bg-[#0f172a] text-white shadow-sm'
-                : 'text-[#64748b] hover:text-[#0f172a]'
+              mode === key ? 'text-white shadow-sm' : 'text-[#CBD5E1] hover:text-white'
             }`}
+            style={mode === key ? { background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' } : undefined}
           >
             {label}
           </button>
@@ -191,51 +190,52 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             setTempE(format(customRange.end,   'yyyy-MM-dd'))
             setOpen(v => !v)
           }}
-          className={`flex items-center gap-2 text-[12px] border rounded-xl px-3 py-1.5 transition-colors ${
-            mode === 'custom'
-              ? 'text-[#0f172a] bg-white border-[#cbd5e1] font-medium'
-              : 'text-[#94a3b8] bg-white border-[#f1f5f9] hover:border-[#cbd5e1] hover:text-[#475569]'
-          }`}
+          className="flex items-center gap-2 text-[12px] rounded-xl px-3 py-1.5 transition-colors text-[#CBD5E1] hover:text-white"
+          style={{ background: '#101A2B', border: `1px solid ${mode === 'custom' ? '#2563EB' : '#182233'}` }}
         >
           <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="capitalize whitespace-nowrap">{rangeLabel(mode, range)}</span>
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl p-4 w-[260px]">
-            <p className="text-[12px] font-semibold text-gray-800 mb-3">Período personalizado</p>
+          <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl shadow-xl p-4 w-[260px]" style={{ background: '#101A2B', border: '1px solid #182233' }}>
+            <p className="text-[12px] font-semibold text-[#F8FAFC] mb-3">Período personalizado</p>
             <div className="space-y-2.5">
               <div>
-                <label className="text-[11px] text-gray-400 block mb-1">Data inicial</label>
+                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data inicial</label>
                 <input
                   type="date"
                   value={tempS}
                   onChange={e => setTempS(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
+                  style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
               <div>
-                <label className="text-[11px] text-gray-400 block mb-1">Data final</label>
+                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data final</label>
                 <input
                   type="date"
                   value={tempE}
                   min={tempS}
                   onChange={e => setTempE(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg border border-gray-200 text-[12px] text-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-400/40 focus:border-gray-400"
+                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
+                  style={{ background: '#182233', border: '1px solid #1e293b' }}
                 />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setOpen(false)}
-                className="flex-1 h-8 rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 border border-gray-100 transition-colors"
+                className="flex-1 h-8 rounded-lg text-[12px] text-[#CBD5E1] hover:text-white transition-colors"
+                style={{ border: '1px solid #182233' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={applyCustom}
                 disabled={!tempS || !tempE || tempE < tempS}
-                className="flex-1 h-8 rounded-lg text-[12px] bg-gray-900 text-white hover:bg-gray-800 transition-colors font-medium disabled:opacity-40"
+                className="flex-1 h-8 rounded-lg text-[12px] text-white font-medium disabled:opacity-40 transition-colors"
+                style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
               >
                 Aplicar
               </button>
@@ -248,6 +248,17 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+const iconBgMap: Record<string, string> = {
+  'bg-amber-50':   'rgba(245,166,35,0.15)',
+  'bg-blue-50':    'rgba(79,142,247,0.15)',
+  'bg-emerald-50': 'rgba(34,197,94,0.15)',
+  'bg-green-50':   'rgba(34,197,94,0.15)',
+  'bg-red-50':     'rgba(239,68,68,0.15)',
+  'bg-violet-50':  'rgba(139,92,246,0.15)',
+  'bg-gray-50':    'rgba(203,213,225,0.10)',
+  'bg-gray-100':   'rgba(203,213,225,0.10)',
+}
 
 function KpiCard({
   label, value, displayValue, subtitle, href, icon: Icon,
@@ -265,48 +276,53 @@ function KpiCard({
   featured?:     boolean
   warning?:      boolean
 }) {
+  const iconBgStyle = iconBgMap[iconBg] ?? 'rgba(203,213,225,0.10)'
   const showWarning = warning && value > 0
 
   const inner = featured ? (
     <div
-      className="h-full rounded-2xl bg-[#0f172a] p-5 flex flex-col gap-3 hover:bg-[#1e293b] transition-colors duration-200"
-      style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.18)' }}
+      className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
+      style={{
+        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+        boxShadow:  '0 4px 24px rgba(37,99,235,0.25)',
+      }}
     >
       <div className="flex items-start justify-between">
-        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-white/75" />
+        <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white/90" />
         </div>
-        <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-white/8 text-white/35 uppercase tracking-widest">
-          Total
+        <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/60 uppercase tracking-widest">
+          Ativos
         </span>
       </div>
       <div className="mt-auto">
         <p className="text-[28px] font-semibold text-white tabular-nums leading-none">{displayValue ?? value}</p>
-        <p className="text-[12px] text-white/60 mt-1.5 leading-tight">{label}</p>
-        {subtitle && <p className="text-[10px] text-white/30 mt-0.5">{subtitle}</p>}
+        <p className="text-[12px] text-white/70 mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-white/40 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   ) : (
     <div
-      className={`h-full rounded-2xl bg-white p-4 flex flex-col gap-3 transition-all duration-200 hover:shadow-md ${
-        showWarning ? 'border border-red-100' : 'border border-[#f1f5f9]'
-      }`}
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="h-full rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200 hover:opacity-90"
+      style={{ background: '#182233', border: `1px solid ${showWarning ? 'rgba(239,68,68,0.3)' : '#1e293b'}`, boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       <div className="flex items-start justify-between">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${showWarning ? 'bg-red-50' : iconBg}`}>
-          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-700' : iconColor}`} />
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{ background: showWarning ? 'rgba(239,68,68,0.15)' : iconBgStyle }}
+        >
+          <Icon className={`w-4 h-4 ${showWarning ? 'text-red-400' : iconColor}`} />
         </div>
         {showWarning && (
-          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200">
+          <span className="text-[9px] font-medium px-2 py-0.5 rounded-full text-red-400" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
             Atenção
           </span>
         )}
       </div>
       <div>
-        <p className="text-[26px] font-semibold text-[#0f172a] tabular-nums leading-none">{displayValue ?? value}</p>
-        <p className="text-[12px] text-[#64748b] mt-1.5 leading-tight">{label}</p>
-        {subtitle && <p className="text-[10px] text-[#94a3b8] mt-0.5">{subtitle}</p>}
+        <p className="text-[26px] font-semibold text-[#F8FAFC] tabular-nums leading-none">{displayValue ?? value}</p>
+        <p className="text-[12px] text-[#CBD5E1] mt-1.5 leading-tight">{label}</p>
+        {subtitle && <p className="text-[10px] text-[#64748b] mt-0.5">{subtitle}</p>}
       </div>
     </div>
   )
@@ -344,23 +360,25 @@ function CalendarWidget({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl p-5"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       {/* Month + nav */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setOffset(o => o - 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
+          style={{ background: '#101A2B' }}
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-[13px] font-semibold text-[#0f172a] capitalize">
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC] capitalize">
           {format(center, 'MMMM yyyy', { locale: ptBR })}
         </h3>
         <button
           onClick={() => setOffset(o => o + 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a] transition-colors"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
+          style={{ background: '#101A2B' }}
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -385,13 +403,12 @@ function CalendarWidget({
             <div
               key={dayStr}
               onClick={onDayClick}
-              className={`flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none ${
-                isCurrent
-                  ? 'bg-[#0f172a]'
-                  : 'hover:bg-[#f8fafc]'
-              }`}
+              className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none"
+              style={isCurrent ? { background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' } : { background: 'transparent' }}
+              onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = '#101A2B' }}
+              onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
-              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#1e293b]'}`}>
+              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#CBD5E1]'}`}>
                 {format(day, 'd')}
               </span>
               {dayItems.length > 0 && (
@@ -413,9 +430,9 @@ function CalendarWidget({
         <div className="space-y-1">
           <p className="text-[9.5px] font-semibold text-[#94a3b8] uppercase tracking-widest mb-2.5">Hoje</p>
           {todayItems.slice(0, 3).map(item => (
-            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-[#f8fafc]">
+            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl" style={{ background: '#101A2B' }}>
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-[#94a3b8]'}`} />
-              <p className="text-[11.5px] text-[#0f172a] truncate flex-1 font-medium">{item.title}</p>
+              <p className="text-[11.5px] text-[#F8FAFC] truncate flex-1 font-medium">{item.title}</p>
               <span className="text-[9.5px] text-[#94a3b8] flex-shrink-0">
                 {contentTypeLabels[item.content_type as any] ?? item.content_type}
               </span>
@@ -432,7 +449,7 @@ function CalendarWidget({
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#f8fafc]">
+      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#1e293b]">
         {Object.entries(statusDotColor).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1">
             <div className={`w-1 h-1 rounded-full ${color}`} />
@@ -451,76 +468,76 @@ function CalendarWidget({
 function FinancialSummary({ data }: { data: FinStats }) {
   const items = [
     {
-      icon:       <DollarSign className="w-4 h-4 text-[#0f172a]" />,
-      iconBg:     'bg-[#f1f5f9]',
-      label:      'MRR',
-      sub:        'receita mensal recorrente',
-      value:      fmtBRL(data.mrr),
-      valueColor: 'text-[#0f172a]',
-      show:       true,
+      icon:        <DollarSign className="w-4 h-4" style={{ color: '#CBD5E1' }} />,
+      iconBgStyle: 'rgba(203,213,225,0.15)',
+      label:       'MRR',
+      sub:         'receita mensal recorrente',
+      value:       fmtBRL(data.mrr),
+      valueColor:  '#F8FAFC',
+      show:        true,
     },
     {
-      icon:       <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
-      iconBg:     'bg-emerald-50',
-      label:      'Recebido',
-      sub:        'pago no ciclo atual',
-      value:      fmtBRL(data.received),
-      valueColor: 'text-emerald-700',
-      show:       true,
+      icon:        <CheckCircle2 className="w-4 h-4" style={{ color: '#22C55E' }} />,
+      iconBgStyle: 'rgba(34,197,94,0.15)',
+      label:       'Recebido',
+      sub:         'pago no ciclo atual',
+      value:       fmtBRL(data.received),
+      valueColor:  '#22C55E',
+      show:        true,
     },
     {
-      icon:       <Clock className="w-4 h-4 text-amber-500" />,
-      iconBg:     'bg-amber-50',
-      label:      'Pendente',
-      sub:        'a receber no ciclo',
-      value:      fmtBRL(data.pending),
-      valueColor: data.pending > 0 ? 'text-amber-600' : 'text-[#94a3b8]',
-      show:       true,
+      icon:        <Clock className="w-4 h-4" style={{ color: data.pending > 0 ? '#F5A623' : '#64748b' }} />,
+      iconBgStyle: data.pending > 0 ? 'rgba(245,166,35,0.15)' : 'rgba(203,213,225,0.10)',
+      label:       'Pendente',
+      sub:         'a receber no ciclo',
+      value:       fmtBRL(data.pending),
+      valueColor:  data.pending > 0 ? '#F5A623' : '#94a3b8',
+      show:        true,
     },
     {
-      icon:       <AlertTriangle className="w-4 h-4 text-red-500" />,
-      iconBg:     'bg-red-50',
-      label:      'Inadimplência',
-      sub:        data.overdueCount > 0
-                    ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
-                    : 'nenhum em atraso',
-      value:      fmtBRL(data.overdueAmt),
-      valueColor: data.overdueCount > 0 ? 'text-red-600' : 'text-[#94a3b8]',
-      show:       true,
+      icon:        <AlertTriangle className="w-4 h-4" style={{ color: data.overdueCount > 0 ? '#f87171' : '#64748b' }} />,
+      iconBgStyle: data.overdueCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(203,213,225,0.10)',
+      label:       'Inadimplência',
+      sub:         data.overdueCount > 0
+                     ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
+                     : 'nenhum em atraso',
+      value:       fmtBRL(data.overdueAmt),
+      valueColor:  data.overdueCount > 0 ? '#f87171' : '#94a3b8',
+      show:        true,
     },
     {
-      icon:       <TrendingUp className="w-4 h-4 text-blue-500" />,
-      iconBg:     'bg-blue-50',
-      label:      'Ticket médio',
-      sub:        'por cliente ativo',
-      value:      fmtBRL(data.avgTicket),
-      valueColor: 'text-[#0f172a]',
-      show:       true,
+      icon:        <TrendingUp className="w-4 h-4" style={{ color: '#4F8EF7' }} />,
+      iconBgStyle: 'rgba(79,142,247,0.15)',
+      label:       'Ticket médio',
+      sub:         'por cliente ativo',
+      value:       fmtBRL(data.avgTicket),
+      valueColor:  '#F8FAFC',
+      show:        true,
     },
   ]
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#ececec] overflow-hidden"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl overflow-hidden"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[#f5f5f7] flex items-center">
-        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo financeiro</h3>
+      <div className="px-6 py-4 flex items-center" style={{ borderBottom: '1px solid #1e293b' }}>
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo financeiro</h3>
         <Link to="/financial" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
           Ver detalhes →
         </Link>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-[#f5f5f7]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: '#1e293b' }}>
         {items.map((item, i) => (
           <div key={i} className="px-6 py-5 flex flex-col gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: item.iconBgStyle }}>
               {item.icon}
             </div>
             <div>
-              <p className={`text-[20px] font-bold leading-tight tabular-nums ${item.valueColor}`}>
+              <p className="text-[20px] font-bold leading-tight tabular-nums" style={{ color: item.valueColor }}>
                 {item.value}
               </p>
               <p className="text-[10.5px] font-semibold text-[#94a3b8] mt-1 uppercase tracking-wide">
@@ -548,29 +565,29 @@ function AlertsWidget({
   const allGood = pendingApproval === 0 && overdueTasks === 0
 
   const rows = [
-    { icon: CheckCircle2, label: 'Aprovados no período',    value: periodApproved,  color: 'text-emerald-800', bg: 'bg-emerald-50', href: '/planner' },
-    { icon: Clock,        label: 'Aguardando aprovação',    value: pendingApproval, color: pendingApproval > 0 ? 'text-amber-800'  : 'text-gray-400', bg: pendingApproval > 0 ? 'bg-amber-50'  : 'bg-gray-50', href: '/planner' },
-    { icon: CheckSquare,  label: 'Tarefas em aberto',       value: pendingTasks,    color: pendingTasks    > 0 ? 'text-blue-800'   : 'text-gray-400', bg: pendingTasks    > 0 ? 'bg-blue-50'   : 'bg-gray-50', href: '/tasks'   },
-    { icon: AlertTriangle,label: 'Tarefas atrasadas',       value: overdueTasks,    color: overdueTasks    > 0 ? 'text-red-800'    : 'text-gray-400', bg: overdueTasks    > 0 ? 'bg-red-50'    : 'bg-gray-50', href: '/tasks'   },
+    { icon: CheckCircle2, label: 'Aprovados no período',  value: periodApproved,  bgStyle: 'rgba(34,197,94,0.15)',                                            iconColor: '#22C55E', href: '/planner' },
+    { icon: Clock,        label: 'Aguardando aprovação',  value: pendingApproval, bgStyle: pendingApproval > 0 ? 'rgba(245,166,35,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingApproval > 0 ? '#F5A623' : '#64748b', href: '/planner' },
+    { icon: CheckSquare,  label: 'Tarefas em aberto',     value: pendingTasks,    bgStyle: pendingTasks    > 0 ? 'rgba(79,142,247,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingTasks    > 0 ? '#4F8EF7' : '#64748b', href: '/tasks'   },
+    { icon: AlertTriangle,label: 'Tarefas atrasadas',     value: overdueTasks,    bgStyle: overdueTasks    > 0 ? 'rgba(239,68,68,0.15)'   : 'rgba(203,213,225,0.10)', iconColor: overdueTasks    > 0 ? '#f87171' : '#64748b', href: '/tasks'   },
   ]
 
   return (
     <div
-      className="bg-white rounded-2xl border border-[#f1f5f9] p-5"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+      className="rounded-2xl p-5"
+      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
     >
       <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-[13px] font-semibold text-[#0f172a]">Resumo operacional</h3>
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo operacional</h3>
       </div>
       <div className="space-y-0.5">
         {rows.map((row, i) => (
           <Link key={i} to={row.href}>
-            <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#f8fafc] transition-colors cursor-pointer">
-              <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${row.bg}`}>
-                <row.icon className={`w-3.5 h-3.5 ${row.color}`} />
+            <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors cursor-pointer hover:opacity-80" style={{ background: 'transparent' }}>
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: row.bgStyle }}>
+                <row.icon className="w-3.5 h-3.5" style={{ color: row.iconColor }} />
               </div>
-              <p className="text-[11.5px] text-[#475569] flex-1 leading-snug">{row.label}</p>
-              <span className={`text-[14px] font-semibold tabular-nums ${row.color}`}>{row.value}</span>
+              <p className="text-[11.5px] text-[#CBD5E1] flex-1 leading-snug">{row.label}</p>
+              <span className="text-[14px] font-semibold tabular-nums" style={{ color: row.iconColor }}>{row.value}</span>
             </div>
           </Link>
         ))}
@@ -760,11 +777,11 @@ export function Dashboard() {
     pList.forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    // Gráfico de planejamento — "Ag. aprovação" usa isAwaitingApproval()
+    // Gráfico de planejamento — "Aguardando aprovação" usa isAwaitingClientApproval()
     setPlannerChartData([
-      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#8b5cf6' },
+      { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#a3a3a3' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
-      { label: 'Ag. aprovação', value: pList.filter(isAwaitingClientApproval).length,            color: '#f97316' },
+      { label: 'Aguardando aprovação', value: pList.filter(isAwaitingClientApproval).length,     color: '#f97316' },
       { label: 'Aprovado',      value: period_approved,                                          color: '#10b981' },
     ])
   }
@@ -776,7 +793,7 @@ export function Dashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#f5f5f7]">
+    <div className="min-h-full" style={{ background: '#0B1020' }}>
 
       {/* ── Hero Banner inteligente ── */}
       <DashboardHero
@@ -799,28 +816,10 @@ export function Dashboard() {
 
       <div className="px-6 py-6 md:px-8 md:py-7 space-y-6">
 
-        {/* KPI Cards */}
+        {/* KPI Cards — conteúdo */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
-            label="Posts Agendados"
-            value={stats.period_scheduled}
-            subtitle="aprovados no período"
-            href="/planner"
-            icon={CalendarDays}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-700"
-          />
-          <KpiCard
-            label="Posts Publicados"
-            value={stats.period_published}
-            subtitle="publicados no período"
-            href="/planner"
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-700"
-          />
-          <KpiCard
-            label="Aguardando Aprovação do Cliente"
+            label="Aguardando Aprovação"
             value={stats.period_pending_approval}
             subtitle={stats.period_pending_approval > 0 ? 'aguardando retorno do cliente' : 'nenhum pendente'}
             href="/planner"
@@ -835,6 +834,25 @@ export function Dashboard() {
             href="/planner"
             icon={AlertTriangle}
             warning
+          />
+          <KpiCard
+            label="Tarefas em Aberto"
+            value={stats.pending_tasks}
+            subtitle="no período"
+            href="/tasks"
+            icon={CheckSquare}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+          />
+          <KpiCard
+            label="Tarefas Atrasadas"
+            value={stats.overdue_tasks}
+            subtitle={stats.overdue_tasks > 0 ? 'requerem atenção' : 'tudo em dia'}
+            href="/tasks"
+            icon={AlertTriangle}
+            warning={stats.overdue_tasks > 0}
+            iconBg="bg-gray-50"
+            iconColor="text-gray-400"
           />
         </div>
 
@@ -859,6 +877,12 @@ export function Dashboard() {
             <CalendarWidget
               items={plannerCalItems}
               onDayClick={() => navigate('/planner')}
+            />
+            <AlertsWidget
+              pendingApproval={stats.period_pending_approval}
+              overdueTasks={stats.overdue_tasks}
+              pendingTasks={stats.pending_tasks}
+              periodApproved={stats.period_approved}
             />
           </div>
         </div>

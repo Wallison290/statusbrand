@@ -57,9 +57,26 @@ export function useUpdatePlannerItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<PlannerItem> & { id: string }) => {
+      const patch: any = { ...updates, updated_at: new Date().toISOString() }
+
+      // Quando a agência marca o conteúdo como "publicado", consideramos que ele
+      // já foi aprovado pelo cliente (muitos aprovam por WhatsApp / fora do sistema).
+      // Isso atualiza também o acesso do cliente, que deixa de mostrar "pendente
+      // de aprovação". Não setamos reviewed_by, então o trigger do banco NÃO dispara
+      // a notificação falsa de "aprovado pelo cliente".
+      if (updates.status === 'publicado') {
+        patch.approval_status = 'aprovado'
+        if (patch.art_approval_status == null || patch.art_approval_status === 'pendente_aprovacao') {
+          patch.art_approval_status = 'aprovado'
+        }
+        if (patch.copy_approval_status == null || patch.copy_approval_status === 'pendente_aprovacao') {
+          patch.copy_approval_status = 'aprovado'
+        }
+      }
+
       const { data, error } = await supabase
         .from('planner')
-        .update({ ...updates, updated_at: new Date().toISOString() } as any)
+        .update(patch)
         .eq('id', id)
         .select()
         .single()

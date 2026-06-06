@@ -11,7 +11,7 @@ import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
-  LayoutGrid, Film,
+  LayoutGrid, Film, ChevronDown,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -359,23 +359,23 @@ function DayTooltip({ state }: { state: HoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-white border border-[#e2e8f0] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[#0f0f0f]"
+        className="bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[#F8FAFC]"
       >
         {state.items.map((item, i) => (
-          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[#f0f0f0]' : ''}>
+          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[#1e293b]' : ''}>
             <div className="flex items-start gap-2 mb-1">
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-[#0f0f0f] text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-[#737373] mt-0.5">
+                <p className="font-medium text-[#F8FAFC] text-[11px] leading-snug">{item.title}</p>
+                <p className="text-[10px] text-[#94a3b8] mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.client && (
               <div className="flex items-center gap-1 mb-1">
-                <Building2 className="w-3 h-3 text-[#9ca3af] flex-shrink-0" />
-                <span className="text-[10px] text-[#737373] truncate">{item.client.company_name}</span>
+                <Building2 className="w-3 h-3 text-[#94a3b8] flex-shrink-0" />
+                <span className="text-[10px] text-[#94a3b8] truncate">{item.client.company_name}</span>
               </div>
             )}
             {/* Approval badge no tooltip */}
@@ -383,11 +383,11 @@ function DayTooltip({ state }: { state: HoverState }) {
               const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
               return (
                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md mb-1.5 ${
-                  as_ === 'aprovado' ? 'bg-green-50 text-green-900' :
-                  as_ === 'ajuste_solicitado' ? 'bg-orange-50 text-orange-900' :
-                  as_ === 'ajuste_realizado' ? 'bg-blue-50 text-blue-900' :
-                  as_ === 'reprovado' ? 'bg-red-50 text-red-900' :
-                  'bg-amber-50 text-amber-900'
+                  as_ === 'aprovado' ? 'bg-green-500/10 text-green-300' :
+                  as_ === 'ajuste_solicitado' ? 'bg-orange-500/10 text-orange-300' :
+                  as_ === 'ajuste_realizado' ? 'bg-blue-500/10 text-blue-300' :
+                  as_ === 'reprovado' ? 'bg-red-500/10 text-red-300' :
+                  'bg-amber-500/10 text-amber-300'
                 }`}>
                   <div className={`w-1 h-1 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
                   <span className="text-[9px] font-medium">{approvalLabel[as_]}</span>
@@ -395,10 +395,10 @@ function DayTooltip({ state }: { state: HoverState }) {
               )
             })()}
             {item.notes && (
-              <p className="text-[10px] text-[#737373] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-[#94a3b8] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {item.client_feedback && (
-              <p className="text-[10px] text-[#9ca3af] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
+              <p className="text-[10px] text-[#64748b] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => isImageAttachment(a))
@@ -421,8 +421,8 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-[#9ca3af]" />
-                  <span className="text-[10px] text-[#737373]">
+                  <Paperclip className="w-3 h-3 text-[#94a3b8]" />
+                  <span className="text-[10px] text-[#94a3b8]">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
@@ -567,49 +567,49 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   }
 
   if (igLoading) return (
-    <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
-      <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" /> Verificando Instagram...
+    <div className="flex items-center gap-2 py-2 text-xs text-[#94a3b8]">
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#64748b]" /> Verificando Instagram...
     </div>
   )
 
   if (!item.client_id) return (
-    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-500">
+    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] text-xs text-[#94a3b8]">
       Post sem cliente vinculado — não é possível agendar no Instagram.
     </div>
   )
 
   if (!igAccount) return (
-    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1.5">
+    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] space-y-1.5">
       <div className="flex items-center gap-2">
-        <Instagram className="w-3.5 h-3.5 text-gray-400" />
-        <p className="text-xs text-gray-700 font-medium">Instagram não conectado</p>
+        <Instagram className="w-3.5 h-3.5 text-[#64748b]" />
+        <p className="text-xs text-[#CBD5E1] font-medium">Instagram não conectado</p>
       </div>
-      <p className="text-[11px] text-gray-500">
-        Acesse o perfil do cliente → aba <strong className="text-gray-700">Instagram</strong> para conectar a conta.
+      <p className="text-[11px] text-[#94a3b8]">
+        Acesse o perfil do cliente → aba <strong className="text-[#CBD5E1]">Instagram</strong> para conectar a conta.
       </p>
     </div>
   )
 
   if (!postType) return (
-    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
-      <p className="text-xs text-amber-800 font-medium">Tipo de post não configurado</p>
-      <p className="text-[11px] text-amber-700">Edite o post e selecione o tipo (Imagem, Carrossel ou Reel) para poder agendar.</p>
+    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/25 space-y-1">
+      <p className="text-xs text-amber-300 font-medium">Tipo de post não configurado</p>
+      <p className="text-[11px] text-amber-200/80">Edite o post e selecione o tipo (Imagem, Carrossel ou Reel) para poder agendar.</p>
     </div>
   )
 
   if (igMedia.length === 0) return (
-    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
-      <p className="text-xs text-amber-800 font-medium">Sem mídia configurada</p>
-      <p className="text-[11px] text-amber-700">Edite o post e adicione as mídias na seção "Publicação no Instagram".</p>
+    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/25 space-y-1">
+      <p className="text-xs text-amber-300 font-medium">Sem mídia configurada</p>
+      <p className="text-[11px] text-amber-200/80">Edite o post e adicione as mídias na seção "Publicação no Instagram".</p>
     </div>
   )
 
   if (success) return (
-    <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+    <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/25">
+      <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
       <div>
-        <p className="text-xs font-medium text-emerald-700">Post agendado!</p>
-        <p className="text-[11px] text-gray-500 mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
+        <p className="text-xs font-medium text-emerald-300">Post agendado!</p>
+        <p className="text-[11px] text-[#94a3b8] mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
       </div>
     </div>
   )
@@ -618,24 +618,24 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   const TypeIcon  = postType === 'REELS' ? Film : postType === 'CAROUSEL_ALBUM' ? LayoutGrid : ImageIcon
 
   return (
-    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] space-y-3">
       {/* Conta conectada */}
       <div className="flex items-center gap-2">
         {igAccount.profile_picture_url
           ? <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
           : <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}><Instagram className="w-3.5 h-3.5 text-white" /></div>
         }
-        <span className="text-xs text-gray-800 font-medium">@{igAccount.username}</span>
-        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Conectado</span>
+        <span className="text-xs text-[#CBD5E1] font-medium">@{igAccount.username}</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">Conectado</span>
       </div>
 
       {/* Tipo + prévia das mídias */}
-      <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
-        <TypeIcon className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-        <span className="text-xs text-gray-700 font-medium">{typeLabel}</span>
+      <div className="flex items-center gap-2 p-2 bg-[#182233] rounded-lg border border-[#1e293b]">
+        <TypeIcon className="w-3.5 h-3.5 text-[#94a3b8] flex-shrink-0" />
+        <span className="text-xs text-[#CBD5E1] font-medium">{typeLabel}</span>
         <div className="ml-auto flex gap-1">
           {igMedia.slice(0, 4).map((att, i) => (
-            <div key={att.id} className="w-8 h-8 rounded overflow-hidden border border-gray-200 flex-shrink-0">
+            <div key={att.id} className="w-8 h-8 rounded overflow-hidden border border-[#1e293b] flex-shrink-0">
               {isVideoAttachment(att)
                 ? <video src={att.file_url} className="w-full h-full object-cover" muted />
                 : <img src={att.file_url} alt="" className="w-full h-full object-cover" />
@@ -643,21 +643,21 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
             </div>
           ))}
           {igMedia.length > 4 && (
-            <span className="text-[10px] text-gray-400 self-center pl-0.5">+{igMedia.length - 4}</span>
+            <span className="text-[10px] text-[#64748b] self-center pl-0.5">+{igMedia.length - 4}</span>
           )}
         </div>
       </div>
 
       {/* Legenda */}
       <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} placeholder="Legenda..."
-        className="w-full text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:border-blue-400 transition-colors" />
+        className="w-full text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] placeholder-[#64748b] resize-none focus:outline-none focus:border-[#2563EB] transition-colors" />
 
       {/* Data/hora */}
       <div className="grid grid-cols-2 gap-2">
         <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
-          className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-blue-400 transition-colors [color-scheme:light]" />
+          className="text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
         <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)}
-          className="text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-blue-400 transition-colors [color-scheme:light]" />
+          className="text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
       </div>
 
       <Button size="sm" onClick={handleSchedule} disabled={publishing}
@@ -739,7 +739,7 @@ function PlannerItemView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
-      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden bg-white flex flex-col h-[90vh]">
+      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden !bg-[#0d0f14] flex flex-col h-[90vh]">
 
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row h-full overflow-hidden">
@@ -747,7 +747,7 @@ function PlannerItemView({
           {/* ══ ESQUERDA: Mídia — preenche todo o painel, sem fundo preto ══ */}
           {hasMedia && (
             /* mobile: altura fixa 45vw (aprox. quadrado); desktop: 50% da largura, altura total do modal */
-            <div className="lg:w-1/2 flex-shrink-0 relative bg-gray-200 overflow-hidden h-[45vw] lg:h-full">
+            <div className="lg:w-1/2 flex-shrink-0 relative bg-[#101A2B] overflow-hidden h-[45vw] lg:h-full">
 
               {/* Mídia — cobre todo o espaço, centralizada */}
               {currentMedia?.kind === 'image' ? (
@@ -814,36 +814,58 @@ function PlannerItemView({
           )}
 
           {/* ══ DIREITA: Informações — scroll independente ══ */}
-          <div className={`flex flex-col overflow-hidden bg-white ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-gray-200' : 'w-full'} flex-1`}>
+          <div className={`flex flex-col overflow-hidden bg-[#0d0f14] ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-white/10' : 'w-full'} flex-1`}>
             {/* Header fixo — não rola */}
-            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-200">
+            <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-white/10">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   {item.client && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                      <span className="text-[11px] text-gray-500 font-medium">{item.client.company_name}</span>
+                      <Building2 className="w-3 h-3 text-[#64748b] flex-shrink-0" />
+                      <span className="text-[11px] text-[#94a3b8] font-medium">{item.client.company_name}</span>
                     </div>
                   )}
-                  <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
+                  <h2 className="text-[15px] font-semibold text-[#F8FAFC] leading-snug break-words">{item.title}</h2>
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    <span className="text-[11px] text-gray-500">
+                    <span className="text-[11px] text-[#94a3b8]">
                       {format(parseISO(item.scheduled_date), "dd 'de' MMM", { locale: ptBR })}
                       {item.scheduled_time && ` · ${item.scheduled_time.slice(0,5)}`}
                     </span>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-[11px] text-gray-500">{contentTypeLabels[item.content_type as ContentType]}</span>
-                    <span className="text-gray-300">·</span>
-                    <span className={`text-[11px] font-semibold ${statusTextColors[item.status as PlannerStatus]}`}>
-                      {statusLabels[item.status as PlannerStatus]}
-                    </span>
+                    <span className="text-[#475569]">·</span>
+                    <span className="text-[11px] text-[#94a3b8]">{contentTypeLabels[item.content_type as ContentType]}</span>
+                    <span className="text-[#475569]">·</span>
+                    {/* Status — seletor inline: muda o status do conteúdo direto por aqui */}
+                    <div className="relative inline-flex items-center">
+                      <select
+                        value={item.status}
+                        disabled={updateItem.isPending}
+                        onChange={async (e) => {
+                          const next = e.target.value as PlannerStatus
+                          if (next === item.status) return
+                          try {
+                            await updateItem.mutateAsync({ id: item.id, status: next })
+                            toast('Status atualizado!', 'success')
+                          } catch (err: any) {
+                            toast(err.message, 'error')
+                          }
+                        }}
+                        className={`appearance-none cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-2 pr-6 py-0.5 text-[11px] font-semibold outline-none transition-colors disabled:opacity-50 ${statusTextColors[item.status as PlannerStatus]}`}
+                      >
+                        {(Object.keys(statusLabels) as PlannerStatus[]).map(s => (
+                          <option key={s} value={s} className="bg-[#0d0f14] text-[#F8FAFC]">
+                            {statusLabels[s]}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-[#94a3b8] absolute right-1.5 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button onClick={onEdit} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all">
+                  <button onClick={onEdit} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#94a3b8] hover:text-[#F8FAFC] transition-all">
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={onClose} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-all">
+                  <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#94a3b8] hover:text-[#F8FAFC] transition-all">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -851,18 +873,18 @@ function PlannerItemView({
             </div>
 
             {/* Corpo — rola independentemente */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
 
               {/* Legenda */}
               {item.notes && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Legenda</p>
+                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Legenda</p>
                   <div className="relative">
-                    <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
+                    <p className={`text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
                       {item.notes}
                     </p>
                     {item.notes.length > 200 && (
-                      <button onClick={() => setNotesExpanded(v => !v)} className="text-[12px] text-gray-500 hover:text-gray-700 mt-1.5 font-medium transition-colors">
+                      <button onClick={() => setNotesExpanded(v => !v)} className="text-[12px] text-[#94a3b8] hover:text-[#CBD5E1] mt-1.5 font-medium transition-colors">
                         {notesExpanded ? 'ver menos' : 'ver mais'}
                       </button>
                     )}
@@ -873,15 +895,15 @@ function PlannerItemView({
               {/* Outros anexos */}
               {otherAttachments.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Anexos</p>
+                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Anexos</p>
                   <div className="space-y-1.5">
                     {otherAttachments.map(att => (
                       <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
+                        className="flex items-center gap-2.5 p-2.5 bg-[#101A2B] border border-[#1e293b] rounded-lg hover:bg-[#182233] transition-colors min-w-0 overflow-hidden">
                         <FileTypeIcon type={att.file_type} size="md" />
-                        <span className="text-xs text-gray-700 truncate flex-1">{att.file_name}</span>
-                        {att.file_size && <span className="text-[10px] text-gray-400 flex-shrink-0">{formatFileSize(att.file_size)}</span>}
-                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-[#CBD5E1] truncate flex-1">{att.file_name}</span>
+                        {att.file_size && <span className="text-[10px] text-[#64748b] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                        <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0" />
                       </a>
                     ))}
                   </div>
@@ -891,14 +913,14 @@ function PlannerItemView({
               {/* Links */}
               {item.links && item.links.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Links</p>
+                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Links</p>
                   <div className="space-y-1.5">
                     {item.links.map(link => (
                       <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors min-w-0 overflow-hidden">
-                        <Link2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                        <span className="text-xs text-blue-600 flex-1 min-w-0 truncate">{link.label || link.url}</span>
-                        <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                        className="flex items-center gap-2 p-2.5 bg-[#101A2B] border border-[#1e293b] rounded-lg hover:bg-[#182233] transition-colors min-w-0 overflow-hidden">
+                        <Link2 className="w-3.5 h-3.5 text-[#60A5FA] flex-shrink-0" />
+                        <span className="text-xs text-[#93c5fd] flex-1 min-w-0 truncate">{link.label || link.url}</span>
+                        <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0" />
                       </a>
                     ))}
                   </div>
@@ -908,7 +930,7 @@ function PlannerItemView({
               {/* Resposta do cliente */}
               {item.approval_status && (
                 <div className="space-y-2">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Resposta do Cliente</p>
+                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold">Resposta do Cliente</p>
 
                   {/* Status geral + data */}
                   <div className="flex items-center gap-2 px-0.5 flex-wrap">
@@ -917,7 +939,7 @@ function PlannerItemView({
                       {approvalLabel[effectiveStatus]}
                     </span>
                     {item.reviewed_at && (
-                      <span className="text-[10px] text-gray-400 ml-auto">
+                      <span className="text-[10px] text-[#64748b] ml-auto">
                         {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                       </span>
                     )}
@@ -929,17 +951,17 @@ function PlannerItemView({
                     const artFeedbackRaw = (item as any).art_feedback as string | null
                     const carouselSlides = parseCarouselFeedback(artFeedbackRaw)
                     const bgMap: Record<ApprovalStatus, string> = {
-                      pendente_aprovacao: 'border-yellow-200 bg-yellow-50',
-                      aprovado:           'border-green-200 bg-green-50',
-                      ajuste_solicitado:  'border-orange-200 bg-orange-50',
-                      ajuste_realizado:   'border-blue-200 bg-blue-50',
-                      reprovado:          'border-red-200 bg-red-50',
+                      pendente_aprovacao: 'border-yellow-500/25 bg-yellow-500/10',
+                      aprovado:           'border-green-500/25 bg-green-500/10',
+                      ajuste_solicitado:  'border-orange-500/25 bg-orange-500/10',
+                      ajuste_realizado:   'border-[#2563EB]/30 bg-[#2563EB]/10',
+                      reprovado:          'border-red-500/25 bg-red-500/10',
                     }
                     const slideDot: Record<string, string> = {
                       aprovado: 'bg-green-500', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-500'
                     }
                     const slideText: Record<string, string> = {
-                      aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-700', reprovado: 'text-red-700'
+                      aprovado: 'text-green-300', ajuste_solicitado: 'text-orange-300', reprovado: 'text-red-300'
                     }
                     const slideLabel: Record<string, string> = {
                       aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado'
@@ -947,7 +969,7 @@ function PlannerItemView({
                     return (
                       <div className={`rounded-xl border p-3 ${bgMap[artStatus]}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wide">
                             Arte{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
                           </p>
                           <div className="flex items-center gap-1.5">
@@ -962,25 +984,25 @@ function PlannerItemView({
                         {carouselSlides ? (
                           <div className="mt-2 space-y-1.5">
                             {carouselSlides.map(s => (
-                              <div key={s.slide} className="flex flex-col gap-1 bg-white/70 rounded-lg px-2.5 py-1.5">
+                              <div key={s.slide} className="flex flex-col gap-1 bg-white/5 rounded-lg px-2.5 py-1.5">
                                 <div className="flex items-center gap-1.5">
-                                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-300'}`} />
-                                  <span className="text-[10px] font-semibold text-gray-500">Slide {s.slide}</span>
-                                  <span className={`text-[10px] font-semibold ml-auto ${slideText[s.status] ?? 'text-gray-500'}`}>
+                                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-500'}`} />
+                                  <span className="text-[10px] font-semibold text-[#94a3b8]">Slide {s.slide}</span>
+                                  <span className={`text-[10px] font-semibold ml-auto ${slideText[s.status] ?? 'text-[#94a3b8]'}`}>
                                     {slideLabel[s.status] ?? s.status}
                                   </span>
                                 </div>
                                 {s.feedback && (
-                                  <p className="text-[11px] text-gray-600 leading-relaxed pl-3 break-words">"{s.feedback}"</p>
+                                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed pl-3 break-words">"{s.feedback}"</p>
                                 )}
                               </div>
                             ))}
                           </div>
                         ) : artFeedbackRaw && artStatus !== 'aprovado' && artStatus !== 'pendente_aprovacao' ? (
                           /* Feedback texto simples (legado) */
-                          <div className="mt-2 flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
-                            <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">Cliente:</span>
-                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{artFeedbackRaw}"</p>
+                          <div className="mt-2 flex items-start gap-2 bg-white/5 rounded-lg px-2.5 py-2">
+                            <span className="text-[10px] text-[#64748b] flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-[#CBD5E1] leading-relaxed break-words select-text flex-1">"{artFeedbackRaw}"</p>
                           </div>
                         ) : null}
 
@@ -1002,10 +1024,10 @@ function PlannerItemView({
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
                             disabled={updateItem.isPending}
-                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 transition-colors disabled:opacity-50"
+                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50"
                           >
                             {updateItem.isPending
-                              ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
                               : <Check className="w-3 h-3" />}
                             Marcar ajuste de Arte como realizado
                           </button>
@@ -1019,16 +1041,16 @@ function PlannerItemView({
                     const copyStatus = (item as any).copy_approval_status as ApprovalStatus
                     const copyFeedback = (item as any).copy_feedback as string | null
                     const bgMap: Record<ApprovalStatus, string> = {
-                      pendente_aprovacao: 'border-yellow-200 bg-yellow-50',
-                      aprovado:           'border-green-200 bg-green-50',
-                      ajuste_solicitado:  'border-orange-200 bg-orange-50',
-                      ajuste_realizado:   'border-blue-200 bg-blue-50',
-                      reprovado:          'border-red-200 bg-red-50',
+                      pendente_aprovacao: 'border-yellow-500/25 bg-yellow-500/10',
+                      aprovado:           'border-green-500/25 bg-green-500/10',
+                      ajuste_solicitado:  'border-orange-500/25 bg-orange-500/10',
+                      ajuste_realizado:   'border-[#2563EB]/30 bg-[#2563EB]/10',
+                      reprovado:          'border-red-500/25 bg-red-500/10',
                     }
                     return (
                       <div className={`rounded-xl border p-3 ${bgMap[copyStatus]}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Copy</p>
+                          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wide">Copy</p>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[copyStatus]}`} />
                             <span className={`text-[11px] font-semibold ${approvalTextColor[copyStatus]}`}>
@@ -1037,9 +1059,9 @@ function PlannerItemView({
                           </div>
                         </div>
                         {copyFeedback && copyStatus !== 'aprovado' && copyStatus !== 'pendente_aprovacao' && (
-                          <div className="mt-2 flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
-                            <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">Cliente:</span>
-                            <p className="text-xs text-gray-700 leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
+                          <div className="mt-2 flex items-start gap-2 bg-white/5 rounded-lg px-2.5 py-2">
+                            <span className="text-[10px] text-[#64748b] flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-[#CBD5E1] leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
                           </div>
                         )}
                         {(copyStatus === 'ajuste_solicitado' || copyStatus === 'reprovado') && (
@@ -1060,10 +1082,10 @@ function PlannerItemView({
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
                             disabled={updateItem.isPending}
-                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 transition-colors disabled:opacity-50"
+                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50"
                           >
                             {updateItem.isPending
-                              ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
                               : <Check className="w-3 h-3" />}
                             Marcar ajuste de Copy como realizado
                           </button>
@@ -1074,7 +1096,7 @@ function PlannerItemView({
 
                   {/* Fallback legado: feedback geral quando não há campos parciais */}
                   {!(item as any).art_approval_status && !(item as any).copy_approval_status && item.client_feedback && (
-                    <p className="text-xs text-gray-700 leading-relaxed bg-white border border-gray-100 rounded-lg px-3 py-2 break-words">
+                    <p className="text-xs text-[#CBD5E1] leading-relaxed bg-[#101A2B] border border-[#1e293b] rounded-lg px-3 py-2 break-words">
                       "{item.client_feedback}"
                     </p>
                   )}
@@ -1083,9 +1105,9 @@ function PlannerItemView({
                   {!(item as any).art_approval_status && !(item as any).copy_approval_status &&
                     (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
                     <button onClick={handleMarkAdjustmentDone} disabled={updateItem.isPending}
-                      className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50">
+                      className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50">
                       {updateItem.isPending
-                        ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
                         : <Check className="w-3 h-3" />}
                       Ajuste realizado
                     </button>
@@ -1095,7 +1117,7 @@ function PlannerItemView({
 
               {/* Agendar no Instagram */}
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
                   <Instagram className="w-3 h-3" /> Agendar no Instagram
                 </p>
                 <InstagramScheduleSection item={item} userId={userId} />
@@ -1103,7 +1125,7 @@ function PlannerItemView({
 
               {/* Comentários */}
               <div className="pb-2">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Comentários</p>
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Comentários</p>
                 <PlannerCommentsThread plannerId={item.id} role="agency" />
               </div>
             </div>
@@ -1262,17 +1284,17 @@ function getChipStyle(item: PlannerItem): { bg: string; border: string; text: st
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
 
   // Rascunho — não enviado ao cliente → cinza
-  if (!item.sent_to_client)         return { bg: '#f3f4f6', border: '#d1d5db', text: '#6b7280' }
+  if (!item.sent_to_client)         return { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.30)', text: '#cbd5e1' }
 
   // Publicado — estado final
-  if (s === 'publicado')            return { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+  if (s === 'publicado')            return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
   // Resposta do cliente tem prioridade
-  if (as_ === 'aprovado')           return { bg: '#f0fdf4', border: '#86efac', text: '#166534' }
-  if (as_ === 'reprovado')          return { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' }
-  if (as_ === 'ajuste_solicitado')  return { bg: '#fff7ed', border: '#fdba74', text: '#9a3412' }
-  if (as_ === 'ajuste_realizado')   return { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' }
+  if (as_ === 'aprovado')           return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
+  if (as_ === 'reprovado')          return { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.30)',  text: '#fca5a5' }
+  if (as_ === 'ajuste_solicitado')  return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.30)', text: '#fcd34d' }
+  if (as_ === 'ajuste_realizado')   return { bg: 'rgba(37,99,235,0.14)',  border: 'rgba(37,99,235,0.35)',  text: '#93c5fd' }
   // Enviado, aguardando aprovação → amarelo
-  return { bg: '#fefce8', border: '#fde047', text: '#854d0e' }
+  return { bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.30)', text: '#fde047' }
 }
 
 function DayPreviewChip({
@@ -1337,11 +1359,11 @@ function DroppableDay({
         min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
         ${isCurrentMonth
           ? `cursor-pointer ${isOver
-              ? 'border-blue-400/60 bg-blue-500/10 scale-[1.02]'
-              : 'border-black/10 hover:border-black/20 hover:bg-gray-50'}`
+              ? 'border-[#2563EB]/60 bg-[#2563EB]/10 scale-[1.02]'
+              : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]'}`
           : 'border-transparent opacity-30 cursor-default'}
-        ${isCurrentDay && !isOver ? 'border-blue-500/40 bg-blue-50' : ''}
-        ${hasItems && isCurrentMonth && !isOver ? 'hover:border-black/20' : ''}
+        ${isCurrentDay && !isOver ? 'border-[#2563EB]/40 bg-[#2563EB]/[0.08]' : ''}
+        ${hasItems && isCurrentMonth && !isOver ? 'hover:border-white/[0.12]' : ''}
       `}
     >
       {children}
@@ -1926,17 +1948,17 @@ export function Planner() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#f5f7fb]">
+    <div className="min-h-full bg-[#0B1020]">
       <div className="p-4 md:p-6">
         {/* ── Toggle de visualização + Novo post ──────────────────────────────── */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 bg-[#f0f0f0] rounded-xl w-fit">
+        <div className="flex items-center gap-1.5 p-1 bg-[#101A2B] rounded-xl w-fit">
           <button
             onClick={() => setViewMode('mensal')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               viewMode === 'mensal'
-                ? 'bg-white text-[#0f0f0f] shadow-sm'
-                : 'text-[#737373] hover:text-[#0f0f0f]'
+                ? 'bg-[#2563EB] text-white shadow-sm'
+                : 'text-[#94a3b8] hover:text-[#F8FAFC]'
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
@@ -1946,8 +1968,8 @@ export function Planner() {
             onClick={() => setViewMode('feed')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               viewMode === 'feed'
-                ? 'bg-white text-[#0f0f0f] shadow-sm'
-                : 'text-[#737373] hover:text-[#0f0f0f]'
+                ? 'bg-[#2563EB] text-white shadow-sm'
+                : 'text-[#94a3b8] hover:text-[#F8FAFC]'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -1966,7 +1988,7 @@ export function Planner() {
               setOpen(true)
             }}
             size="sm"
-            className="!bg-[#0f0f0f] hover:!bg-[#1a1a1a] !text-white !border-0 !shadow-none"
+            className="!bg-[#2563EB] hover:!bg-[#1D4ED8] !text-white !border-0 !shadow-none"
           >
             <Plus className="w-4 h-4" /> Novo post
           </Button>
@@ -1984,8 +2006,8 @@ export function Planner() {
                   onClick={() => { setClientDropOpen(o => !o); setStatusDropOpen(false) }}
                   className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
                     selectedClientFilter
-                      ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
-                      : 'bg-white text-[#374151] border-[#e0e0e0] hover:border-[#c0c0c0] hover:bg-[#fafafa]'
+                      ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                      : 'bg-[#182233] text-[#CBD5E1] border-[#1e293b] hover:border-[#2f3b52] hover:bg-[#1e293b]'
                   }`}
                 >
                   {selectedClient ? (
@@ -2014,28 +2036,28 @@ export function Planner() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.97 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute left-0 top-full mt-1.5 z-30 bg-white border border-[#e0e0e0] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[200px]"
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-[#101A2B] border border-[#1e293b] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[200px]"
                       >
                         {/* Opção Todos */}
                         <button
                           onClick={() => { setSelectedClientFilter(null); setClientDropOpen(false) }}
                           className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                            selectedClientFilter === null ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                            selectedClientFilter === null ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
                           }`}
                         >
-                          <span className="w-5 h-5 rounded-full bg-[#e8e8e8] flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-3 h-3 text-[#9ca3af]" />
+                          <span className="w-5 h-5 rounded-full bg-[#1e293b] flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-3 h-3 text-[#94a3b8]" />
                           </span>
                           Todos os clientes
-                          {selectedClientFilter === null && <Check className="w-3 h-3 ml-auto text-[#0f0f0f]" />}
+                          {selectedClientFilter === null && <Check className="w-3 h-3 ml-auto text-[#60A5FA]" />}
                         </button>
-                        {(clients || []).length > 0 && <div className="h-px bg-[#f0f0f0] mx-3 my-1" />}
+                        {(clients || []).length > 0 && <div className="h-px bg-[#1e293b] mx-3 my-1" />}
                         {(clients || []).map(c => (
                           <button
                             key={c.id}
                             onClick={() => { setSelectedClientFilter(c.id); setClientDropOpen(false) }}
                             className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                              selectedClientFilter === c.id ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                              selectedClientFilter === c.id ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
                             }`}
                           >
                             {c.logo_url ? (
@@ -2046,7 +2068,7 @@ export function Planner() {
                               </span>
                             )}
                             <span className="truncate flex-1">{c.company_name}</span>
-                            {selectedClientFilter === c.id && <Check className="w-3 h-3 ml-auto text-[#0f0f0f] flex-shrink-0" />}
+                            {selectedClientFilter === c.id && <Check className="w-3 h-3 ml-auto text-[#60A5FA] flex-shrink-0" />}
                           </button>
                         ))}
                       </motion.div>
@@ -2060,7 +2082,7 @@ export function Planner() {
           {/* Seletor de status de aprovação */}
           {(() => {
             const STATUS_OPTIONS = [
-              { key: 'todos',              label: 'Todos os status',   dot: 'bg-[#c0c0c0]' },
+              { key: 'todos',              label: 'Todos os status',   dot: 'bg-[#64748b]' },
               { key: 'rascunho',           label: 'Rascunho',           dot: 'bg-gray-400' },
               { key: 'pendente_aprovacao', label: 'Aguardando aprovação', dot: 'bg-yellow-400' },
               { key: 'aprovado',           label: 'Aprovados',          dot: 'bg-green-400' },
@@ -2076,8 +2098,8 @@ export function Planner() {
                   onClick={() => { setStatusDropOpen(o => !o); setClientDropOpen(false) }}
                   className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
                     isFiltered
-                      ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
-                      : 'bg-white text-[#374151] border-[#e0e0e0] hover:border-[#c0c0c0] hover:bg-[#fafafa]'
+                      ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                      : 'bg-[#182233] text-[#CBD5E1] border-[#1e293b] hover:border-[#2f3b52] hover:bg-[#1e293b]'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${current.dot}`} />
@@ -2094,19 +2116,19 @@ export function Planner() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.97 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute left-0 top-full mt-1.5 z-30 bg-white border border-[#e0e0e0] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[190px]"
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-[#101A2B] border border-[#1e293b] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[190px]"
                       >
                         {STATUS_OPTIONS.map(({ key, label, dot }) => (
                           <button
                             key={key}
                             onClick={() => { setSelectedApprovalFilter(key); setStatusDropOpen(false) }}
                             className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                              selectedApprovalFilter === key ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#374151] hover:bg-[#f5f5f5]'
+                              selectedApprovalFilter === key ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
                             }`}
                           >
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
                             <span className="flex-1">{label}</span>
-                            {selectedApprovalFilter === key && <Check className="w-3 h-3 ml-auto text-[#0f0f0f] flex-shrink-0" />}
+                            {selectedApprovalFilter === key && <Check className="w-3 h-3 ml-auto text-[#60A5FA] flex-shrink-0" />}
                           </button>
                         ))}
                       </motion.div>
@@ -2133,7 +2155,7 @@ export function Planner() {
               {/* ── Cabeçalho de perfil ── */}
               <div className="flex items-center gap-5 mb-5">
                 {/* Avatar */}
-                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#e0e0e0]">
+                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#1e293b]">
                   {selectedClient?.logo_url ? (
                     <img src={selectedClient.logo_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -2148,31 +2170,31 @@ export function Planner() {
                 {/* Info do perfil */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <h2 className="text-sm font-semibold text-[#0f0f0f] truncate">
+                    <h2 className="text-sm font-semibold text-[#F8FAFC] truncate">
                       {selectedClient ? selectedClient.company_name : 'Todos os clientes'}
                     </h2>
                     {!selectedClient && (
-                      <span className="text-[11px] text-[#737373] bg-[#f0f0f0] px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] text-[#94a3b8] bg-[#101A2B] px-2 py-0.5 rounded-full">
                         Selecione um cliente
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-5">
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#0f0f0f]">{feedItems.length}</p>
-                      <p className="text-[10px] text-[#737373]">planejados</p>
+                      <p className="text-sm font-bold text-[#F8FAFC]">{feedItems.length}</p>
+                      <p className="text-[10px] text-[#94a3b8]">planejados</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#0f0f0f]">
+                      <p className="text-sm font-bold text-[#F8FAFC]">
                         {feedItems.filter(i => i.status === 'publicado').length}
                       </p>
-                      <p className="text-[10px] text-[#737373]">publicados</p>
+                      <p className="text-[10px] text-[#94a3b8]">publicados</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#0f0f0f]">
+                      <p className="text-sm font-bold text-[#F8FAFC]">
                         {feedItems.filter(i => i.approval_status === 'aprovado').length}
                       </p>
-                      <p className="text-[10px] text-[#737373]">aprovados</p>
+                      <p className="text-[10px] text-[#94a3b8]">aprovados</p>
                     </div>
                   </div>
                 </div>
@@ -2181,11 +2203,11 @@ export function Planner() {
               {/* ── Grade estilo Instagram (3 colunas) ── */}
               {feedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#f0f0f0] flex items-center justify-center mb-3">
-                    <LayoutGrid className="w-7 h-7 text-[#c0c0c0]" />
+                  <div className="w-16 h-16 rounded-full bg-[#101A2B] flex items-center justify-center mb-3">
+                    <LayoutGrid className="w-7 h-7 text-[#475569]" />
                   </div>
-                  <p className="text-sm font-medium text-[#737373]">Nenhum conteúdo planejado</p>
-                  <p className="text-xs text-[#9ca3af] mt-1">
+                  <p className="text-sm font-medium text-[#94a3b8]">Nenhum conteúdo planejado</p>
+                  <p className="text-xs text-[#64748b] mt-1">
                     {selectedClientFilter ? 'Crie posts no calendário para visualizar o feed' : 'Selecione um cliente para ver o feed'}
                   </p>
                 </div>
@@ -2202,13 +2224,13 @@ export function Planner() {
 
                     // Cor de status para placeholder
                     const statusBg: Record<PlannerStatus, string> = {
-                      ideia: 'from-purple-100 to-purple-200',
-                      producao: 'from-blue-100 to-blue-200',
-                      revisao: 'from-yellow-100 to-yellow-200',
-                      aprovado: 'from-green-100 to-green-200',
-                      publicado: 'from-emerald-100 to-emerald-200',
+                      ideia: 'from-purple-500/20 to-purple-600/10',
+                      producao: 'from-blue-500/20 to-blue-600/10',
+                      revisao: 'from-yellow-500/20 to-yellow-600/10',
+                      aprovado: 'from-green-500/20 to-green-600/10',
+                      publicado: 'from-emerald-500/20 to-emerald-600/10',
                     }
-                    const bg = statusBg[item.status as PlannerStatus] ?? 'from-gray-100 to-gray-200'
+                    const bg = statusBg[item.status as PlannerStatus] ?? 'from-slate-500/20 to-slate-600/10'
 
                     // Ícone de tipo de conteúdo
                     const isCarousel = item.content_type === 'carrossel' || igImages.length > 1
@@ -2263,11 +2285,11 @@ export function Planner() {
                           // Sem mídia — placeholder informativo
                           <div className={`w-full h-full bg-gradient-to-br ${bg} flex flex-col items-center justify-center p-2 group-hover:opacity-90 transition-opacity`}>
                             <div className={`w-6 h-6 rounded-full mb-1.5 flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                            <p className="text-[10px] font-semibold text-[#374151] text-center leading-tight line-clamp-2">{item.title}</p>
-                            <p className="text-[9px] text-[#737373] mt-1">
+                            <p className="text-[10px] font-semibold text-[#F8FAFC] text-center leading-tight line-clamp-2">{item.title}</p>
+                            <p className="text-[9px] text-[#CBD5E1] mt-1">
                               {format(parseISO(item.scheduled_date), 'dd/MM', { locale: ptBR })}
                             </p>
-                            <p className="text-[9px] text-[#9ca3af]">{contentTypeLabels[item.content_type as ContentType]}</p>
+                            <p className="text-[9px] text-[#94a3b8]">{contentTypeLabels[item.content_type as ContentType]}</p>
                           </div>
                         )}
 
@@ -2305,7 +2327,7 @@ export function Planner() {
               {/* Legenda de status */}
               <div className="flex gap-3 mt-4 flex-wrap max-w-2xl">
                 {(Object.entries(approvalDot) as [ApprovalStatus, string][]).map(([status, dot]) => (
-                  <div key={status} className="flex items-center gap-1.5 text-[11px] text-[#737373]">
+                  <div key={status} className="flex items-center gap-1.5 text-[11px] text-[#94a3b8]">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
                     {approvalLabel[status]}
                   </div>
@@ -2317,7 +2339,7 @@ export function Planner() {
 
         {/* Navigation */}
         {viewMode === 'mensal' && <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#0f0f0f] capitalize">
+          <h2 className="text-lg font-semibold text-[#F8FAFC] capitalize">
             {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
           <div className="flex gap-2">
@@ -2337,12 +2359,12 @@ export function Planner() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-        <Card>
-          <CardContent className="p-2 sm:p-4">
+        <div className="rounded-lg border border-[#1e293b] bg-[#182233]">
+          <div className="p-2 sm:p-4">
             <div className="w-full max-w-full min-w-0">
             <div className="grid grid-cols-7 mb-1 sm:mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-[9px] sm:text-xs font-semibold text-[#0f0f0f] py-1 sm:py-2 truncate">{d}</div>
+                <div key={d} className="text-center text-[9px] sm:text-xs font-semibold text-[#CBD5E1] py-1 sm:py-2 truncate">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
@@ -2366,7 +2388,7 @@ export function Planner() {
                   >
                     <div className={`
                       text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
-                      ${isCurrentDay ? 'bg-blue-600 text-white' : isCurrentMonth ? 'text-[#0f0f0f]' : 'text-gray-400'}
+                      ${isCurrentDay ? 'bg-[#2563EB] text-white' : isCurrentMonth ? 'text-[#F8FAFC]' : 'text-[#475569]'}
                     `}>
                       {format(day, 'd')}
                     </div>
@@ -2380,7 +2402,7 @@ export function Planner() {
                         />
                       ))}
                       {dayItems.length > 2 && (
-                        <p className="text-[7px] sm:text-[9px] text-gray-400 font-medium pl-0.5">+{dayItems.length - 2} mais</p>
+                        <p className="text-[7px] sm:text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - 2} mais</p>
                       )}
                     </div>
                   </DroppableDay>
@@ -2388,13 +2410,13 @@ export function Planner() {
               })}
             </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Overlay visual durante o drag */}
         <DragOverlay dropAnimation={null}>
           {draggingItem ? (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-[#e2e8f0] shadow-lg text-[10px] text-[#0f0f0f] max-w-[160px]">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#182233] border border-[#1e293b] shadow-lg text-[10px] text-[#F8FAFC] max-w-[160px]">
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[draggingItem.status as PlannerStatus]}`} />
               <span className="truncate">{draggingItem.title}</span>
             </div>
@@ -2406,7 +2428,7 @@ export function Planner() {
         {viewMode === 'mensal' && (
           <div className="flex gap-3 mt-4 flex-wrap">
             {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-1.5 text-xs text-[#737373]">
+              <div key={status} className="flex items-center gap-1.5 text-xs text-[#94a3b8]">
                 <div className={`w-2 h-2 rounded-full ${color}`} />
                 {statusLabels[status]}
               </div>
