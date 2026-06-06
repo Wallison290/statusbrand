@@ -55,11 +55,11 @@ export function Login() {
     <div className="h-screen flex overflow-hidden">
 
       {/* ── Left panel — imagem ──────────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-[#0a1020] items-center justify-center">
+      <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
         <img
           src="/planer.png"
           alt="Kairo Hub"
-          className="w-full h-full object-contain select-none"
+          className="absolute inset-0 w-full h-full object-cover object-center select-none"
           draggable={false}
         />
       </div>
