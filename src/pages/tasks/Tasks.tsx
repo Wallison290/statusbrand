@@ -55,7 +55,7 @@ function DonutProgress({ percent }: { percent: number }) {
   const dash = (percent / 100) * circ
   return (
     <svg width="42" height="42" viewBox="0 0 42 42" className="flex-shrink-0">
-      <circle cx="21" cy="21" r={r} fill="none" stroke="#e9ecef" strokeWidth="4" />
+      <circle cx="21" cy="21" r={r} fill="none" stroke="#1e293b" strokeWidth="4" />
       <circle cx="21" cy="21" r={r} fill="none" stroke="#8b5cf6" strokeWidth="4"
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform="rotate(-90 21 21)" style={{ transition: 'stroke-dasharray 0.5s ease' }} />
@@ -83,20 +83,20 @@ function MiniCalendar({ weekStart }: { weekStart: Date }) {
     <div className="w-[180px] flex-shrink-0">
       <div className="flex items-center justify-between mb-2">
         <button onClick={() => setViewMonth(m => subMonths(m, 1))}
-          className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+          className="w-5 h-5 rounded flex items-center justify-center text-[#64748b] hover:text-white hover:bg-[#1e293b]">
           <ChevronLeft className="w-3 h-3" />
         </button>
-        <span className="text-[11px] font-bold text-gray-700 capitalize">
+        <span className="text-[11px] font-bold text-[#CBD5E1] capitalize">
           {format(viewMonth, 'MMMM yyyy', { locale: ptBR })}
         </span>
         <button onClick={() => setViewMonth(m => addMonths(m, 1))}
-          className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+          className="w-5 h-5 rounded flex items-center justify-center text-[#64748b] hover:text-white hover:bg-[#1e293b]">
           <ChevronRight className="w-3 h-3" />
         </button>
       </div>
       <div className="grid grid-cols-7 mb-1">
         {['D','S','T','Q','Q','S','S'].map((d, i) => (
-          <div key={i} className="text-[9px] font-bold text-gray-400 text-center">{d}</div>
+          <div key={i} className="text-[9px] font-bold text-[#64748b] text-center">{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 gap-y-0.5">
@@ -107,7 +107,7 @@ function MiniCalendar({ weekStart }: { weekStart: Date }) {
           return (
             <div key={i} className={[
               'text-[10px] h-5 w-5 mx-auto flex items-center justify-center rounded-full font-medium',
-              isT ? 'bg-blue-500 text-white font-bold' : inWk ? 'bg-blue-100 text-blue-700' : 'text-gray-500',
+              isT ? 'bg-[#2563EB] text-white font-bold' : inWk ? 'bg-[#2563EB]/20 text-[#60A5FA]' : 'text-[#94a3b8]',
             ].join(' ')}>
               {format(date, 'd')}
             </div>
@@ -136,12 +136,12 @@ function StatusPill({ status, onChange }: { status: TaskStatus; onChange: (s: Ta
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
             <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.12 }}
-              className="absolute bottom-full mb-1.5 left-0 z-20 w-40 bg-white border border-[#e8e8e8] rounded-xl shadow-xl overflow-hidden py-1.5">
+              className="absolute bottom-full mb-1.5 left-0 z-20 w-40 bg-[#182233] border border-[#1e293b] rounded-xl shadow-xl overflow-hidden py-1.5">
               {(Object.entries(STATUS_CFG) as [TaskStatus, typeof STATUS_CFG[TaskStatus]][]).map(([s, c]) => (
                 <button key={s} onClick={e => { e.stopPropagation(); onChange(s); setOpen(false) }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#f5f5f5] text-left ${s === status ? 'font-semibold' : ''}`}>
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[11px] hover:bg-[#1e293b] text-left ${s === status ? 'font-semibold' : ''}`}>
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${c.dot}`} />
-                  <span className={c.text}>{c.label}</span>
+                  <span className="text-[#CBD5E1]">{c.label}</span>
                 </button>
               ))}
             </motion.div>
@@ -181,13 +181,13 @@ function MoreMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
             <motion.div initial={{ opacity: 0, y: 4, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.95 }} transition={{ duration: 0.1 }}
-              className="absolute right-0 bottom-full mb-1 z-20 w-32 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden py-1">
+              className="absolute right-0 bottom-full mb-1 z-20 w-32 bg-[#182233] rounded-xl border border-[#1e293b] shadow-xl overflow-hidden py-1">
               <button onClick={e => { e.stopPropagation(); onEdit(); setOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[#CBD5E1] hover:bg-[#1e293b]">
                 <Pencil className="w-3 h-3" /> Editar
               </button>
               <button onClick={e => { e.stopPropagation(); onDelete(); setOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50">
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-[#f87171] hover:bg-[#ef4444]/10">
                 <Trash2 className="w-3 h-3" /> Excluir
               </button>
             </motion.div>
@@ -284,7 +284,8 @@ function DayColumn({
 
   return (
     <div
-      className="flex-shrink-0 w-[260px] flex flex-col"
+      className={['flex-shrink-0 w-[260px] flex flex-col rounded-2xl border p-3 transition-colors',
+        isDragOver ? 'border-[#2563EB]/50 bg-[#2563EB]/5' : 'border-[#1e293b] bg-[#0d1424]'].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
       onDrop={e => { e.preventDefault(); setIsDragOver(false); const id = e.dataTransfer.getData('taskId'); if (id) onDrop(id, day) }}
@@ -293,17 +294,17 @@ function DayColumn({
       <div className="flex items-center justify-between px-1 pb-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-[15px] font-bold text-gray-800">{dayName}</p>
-            {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-gray-900 text-white rounded-full uppercase tracking-wider leading-none">Hoje</span>}
+            <p className="text-[15px] font-bold text-[#F8FAFC]">{dayName}</p>
+            {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wider leading-none">Hoje</span>}
           </div>
-          <p className="text-[12px] text-gray-400 mt-0.5">{dayNum} {monthAbbr}</p>
+          <p className="text-[12px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
         </div>
         <div className="flex items-center gap-1.5">
           {tasks.length > 0 && (
             <span className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold bg-violet-600 text-white">{tasks.length}</span>
           )}
           <button onClick={() => onAddTask(day)}
-            className="w-7 h-7 rounded-full text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all border border-gray-200 bg-white hover:bg-gray-50"
+            className="w-7 h-7 rounded-full text-[#94a3b8] hover:text-white flex items-center justify-center transition-all border border-[#1e293b] bg-[#182233] hover:bg-[#1e293b]"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}>
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -322,17 +323,17 @@ function DayColumn({
 
         {tasks.length === 0 && !isDragOver && (
           <button onClick={() => onAddTask(day)}
-            className="w-full h-full min-h-[360px] rounded-2xl bg-[#f5f5f8] hover:bg-[#eeecf8] flex flex-col items-center justify-center gap-2 transition-colors group">
-            <span className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center group-hover:border-violet-200 transition-colors">
-              <Plus className="w-5 h-5 text-gray-400 group-hover:text-violet-400" />
+            className="w-full h-full min-h-[360px] rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors group hover:bg-white/[0.02]">
+            <span className="w-11 h-11 rounded-full border border-dashed border-[#334155] flex items-center justify-center group-hover:border-[#2563EB]/60 transition-colors">
+              <Plus className="w-5 h-5 text-[#64748b] group-hover:text-[#60A5FA]" />
             </span>
-            <p className="text-[12px] text-gray-400 group-hover:text-violet-400">Adicionar tarefa</p>
+            <p className="text-[12px] text-[#64748b] group-hover:text-[#94a3b8]">Adicionar tarefa</p>
           </button>
         )}
 
         {isDragOver && (
-          <div className="h-16 rounded-2xl border-2 border-dashed border-violet-300 bg-violet-50/50 flex items-center justify-center">
-            <p className="text-[11px] text-violet-500 font-semibold">Soltar aqui</p>
+          <div className="h-16 rounded-2xl border-2 border-dashed border-[#2563EB]/50 bg-[#2563EB]/5 flex items-center justify-center">
+            <p className="text-[11px] text-[#60A5FA] font-semibold">Soltar aqui</p>
           </div>
         )}
       </div>
@@ -364,7 +365,7 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
   return (
     <div className="flex-1 overflow-hidden flex flex-col min-h-0">
       {thisWeekTotal === 0 && tasks.length > 0 && (
-        <div className="mx-4 mb-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-[12px] text-amber-700 flex-shrink-0">
+        <div className="mx-4 mb-2 px-4 py-2 bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-xl text-[12px] text-[#F5A623] flex-shrink-0">
           ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Navegue com as setas ou use a aba <strong>Lista</strong> para ver todas.
         </div>
       )}
@@ -407,16 +408,16 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
   return (
     <div className="flex-1 overflow-auto px-4 pb-4">
       {/* Grid header */}
-      <div className="flex sticky top-0 bg-white z-10 border-b border-gray-100 mb-1">
+      <div className="flex sticky top-0 bg-[#0B1020] z-10 border-b border-[#1e293b] mb-1">
         <div className="w-72 flex-shrink-0 px-3 py-2.5">
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Tarefa</span>
+          <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wide">Tarefa</span>
         </div>
         {days.map((day, di) => (
-          <div key={di} className={`flex-1 min-w-0 text-center py-2.5 border-l border-gray-50 ${isToday(day) ? 'bg-violet-50' : ''}`}>
-            <p className={`text-[10px] font-bold capitalize ${isToday(day) ? 'text-violet-600' : 'text-gray-400'}`}>
+          <div key={di} className={`flex-1 min-w-0 text-center py-2.5 border-l border-[#1e293b] ${isToday(day) ? 'bg-[#2563EB]/10' : ''}`}>
+            <p className={`text-[10px] font-bold capitalize ${isToday(day) ? 'text-[#60A5FA]' : 'text-[#64748b]'}`}>
               {format(day, 'EEE', { locale: ptBR })}
             </p>
-            <p className={`text-[14px] font-bold ${isToday(day) ? 'text-violet-700' : 'text-gray-700'}`}>
+            <p className={`text-[14px] font-bold ${isToday(day) ? 'text-[#60A5FA]' : 'text-[#CBD5E1]'}`}>
               {format(day, 'd')}
             </p>
           </div>
@@ -441,24 +442,24 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
         const outsideWeek = beforeWeek || afterWeek
 
         return (
-          <div key={task.id} className="flex items-stretch border-b border-gray-50 hover:bg-gray-50/40 transition-colors group min-h-[56px]">
+          <div key={task.id} className="flex items-stretch border-b border-[#1e293b] hover:bg-white/[0.02] transition-colors group min-h-[56px]">
             {/* Task info */}
             <div className="w-72 flex-shrink-0 px-3 py-2 cursor-pointer flex flex-col justify-center" onClick={() => onView(task)}>
-              <p className="text-[13px] font-semibold text-gray-800 truncate">{task.title}</p>
+              <p className="text-[13px] font-semibold text-[#F8FAFC] truncate">{task.title}</p>
               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
                 <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${sCfg.bg} ${sCfg.text}`}>{sCfg.label}</span>
-                {clientName && <span className="text-[10px] text-gray-400 truncate">{clientName}</span>}
-                {overdue && <span className="text-[10px] text-red-500 font-semibold">⚠ Atrasada</span>}
+                {clientName && <span className="text-[10px] text-[#64748b] truncate">{clientName}</span>}
+                {overdue && <span className="text-[10px] text-[#f87171] font-semibold">⚠ Atrasada</span>}
               </div>
             </div>
 
             {/* Day columns */}
             {days.map((day, di) => (
-              <div key={di} className={`flex-1 min-w-0 border-l border-gray-50 px-1 py-2 flex items-center justify-center ${isToday(day) ? 'bg-violet-50/40' : ''}`}>
+              <div key={di} className={`flex-1 min-w-0 border-l border-[#1e293b] px-1 py-2 flex items-center justify-center ${isToday(day) ? 'bg-[#2563EB]/5' : ''}`}>
                 {dueDayIdx === di && (
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${overdue ? 'bg-red-100' : priCfg.pillBg} ${overdue ? 'text-red-700' : priCfg.pillText}`}
+                    className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${overdue ? 'bg-[#ef4444]/15 text-[#f87171]' : `${priCfg.pillBg} ${priCfg.pillText}`}`}
                     onClick={() => onView(task)}>
                     <p className="text-[11px] font-semibold truncate">{task.due_time ? task.due_time.slice(0, 5) : '✓'}</p>
                   </motion.div>
@@ -466,7 +467,7 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
                 {/* Show indicator for tasks outside this week */}
                 {outsideWeek && di === (beforeWeek ? 0 : 6) && (
                   <div className="text-center">
-                    <span className="text-[9px] text-gray-300">{beforeWeek ? '◀' : '▶'}</span>
+                    <span className="text-[9px] text-[#475569]">{beforeWeek ? '◀' : '▶'}</span>
                   </div>
                 )}
               </div>
@@ -476,7 +477,7 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
       })}
 
       {tasks.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-20 text-[#64748b]">
           <ClipboardList className="w-10 h-10 mb-2 opacity-30" />
           <p className="text-[13px]">Nenhuma tarefa encontrada</p>
         </div>
@@ -511,8 +512,8 @@ function DayTasksModal({
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[15px] font-bold text-gray-900">{dateLabel}</DialogTitle>
-          <p className="text-[12px] text-gray-400 mt-0.5">
+          <DialogTitle className="text-[15px] font-bold text-white">{dateLabel}</DialogTitle>
+          <p className="text-[12px] text-[#64748b] mt-0.5">
             {sorted.length} tarefa{sorted.length !== 1 ? 's' : ''} neste dia
           </p>
         </DialogHeader>
@@ -526,29 +527,29 @@ function DayTasksModal({
 
             return (
               <div key={task.id}
-                className="group flex items-start gap-3 bg-gray-50 rounded-xl border border-gray-100 p-3 hover:border-gray-200 transition-all">
+                className="group flex items-start gap-3 bg-[#182233] rounded-xl border border-[#1e293b] p-3 hover:border-[#2563EB]/40 transition-all">
 
                 {/* Task info — click to view detail */}
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { onClose(); onView(task) }}>
-                  <p className="text-[13px] font-semibold text-gray-800 leading-snug mb-1.5">{task.title}</p>
+                  <p className="text-[13px] font-semibold text-[#F8FAFC] leading-snug mb-1.5">{task.title}</p>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${pc.pillBg} ${pc.pillText}`}>{pc.label}</span>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sc.bg} ${sc.text} ${sc.border}`}>{sc.label}</span>
-                    {clientName && <span className="text-[10px] text-gray-400">{clientName}</span>}
-                    {overdue && <span className="text-[10px] text-red-500 font-semibold">⚠ Atrasada</span>}
+                    {clientName && <span className="text-[10px] text-[#64748b]">{clientName}</span>}
+                    {overdue && <span className="text-[10px] text-[#f87171] font-semibold">⚠ Atrasada</span>}
                   </div>
                   {(task.due_time || task.assignee) && (
                     <div className="flex items-center gap-3 mt-1.5">
                       {task.due_time && (
                         <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-gray-400" />
-                          <span className="text-[11px] text-gray-500">{task.due_time.slice(0, 5)}</span>
+                          <Clock className="w-3 h-3 text-[#64748b]" />
+                          <span className="text-[11px] text-[#94a3b8]">{task.due_time.slice(0, 5)}</span>
                         </div>
                       )}
                       {task.assignee && (
                         <div className="flex items-center gap-1.5">
                           <AvatarCircle name={task.assignee} />
-                          <span className="text-[11px] text-gray-500">{task.assignee}</span>
+                          <span className="text-[11px] text-[#94a3b8]">{task.assignee}</span>
                         </div>
                       )}
                     </div>
@@ -565,14 +566,14 @@ function DayTasksModal({
                   <button
                     onClick={() => { onClose(); onEdit(task) }}
                     title="Editar"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#64748b] hover:text-[#60A5FA] hover:bg-[#2563EB]/10 transition-colors"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onDelete(task.id)}
                     title="Excluir"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#64748b] hover:text-[#f87171] hover:bg-[#ef4444]/10 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -582,19 +583,19 @@ function DayTasksModal({
           })}
 
           {sorted.length === 0 && (
-            <div className="flex flex-col items-center py-8 text-gray-400">
+            <div className="flex flex-col items-center py-8 text-[#64748b]">
               <ClipboardList className="w-8 h-8 mb-2 opacity-30" />
               <p className="text-[13px]">Nenhuma tarefa neste dia</p>
             </div>
           )}
         </div>
 
-        <DialogFooter className="border-t border-gray-100 pt-3 gap-2 flex-row">
+        <DialogFooter className="border-t border-[#1e293b] pt-3 gap-2 flex-row">
           <Button variant="outline" size="sm" onClick={onClose} className="flex-shrink-0">
             Fechar
           </Button>
           <Button size="sm" onClick={() => { onClose(); onAddTask(date) }}
-            className="flex-1" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
+            className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
             <Plus className="w-3.5 h-3.5 mr-1" /> Nova tarefa neste dia
           </Button>
         </DialogFooter>
@@ -652,12 +653,12 @@ function MonthView({ tasks, onView, onEdit, onDelete, onStatusChange, onAddTask 
         {/* Month header */}
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => setMonthBase(m => subMonths(m, 1))}
-            className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
+            className="w-9 h-9 rounded-xl border border-[#1e293b] bg-[#182233] flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-colors">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <h2 className="text-[16px] font-bold text-gray-800 capitalize">{monthLabel}</h2>
+          <h2 className="text-[16px] font-bold text-[#F8FAFC] capitalize">{monthLabel}</h2>
           <button onClick={() => setMonthBase(m => addMonths(m, 1))}
-            className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
+            className="w-9 h-9 rounded-xl border border-[#1e293b] bg-[#182233] flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-colors">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -665,14 +666,14 @@ function MonthView({ tasks, onView, onEdit, onDelete, onStatusChange, onAddTask 
         {/* Day header */}
         <div className="grid grid-cols-7 mb-1">
           {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => (
-            <div key={d} className="text-center text-[11px] font-bold text-gray-400 py-2">{d}</div>
+            <div key={d} className="text-center text-[11px] font-bold text-[#64748b] py-2">{d}</div>
           ))}
         </div>
 
         {/* Calendar grid */}
         <div className="grid grid-cols-7 gap-1">
           {days.map((date, i) => {
-            if (!date) return <div key={i} className="h-28 rounded-xl bg-gray-50/30" />
+            if (!date) return <div key={i} className="h-28 rounded-xl bg-white/[0.02]" />
             const dayTasks = tasksByDate(date)
             const today    = isToday(date)
             const hasTasks = dayTasks.length > 0
@@ -682,13 +683,13 @@ function MonthView({ tasks, onView, onEdit, onDelete, onStatusChange, onAddTask 
                 className={[
                   'h-28 rounded-xl border p-2 cursor-pointer transition-all',
                   today
-                    ? 'border-violet-300 bg-violet-50/40 hover:border-violet-400'
+                    ? 'border-[#2563EB]/50 bg-[#2563EB]/10 hover:border-[#2563EB]'
                     : hasTasks
-                      ? 'border-gray-200 bg-white hover:border-violet-200 hover:shadow-sm'
-                      : 'border-gray-100 bg-white hover:border-gray-200',
+                      ? 'border-[#1e293b] bg-[#182233] hover:border-[#2563EB]/40'
+                      : 'border-[#1e293b] bg-[#0d1424] hover:border-[#334155]',
                 ].join(' ')}
               >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold mb-1 ${today ? 'bg-violet-600 text-white' : 'text-gray-700'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold mb-1 ${today ? 'bg-[#2563EB] text-white' : 'text-[#CBD5E1]'}`}>
                   {format(date, 'd')}
                 </div>
                 <div className="space-y-0.5 overflow-hidden">
@@ -702,7 +703,7 @@ function MonthView({ tasks, onView, onEdit, onDelete, onStatusChange, onAddTask 
                     )
                   })}
                   {dayTasks.length > 3 && (
-                    <p className="text-[9px] text-gray-400 font-medium pl-0.5">+{dayTasks.length - 3} mais</p>
+                    <p className="text-[9px] text-[#64748b] font-medium pl-0.5">+{dayTasks.length - 3} mais</p>
                   )}
                 </div>
               </div>
@@ -764,7 +765,7 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
   })
 
   const SortBtn = ({ k, label }: { k: SortKey; label: string }) => (
-    <button onClick={() => handleSort(k)} className="flex items-center gap-1 text-[11px] font-bold text-gray-500 uppercase tracking-wide hover:text-gray-800 transition-colors">
+    <button onClick={() => handleSort(k)} className="flex items-center gap-1 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wide hover:text-white transition-colors">
       {label}
       {sortKey === k ? (sortAsc ? ' ↑' : ' ↓') : <ArrowUpDown className="w-3 h-3 opacity-40" />}
     </button>
@@ -774,35 +775,35 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
     <div className="flex-1 overflow-hidden flex flex-col px-4">
       {/* Filters */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-[12px] font-semibold text-gray-500">Status:</span>
+        <span className="text-[12px] font-semibold text-[#94a3b8]">Status:</span>
         {(['all', 'a_fazer', 'em_andamento', 'revisao', 'concluido'] as const).map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${filterStatus === s ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${filterStatus === s ? 'bg-[#2563EB] text-white' : 'bg-[#182233] text-[#CBD5E1] hover:bg-[#1e293b]'}`}>
             {s === 'all' ? 'Todos' : STATUS_CFG[s].label}
           </button>
         ))}
-        <span className="ml-auto text-[12px] text-gray-400">{sorted.length} tarefa{sorted.length !== 1 ? 's' : ''}</span>
+        <span className="ml-auto text-[12px] text-[#64748b]">{sorted.length} tarefa{sorted.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto rounded-xl border border-gray-100">
+      <div className="flex-1 overflow-auto rounded-xl border border-[#1e293b]">
         <table className="w-full">
-          <thead className="bg-gray-50 sticky top-0 z-10">
+          <thead className="bg-[#182233] sticky top-0 z-10">
             <tr>
-              <th className="text-left px-4 py-3 border-b border-gray-100"><SortBtn k="title" label="Tarefa" /></th>
-              <th className="text-left px-4 py-3 border-b border-gray-100"><SortBtn k="due_date" label="Prazo" /></th>
-              <th className="text-left px-4 py-3 border-b border-gray-100"><SortBtn k="priority" label="Prioridade" /></th>
-              <th className="text-left px-4 py-3 border-b border-gray-100"><SortBtn k="status" label="Status" /></th>
-              <th className="text-left px-4 py-3 border-b border-gray-100">
-                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Cliente</span>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]"><SortBtn k="title" label="Tarefa" /></th>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]"><SortBtn k="due_date" label="Prazo" /></th>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]"><SortBtn k="priority" label="Prioridade" /></th>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]"><SortBtn k="status" label="Status" /></th>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]">
+                <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-wide">Cliente</span>
               </th>
-              <th className="text-left px-4 py-3 border-b border-gray-100">
-                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Responsável</span>
+              <th className="text-left px-4 py-3 border-b border-[#1e293b]">
+                <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-wide">Responsável</span>
               </th>
-              <th className="px-4 py-3 border-b border-gray-100" />
+              <th className="px-4 py-3 border-b border-[#1e293b]" />
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-50">
+          <tbody className="bg-[#0d1424] divide-y divide-[#1e293b]">
             {sorted.map(task => {
               const priCfg     = PRIORITY_CFG[task.priority]
               const sCfg       = STATUS_CFG[task.status]
@@ -810,21 +811,21 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
               const clientName = (task.client as any)?.company_name
               return (
                 <tr key={task.id} onClick={() => onView(task)}
-                  className="cursor-pointer hover:bg-gray-50/60 transition-colors">
+                  className="cursor-pointer hover:bg-white/[0.02] transition-colors">
                   <td className="px-4 py-3">
-                    <p className="text-[13px] font-semibold text-gray-800 max-w-[280px] truncate">{task.title}</p>
-                    {task.description && <p className="text-[11px] text-gray-400 truncate max-w-[280px] mt-0.5">{task.description}</p>}
+                    <p className="text-[13px] font-semibold text-[#F8FAFC] max-w-[280px] truncate">{task.title}</p>
+                    {task.description && <p className="text-[11px] text-[#64748b] truncate max-w-[280px] mt-0.5">{task.description}</p>}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {task.due_date ? (
                       <div>
-                        <p className={`text-[12px] font-medium ${overdue ? 'text-red-500' : 'text-gray-700'}`}>
+                        <p className={`text-[12px] font-medium ${overdue ? 'text-[#f87171]' : 'text-[#CBD5E1]'}`}>
                           {format(new Date(task.due_date + 'T00:00:00'), "d MMM yyyy", { locale: ptBR })}
                         </p>
-                        {task.due_time && <p className="text-[11px] text-gray-400">{task.due_time.slice(0, 5)}</p>}
-                        {overdue && <p className="text-[10px] text-red-500 font-semibold">Atrasada</p>}
+                        {task.due_time && <p className="text-[11px] text-[#64748b]">{task.due_time.slice(0, 5)}</p>}
+                        {overdue && <p className="text-[10px] text-[#f87171] font-semibold">Atrasada</p>}
                       </div>
-                    ) : <span className="text-[12px] text-gray-300">—</span>}
+                    ) : <span className="text-[12px] text-[#475569]">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>
@@ -836,16 +837,16 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
                   </td>
                   <td className="px-4 py-3">
                     {clientName ? (
-                      <span className="text-[12px] font-medium text-gray-600">{clientName}</span>
-                    ) : <span className="text-[12px] text-gray-300">—</span>}
+                      <span className="text-[12px] font-medium text-[#CBD5E1]">{clientName}</span>
+                    ) : <span className="text-[12px] text-[#475569]">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     {task.assignee ? (
                       <div className="flex items-center gap-2">
                         <AvatarCircle name={task.assignee} />
-                        <span className="text-[12px] text-gray-600">{task.assignee}</span>
+                        <span className="text-[12px] text-[#CBD5E1]">{task.assignee}</span>
                       </div>
-                    ) : <span className="text-[12px] text-gray-300">—</span>}
+                    ) : <span className="text-[12px] text-[#475569]">—</span>}
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <MoreMenu onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
@@ -855,7 +856,7 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
             })}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-16 text-gray-400 text-[13px]">
+                <td colSpan={7} className="text-center py-16 text-[#64748b] text-[13px]">
                   {tasks.length === 0 ? 'Nenhuma tarefa criada ainda.' : 'Nenhuma tarefa com esse filtro.'}
                 </td>
               </tr>
@@ -877,8 +878,8 @@ function NoDatePills({ tasks, onView, onDelete, onEdit }: {
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-gray-700">Tarefas sem data</span>
-          <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{tasks.length}</span>
+          <span className="text-[13px] font-bold text-[#CBD5E1]">Tarefas sem data</span>
+          <span className="text-[10px] font-bold text-[#94a3b8] bg-[#1e293b] px-1.5 py-0.5 rounded-full">{tasks.length}</span>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
@@ -886,8 +887,8 @@ function NoDatePills({ tasks, onView, onDelete, onEdit }: {
           const priCfg = PRIORITY_CFG[task.priority]
           return (
             <div key={task.id} onClick={() => onView(task)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all">
-              <span className="text-[12px] font-medium text-gray-800 max-w-[160px] truncate">{task.title}</span>
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#182233] border border-[#1e293b] rounded-xl cursor-pointer hover:border-[#2563EB]/50 transition-all">
+              <span className="text-[12px] font-medium text-[#CBD5E1] max-w-[160px] truncate">{task.title}</span>
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
               <div onClick={e => e.stopPropagation()}>
                 <MoreMenu onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
@@ -920,48 +921,48 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div className="pr-6">
-            <DialogTitle className="text-[16px] font-semibold text-[#0f0f0f] leading-snug">{task.title}</DialogTitle>
+            <DialogTitle className="text-[16px] font-semibold text-[#F8FAFC] leading-snug">{task.title}</DialogTitle>
           </div>
         </DialogHeader>
         <div className="space-y-4 mt-1 overflow-y-auto max-h-[60vh] pr-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-              style={{ color: pCfg.color, backgroundColor: `${pCfg.color}18` }}>
+              style={{ color: pCfg.color, backgroundColor: `${pCfg.color}22` }}>
               {task.priority === 'urgente' && <AlertCircle className="w-3 h-3" />}{pCfg.label}
             </span>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${sCfg.bg} ${sCfg.text}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${sCfg.dot}`} />{sCfg.label}
             </span>
-            {overdue && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-50 text-red-700 border border-red-200">⚠ Atrasada</span>}
-            {clientName && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">{clientName}</span>}
+            {overdue && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#ef4444]/15 text-[#f87171] border border-[#ef4444]/30">⚠ Atrasada</span>}
+            {clientName && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#2563EB]/15 text-[#60A5FA]">{clientName}</span>}
           </div>
           {task.description && (
-            <div className="bg-[#f8fafc] rounded-xl p-3.5 border border-[#e8e8e8]">
-              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5">Descrição</p>
-              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{task.description}</p>
+            <div className="bg-[#182233] rounded-xl p-3.5 border border-[#1e293b]">
+              <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide mb-1.5">Descrição</p>
+              <p className="text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap">{task.description}</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
-              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Prazo</p>
+            <div className="bg-[#182233] rounded-xl p-3 border border-[#1e293b]">
+              <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide mb-1.5 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Prazo</p>
               {task.due_date ? (
                 <>
-                  <p className={`text-[13px] font-medium ${overdue ? 'text-red-600' : 'text-[#0f0f0f]'}`}>
+                  <p className={`text-[13px] font-medium ${overdue ? 'text-[#f87171]' : 'text-[#F8FAFC]'}`}>
                     {format(new Date(task.due_date + 'T00:00:00'), "d 'de' MMMM yyyy", { locale: ptBR })}
                   </p>
-                  {task.due_time && <p className="text-[12px] text-[#64748b] mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" /> {task.due_time.slice(0, 5)}</p>}
+                  {task.due_time && <p className="text-[12px] text-[#94a3b8] mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" /> {task.due_time.slice(0, 5)}</p>}
                 </>
-              ) : <p className="text-[13px] text-[#94a3b8]">Sem prazo</p>}
+              ) : <p className="text-[13px] text-[#64748b]">Sem prazo</p>}
             </div>
-            <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e8e8e8]">
-              <p className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1.5 flex items-center gap-1"><User className="w-3 h-3" /> Responsável</p>
+            <div className="bg-[#182233] rounded-xl p-3 border border-[#1e293b]">
+              <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide mb-1.5 flex items-center gap-1"><User className="w-3 h-3" /> Responsável</p>
               {member ? (
                 <div className="flex items-center gap-2">
                   <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0" style={{ backgroundColor: member.color }}>{member.name.charAt(0).toUpperCase()}</span>
-                  <span className="text-[13px] font-medium text-[#0f0f0f]">{member.name}</span>
+                  <span className="text-[13px] font-medium text-[#F8FAFC]">{member.name}</span>
                 </div>
-              ) : task.assignee ? <p className="text-[13px] text-[#374151]">{task.assignee}</p>
-                : <p className="text-[13px] text-[#94a3b8]">Sem responsável</p>}
+              ) : task.assignee ? <p className="text-[13px] text-[#CBD5E1]">{task.assignee}</p>
+                : <p className="text-[13px] text-[#64748b]">Sem responsável</p>}
             </div>
           </div>
           {links.length > 0 && (
@@ -970,11 +971,11 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
               <div className="space-y-2">
                 {links.map(link => {
                   if (link.type === 'imagem') return (
-                    <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                    <div key={link.id} className="rounded-xl overflow-hidden border border-[#1e293b]">
                       <img src={link.url} alt={link.label} className="w-full max-h-48 object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                      <div className="flex items-center justify-between px-3 py-2 bg-white">
-                        <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
-                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[#94a3b8] hover:text-[#0f0f0f] ml-2"><ExternalLink className="w-3 h-3" /></a>
+                      <div className="flex items-center justify-between px-3 py-2 bg-[#182233]">
+                        <span className="text-[11px] font-medium text-[#CBD5E1] truncate flex-1">{link.label}</span>
+                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[#64748b] hover:text-white ml-2"><ExternalLink className="w-3 h-3" /></a>
                       </div>
                     </div>
                   )
@@ -982,13 +983,13 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
                   const Icon = iconMap[link.type] ?? Link2
                   return (
                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl border border-[#e2e8f0] hover:border-blue-300 hover:bg-blue-50/50 transition-all group">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"><Icon className="w-4 h-4 text-blue-600" /></div>
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#1e293b] bg-[#182233] hover:border-[#2563EB]/50 transition-all group">
+                      <div className="w-8 h-8 rounded-lg bg-[#2563EB]/15 flex items-center justify-center flex-shrink-0"><Icon className="w-4 h-4 text-[#60A5FA]" /></div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-[#334155] truncate group-hover:text-blue-700">{link.label}</p>
-                        <p className="text-[10px] text-[#94a3b8] truncate">{link.url}</p>
+                        <p className="text-[12px] font-medium text-[#CBD5E1] truncate group-hover:text-white">{link.label}</p>
+                        <p className="text-[10px] text-[#64748b] truncate">{link.url}</p>
                       </div>
-                      <ExternalLink className="w-3 h-3 text-[#c0c0c0] group-hover:text-blue-400 flex-shrink-0" />
+                      <ExternalLink className="w-3 h-3 text-[#475569] group-hover:text-[#60A5FA] flex-shrink-0" />
                     </a>
                   )
                 })}
@@ -996,21 +997,21 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
             </div>
           )}
           {((task as any).collaborator_note || (task as any).delivery_url) && (
-            <div className="bg-violet-50 rounded-xl p-3.5 border border-violet-100 space-y-1.5">
-              <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Entrega do colaborador</p>
-              {(task as any).collaborator_note && <p className="text-[12px] text-violet-800 leading-relaxed">📝 {(task as any).collaborator_note}</p>}
+            <div className="bg-[#8B5CF6]/10 rounded-xl p-3.5 border border-[#8B5CF6]/30 space-y-1.5">
+              <p className="text-[10px] font-semibold text-[#a78bfa] uppercase tracking-wider">Entrega do colaborador</p>
+              {(task as any).collaborator_note && <p className="text-[12px] text-[#c4b5fd] leading-relaxed">📝 {(task as any).collaborator_note}</p>}
               {(task as any).delivery_url && (
                 <a href={(task as any).delivery_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium">
+                  className="flex items-center gap-1.5 text-[11px] text-[#a78bfa] hover:text-[#c4b5fd] font-medium">
                   <ExternalLink className="w-3 h-3" /> Ver entrega enviada
                 </a>
               )}
             </div>
           )}
-          <p className="text-[11px] text-[#94a3b8]">Criada em {format(new Date(task.created_at), "d 'de' MMMM yyyy 'às' HH:mm", { locale: ptBR })}</p>
+          <p className="text-[11px] text-[#64748b]">Criada em {format(new Date(task.created_at), "d 'de' MMMM yyyy 'às' HH:mm", { locale: ptBR })}</p>
         </div>
-        <DialogFooter className="gap-2 border-t border-[#f1f5f9] pt-3">
-          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+        <DialogFooter className="gap-2 border-t border-[#1e293b] pt-3">
+          <Button variant="outline" size="sm" className="text-[#f87171] border-[#ef4444]/30 hover:bg-[#ef4444]/10 hover:border-[#ef4444]/50"
             onClick={() => { onClose(); onDelete(task.id) }}>
             <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
           </Button>
@@ -1244,82 +1245,79 @@ export function Tasks() {
   const showBottom = (activeTab === 'semanal' || activeTab === 'timeline') && tasksWithoutDate.length > 0
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc]">
+    <div className="flex flex-col h-full bg-[#0B1020]">
 
       {/* ── Local header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 md:px-6 pt-5 pb-1 flex-shrink-0 border-b border-gray-100 bg-white">
+      <div className="flex items-center justify-between px-5 md:px-6 pt-5 pb-3 flex-shrink-0 border-b border-[#1e293b] bg-[#0B1020]">
         <div>
-          <h1 className="text-[18px] font-bold text-gray-900">Tarefas</h1>
-          <p className="text-[12px] text-gray-400">Gerencie e acompanhe todas as tarefas</p>
+          <h1 className="text-[20px] font-bold text-[#F8FAFC]">Tarefas</h1>
+          <p className="text-[12px] text-[#64748b] mt-0.5">Gerencie e acompanhe todas as tarefas</p>
         </div>
         <button onClick={handleNewTask}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold shadow-md hover:opacity-90 active:scale-95 transition-all"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff' }}>
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:scale-95 transition-all shadow-lg shadow-[#2563EB]/20">
           <Plus className="w-4 h-4" /> Nova tarefa
         </button>
       </div>
 
       {/* ── Stats + date nav ─────────────────────────────────────────────── */}
-      <div className="px-5 md:px-6 pt-3 pb-0 flex-shrink-0 bg-white border-b border-gray-100">
+      <div className="px-5 md:px-6 pt-3 pb-3 flex-shrink-0 bg-[#0B1020] border-b border-[#1e293b]">
         <div className="flex items-center gap-3 flex-wrap">
 
           {/* Week navigator */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex items-center bg-[#182233] border border-[#1e293b] rounded-xl overflow-hidden">
             <button onClick={() => setWeekBase(d => subWeeks(d, 1))}
-              className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all border-r border-gray-100">
+              className="w-9 h-9 flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-all border-r border-[#1e293b]">
               <ChevronLeft className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2 px-4">
-              <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-[13px] font-bold text-gray-900 whitespace-nowrap">{weekLabel}</span>
+              <CalendarDays className="w-3.5 h-3.5 text-[#64748b]" />
+              <span className="text-[13px] font-bold text-[#F8FAFC] whitespace-nowrap">{weekLabel}</span>
             </div>
             <button onClick={() => setWeekBase(d => addWeeks(d, 1))}
-              className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all border-l border-gray-100">
+              className="w-9 h-9 flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-all border-l border-[#1e293b]">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          {!days.some(d => isToday(d)) && (
-            <button onClick={() => setWeekBase(new Date())}
-              className="px-3 py-2 text-[12px] font-semibold rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-gray-400 transition-colors shadow-sm">
-              Hoje
-            </button>
-          )}
+          <button onClick={() => setWeekBase(new Date())}
+            className="px-4 py-2 text-[12px] font-semibold rounded-xl border border-[#1e293b] bg-[#182233] text-[#CBD5E1] hover:border-[#2563EB]/50 hover:text-white transition-colors">
+            Hoje
+          </button>
 
           {/* Metric cards */}
           <div className="ml-auto flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <ClipboardList className="w-4 h-4 text-blue-600" />
+            <div className="flex items-center gap-2.5 px-4 py-2 bg-[#182233] border border-[#1e293b] rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-[#2563EB]/15 flex items-center justify-center flex-shrink-0">
+                <ClipboardList className="w-4 h-4 text-[#60A5FA]" />
               </div>
               <div>
-                <p className="text-[18px] font-bold text-gray-900 leading-none">{totalCount}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">Total de tarefas</p>
+                <p className="text-[18px] font-bold text-[#F8FAFC] leading-none">{totalCount}</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">Total de tarefas</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center gap-2.5 px-4 py-2 bg-[#182233] border border-[#1e293b] rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-[#22C55E]/15 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
               </div>
               <div>
-                <p className="text-[18px] font-bold text-gray-900 leading-none">{doneCount}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">Concluídas</p>
+                <p className="text-[18px] font-bold text-[#F8FAFC] leading-none">{doneCount}</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">Concluídas</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                <Clock className="w-4 h-4 text-orange-500" />
+            <div className="flex items-center gap-2.5 px-4 py-2 bg-[#182233] border border-[#1e293b] rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-[#F5A623]/15 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-[#F5A623]" />
               </div>
               <div>
-                <p className="text-[18px] font-bold text-gray-900 leading-none">{overdueCount}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">Atrasada{overdueCount !== 1 ? 's' : ''}</p>
+                <p className="text-[18px] font-bold text-[#F8FAFC] leading-none">{overdueCount}</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">Atrasada{overdueCount !== 1 ? 's' : ''}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl">
+            <div className="flex items-center gap-2.5 px-4 py-2 bg-[#182233] border border-[#1e293b] rounded-xl">
               <DonutProgress percent={progressPct} />
               <div>
-                <p className="text-[18px] font-bold text-gray-900 leading-none">{progressPct}%</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">Progresso semanal</p>
+                <p className="text-[18px] font-bold text-[#F8FAFC] leading-none">{progressPct}%</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">Progresso semanal</p>
               </div>
             </div>
           </div>
@@ -1327,19 +1325,19 @@ export function Tasks() {
       </div>
 
       {/* ── View tabs ───────────────────────────────────────────────────── */}
-      <div className="px-5 md:px-6 mt-0 border-b border-gray-100 flex-shrink-0 bg-white">
+      <div className="px-5 md:px-6 mt-0 border-b border-[#1e293b] flex-shrink-0 bg-[#0B1020]">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             {TABS.map(({ id, label, Icon }) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={['flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-all border-b-2',
-                  activeTab === id ? 'text-violet-600 border-violet-600' : 'text-gray-500 border-transparent hover:text-gray-700'].join(' ')}>
+                  activeTab === id ? 'text-[#60A5FA] border-[#2563EB]' : 'text-[#64748b] border-transparent hover:text-[#CBD5E1]'].join(' ')}>
                 <Icon className="w-3.5 h-3.5" />
                 {label}
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all mb-1">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#94a3b8] border border-[#1e293b] rounded-lg hover:border-[#2563EB]/50 hover:text-white transition-all mb-1">
             <Filter className="w-3.5 h-3.5" /> Filtrar
           </button>
         </div>
@@ -1374,9 +1372,9 @@ export function Tasks() {
 
       {/* ── Bottom: mini calendar + no-date tasks ───────────────────────── */}
       {showBottom && (
-        <div className="flex-shrink-0 px-5 md:px-6 py-3 border-t border-gray-100 bg-white flex items-start gap-5">
+        <div className="flex-shrink-0 px-5 md:px-6 py-3 border-t border-[#1e293b] bg-[#0B1020] flex items-start gap-5">
           <MiniCalendar weekStart={weekStart} />
-          <div className="w-px self-stretch bg-gray-100 flex-shrink-0" />
+          <div className="w-px self-stretch bg-[#1e293b] flex-shrink-0" />
           <NoDatePills tasks={tasksWithoutDate} onView={setViewingTask} onDelete={handleDelete} onEdit={handleEditTask} />
         </div>
       )}
