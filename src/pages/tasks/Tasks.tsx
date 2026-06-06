@@ -39,10 +39,10 @@ const STATUS_CFG: Record<TaskStatus, { label: string; bg: string; text: string; 
 // ─── Priority config ───────────────────────────────────────────────────────────
 
 const PRIORITY_CFG: Record<TaskPriority, { label: string; color: string; pillBg: string; pillText: string; accent: string }> = {
-  baixa:   { label: 'Baixa',   color: '#9ca3af', pillBg: 'bg-gray-100',   pillText: 'text-gray-600',   accent: '#9ca3af' },
-  media:   { label: 'Média',   color: '#7c3aed', pillBg: 'bg-violet-100', pillText: 'text-violet-700', accent: '#7c3aed' },
-  alta:    { label: 'Alta',    color: '#f97316', pillBg: 'bg-orange-100', pillText: 'text-orange-700', accent: '#f97316' },
-  urgente: { label: 'Urgente', color: '#ef4444', pillBg: 'bg-red-100',    pillText: 'text-red-700',    accent: '#ef4444' },
+  baixa:   { label: 'Baixa',   color: '#475569', pillBg: 'bg-[#475569]', pillText: 'text-white', accent: '#64748b' },
+  media:   { label: 'Média',   color: '#7c3aed', pillBg: 'bg-[#7c3aed]', pillText: 'text-white', accent: '#8b5cf6' },
+  alta:    { label: 'Alta',    color: '#ea580c', pillBg: 'bg-[#ea580c]', pillText: 'text-white', accent: '#f59e0b' },
+  urgente: { label: 'Urgente', color: '#dc2626', pillBg: 'bg-[#dc2626]', pillText: 'text-white', accent: '#ef4444' },
 }
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = { urgente: 0, alta: 1, media: 2, baixa: 3 }
@@ -219,44 +219,44 @@ function TaskCard({
       }}
       onDragEnd={() => { setTimeout(() => { dragStarted.current = false }, 50); onDragEnd() }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      className={['w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100',
+      className={['w-full min-w-0 bg-white rounded-xl p-2.5 shadow-sm border border-gray-100',
         'cursor-pointer hover:shadow-md transition-all duration-150 select-none',
         dragging ? 'opacity-40 scale-95' : ''].join(' ')}
       style={{ borderLeftWidth: 4, borderLeftColor: priCfg.accent }}>
       {(task.due_time || overdueAndOpen) && (
-        <div className="flex items-center gap-1.5 mb-2.5">
-          <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${overdueAndOpen ? 'text-red-400' : 'text-gray-400'}`} />
-          <span className={`text-[12px] font-medium ${overdueAndOpen ? 'text-red-500' : 'text-gray-500'}`}>
+        <div className="flex items-center gap-1 mb-1.5">
+          <Clock className={`w-3 h-3 flex-shrink-0 ${overdueAndOpen ? 'text-red-400' : 'text-gray-400'}`} />
+          <span className={`text-[11px] font-medium ${overdueAndOpen ? 'text-red-500' : 'text-gray-500'}`}>
             {task.due_time ? task.due_time.slice(0, 5) : ''}
             {overdueAndOpen && <span className="ml-1">· Atrasada</span>}
           </span>
         </div>
       )}
-      <p className="text-[14px] font-bold text-gray-900 leading-snug mb-3 line-clamp-2">{task.title}</p>
-      <div className="flex items-center gap-1.5 flex-wrap mb-3">
-        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
+      <p className="text-[12.5px] font-bold text-gray-900 leading-snug mb-2 line-clamp-3 break-words">{task.title}</p>
+      <div className="flex items-center gap-1 flex-wrap mb-2">
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
         {clientName && (
-          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700">{clientName}</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 max-w-full truncate">{clientName}</span>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-1 min-w-0">
         {task.assignee ? (
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             <AvatarCircle name={task.assignee} />
-            <span className="text-[12px] text-gray-600 truncate">{task.assignee}</span>
+            <span className="text-[11px] text-gray-600 truncate">{task.assignee}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <User className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="text-[12px]">Sem responsável</span>
+          <div className="flex items-center gap-1 text-gray-400 min-w-0">
+            <User className="w-3 h-3 flex-shrink-0" />
+            <span className="text-[11px] truncate">Sem responsável</span>
           </div>
         )}
-        <div onClick={e => e.stopPropagation()}>
+        <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
           <MoreMenu onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
         </div>
       </div>
       {task.status !== 'a_fazer' && (
-        <div className="mt-3 pt-2.5 border-t border-gray-50" onClick={e => e.stopPropagation()}>
+        <div className="mt-2 pt-2 border-t border-gray-100" onClick={e => e.stopPropagation()}>
           <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
         </div>
       )}
@@ -284,29 +284,29 @@ function DayColumn({
 
   return (
     <div
-      className={['flex-shrink-0 w-[260px] self-start flex flex-col rounded-2xl border p-3 transition-colors min-h-[440px]',
+      className={['w-full min-w-0 self-start flex flex-col rounded-2xl border p-2.5 transition-colors min-h-[440px]',
         isDragOver ? 'border-[#2563EB]/50 bg-[#2563EB]/5' : 'border-[#1e293b] bg-[#0d1424]'].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
       onDrop={e => { e.preventDefault(); setIsDragOver(false); const id = e.dataTransfer.getData('taskId'); if (id) onDrop(id, day) }}
     >
       {/* Header do dia */}
-      <div className="flex items-center justify-between px-1 pb-3">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-[15px] font-bold text-[#F8FAFC]">{dayName}</p>
-            {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wider leading-none">Hoje</span>}
+      <div className="flex items-center justify-between gap-1 px-0.5 pb-3 min-w-0">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1">
+            <p className="text-[13px] font-bold text-[#F8FAFC] truncate">{dayName}</p>
+            {today && <span className="text-[7px] font-black px-1 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wide leading-none flex-shrink-0">Hoje</span>}
           </div>
-          <p className="text-[12px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
+          <p className="text-[11px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {tasks.length > 0 && (
-            <span className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold bg-violet-600 text-white">{tasks.length}</span>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold bg-violet-600 text-white">{tasks.length}</span>
           )}
           <button onClick={() => onAddTask(day)}
-            className="w-7 h-7 rounded-full text-[#94a3b8] hover:text-white flex items-center justify-center transition-all border border-[#1e293b] bg-[#182233] hover:bg-[#1e293b]"
+            className="w-6 h-6 rounded-full text-[#94a3b8] hover:text-white flex items-center justify-center transition-all border border-[#1e293b] bg-[#182233] hover:bg-[#1e293b]"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}>
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3 h-3" />
           </button>
         </div>
       </div>
@@ -369,8 +369,8 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
           ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Navegue com as setas ou use a aba <strong>Lista</strong> para ver todas.
         </div>
       )}
-      <div className="overflow-auto flex-1 min-h-0 px-5 md:px-6">
-        <div className="flex gap-4 items-start pb-4" style={{ minWidth: `${7 * 276}px` }}>
+      <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 px-4 md:px-5">
+        <div className="grid grid-cols-7 gap-2.5 items-start pb-4">
           {days.map(day => (
             <DayColumn key={day.toISOString()} day={day} tasks={tasksByDay(day)} draggingId={draggingId}
               onDrop={onDrop} onDragStart={onDragStart} onDragEnd={onDragEnd}
