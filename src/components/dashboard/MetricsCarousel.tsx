@@ -59,11 +59,17 @@ function PlannerBarChart({
     <div>
       <ResponsiveContainer width="100%" height={195}>
         <BarChart data={chartData} barSize={26} barCategoryGap="38%" layout="vertical" margin={{ left: 8 }}>
+          <defs>
+            <linearGradient id="plannerBarGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="#29457a" />
+              <stop offset="100%" stopColor="#16284d" />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} horizontal={false} />
           <XAxis type="number" tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} />
           <YAxis type="category" dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} width={120} />
           <Tooltip {...TIP_STYLE} />
-          <Bar dataKey="value" fill={BAR_COLOR} radius={[0, 6, 6, 0]} name="Itens" />
+          <Bar dataKey="value" fill="url(#plannerBarGradient)" radius={[0, 6, 6, 0]} name="Itens" />
         </BarChart>
       </ResponsiveContainer>
       <p className="text-center text-[11px] text-[#94a3b8] mt-1.5">
@@ -201,44 +207,16 @@ export function MetricsCarousel({
 }: MetricsCarouselProps) {
   const [[activeIdx, dir], setSlide] = useState<[number, number]>([0, 0])
 
-  const nav  = (d: 1 | -1) => setSlide(([curr]) => [(curr + d + 3) % 3, d])
-  const goTo = (i: number) => setSlide(([curr]) => [i, i > curr ? 1 : -1])
-
   const slides = useMemo(() => [
     {
       title:    'Planejamento',
       subtitle: `${totalPlanner} item${totalPlanner !== 1 ? 's' : ''} no período`,
       content:  <PlannerBarChart data={plannerChartData} />,
     },
-    {
-      title:    'Conteúdos gerados',
-      subtitle: 'Volume por dia no período',
-      content: (
-        <GeneratedChart
-          data={weeklyData}
-          summary={
-            contentsThisWeek > 0
-              ? `${contentsThisWeek} gerado${contentsThisWeek !== 1 ? 's' : ''} no período`
-              : 'Nenhum conteúdo gerado neste período'
-          }
-        />
-      ),
-    },
-    {
-      title:    'Arsenal de conteúdos',
-      subtitle: 'Distribuição por tipo',
-      content: (
-        <AssetsDonut
-          data={assetTypes}
-          summary={
-            totalAssets > 0
-              ? `${totalAssets} conteúdo${totalAssets !== 1 ? 's' : ''} no arsenal`
-              : ''
-          }
-        />
-      ),
-    },
-  ], [weeklyData, assetTypes, plannerChartData, contentsThisWeek, totalAssets, totalPlanner])
+  ], [plannerChartData, totalPlanner])
+
+  const nav  = (d: 1 | -1) => setSlide(([curr]) => [(curr + d + slides.length) % slides.length, d])
+  const goTo = (i: number) => setSlide(([curr]) => [i, i > curr ? 1 : -1])
 
   const slide = slides[activeIdx]
 
@@ -251,14 +229,16 @@ export function MetricsCarousel({
       <div className="px-6 pt-5 pb-3" style={{ borderBottom: '1px solid #1e293b' }}>
         <div className="flex items-center gap-3">
 
-          <button
-            onClick={() => nav(-1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
-            style={{ border: '1px solid #1e293b', background: '#101A2B' }}
-            aria-label="Anterior"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
+          {slides.length > 1 && (
+            <button
+              onClick={() => nav(-1)}
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
+              style={{ border: '1px solid #1e293b', background: '#101A2B' }}
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <div className="flex-1 text-center min-w-0 overflow-hidden">
             <AnimatePresence mode="wait">
@@ -277,32 +257,36 @@ export function MetricsCarousel({
             </AnimatePresence>
           </div>
 
-          <button
-            onClick={() => nav(1)}
-            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
-            style={{ border: '1px solid #1e293b', background: '#101A2B' }}
-            aria-label="Próximo"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          {slides.length > 1 && (
+            <button
+              onClick={() => nav(1)}
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
+              style={{ border: '1px solid #1e293b', background: '#101A2B' }}
+              aria-label="Próximo"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Dot indicators */}
-        <div className="flex items-center justify-center gap-1.5 mt-3">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`rounded-full transition-all duration-200 ${
-                i === activeIdx
-                  ? 'w-4 h-1.5'
-                  : 'w-1.5 h-1.5 hover:opacity-80'
-              }`}
-              style={{ background: i === activeIdx ? '#2563EB' : '#1e293b' }}
-              aria-label={`Ir para slide ${i + 1}`}
-            />
-          ))}
-        </div>
+        {slides.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 mt-3">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`rounded-full transition-all duration-200 ${
+                  i === activeIdx
+                    ? 'w-4 h-1.5'
+                    : 'w-1.5 h-1.5 hover:opacity-80'
+                }`}
+                style={{ background: i === activeIdx ? '#29457a' : '#1e293b' }}
+                aria-label={`Ir para slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Chart area ──────────────────────────────────────────────────────── */}
