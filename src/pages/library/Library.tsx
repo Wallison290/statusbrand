@@ -5,7 +5,7 @@ import {
   Lightbulb, Zap, Target, FileText, ImageIcon,
   Video, File as FileIcon, Link2, FolderOpen,
   Building2, Loader2, X, Pencil, Eye, Upload,
-  ExternalLink, Tag,
+  ExternalLink, Tag, Users, LayoutGrid,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -912,37 +912,43 @@ function ConteudosTab() {
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex gap-2 flex-wrap">
           {/* Client filter */}
-          <select
-            value={clientFilter}
-            onChange={e => setClientFilter(e.target.value)}
-            className="h-8 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] px-2.5 focus:outline-none focus:border-[#b0b0b0]"
-          >
-            <option value="all">Todos os clientes</option>
-            <option value="__none__">Sem cliente</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-          </select>
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
+            <select
+              value={clientFilter}
+              onChange={e => setClientFilter(e.target.value)}
+              className="h-10 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#CBD5E1] pl-9 pr-3 focus:outline-none focus:border-[#2563EB]/50 cursor-pointer [&>option]:bg-[#182233]"
+            >
+              <option value="all">Todos os clientes</option>
+              <option value="__none__">Sem cliente</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+            </select>
+          </div>
 
           {/* Type filter */}
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="h-8 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] px-2.5 focus:outline-none focus:border-[#b0b0b0]"
-          >
-            <option value="all">Todos os tipos</option>
-            {types.map(t => (
-              <option key={t} value={t}>{contentTypeLabels[t as ContentType] ?? t}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <LayoutGrid className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
+            <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+              className="h-10 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#CBD5E1] pl-9 pr-3 focus:outline-none focus:border-[#2563EB]/50 cursor-pointer [&>option]:bg-[#182233]"
+            >
+              <option value="all">Todos os tipos</option>
+              {types.map(t => (
+                <option key={t} value={t}>{contentTypeLabels[t as ContentType] ?? t}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#b0b0b0] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar conteúdo..."
-            className="h-8 pl-8 pr-3 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] placeholder:text-[#b0b0b0] focus:outline-none focus:border-[#b0b0b0] w-52"
+            className="h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50 w-64"
           />
         </div>
       </div>
@@ -951,19 +957,19 @@ function ConteudosTab() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-52 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7] animate-pulse" />
+            <div key={i} className="h-52 rounded-xl border border-[#1e293b] bg-[#182233] animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f5f5f5] flex items-center justify-center mb-4">
-            <ImageIcon className="w-5 h-5 text-[#c0c0c0]" />
+          <div className="w-12 h-12 rounded-xl border border-[#1e293b] bg-[#182233] flex items-center justify-center mb-4">
+            <ImageIcon className="w-5 h-5 text-[#475569]" />
           </div>
-          <p className="text-[14px] font-medium text-[#737373]">Nenhum conteúdo encontrado</p>
-          <p className="text-[12px] text-[#b0b0b0] mt-1">Adicione conteúdos à biblioteca ou ajuste os filtros.</p>
+          <p className="text-[14px] font-medium text-[#CBD5E1]">Nenhum conteúdo encontrado</p>
+          <p className="text-[12px] text-[#64748b] mt-1">Adicione conteúdos à biblioteca ou ajuste os filtros.</p>
           <button
-            className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
-            style={{ background: '#0f0f0f', color: '#ffffff' }}
+            className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
+            style={{ background: '#2563EB', color: '#ffffff' }}
             onClick={() => setAddOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Adicionar conteúdo
@@ -971,7 +977,7 @@ function ConteudosTab() {
         </div>
       ) : (
         <>
-          <p className="text-[11px] text-[#b0b0b0]">{filtered.length} conteúdo{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-[11px] text-[#64748b]">{filtered.length} conteúdo{filtered.length !== 1 ? 's' : ''}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <AnimatePresence>
               {filtered.map(asset => (
@@ -1051,8 +1057,8 @@ function SnippetsTab() {
           onClick={() => setActiveCategory('all')}
           className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1.5 border ${
             activeCategory === 'all'
-              ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
-              : 'bg-white text-[#737373] border-[#e0e0e0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
+              ? 'bg-[#2563EB] text-white border-[#2563EB]'
+              : 'bg-[#182233] text-[#94a3b8] border-[#1e293b] hover:bg-[#1e293b] hover:text-white'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" /> Todos
@@ -1063,8 +1069,8 @@ function SnippetsTab() {
             onClick={() => setActiveCategory(cat.value)}
             className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1.5 border ${
               activeCategory === cat.value
-                ? 'bg-[#0f0f0f] text-white border-[#0f0f0f]'
-                : 'bg-white text-[#737373] border-[#e0e0e0] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
+                ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                : 'bg-[#182233] text-[#94a3b8] border-[#1e293b] hover:bg-[#1e293b] hover:text-white'
             }`}
           >
             <cat.icon className={`w-3.5 h-3.5 ${activeCategory === cat.value ? 'text-white' : cat.color}`} />
@@ -1075,12 +1081,12 @@ function SnippetsTab() {
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#b0b0b0] pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
         <input
           placeholder="Buscar snippets..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full h-8 pl-8 pr-3 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] placeholder:text-[#b0b0b0] focus:outline-none focus:border-[#b0b0b0]"
+          className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50"
         />
       </div>
 
@@ -1088,16 +1094,16 @@ function SnippetsTab() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-24 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7] animate-pulse" />
+            <div key={i} className="h-24 rounded-xl border border-[#1e293b] bg-[#182233] animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <BookOpen className="w-10 h-10 text-[#c0c0c0] mb-3" />
-          <p className="text-[13px] text-[#a0a0a0]">Biblioteca de snippets vazia.</p>
+          <BookOpen className="w-10 h-10 text-[#475569] mb-3" />
+          <p className="text-[13px] text-[#64748b]">Biblioteca de snippets vazia.</p>
           <button
-            className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
-            style={{ background: '#0f0f0f', color: '#ffffff' }}
+            className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
+            style={{ background: '#2563EB', color: '#ffffff' }}
             onClick={() => setOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Adicionar snippet
@@ -1110,30 +1116,30 @@ function SnippetsTab() {
               const catInfo = getCategoryInfo(item.category as LibraryCategory)
               return (
                 <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                  <div className="bg-white rounded-xl border border-[#e8e8e8] p-4 hover:border-[#d0d0d0] hover:shadow-sm transition-all">
+                  <div className="bg-[#182233] rounded-xl border border-[#1e293b] p-4 hover:border-[#2563EB]/40 transition-all">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         {catInfo && <catInfo.icon className={`w-4 h-4 flex-shrink-0 ${catInfo.color}`} />}
-                        <p className="font-medium text-[#0f0f0f] text-[13px]">{item.title}</p>
+                        <p className="font-medium text-[#F8FAFC] text-[13px]">{item.title}</p>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
                         <button
                           onClick={() => copyToClipboard(item.content).then(() => toast('Copiado!', 'success'))}
-                          className="text-[#b0b0b0] hover:text-[#0f0f0f] transition-colors p-1"
+                          className="text-[#64748b] hover:text-white transition-colors p-1"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => deleteItem.mutateAsync(item.id)}
-                          className="text-[#c0c0c0] hover:text-red-500 transition-colors p-1"
+                          className="text-[#64748b] hover:text-[#f87171] transition-colors p-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                    <p className="text-[12px] text-[#737373] line-clamp-3 leading-relaxed">{item.content}</p>
+                    <p className="text-[12px] text-[#94a3b8] line-clamp-3 leading-relaxed">{item.content}</p>
                     {item.niche && (
-                      <span className="inline-block mt-2 text-[10px] text-[#a0a0a0] bg-[#f5f5f5] border border-[#e8e8e8] px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[10px] text-[#94a3b8] bg-[#0d1424] border border-[#1e293b] px-2 py-0.5 rounded-full">
                         {item.niche}
                       </span>
                     )}
@@ -1490,34 +1496,40 @@ function MateriaisTab({ addOpen, onAddClose }: { addOpen: boolean; onAddClose: (
       {/* Filter bar */}
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex gap-2 flex-wrap">
-          <select
-            value={clientFilter}
-            onChange={e => setClientFilter(e.target.value)}
-            className="h-8 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] px-2.5 focus:outline-none focus:border-[#b0b0b0]"
-          >
-            <option value="all">Todos os clientes</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-          </select>
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
+            <select
+              value={clientFilter}
+              onChange={e => setClientFilter(e.target.value)}
+              className="h-10 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#CBD5E1] pl-9 pr-3 focus:outline-none focus:border-[#2563EB]/50 cursor-pointer [&>option]:bg-[#182233]"
+            >
+              <option value="all">Todos os clientes</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+            </select>
+          </div>
 
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="h-8 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] px-2.5 focus:outline-none focus:border-[#b0b0b0]"
-          >
-            <option value="all">Todos os tipos</option>
-            {MATERIAL_TYPE_OPTIONS.map(t => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <LayoutGrid className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
+            <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+              className="h-10 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#CBD5E1] pl-9 pr-3 focus:outline-none focus:border-[#2563EB]/50 cursor-pointer [&>option]:bg-[#182233]"
+            >
+              <option value="all">Todos os tipos</option>
+              {MATERIAL_TYPE_OPTIONS.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#b0b0b0] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar material..."
-            className="h-8 pl-8 pr-3 rounded-lg border border-[#e0e0e0] bg-white text-[12px] text-[#0f0f0f] placeholder:text-[#b0b0b0] focus:outline-none focus:border-[#b0b0b0] w-52"
+            className="h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50 w-64"
           />
         </div>
       </div>
@@ -1526,48 +1538,48 @@ function MateriaisTab({ addOpen, onAddClose }: { addOpen: boolean; onAddClose: (
       {isLoading ? (
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7] animate-pulse" />
+            <div key={i} className="h-14 rounded-xl border border-[#1e293b] bg-[#182233] animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-12 h-12 rounded-xl border border-[#e8e8e8] bg-[#f5f5f5] flex items-center justify-center mb-4">
-            <FolderOpen className="w-5 h-5 text-[#c0c0c0]" />
+          <div className="w-12 h-12 rounded-xl border border-[#1e293b] bg-[#182233] flex items-center justify-center mb-4">
+            <FolderOpen className="w-5 h-5 text-[#475569]" />
           </div>
-          <p className="text-[14px] font-medium text-[#737373]">Nenhum material encontrado</p>
-          <p className="text-[12px] text-[#b0b0b0] mt-1">Adicione materiais para os seus clientes.</p>
+          <p className="text-[14px] font-medium text-[#CBD5E1]">Nenhum material encontrado</p>
+          <p className="text-[12px] text-[#64748b] mt-1">Adicione materiais para os seus clientes.</p>
         </div>
       ) : (
         <>
-          <p className="text-[11px] text-[#b0b0b0]">{filtered.length} material{filtered.length !== 1 ? 'is' : ''}</p>
+          <p className="text-[11px] text-[#64748b]">{filtered.length} material{filtered.length !== 1 ? 'is' : ''}</p>
           <div className="space-y-1.5">
             {filtered.map(mat => (
               <div
                 key={mat.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[#e8e8e8] bg-white hover:border-[#d0d0d0] hover:shadow-sm transition-all group"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[#1e293b] bg-[#182233] hover:border-[#2563EB]/40 transition-all group"
               >
                 {/* Icon */}
-                <div className="w-9 h-9 rounded-lg bg-[#f5f5f5] border border-[#e8e8e8] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-[#0d1424] border border-[#1e293b] flex items-center justify-center flex-shrink-0">
                   <MatTypeIcon type={mat.type} />
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{mat.title}</p>
+                    <p className="text-[13px] font-medium text-[#F8FAFC] truncate">{mat.title}</p>
                     {mat.folder_name && (
-                      <span className="hidden sm:flex items-center gap-1 text-[10px] text-[#a0a0a0] bg-[#f5f5f5] border border-[#e8e8e8] px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      <span className="hidden sm:flex items-center gap-1 text-[10px] text-[#94a3b8] bg-[#0d1424] border border-[#1e293b] px-1.5 py-0.5 rounded-full flex-shrink-0">
                         <FolderOpen className="w-2.5 h-2.5" /> {mat.folder_name}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-[#b0b0b0]">{MAT_TYPE_LABELS[mat.type]}</span>
-                    {mat.file_size ? <><span className="text-[#d0d0d0]">·</span><span className="text-[10px] text-[#b0b0b0]">{formatMatSize(mat.file_size)}</span></> : null}
+                    <span className="text-[10px] text-[#64748b]">{MAT_TYPE_LABELS[mat.type]}</span>
+                    {mat.file_size ? <><span className="text-[#334155]">·</span><span className="text-[10px] text-[#64748b]">{formatMatSize(mat.file_size)}</span></> : null}
                     {mat.client?.company_name && (
                       <>
-                        <span className="text-[#d0d0d0]">·</span>
-                        <span className="flex items-center gap-1 text-[10px] text-[#737373]">
+                        <span className="text-[#334155]">·</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#94a3b8]">
                           <Building2 className="w-2.5 h-2.5" /> {mat.client.company_name}
                         </span>
                       </>
@@ -1582,7 +1594,7 @@ function MateriaisTab({ addOpen, onAddClose }: { addOpen: boolean; onAddClose: (
                       href={mat.link_url || mat.file_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a0a0a0] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-colors"
                       title="Abrir"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1590,7 +1602,7 @@ function MateriaisTab({ addOpen, onAddClose }: { addOpen: boolean; onAddClose: (
                   )}
                   <button
                     onClick={() => openEdit(mat)}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a0a0a0] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-colors"
                     title="Editar"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -1598,13 +1610,13 @@ function MateriaisTab({ addOpen, onAddClose }: { addOpen: boolean; onAddClose: (
 
                   {confirmingId === mat.id ? (
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setConfirmingId(null)} className="text-[10px] text-[#a0a0a0] hover:text-[#737373] px-1.5 py-1">Não</button>
-                      <button onClick={() => handleDelete(mat)} className="text-[10px] text-red-500 hover:text-red-600 px-1.5 py-1">Sim</button>
+                      <button onClick={() => setConfirmingId(null)} className="text-[10px] text-[#94a3b8] hover:text-[#CBD5E1] px-1.5 py-1">Não</button>
+                      <button onClick={() => handleDelete(mat)} className="text-[10px] text-[#f87171] hover:text-[#ef4444] px-1.5 py-1">Sim</button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setConfirmingId(mat.id)}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a0a0a0] hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-[#f87171] hover:bg-[#ef4444]/10 transition-colors"
                       title="Remover"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1649,8 +1661,8 @@ export function Library() {
     ? (
       <button
         onClick={() => setAddOpen(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
-        style={{ background: '#0f0f0f', color: '#ffffff' }}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
+        style={{ background: '#2563EB', color: '#ffffff' }}
       >
         <Plus className="w-3.5 h-3.5" /> Novo conteúdo
       </button>
@@ -1668,11 +1680,11 @@ export function Library() {
       : undefined
 
   return (
-    <div className="min-h-full bg-[#f5f7fb]">
+    <div className="min-h-full bg-[#0B1020]">
       <div className="p-4 md:p-6 space-y-5">
         {/* Tab switcher + ação */}
         <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1 bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-[#182233] border border-[#1e293b] rounded-xl p-1 w-fit">
           {([
             ['conteudos', 'Conteúdos'],
             ['materiais', 'Materiais'],
@@ -1683,8 +1695,8 @@ export function Library() {
               onClick={() => setTab(key)}
               className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                 tab === key
-                  ? 'bg-[#0f0f0f] text-white shadow-sm border border-transparent'
-                  : 'text-[#6b7280] hover:text-[#0f0f0f] hover:bg-[#f0f4f8]'
+                  ? 'bg-[#1e293b] text-white shadow-sm border border-[#334155]'
+                  : 'text-[#94a3b8] hover:text-white hover:bg-[#1e293b]/60'
               }`}
             >
               {label}
