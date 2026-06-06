@@ -66,8 +66,8 @@ function ContextIcon({ hour }: { hour: number }) {
     hour < 12
       ? { Icon: Sun,       bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.22)',  color: '#fbbf24' }
       : hour < 18
-        ? { Icon: SunMedium, bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.22)',  color: '#60a5fa' }
-        : { Icon: Moon,      bg: 'rgba(37,99,235,0.14)',   border: 'rgba(37,99,235,0.24)',   color: '#60a5fa' }
+        ? { Icon: SunMedium, bg: 'rgba(111,147,201,0.12)',  border: 'rgba(111,147,201,0.24)',  color: '#6f93c9' }
+        : { Icon: Moon,      bg: 'rgba(111,147,201,0.12)',   border: 'rgba(111,147,201,0.24)',   color: '#6f93c9' }
 
   return (
     <div
@@ -143,7 +143,7 @@ export function DashboardHero({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(37,99,235,0.14) 0%, transparent 65%)',
+            'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(111,147,201,0.12) 0%, transparent 65%)',
         }}
       />
 
@@ -161,7 +161,7 @@ export function DashboardHero({
         className="absolute top-0 left-0 right-0 h-px pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.45) 35%, rgba(96,165,250,0.30) 65%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0%, rgba(41,69,122,0.55) 35%, rgba(111,147,201,0.30) 65%, transparent 100%)',
         }}
       />
 
@@ -182,7 +182,7 @@ export function DashboardHero({
           <div className="flex items-center gap-2.5 mb-4">
             <ContextIcon hour={hour} />
             <p className="text-[12.5px] font-semibold capitalize tracking-wide"
-               style={{ color: '#60a5fa' }}>
+               style={{ color: '#6f93c9' }}>
               {dateStr} • {timeStr}
             </p>
           </div>
@@ -194,8 +194,8 @@ export function DashboardHero({
             <span style={{ color: '#f1f5f9' }}>{greetingBase}</span>
             <span
               style={{
-                color:      '#2563EB',
-                textShadow: '0 0 28px rgba(37,99,235,0.50)',
+                color:      '#7aa0d4',
+                textShadow: '0 0 22px rgba(41,69,122,0.45)',
               }}
             >
               {greetingName}
@@ -287,7 +287,7 @@ export function DashboardHero({
             title="Atualizar mensagem da IA"
             className="w-7 h-7 flex items-center justify-center rounded-full transition-all"
             style={{ color: 'rgba(148,163,184,0.45)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#60a5fa')}
+            onMouseEnter={e => (e.currentTarget.style.color = '#6f93c9')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(148,163,184,0.45)')}
           >
             <RefreshCw className="w-3.5 h-3.5" />
