@@ -2764,7 +2764,7 @@ export function Planner() {
                                 onDragEnter={() => igOnDragEnter(i)}
                                 onDragOver={e => e.preventDefault()}
                                 onDragEnd={igOnDragEnd}
-                                onDrop={() => igOnDrop(i)}
+                                onDrop={igOnDrop}
                                 className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing select-none transition-all ${
                                   igDragOver === i
                                     ? 'border-pink-500 scale-105'
