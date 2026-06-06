@@ -154,12 +154,12 @@ function StatusPill({ status, onChange }: { status: TaskStatus; onChange: (s: Ta
 
 // ─── Avatar ────────────────────────────────────────────────────────────────────
 
-function AvatarCircle({ name }: { name: string }) {
+function AvatarCircle({ name, sm }: { name: string; sm?: boolean }) {
   const palette  = ['bg-blue-400','bg-violet-400','bg-emerald-400','bg-amber-400','bg-pink-400','bg-indigo-400','bg-cyan-400','bg-orange-400']
   const hash     = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
   const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
-    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 ${palette[hash % palette.length]}`}>
+    <span className={`${sm ? 'w-[18px] h-[18px] text-[8px]' : 'w-6 h-6 text-[10px]'} rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 ${palette[hash % palette.length]}`}>
       {initials}
     </span>
   )
@@ -201,7 +201,7 @@ function MoreMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
 // ─── Task card ────────────────────────────────────────────────────────────────
 
 function TaskCard({
-  task, onStatusChange, onDelete, onEdit, onView, dragging, onDragStart, onDragEnd,
+  task, onView, dragging, onDragStart, onDragEnd,
 }: {
   task: Task; onStatusChange: (id: string, s: TaskStatus) => void
   onDelete: (id: string) => void; onEdit: (task: Task) => void; onView: (task: Task) => void
@@ -212,6 +212,8 @@ function TaskCard({
   const clientName     = (task.client as any)?.company_name
   const priCfg         = PRIORITY_CFG[task.priority]
 
+  const done = task.status === 'concluido'
+
   return (
     <div draggable
       onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
@@ -219,47 +221,32 @@ function TaskCard({
       }}
       onDragEnd={() => { setTimeout(() => { dragStarted.current = false }, 50); onDragEnd() }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      className={['w-full min-w-0 bg-white rounded-xl p-2.5 shadow-sm border border-gray-100',
-        'cursor-pointer hover:shadow-md transition-all duration-150 select-none',
+      title={`${task.due_time ? task.due_time.slice(0,5) + ' · ' : ''}${task.title}${clientName ? ' · ' + clientName : ''}`}
+      className={['group w-full min-w-0 bg-white rounded-lg pl-2 pr-1.5 py-1.5 shadow-sm',
+        'cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-150 select-none',
+        'flex items-center gap-1.5',
         dragging ? 'opacity-40 scale-95' : ''].join(' ')}
-      style={{ borderLeftWidth: 4, borderLeftColor: priCfg.accent }}>
-      {(task.due_time || overdueAndOpen) && (
-        <div className="flex items-center gap-1 mb-1.5">
-          <Clock className={`w-3 h-3 flex-shrink-0 ${overdueAndOpen ? 'text-red-400' : 'text-gray-400'}`} />
-          <span className={`text-[11px] font-medium ${overdueAndOpen ? 'text-red-500' : 'text-gray-500'}`}>
-            {task.due_time ? task.due_time.slice(0, 5) : ''}
-            {overdueAndOpen && <span className="ml-1">· Atrasada</span>}
-          </span>
-        </div>
+      style={{ borderLeft: `3px solid ${priCfg.accent}` }}>
+
+      {/* Hora */}
+      {task.due_time && (
+        <span className={`text-[10px] font-bold tabular-nums flex-shrink-0 ${overdueAndOpen ? 'text-red-500' : 'text-gray-400'}`}>
+          {task.due_time.slice(0, 5)}
+        </span>
       )}
-      <p className="text-[12.5px] font-bold text-gray-900 leading-snug mb-2 line-clamp-3 break-words">{task.title}</p>
-      <div className="flex items-center gap-1 flex-wrap mb-2">
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
-        {clientName && (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 max-w-full truncate">{clientName}</span>
-        )}
-      </div>
-      <div className="flex items-center justify-between gap-1 min-w-0">
-        {task.assignee ? (
-          <div className="flex items-center gap-1.5 min-w-0">
-            <AvatarCircle name={task.assignee} />
-            <span className="text-[11px] text-gray-600 truncate">{task.assignee}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 text-gray-400 min-w-0">
-            <User className="w-3 h-3 flex-shrink-0" />
-            <span className="text-[11px] truncate">Sem responsável</span>
-          </div>
-        )}
-        <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
-          <MoreMenu onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
-        </div>
-      </div>
-      {task.status !== 'a_fazer' && (
-        <div className="mt-2 pt-2 border-t border-gray-100" onClick={e => e.stopPropagation()}>
-          <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
-        </div>
+
+      {/* Título */}
+      <span className={`text-[11.5px] font-semibold flex-1 min-w-0 truncate ${done ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+        {task.title}
+      </span>
+
+      {/* Atrasada */}
+      {overdueAndOpen && (
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" title="Atrasada" />
       )}
+
+      {/* Avatar do responsável */}
+      {task.assignee && <AvatarCircle name={task.assignee} sm />}
     </div>
   )
 }
@@ -312,7 +299,7 @@ function DayColumn({
       </div>
 
       {/* Corpo — cresce com o conteúdo (sem scroll interno) */}
-      <div className="flex-1 flex flex-col space-y-2.5">
+      <div className="flex-1 flex flex-col space-y-1.5">
         <AnimatePresence>
           {tasks.map(task => (
             <motion.div key={task.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.14 }}>
