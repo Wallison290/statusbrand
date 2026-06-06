@@ -84,10 +84,10 @@ export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
 
       {note.checklist.length > 0 && (
         <div className="flex items-center gap-1.5 mb-2">
-          <div className="h-1 flex-1 rounded-full bg-[#f0f0f0] overflow-hidden">
+          <div className="h-1.5 flex-1 rounded-full bg-[#ede9fe] overflow-hidden">
             <div
-              className="h-full bg-[#0f0f0f] rounded-full transition-all"
-              style={{ width: `${(doneCount / note.checklist.length) * 100}%` }}
+              className="h-full rounded-full transition-all"
+              style={{ width: `${(doneCount / note.checklist.length) * 100}%`, background: 'linear-gradient(90deg,#7c3aed,#4f46e5)' }}
             />
           </div>
           <span className="text-[11px] text-[#a0a0a0] flex-shrink-0">
@@ -145,12 +145,12 @@ function ChecklistEditor({
     <div className="space-y-1">
       {items.map((item, idx) => (
         <div key={item.id} className="flex items-center gap-2 group/item">
-          <GripVertical className="w-3.5 h-3.5 text-[#d0d0d0] flex-shrink-0 cursor-grab" />
+          <GripVertical className="w-3.5 h-3.5 text-[#475569] flex-shrink-0 cursor-grab" />
           <button
             type="button"
             onClick={() => toggle(item.id)}
             className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-              item.done ? 'bg-[#0f0f0f] border-[#0f0f0f]' : 'border-[#d0d0d0] hover:border-[#a0a0a0]'
+              item.done ? 'bg-[#2563EB] border-[#2563EB]' : 'border-[#475569] hover:border-[#64748b]'
             }`}
           >
             {item.done && <Check className="w-2.5 h-2.5" style={{ color: '#ffffff' }} />}
@@ -161,23 +161,23 @@ function ChecklistEditor({
             onChange={e => updateText(item.id, e.target.value)}
             onKeyDown={e => handleKeyDown(e, idx)}
             placeholder="Item da lista..."
-            className={`flex-1 text-[13px] bg-transparent outline-none placeholder:text-[#c0c0c0] ${
-              item.done ? 'line-through text-[#a0a0a0]' : 'text-[#0f0f0f]'
+            className={`flex-1 text-[13px] bg-transparent outline-none placeholder:text-[#475569] ${
+              item.done ? 'line-through text-[#64748b]' : 'text-[#E2E8F0]'
             }`}
           />
           <button
             type="button"
             onClick={() => remove(item.id)}
-            className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-[#f0f0f0]"
+            className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-[#1e293b]"
           >
-            <X className="w-3 h-3 text-[#a0a0a0]" />
+            <X className="w-3 h-3 text-[#94a3b8]" />
           </button>
         </div>
       ))}
       <button
         type="button"
         onClick={() => { onChange([...items, newItem()]); setTimeout(() => inputRefs.current[items.length]?.focus(), 30) }}
-        className="flex items-center gap-1.5 text-[12px] text-[#a0a0a0] hover:text-[#0f0f0f] transition-colors mt-1"
+        className="flex items-center gap-1.5 text-[12px] text-[#64748b] hover:text-[#CBD5E1] transition-colors mt-1"
       >
         <Plus className="w-3.5 h-3.5" /> Adicionar item
       </button>
@@ -262,20 +262,20 @@ export function NoteModal({
         initial={{ opacity: 0, y: -12, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.97 }}
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-[#e8e8e8] flex flex-col max-h-[85vh] overflow-hidden"
+        className="relative w-full max-w-lg bg-[#111827] rounded-2xl shadow-2xl border border-[#1e293b] flex flex-col max-h-[85vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#f0f0f0]">
+        <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-[#1e293b]">
           <input
             ref={titleRef}
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Título da nota..."
-            className="flex-1 text-[16px] font-semibold text-[#0f0f0f] bg-transparent outline-none placeholder:text-[#c0c0c0] placeholder:font-normal"
+            className="flex-1 text-[16px] font-semibold text-[#F8FAFC] bg-transparent outline-none placeholder:text-[#475569] placeholder:font-normal"
           />
-          <button onClick={handleSave} className="p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
-            <X className="w-4 h-4 text-[#737373]" />
+          <button onClick={handleSave} className="p-1.5 rounded-lg hover:bg-[#1e293b] transition-colors">
+            <X className="w-4 h-4 text-[#94a3b8]" />
           </button>
         </div>
 
@@ -283,11 +283,11 @@ export function NoteModal({
         <div className="flex items-center gap-2 px-5 pt-3 pb-1 flex-wrap">
           {/* Tipo */}
           <div className="flex items-center gap-1">
-            <Tag className="w-3 h-3 text-[#a0a0a0]" />
+            <Tag className="w-3 h-3 text-[#64748b]" />
             <select
               value={type}
               onChange={e => setType(e.target.value as NoteType)}
-              className="text-[12px] text-[#0f0f0f] bg-transparent outline-none border-none cursor-pointer"
+              className="text-[12px] text-[#CBD5E1] bg-transparent outline-none border-none cursor-pointer [&>option]:bg-[#182233]"
             >
               <option value="interna">Interna</option>
               <option value="ideia">Ideia</option>
@@ -295,15 +295,15 @@ export function NoteModal({
             </select>
           </div>
 
-          <span className="text-[#e0e0e0]">·</span>
+          <span className="text-[#334155]">·</span>
 
           {/* Cliente */}
           <div className="flex items-center gap-1">
-            <Building2 className="w-3 h-3 text-[#a0a0a0]" />
+            <Building2 className="w-3 h-3 text-[#64748b]" />
             <select
               value={clientId}
               onChange={e => setClientId(e.target.value)}
-              className="text-[12px] text-[#0f0f0f] bg-transparent outline-none border-none cursor-pointer max-w-[180px] truncate"
+              className="text-[12px] text-[#CBD5E1] bg-transparent outline-none border-none cursor-pointer max-w-[180px] truncate [&>option]:bg-[#182233]"
             >
               <option value="">Sem cliente</option>
               {clients.map(c => (
@@ -320,12 +320,12 @@ export function NoteModal({
               key={t}
               onClick={() => setTab(t)}
               className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
-                tab === t ? 'bg-[#f0f0f0] text-[#0f0f0f]' : 'text-[#a0a0a0] hover:text-[#0f0f0f]'
+                tab === t ? 'bg-[#1e293b] text-[#F8FAFC]' : 'text-[#64748b] hover:text-[#CBD5E1]'
               }`}
             >
               {t === 'texto' ? 'Texto' : 'Checklist'}
               {t === 'checklist' && checklist.length > 0 && (
-                <span className="ml-1.5 text-[10px] bg-[#0f0f0f] rounded-full px-1.5 py-0.5" style={{ color: '#ffffff' }}>
+                <span className="ml-1.5 text-[10px] bg-[#2563EB] rounded-full px-1.5 py-0.5" style={{ color: '#ffffff' }}>
                   {checklist.filter(i => i.done).length}/{checklist.length}
                 </span>
               )}
@@ -341,14 +341,14 @@ export function NoteModal({
               onChange={e => setContent(e.target.value)}
               placeholder="Escreva sua nota aqui..."
               rows={10}
-              className="w-full text-[13px] text-[#0f0f0f] bg-transparent outline-none resize-none placeholder:text-[#c0c0c0] leading-relaxed"
+              className="w-full text-[13px] text-[#E2E8F0] bg-transparent outline-none resize-none placeholder:text-[#475569] leading-relaxed"
             />
           ) : (
             checklist.length === 0 ? (
               <button
                 type="button"
                 onClick={() => setChecklist([newItem()])}
-                className="flex items-center gap-2 text-[13px] text-[#a0a0a0] hover:text-[#0f0f0f] transition-colors"
+                className="flex items-center gap-2 text-[13px] text-[#64748b] hover:text-[#CBD5E1] transition-colors"
               >
                 <Plus className="w-4 h-4" /> Adicionar primeiro item
               </button>
@@ -359,21 +359,21 @@ export function NoteModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-[#f0f0f0]">
+        <div className="flex items-center justify-between px-5 py-4 border-t border-[#1e293b]">
           {!isNew ? (
             confirmDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-[#737373]">Excluir nota?</span>
+                <span className="text-[12px] text-[#94a3b8]">Excluir nota?</span>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="text-[12px] px-2.5 py-1 rounded-lg border border-[#e0e0e0] text-[#737373] hover:bg-[#f8f8f8] transition-colors"
+                  className="text-[12px] px-2.5 py-1 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:bg-[#1e293b] transition-colors"
                 >
                   Não
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleteNote.isPending}
-                  className="text-[12px] px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition-colors"
+                  className="text-[12px] px-2.5 py-1 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#f87171] hover:bg-[#ef4444]/20 transition-colors"
                 >
                   Sim, excluir
                 </button>
@@ -381,7 +381,7 @@ export function NoteModal({
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="flex items-center gap-1.5 text-[12px] text-[#a0a0a0] hover:text-red-400 transition-colors"
+                className="flex items-center gap-1.5 text-[12px] text-[#64748b] hover:text-[#f87171] transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Excluir
               </button>
@@ -393,7 +393,7 @@ export function NoteModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-xl bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
             style={{ color: '#ffffff' }}
           >
             {saving ? 'Salvando...' : 'Salvar'}
@@ -415,15 +415,19 @@ function FilterBar({
   clients: { id: string; company_name: string }[]
   onChange: (f: NotesFilter) => void
 }) {
+  const selectCls = "text-[12px] text-[#CBD5E1] bg-[#182233] border border-[#1e293b] rounded-xl px-3 py-2 outline-none cursor-pointer hover:border-[#2563EB]/50 transition-colors [&>option]:bg-[#182233] [&>option]:text-[#CBD5E1]"
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <Filter className="w-3.5 h-3.5 text-[#a0a0a0]" />
+      {/* Funil */}
+      <div className="w-9 h-9 rounded-xl bg-[#182233] border border-[#1e293b] flex items-center justify-center flex-shrink-0">
+        <Filter className="w-3.5 h-3.5 text-[#94a3b8]" />
+      </div>
 
       {/* Por cliente */}
       <select
         value={filter.client_id ?? ''}
         onChange={e => onChange({ ...filter, client_id: e.target.value || null })}
-        className="text-[12px] text-[#0f0f0f] bg-white border border-[#e8e8e8] rounded-lg px-2.5 py-1.5 outline-none cursor-pointer hover:border-[#c0c0c0] transition-colors"
+        className={selectCls}
       >
         <option value="">Todos os clientes</option>
         {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
@@ -433,7 +437,7 @@ function FilterBar({
       <select
         value={filter.type ?? ''}
         onChange={e => onChange({ ...filter, type: (e.target.value as NoteType) || null })}
-        className="text-[12px] text-[#0f0f0f] bg-white border border-[#e8e8e8] rounded-lg px-2.5 py-1.5 outline-none cursor-pointer hover:border-[#c0c0c0] transition-colors"
+        className={selectCls}
       >
         <option value="">Todos os tipos</option>
         <option value="interna">Interna</option>
@@ -445,7 +449,7 @@ function FilterBar({
       <select
         value={filter.origin ?? ''}
         onChange={e => onChange({ ...filter, origin: (e.target.value as NoteOrigin) || null })}
-        className="text-[12px] text-[#0f0f0f] bg-white border border-[#e8e8e8] rounded-lg px-2.5 py-1.5 outline-none cursor-pointer hover:border-[#c0c0c0] transition-colors"
+        className={selectCls}
       >
         <option value="">Qualquer origem</option>
         <option value="agency">Agência</option>
@@ -456,7 +460,7 @@ function FilterBar({
       {(filter.client_id || filter.type || filter.origin) && (
         <button
           onClick={() => onChange({})}
-          className="flex items-center gap-1 text-[12px] text-[#a0a0a0] hover:text-red-400 transition-colors"
+          className="flex items-center gap-1 text-[12px] text-[#94a3b8] hover:text-[#f87171] transition-colors"
         >
           <X className="w-3 h-3" /> Limpar
         </button>
@@ -479,12 +483,12 @@ export function Notes() {
   const clients = allClients.map(c => ({ id: c.id, company_name: c.company_name }))
 
   return (
-    <div className="h-full flex flex-col bg-[#f5f7fb]">
+    <div className="h-full flex flex-col bg-[#0B1020]">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] bg-white gap-4 flex-wrap">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e293b] bg-[#0B1020] gap-4 flex-wrap">
         <div>
-          <h1 className="text-[18px] font-bold text-[#0f0f0f]">Notas</h1>
-          <p className="text-[12px] text-[#a0a0a0] mt-0.5">
+          <h1 className="text-[20px] font-bold text-[#F8FAFC]">Notas</h1>
+          <p className="text-[12px] text-[#64748b] mt-0.5">
             {notes.length} {notes.length === 1 ? 'nota' : 'notas'}
           </p>
         </div>
@@ -493,7 +497,7 @@ export function Notes() {
           <FilterBar filter={filter} clients={clients} onChange={setFilter} />
           <button
             onClick={() => setSelected('new')}
-            className="flex items-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-xl bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors"
+            className="flex items-center gap-2 text-[13px] font-semibold px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
             style={{ color: '#ffffff' }}
           >
             <Plus className="w-4 h-4" style={{ color: '#ffffff' }} />
@@ -507,21 +511,21 @@ export function Notes() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-[#f8f8f8] rounded-2xl h-36 animate-pulse" />
+              <div key={i} className="bg-[#182233] rounded-2xl h-36 animate-pulse" />
             ))}
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh] gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white border border-[#e2e8f0] shadow-sm flex items-center justify-center">
-              <StickyNote className="w-8 h-8 text-[#c7d2e0]" />
+            <div className="w-16 h-16 rounded-2xl bg-[#182233] border border-[#1e293b] flex items-center justify-center">
+              <StickyNote className="w-8 h-8 text-[#475569]" />
             </div>
             <div>
-              <p className="text-[15px] font-semibold text-[#0f0f0f] mb-1">
+              <p className="text-[15px] font-semibold text-[#F8FAFC] mb-1">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Nenhuma nota encontrada com esses filtros'
                   : 'Nenhuma nota ainda'}
               </p>
-              <p className="text-[13px] text-[#9ca3af]">
+              <p className="text-[13px] text-[#64748b]">
                 {(filter.client_id || filter.type || filter.origin)
                   ? 'Tente alterar ou limpar os filtros'
                   : 'Crie sua primeira nota clicando em "Nova nota"'}
@@ -530,8 +534,8 @@ export function Notes() {
             {!(filter.client_id || filter.type || filter.origin) && (
               <button
                 onClick={() => setSelected('new')}
-                className="flex items-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-xl hover:opacity-90 transition-colors mt-2"
-                style={{ background: '#0f0f0f', color: '#ffffff' }}
+                className="flex items-center gap-2 text-[13px] font-semibold px-4 py-2.5 rounded-xl hover:bg-[#1D4ED8] transition-colors mt-2 shadow-lg shadow-[#2563EB]/20"
+                style={{ background: '#2563EB', color: '#ffffff' }}
               >
                 <Plus className="w-4 h-4" />
                 Criar nota
