@@ -222,27 +222,14 @@ export function ClientRegister() {
   return (
     <div className="min-h-screen flex">
 
-      {/* Left panel — brand identity (igual ao Login) */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[#0f0f0f] flex-col items-center justify-center p-12 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)',
-            backgroundSize: '28px 28px',
-          }}
+      {/* Left panel — imagem (igual ao Login) */}
+      <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
+        <img
+          src="/planer.png"
+          alt="Kairo Hub"
+          className="absolute inset-0 w-full h-full object-cover object-center select-none"
+          draggable={false}
         />
-        <div className="relative z-10 flex items-center justify-center w-full">
-          <img
-            src="/logo.png"
-            alt="Kairo Hub"
-            className="w-full max-w-[320px] object-contain select-none"
-            draggable={false}
-            onError={e => {
-              const img = e.currentTarget
-              if (!img.src.endsWith('/logo.svg')) img.src = '/logo.svg'
-            }}
-          />
-        </div>
       </div>
 
       {/* Right panel — formulário */}

@@ -77,16 +77,16 @@ export function Login() {
           <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-6">
 
             {/* Ícone no topo do card */}
-            <div className="flex justify-center mb-2">
-              <img src="/logo-icon.png" alt="Kairo Hub" className="w-24 h-24 object-contain" />
+            <div className="flex justify-center mb-1">
+              <img src="/logo-icon.png" alt="Kairo Hub" className="w-16 h-16 object-contain" />
             </div>
 
-            <div className="mb-5">
+            <div className="mb-4">
               <h2 className="text-[22px] font-bold text-[#0f0f0f]">Entrar</h2>
               <p className="text-[13px] text-[#a0a0a0] mt-1">Bem-vindo de volta.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               <LightField
                 label="Email"
                 type="email"
@@ -139,7 +139,7 @@ export function Login() {
               </button>
             </form>
 
-            <p className="text-center text-[12px] text-[#a0a0a0] mt-5">
+            <p className="text-center text-[12px] text-[#a0a0a0] mt-4">
               Não tem conta?{' '}
               <Link to="/register" className="text-[#29457a] font-semibold hover:text-[#16284d] transition-colors">
                 Criar conta
