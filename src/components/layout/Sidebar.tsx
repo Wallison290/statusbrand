@@ -48,25 +48,21 @@ function InitialsAvatar({ name }: { name: string }) {
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-      <img
-        src="/logo-icon.png"
-        alt="KairoHub"
-        className="flex-shrink-0 w-8 h-8 object-contain"
-      />
-      {!collapsed && (
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1 }}
-          className="min-w-0"
-        >
-          <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap text-white">
-            Kairo<span className="text-[#2563EB]">Hub</span>
-          </span>
-          <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide text-[#64748b]">
-            Organize. Produza. Escale.
-          </span>
-        </motion.div>
+    <div className="flex items-center flex-1 min-w-0 h-full">
+      {collapsed ? (
+        <img
+          src="/logo-icon.png"
+          alt="KairoHub"
+          className="flex-shrink-0 w-8 h-8 object-contain mx-auto select-none"
+          draggable={false}
+        />
+      ) : (
+        <img
+          src="/logo.png"
+          alt="KairoHub"
+          className="h-11 w-auto max-w-full object-contain object-left select-none"
+          draggable={false}
+        />
       )}
     </div>
   )
