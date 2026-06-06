@@ -61,7 +61,7 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
     <img
       src="/logo.png"
       alt="KairoHub"
-      className="w-full max-h-16 object-contain object-left select-none"
+      className="h-14 w-auto max-w-full object-contain object-left select-none"
       draggable={false}
     />
   )
