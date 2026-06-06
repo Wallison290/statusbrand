@@ -173,69 +173,53 @@ function AssetCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden hover:border-[#c8c8c8] hover:shadow-md transition-all group cursor-pointer"
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      onClick={() => onClick(asset)}
+      className="relative aspect-square overflow-hidden group cursor-pointer bg-[#182233] rounded-md"
     >
-      {/* Thumbnail — click opens detail */}
-      <div
-        className="relative h-36 bg-[#f5f5f5] flex items-center justify-center overflow-hidden"
-        onClick={() => onClick(asset)}
-      >
-        {asset.media_url ? (
-          <MediaThumbnail url={asset.media_url} title={asset.title} />
-        ) : (
-          <TypeIcon type={asset.content_type} className="w-8 h-8 text-[#c8c8c8]" />
-        )}
-
-        {/* Type + category badges */}
-        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-white/90 border border-[#e0e0e0] text-[#737373]">
-            {contentTypeLabels[asset.content_type as ContentType] ?? asset.content_type}
-          </span>
-          {asset.category && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-white/90 border border-[#e0e0e0] text-[#737373]">
-              {asset.category}
-            </span>
-          )}
+      {/* Mídia preenchendo o quadrado */}
+      {asset.media_url ? (
+        <MediaThumbnail url={asset.media_url} title={asset.title} />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-[#0d1424]">
+          <TypeIcon type={asset.content_type} className="w-8 h-8 text-[#334155]" />
         </div>
+      )}
 
-        {/* Action buttons — visible on hover */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          <button
-            onClick={e => { e.stopPropagation(); onClick(asset) }}
-            className="w-6 h-6 rounded-full bg-white/90 border border-[#e0e0e0] text-[#737373] hover:text-[#0f0f0f] flex items-center justify-center"
-            title="Visualizar / Editar"
-          >
-            <Eye className="w-3 h-3" />
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(asset) }}
-            className="w-6 h-6 rounded-full bg-white/90 border border-[#e0e0e0] text-[#a0a0a0] hover:text-red-500 hover:border-red-200 flex items-center justify-center"
-            title="Remover"
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
-        </div>
+      {/* Badge de tipo (canto superior esquerdo) */}
+      <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
+        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-white/90 capitalize">
+          {contentTypeLabels[asset.content_type as ContentType] ?? asset.content_type}
+        </span>
       </div>
 
-      {/* Body — click opens detail */}
-      <div className="p-3" onClick={() => onClick(asset)}>
-        <p className="text-[13px] font-semibold text-[#0f0f0f] truncate">{asset.title}</p>
-        {clientName ? (
+      {/* Ações no hover (canto superior direito) */}
+      <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <button
+          onClick={e => { e.stopPropagation(); onClick(asset) }}
+          className="w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm text-white/90 hover:bg-black/80 flex items-center justify-center"
+          title="Visualizar / Editar"
+        >
+          <Eye className="w-3 h-3" />
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(asset) }}
+          className="w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm text-white/90 hover:bg-[#ef4444] flex items-center justify-center"
+          title="Remover"
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Overlay com título e cliente (aparece no hover) */}
+      <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <p className="text-[12px] font-semibold text-white leading-tight line-clamp-2">{asset.title}</p>
+        {clientName && (
           <div className="flex items-center gap-1 mt-1">
-            <Building2 className="w-3 h-3 text-[#a0a0a0]" />
-            <span className="text-[10px] text-[#737373] truncate">{clientName}</span>
+            <Building2 className="w-2.5 h-2.5 text-white/70" />
+            <span className="text-[10px] text-white/70 truncate">{clientName}</span>
           </div>
-        ) : (
-          <span className="inline-block mt-1 text-[9px] text-[#b0b0b0] border border-dashed border-[#e0e0e0] rounded-full px-2 py-0.5">
-            Biblioteca geral
-          </span>
-        )}
-        {asset.caption && (
-          <p className="text-[11px] text-[#a0a0a0] mt-1.5 line-clamp-2 leading-relaxed">
-            {asset.caption}
-          </p>
         )}
       </div>
     </motion.div>
@@ -978,7 +962,7 @@ function ConteudosTab() {
       ) : (
         <>
           <p className="text-[11px] text-[#64748b]">{filtered.length} conteúdo{filtered.length !== 1 ? 's' : ''}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
             <AnimatePresence>
               {filtered.map(asset => (
                 <AssetCard
