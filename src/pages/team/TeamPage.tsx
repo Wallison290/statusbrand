@@ -6,6 +6,7 @@ import {
   Users, ClipboardList, ChevronDown, Plus,
   Calendar, Flag, Building2, Send,
   Link as LinkIcon, Image, Film, FileText as FileIcon, Folder,
+  Search, Filter,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { useClients } from '@/hooks/useClients'
@@ -107,15 +108,15 @@ function WhatsAppModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden">
+      <div className="relative bg-[#111827] border border-[#1e293b] rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f1f5f9]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e293b]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center flex-shrink-0">
               <WaIconLarge />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[#0f172a]">Enviar via WhatsApp</p>
+              <p className="text-[13px] font-semibold text-[#F8FAFC]">Enviar via WhatsApp</p>
               <p className="text-[11px] text-[#94a3b8]">{member.name} · {member.whatsapp}</p>
             </div>
           </div>
@@ -134,7 +135,7 @@ function WhatsAppModal({
             value={message}
             onChange={e => { setMessage(e.target.value); setSent(false) }}
             rows={10}
-            className="w-full px-3 py-2.5 rounded-xl border border-[#e2e8f0] text-[12px] text-[#334155] leading-relaxed bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#25D366] resize-none"
+            className="w-full px-3 py-2.5 rounded-xl border border-[#1e293b] text-[12px] text-[#CBD5E1] leading-relaxed bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#25D366] resize-none"
           />
 
           {/* Instrução */}
@@ -156,7 +157,7 @@ function WhatsAppModal({
         <div className="px-5 pb-5 flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 h-9 rounded-xl border border-[#e2e8f0] text-[12px] text-[#64748b] font-medium hover:bg-[#f8fafc] transition-colors"
+            className="flex-1 h-9 rounded-xl border border-[#1e293b] text-[12px] text-[#64748b] font-medium hover:bg-[#f8fafc] transition-colors"
           >
             Fechar
           </button>
@@ -301,25 +302,25 @@ function LinksEditor({
   const removeLink = (id: string) => onChange(links.filter(l => l.id !== id))
 
   const inputCls = compact
-    ? 'h-7 px-2 text-[11px] rounded-md border border-[#e2e8f0] bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full'
-    : 'h-9 px-3 text-[13px] rounded-lg border border-[#e2e8f0] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-full'
+    ? 'h-7 px-2 text-[11px] rounded-md border border-[#1e293b] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40 w-full'
+    : 'h-9 px-3 text-[13px] rounded-lg border border-[#1e293b] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 w-full'
 
   return (
-    <div className={compact ? 'space-y-1.5' : 'border border-[#e2e8f0] rounded-xl p-3 space-y-2'}>
+    <div className={compact ? 'space-y-1.5' : 'border border-[#1e293b] rounded-xl p-3 space-y-2'}>
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
         <label className={`font-semibold text-[#475569] flex items-center gap-1.5 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
-          <LinkIcon className={compact ? 'w-3 h-3 text-violet-500' : 'w-3.5 h-3.5 text-violet-500'} />
+          <LinkIcon className={compact ? 'w-3 h-3 text-[#a78bfa]' : 'w-3.5 h-3.5 text-[#a78bfa]'} />
           Links e referências
           {links.length > 0 && (
-            <span className="bg-violet-100 text-violet-700 text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>
+            <span className="bg-violet-100 text-[#a78bfa] text-[10px] px-1.5 py-0.5 rounded-full">{links.length}</span>
           )}
         </label>
         {step === null && (
           <button
             type="button"
             onClick={() => setStep('picker')}
-            className="flex items-center gap-0.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium"
+            className="flex items-center gap-0.5 text-[11px] text-violet-600 hover:text-[#a78bfa] font-medium"
           >
             <Plus className="w-3 h-3" /> Adicionar
           </button>
@@ -328,7 +329,7 @@ function LinksEditor({
 
       {/* PASSO 1 — Picker de tipo */}
       {step === 'picker' && (
-        <div className="bg-slate-50 rounded-lg border border-[#e2e8f0] p-2.5 space-y-1.5">
+        <div className="bg-slate-50 rounded-lg border border-[#1e293b] p-2.5 space-y-1.5">
           <p className={`font-medium text-[#475569] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
             O que você quer adicionar?
           </p>
@@ -338,7 +339,7 @@ function LinksEditor({
                 key={value}
                 type="button"
                 onClick={() => setStep(value)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] bg-white hover:border-violet-300 hover:bg-violet-50 transition-colors ${compact ? 'text-[10px]' : 'text-[11px]'} font-medium text-[#334155]`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#1e293b] bg-[#182233] hover:border-[#2563EB]/50 hover:bg-[#1e293b] transition-colors ${compact ? 'text-[10px]' : 'text-[11px]'} font-medium text-[#CBD5E1]`}
               >
                 <Icon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${color}`} />
                 {label}
@@ -359,10 +360,10 @@ function LinksEditor({
       {selectedTypeCfg && (() => {
         const TypeIcon = selectedTypeCfg.Icon
         return (
-          <div className="bg-violet-50 rounded-lg border border-violet-100 p-2.5 space-y-2">
+          <div className="bg-[#8b5cf6]/10 rounded-lg border border-[#8b5cf6]/20 p-2.5 space-y-2">
             {/* Título do tipo selecionado */}
             <div className="flex items-center justify-between">
-              <span className={`flex items-center gap-1.5 font-semibold text-[#334155] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+              <span className={`flex items-center gap-1.5 font-semibold text-[#CBD5E1] ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                 <TypeIcon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${selectedTypeCfg.color}`} />
                 {selectedTypeCfg.label}
               </span>
@@ -406,7 +407,7 @@ function LinksEditor({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-violet-200 rounded-lg py-4 bg-white hover:border-violet-400 hover:bg-violet-50 transition-colors disabled:opacity-60"
+                  className="w-full flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-[#334155] rounded-lg py-4 bg-[#182233] hover:border-[#2563EB]/50 hover:bg-[#1e293b] transition-colors disabled:opacity-60"
                 >
                   {uploading
                     ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
@@ -447,10 +448,10 @@ function LinksEditor({
             const Icon = cfg?.Icon ?? LinkIcon
             return (
               <div key={link.id}
-                className="flex items-center gap-2 bg-white rounded-lg border border-[#e2e8f0] px-2.5 py-2 group">
-                <Icon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${cfg?.color ?? 'text-violet-500'} flex-shrink-0`} />
+                className="flex items-center gap-2 bg-[#182233] rounded-lg border border-[#1e293b] px-2.5 py-2 group">
+                <Icon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${cfg?.color ?? 'text-[#a78bfa]'} flex-shrink-0`} />
                 <a href={link.url} target="_blank" rel="noopener noreferrer"
-                  className={`flex-1 min-w-0 text-[#0f172a] hover:text-violet-700 truncate font-medium ${compact ? 'text-[11px]' : 'text-[12px]'}`}>
+                  className={`flex-1 min-w-0 text-[#F8FAFC] hover:text-[#a78bfa] truncate font-medium ${compact ? 'text-[11px]' : 'text-[12px]'}`}>
                   {link.label}
                 </a>
                 <button onClick={() => removeLink(link.id)}
@@ -511,14 +512,14 @@ function TaskEditPanel({
   }
 
   return (
-    <div className="bg-[#f8fafc] rounded-xl p-3 mt-2 space-y-3 border border-[#e2e8f0]">
+    <div className="bg-[#f8fafc] rounded-xl p-3 mt-2 space-y-3 border border-[#1e293b]">
       {/* Título */}
       <div>
         <label className="text-[10px] font-medium text-[#64748b] block mb-1">Título</label>
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full h-8 px-2.5 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
         />
       </div>
 
@@ -529,7 +530,7 @@ function TaskEditPanel({
           value={desc}
           onChange={e => setDesc(e.target.value)}
           rows={2}
-          className="w-full px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] text-[12px] bg-white resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full px-2.5 py-1.5 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] resize-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
         />
       </div>
 
@@ -537,12 +538,12 @@ function TaskEditPanel({
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prazo</label>
           <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            className="w-full h-8 px-2 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40" />
         </div>
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Prioridade</label>
           <select value={priority} onChange={e => setPri(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
+            className="w-full h-8 px-2 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40">
             <option value="baixa">Baixa</option>
             <option value="media">Normal</option>
             <option value="alta">Alta</option>
@@ -552,7 +553,7 @@ function TaskEditPanel({
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Status</label>
           <select value={status} onChange={e => setStatus(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
+            className="w-full h-8 px-2 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40">
             <option value="a_fazer">A fazer</option>
             <option value="em_andamento">Em andamento</option>
             <option value="revisao">Em revisão</option>
@@ -562,7 +563,7 @@ function TaskEditPanel({
         <div>
           <label className="text-[10px] font-medium text-[#64748b] block mb-1">Cliente</label>
           <select value={clientId} onChange={e => setClient(e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-[#e2e8f0] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400">
+            className="w-full h-8 px-2 rounded-lg border border-[#1e293b] text-[12px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40">
             <option value="__none__">Interno</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
           </select>
@@ -574,14 +575,14 @@ function TaskEditPanel({
 
       {/* Entrega do colaborador (read-only) */}
       {(task.collaborator_note || task.delivery_url) && (
-        <div className="bg-violet-50 rounded-lg p-2 space-y-1">
-          <p className="text-[10px] font-semibold text-violet-700 mb-1">Entrega do colaborador</p>
+        <div className="bg-[#8b5cf6]/10 rounded-lg p-2 space-y-1">
+          <p className="text-[10px] font-semibold text-[#a78bfa] mb-1">Entrega do colaborador</p>
           {task.collaborator_note && (
-            <p className="text-[11px] text-violet-800">📝 {task.collaborator_note}</p>
+            <p className="text-[11px] text-[#a78bfa]">📝 {task.collaborator_note}</p>
           )}
           {task.delivery_url && (
             <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[11px] text-violet-700 underline hover:text-violet-900">
+              className="flex items-center gap-1 text-[11px] text-[#a78bfa] underline hover:text-violet-900">
               <ExternalLink className="w-3 h-3" /> Ver entrega
             </a>
           )}
@@ -596,7 +597,7 @@ function TaskEditPanel({
           Salvar
         </button>
         <button onClick={onCancel}
-          className="flex-1 h-8 rounded-lg border border-[#e2e8f0] text-[12px] text-[#64748b] hover:bg-[#f1f5f9]">
+          className="flex-1 h-8 rounded-lg border border-[#1e293b] text-[12px] text-[#64748b] hover:bg-[#f1f5f9]">
           Cancelar
         </button>
       </div>
@@ -632,14 +633,14 @@ function TaskViewModal({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.18 }}
-        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl max-h-[88vh] overflow-y-auto"
+        className="bg-[#111827] border border-[#1e293b] w-full max-w-lg rounded-2xl shadow-2xl max-h-[88vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 sticky top-0 bg-white border-b border-[#f1f5f9] z-10">
+        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 sticky top-0 bg-[#111827] border-b border-[#1e293b] z-10">
           <div className="flex-1 min-w-0">
             <h2 className={`text-[15px] font-bold leading-snug ${
-              task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#0f172a]'
+              task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#F8FAFC]'
             }`}>{task.title}</h2>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -669,7 +670,7 @@ function TaskViewModal({
             <button
               onClick={onEdit}
               title="Editar"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#e2e8f0] text-[11px] text-[#475569] hover:bg-[#f8fafc] transition-colors font-medium"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#1e293b] text-[11px] text-[#475569] hover:bg-[#f8fafc] transition-colors font-medium"
             >
               <Pencil className="w-3 h-3" /> Editar
             </button>
@@ -684,7 +685,7 @@ function TaskViewModal({
           {task.description && (
             <div className="bg-[#f8fafc] rounded-xl p-3.5">
               <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1.5">Descrição</p>
-              <p className="text-[13px] text-[#334155] leading-relaxed whitespace-pre-wrap">{task.description}</p>
+              <p className="text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap">{task.description}</p>
             </div>
           )}
 
@@ -699,17 +700,17 @@ function TaskViewModal({
                   // Prévia de imagem
                   if (link.type === 'imagem') {
                     return (
-                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#1e293b]">
                         <img
                           src={link.url}
                           alt={link.label}
                           className="w-full max-h-64 object-cover"
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
-                        <div className="flex items-center justify-between px-3 py-2 bg-white">
-                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                        <div className="flex items-center justify-between px-3 py-2 bg-[#182233]">
+                          <span className="text-[11px] font-medium text-[#CBD5E1] truncate flex-1">{link.label}</span>
                           <a href={link.url} target="_blank" rel="noopener noreferrer"
-                            className="text-[#94a3b8] hover:text-violet-500 ml-2 flex-shrink-0">
+                            className="text-[#94a3b8] hover:text-[#a78bfa] ml-2 flex-shrink-0">
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
@@ -720,17 +721,17 @@ function TaskViewModal({
                   // Prévia de vídeo
                   if (link.type === 'video') {
                     return (
-                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                      <div key={link.id} className="rounded-xl overflow-hidden border border-[#1e293b]">
                         <video
                           src={link.url}
                           controls
                           className="w-full max-h-64 bg-black"
                           preload="metadata"
                         />
-                        <div className="flex items-center justify-between px-3 py-2 bg-white">
-                          <span className="text-[11px] font-medium text-[#334155] truncate flex-1">{link.label}</span>
+                        <div className="flex items-center justify-between px-3 py-2 bg-[#182233]">
+                          <span className="text-[11px] font-medium text-[#CBD5E1] truncate flex-1">{link.label}</span>
                           <a href={link.url} target="_blank" rel="noopener noreferrer"
-                            className="text-[#94a3b8] hover:text-violet-500 ml-2 flex-shrink-0">
+                            className="text-[#94a3b8] hover:text-[#a78bfa] ml-2 flex-shrink-0">
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
@@ -746,20 +747,20 @@ function TaskViewModal({
                   }
                   const Icon = iconMap[link.type] ?? LinkIcon
                   const colorMap: Record<string, string> = {
-                    link:    'text-violet-800 bg-violet-50',
+                    link:    'text-[#a78bfa] bg-[#8b5cf6]/10',
                     arquivo: 'text-amber-800 bg-amber-50',
                     pasta:   'text-emerald-800 bg-emerald-50',
                   }
-                  const colorCls = colorMap[link.type] ?? 'text-violet-800 bg-violet-50'
+                  const colorCls = colorMap[link.type] ?? 'text-[#a78bfa] bg-[#8b5cf6]/10'
 
                   return (
                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl border border-[#e2e8f0] hover:border-violet-300 hover:bg-violet-50/50 transition-all group">
+                      className="flex items-center gap-3 p-3 rounded-xl border border-[#1e293b] hover:border-[#2563EB]/50 hover:bg-[#1e293b] transition-all group">
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorCls}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium text-[#334155] truncate group-hover:text-violet-700">{link.label}</p>
+                        <p className="text-[12px] font-medium text-[#CBD5E1] truncate group-hover:text-[#a78bfa]">{link.label}</p>
                         <p className="text-[10px] text-[#94a3b8] truncate">{link.url}</p>
                       </div>
                       <ExternalLink className="w-3 h-3 text-[#c0c0c0] group-hover:text-violet-400 flex-shrink-0" />
@@ -772,14 +773,14 @@ function TaskViewModal({
 
           {/* Entrega do colaborador */}
           {(task.collaborator_note || task.delivery_url) && (
-            <div className="bg-violet-50 rounded-xl p-3.5 border border-violet-100 space-y-1.5">
-              <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Entrega do colaborador</p>
+            <div className="bg-[#8b5cf6]/10 rounded-xl p-3.5 border border-[#8b5cf6]/20 space-y-1.5">
+              <p className="text-[10px] font-semibold text-[#a78bfa] uppercase tracking-wider">Entrega do colaborador</p>
               {task.collaborator_note && (
-                <p className="text-[12px] text-violet-800 leading-relaxed">📝 {task.collaborator_note}</p>
+                <p className="text-[12px] text-[#a78bfa] leading-relaxed">📝 {task.collaborator_note}</p>
               )}
               {task.delivery_url && (
                 <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-violet-800 font-medium">
+                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-[#a78bfa] font-medium">
                   <ExternalLink className="w-3 h-3" /> Ver entrega enviada
                 </a>
               )}
@@ -890,11 +891,11 @@ function MemberDetailModal({
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 40 }}
         transition={{ duration: 0.2 }}
-        className="bg-white h-full w-full max-w-md flex flex-col shadow-2xl"
+        className="bg-[#111827] border-l border-[#1e293b] h-full w-full max-w-md flex flex-col shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header do membro */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#f1f5f9] flex-shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1e293b] flex-shrink-0">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
             style={{ backgroundColor: member.color }}
@@ -904,7 +905,7 @@ function MemberDetailModal({
               : initial}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-[#0f172a] truncate">{member.name}</p>
+            <p className="text-[14px] font-bold text-[#F8FAFC] truncate">{member.name}</p>
             <p className="text-[11px] text-[#94a3b8]">{member.role || 'Sem cargo'}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -944,7 +945,7 @@ function MemberDetailModal({
         {/* Resumo de tarefas */}
         <div className="px-5 py-2.5 border-b border-[#f8fafc] flex gap-4 flex-shrink-0">
           <span className="text-[11px] text-[#94a3b8]">
-            <strong className="text-[#0f172a]">{localTasks.length}</strong> total
+            <strong className="text-[#F8FAFC]">{localTasks.length}</strong> total
           </span>
           <span className="text-[11px] text-amber-600">
             <strong>{pending}</strong> pendente{pending !== 1 ? 's' : ''}
@@ -981,7 +982,7 @@ function MemberDetailModal({
                   className={`rounded-xl border transition-all ${
                     task.status === 'concluido'
                       ? 'border-[#e2e8f0] bg-[#fafafa] opacity-70'
-                      : 'border-[#e8e8e8] bg-white hover:border-violet-200 hover:shadow-sm'
+                      : 'border-[#1e293b] bg-[#182233] hover:border-[#2563EB]/50'
                   }`}
                 >
                   {/* Linha principal da tarefa — clicável para visualizar */}
@@ -992,7 +993,7 @@ function MemberDetailModal({
                     <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <p className={`text-[12.5px] font-semibold leading-snug ${
-                          task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#0f172a]'
+                          task.status === 'concluido' ? 'line-through text-[#94a3b8]' : 'text-[#F8FAFC]'
                         }`}>
                           {task.title}
                         </p>
@@ -1025,7 +1026,7 @@ function MemberDetailModal({
                           )}
                           {/* Indica que tem links */}
                           {Array.isArray(task.task_links) && task.task_links.length > 0 && (
-                            <span className="text-[9.5px] text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded-full font-medium">
+                            <span className="text-[9.5px] text-[#a78bfa] bg-[#8b5cf6]/10 px-1.5 py-0.5 rounded-full font-medium">
                               {task.task_links.length} anexo{task.task_links.length !== 1 ? 's' : ''}
                             </span>
                           )}
@@ -1038,7 +1039,7 @@ function MemberDetailModal({
                           onClick={() => setExpanded(isExpanded ? null : task.id)}
                           title="Editar"
                           className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
-                            isExpanded ? 'bg-violet-100 text-violet-600' : 'text-[#c0c0c0] hover:bg-[#f1f5f9] hover:text-[#0f172a]'
+                            isExpanded ? 'bg-violet-100 text-violet-600' : 'text-[#c0c0c0] hover:bg-[#f1f5f9] hover:text-[#F8FAFC]'
                           }`}
                         >
                           <Pencil className="w-3 h-3" />
@@ -1066,7 +1067,7 @@ function MemberDetailModal({
                         </button>
                         <button
                           onClick={() => setDeletingId(null)}
-                          className="text-[11px] text-[#64748b] hover:text-[#0f172a] px-1"
+                          className="text-[11px] text-[#64748b] hover:text-[#F8FAFC] px-1"
                         >
                           Não
                         </button>
@@ -1160,12 +1161,12 @@ function MemberModal({
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+        className="bg-[#111827] border border-[#1e293b] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-bold text-[#0f172a]">
+          <h2 className="text-[15px] font-bold text-[#F8FAFC]">
             {isEdit ? 'Editar membro' : 'Novo membro'}
           </h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center">
@@ -1206,7 +1207,7 @@ function MemberModal({
                 value={value}
                 onChange={e => set(e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+                className="w-full h-9 px-3 rounded-lg border border-[#1e293b] bg-[#182233] text-[13px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-transparent"
               />
             </div>
           ))}
@@ -1222,7 +1223,7 @@ function MemberModal({
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             {isEdit ? 'Salvar' : 'Adicionar'}
           </button>
-          <button onClick={onClose} className="flex-1 h-9 rounded-lg border border-[#e2e8f0] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
+          <button onClick={onClose} className="flex-1 h-9 rounded-lg border border-[#1e293b] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
             Cancelar
           </button>
         </div>
@@ -1301,7 +1302,7 @@ function NewTaskModal({
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-[#111827] border border-[#1e293b] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -1316,7 +1317,7 @@ function NewTaskModal({
                 : initial}
             </div>
             <div>
-              <h2 className="text-[14px] font-bold text-[#0f172a]">Nova demanda</h2>
+              <h2 className="text-[14px] font-bold text-[#F8FAFC]">Nova demanda</h2>
               <p className="text-[11px] text-[#94a3b8]">Para {member.name}</p>
             </div>
           </div>
@@ -1333,7 +1334,7 @@ function NewTaskModal({
             onChange={e => setTitle(e.target.value)}
             placeholder="Descreva a demanda..."
             autoFocus
-            className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+            className="w-full h-9 px-3 rounded-lg border border-[#1e293b] bg-[#182233] text-[13px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-transparent"
           />
         </div>
 
@@ -1345,7 +1346,7 @@ function NewTaskModal({
             onChange={e => setDesc(e.target.value)}
             placeholder="Detalhes, referências, observações..."
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-[#e2e8f0] text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border border-[#1e293b] bg-[#182233] text-[13px] text-[#E2E8F0] placeholder:text-[#64748b] resize-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-transparent"
           />
         </div>
 
@@ -1359,7 +1360,7 @@ function NewTaskModal({
               type="date"
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              className="w-full h-9 px-3 rounded-lg border border-[#1e293b] bg-[#182233] text-[13px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-transparent"
             />
           </div>
           <div>
@@ -1368,7 +1369,7 @@ function NewTaskModal({
               type="time"
               value={dueTime}
               onChange={e => setDueTime(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              className="w-full h-9 px-3 rounded-lg border border-[#1e293b] bg-[#182233] text-[13px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-transparent"
             />
           </div>
         </div>
@@ -1382,7 +1383,7 @@ function NewTaskModal({
             <select
               value={priority}
               onChange={e => setPriority(e.target.value)}
-              className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full h-9 px-2 rounded-lg border border-[#1e293b] text-[13px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
             >
               {PRIORITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -1392,7 +1393,7 @@ function NewTaskModal({
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full h-9 px-2 rounded-lg border border-[#1e293b] text-[13px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
             >
               {STATUS_OPTIONS_FORM.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -1407,7 +1408,7 @@ function NewTaskModal({
           <select
             value={clientId || '__none__'}
             onChange={e => setClientId(e.target.value === '__none__' ? null : e.target.value)}
-            className="w-full h-9 px-2 rounded-lg border border-[#e2e8f0] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+            className="w-full h-9 px-2 rounded-lg border border-[#1e293b] text-[13px] bg-[#182233] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
           >
             <option value="__none__">Interno (sem cliente)</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
@@ -1427,7 +1428,7 @@ function NewTaskModal({
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             Criar demanda
           </button>
-          <button onClick={onClose} className="flex-1 h-9 rounded-lg border border-[#e2e8f0] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
+          <button onClick={onClose} className="flex-1 h-9 rounded-lg border border-[#1e293b] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
             Cancelar
           </button>
         </div>
@@ -1466,13 +1467,13 @@ function MemberCard({
   return (
     <>
       <div
-        className="rounded-2xl border border-[#e8e8e8] bg-white p-4 flex flex-col gap-3 transition-all cursor-pointer hover:border-violet-300 hover:shadow-md hover:shadow-violet-50 overflow-hidden min-w-0"
+        className="rounded-2xl border border-[#1e293b] bg-[#111827] p-4 flex flex-col gap-3 transition-all cursor-pointer hover:border-[#2563EB]/50 overflow-hidden min-w-0"
         onClick={onOpenDetail}
       >
         {/* Avatar + info */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
             style={{ backgroundColor: member.color }}
           >
             {member.avatar_url
@@ -1480,8 +1481,8 @@ function MemberCard({
               : initial}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-[#0f172a] truncate">{member.name}</p>
-            <p className="text-[11px] text-[#94a3b8] truncate">{member.role || 'Sem cargo'}</p>
+            <p className="text-[13px] font-semibold text-[#F8FAFC] truncate">{member.name}</p>
+            <span className="inline-block mt-0.5 text-[10px] text-[#cbd5e1] bg-[#1e293b] px-2 py-0.5 rounded-full truncate max-w-full">{member.role || 'Sem cargo'}</span>
           </div>
           <span
             className="text-[11px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
@@ -1494,13 +1495,13 @@ function MemberCard({
         {/* Contatos */}
         <div className="flex flex-col gap-1 min-w-0">
           {member.whatsapp && (
-            <div className="flex items-center gap-1.5 text-[11px] text-[#64748b] min-w-0">
+            <div className="flex items-center gap-1.5 text-[11px] text-[#94a3b8] min-w-0">
               <Phone className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{member.whatsapp}</span>
             </div>
           )}
           {member.email && (
-            <div className="flex items-center gap-1.5 text-[11px] text-[#64748b] min-w-0">
+            <div className="flex items-center gap-1.5 text-[11px] text-[#94a3b8] min-w-0">
               <Mail className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{member.email}</span>
             </div>
@@ -1508,13 +1509,13 @@ function MemberCard({
         </div>
 
         {/* Ações — duas linhas para não estourar */}
-        <div className="flex flex-col gap-1.5 pt-1 border-t border-[#f1f5f9]" onClick={e => e.stopPropagation()}>
+        <div className="flex flex-col gap-1.5 pt-2 border-t border-[#1e293b]" onClick={e => e.stopPropagation()}>
           {/* Linha 1: ações primárias */}
           <div className="flex gap-1.5">
             <button
               onClick={onNewTask}
               title="Nova demanda"
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] text-violet-600 bg-violet-50 hover:bg-violet-100 transition-colors font-medium min-w-0"
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] text-[#a78bfa] bg-[#8b5cf6]/15 hover:bg-[#8b5cf6]/25 transition-colors font-medium min-w-0"
             >
               <Plus className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">Demanda</span>
@@ -1524,7 +1525,7 @@ function MemberCard({
               <button
                 onClick={() => setShowWhatsApp(true)}
                 title="Enviar portal via WhatsApp"
-                className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] text-[#25D366] bg-[#f0fdf4] hover:bg-[#dcfce7] transition-colors font-medium min-w-0"
+                className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] text-[#4ade80] bg-[#22C55E]/15 hover:bg-[#22C55E]/25 transition-colors font-medium min-w-0"
               >
                 <WaIcon />
                 <span className="truncate">WhatsApp</span>
@@ -1537,7 +1538,7 @@ function MemberCard({
             <button
               onClick={copyLink}
               title="Copiar link do portal"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-[#64748b] hover:bg-[#f1f5f9] transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors"
             >
               <Copy className="w-3 h-3 flex-shrink-0" />
               <span className="text-[10px]">Portal</span>
@@ -1547,21 +1548,21 @@ function MemberCard({
               target="_blank"
               rel="noopener noreferrer"
               title="Abrir portal"
-              className="flex items-center p-1.5 rounded-lg text-[#64748b] hover:bg-[#f1f5f9] transition-colors"
+              className="flex items-center p-1.5 rounded-lg text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
             </a>
             <button
               onClick={onEdit}
               title="Editar membro"
-              className="flex items-center p-1.5 rounded-lg text-[#64748b] hover:bg-[#f1f5f9] transition-colors"
+              className="flex items-center p-1.5 rounded-lg text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors"
             >
               <Pencil className="w-3 h-3" />
             </button>
             <button
               onClick={onDelete}
               title="Remover membro"
-              className="flex items-center p-1.5 rounded-lg text-red-700 hover:bg-red-50 transition-colors ml-auto"
+              className="flex items-center p-1.5 rounded-lg text-[#f87171] hover:bg-[#ef4444]/10 transition-colors ml-auto"
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -1604,18 +1605,18 @@ function TaskCard({
       draggable={!!onDragStart}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`bg-white rounded-xl border p-3 space-y-2 transition-all select-none ${
+      className={`bg-[#182233] rounded-xl border p-3 space-y-2 transition-all select-none ${
         onDragStart ? 'cursor-grab active:cursor-grabbing' : ''
       } ${
         isDragging
-          ? 'border-violet-400 shadow-lg opacity-40 scale-95'
-          : 'border-[#e8e8e8] hover:border-[#d0d0d0]'
+          ? 'border-[#2563EB] shadow-lg opacity-40 scale-95'
+          : 'border-[#1e293b] hover:border-[#334155]'
       }`}
     >
       {/* Título + prioridade + editar */}
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-[12.5px] font-medium text-[#0f172a] leading-snug line-clamp-2">{task.title}</p>
+          <p className="text-[12.5px] font-medium text-[#F8FAFC] leading-snug line-clamp-2">{task.title}</p>
           {task.clients && (
             <p className="text-[10.5px] text-[#94a3b8] mt-0.5 truncate">🏢 {task.clients.company_name}</p>
           )}
@@ -1626,7 +1627,7 @@ function TaskCard({
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <span
             className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ color: pri.color, backgroundColor: `${pri.color}18` }}
+            style={{ color: pri.color, backgroundColor: `${pri.color}26` }}
           >
             {pri.label}
           </span>
@@ -1635,7 +1636,7 @@ function TaskCard({
               onMouseDown={e => e.stopPropagation()}
               onClick={e => { e.stopPropagation(); onEdit() }}
               title="Editar demanda"
-              className="w-5 h-5 rounded flex items-center justify-center text-[#c0c0c0] hover:text-violet-600 hover:bg-violet-50 transition-colors"
+              className="w-5 h-5 rounded flex items-center justify-center text-[#64748b] hover:text-[#a78bfa] hover:bg-[#8b5cf6]/15 transition-colors"
             >
               <Pencil className="w-2.5 h-2.5" />
             </button>
@@ -1662,23 +1663,23 @@ function TaskCard({
       {(task.collaborator_note || task.delivery_url) && (
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-1 text-[10.5px] text-violet-600 hover:text-violet-800 w-full"
+          className="flex items-center gap-1 text-[10.5px] text-violet-600 hover:text-[#a78bfa] w-full"
         >
           <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
           Ver entrega do colaborador
         </button>
       )}
       {open && (
-        <div className="bg-violet-50 rounded-lg p-2 space-y-1 text-[11px]">
+        <div className="bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 rounded-lg p-2 space-y-1 text-[11px]">
           {task.collaborator_note && (
-            <p className="text-[#4c1d95]">📝 {task.collaborator_note}</p>
+            <p className="text-[#c4b5fd]">📝 {task.collaborator_note}</p>
           )}
           {task.delivery_url && (
             <a
               href={task.delivery_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-violet-700 underline hover:text-violet-900"
+              className="flex items-center gap-1 text-[#a78bfa] underline hover:text-[#c4b5fd]"
             >
               <ExternalLink className="w-3 h-3" /> Ver entrega
             </a>
@@ -1688,7 +1689,7 @@ function TaskCard({
 
       {/* Membro responsável (mostrado no board por status) */}
       {member && (
-        <div className="flex items-center gap-1.5 pt-1 border-t border-[#f8f8f8]">
+        <div className="flex items-center gap-1.5 pt-1 border-t border-[#1e293b]">
           <div
             className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0"
             style={{ backgroundColor: member.color }}
@@ -1724,11 +1725,11 @@ function BoardTaskEditModal({
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5"
+        className="bg-[#111827] border border-[#1e293b] rounded-2xl shadow-2xl w-full max-w-sm p-5"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[14px] font-bold text-[#0f172a]">Editar demanda</h3>
+          <h3 className="text-[14px] font-bold text-[#F8FAFC]">Editar demanda</h3>
           <button
             onClick={onClose}
             className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center"
@@ -1832,7 +1833,7 @@ function Board({ tasks, members, clients, filteredMemberId }: {
               >
                 {/* Cabeçalho da coluna */}
                 <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-xl transition-colors ${
-                  isDragOver ? 'bg-violet-50 ring-2 ring-violet-200' : ''
+                  isDragOver ? 'bg-[#2563EB]/10 ring-2 ring-[#2563EB]/30' : ''
                 }`}>
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
@@ -1841,7 +1842,7 @@ function Board({ tasks, members, clients, filteredMemberId }: {
                     {member.name[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-[#0f172a] truncate">{member.name}</p>
+                    <p className="text-[12px] font-semibold text-[#F8FAFC] truncate">{member.name}</p>
                     {member.role && (
                       <p className="text-[10px] text-[#94a3b8] truncate">{member.role}</p>
                     )}
@@ -1853,13 +1854,13 @@ function Board({ tasks, members, clients, filteredMemberId }: {
 
                 {/* Zona de drop */}
                 <div className={`space-y-2 min-h-[80px] rounded-xl p-1 transition-colors ${
-                  isDragOver ? 'bg-violet-50/60' : ''
+                  isDragOver ? 'bg-[#2563EB]/5' : ''
                 }`}>
                   {memberTasks.length === 0 ? (
                     <p className={`text-[11px] text-center py-8 border-2 border-dashed rounded-xl transition-colors ${
                       isDragOver
-                        ? 'border-violet-400 text-violet-500 bg-white'
-                        : 'border-[#e2e8f0] text-[#94a3b8]'
+                        ? 'border-[#2563EB]/50 text-[#60A5FA] bg-[#182233]'
+                        : 'border-[#1e293b] text-[#64748b]'
                     }`}>
                       {isDragOver ? '↓ Soltar aqui' : 'Sem tarefas'}
                     </p>
@@ -1883,7 +1884,7 @@ function Board({ tasks, members, clients, filteredMemberId }: {
                   )}
                   {/* Drop target quando a coluna já tem tarefas */}
                   {isDragOver && memberTasks.length > 0 && (
-                    <div className="h-1.5 rounded-full bg-violet-400 mx-1 animate-pulse" />
+                    <div className="h-1.5 rounded-full bg-[#2563EB] mx-1 animate-pulse" />
                   )}
                 </div>
               </div>
@@ -1921,12 +1922,12 @@ function Board({ tasks, members, clients, filteredMemberId }: {
             <div key={status} className="flex-shrink-0 w-64">
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
-                <span className="text-[12px] font-semibold text-[#0f172a]">{st.label}</span>
+                <span className="text-[12px] font-semibold text-[#F8FAFC]">{st.label}</span>
                 <span className="ml-auto text-[10px] text-[#94a3b8]">{stTasks.length}</span>
               </div>
               <div className="space-y-2">
                 {stTasks.length === 0
-                  ? <p className="text-[11px] text-[#94a3b8] text-center py-6 border border-dashed border-[#e2e8f0] rounded-xl">Vazio</p>
+                  ? <p className="text-[11px] text-[#64748b] text-center py-6 border border-dashed border-[#1e293b] rounded-xl">Vazio</p>
                   : stTasks.map(t => (
                       <TaskCard
                         key={t.id}
@@ -1957,13 +1958,13 @@ function Board({ tasks, members, clients, filteredMemberId }: {
 
 function ViewTabs({ view, onChange }: { view: BoardView; onChange: (v: BoardView) => void }) {
   return (
-    <div className="flex gap-1 bg-[#f1f5f9] p-1 rounded-xl w-fit mb-4">
+    <div className="flex gap-1 bg-[#182233] border border-[#1e293b] p-1 rounded-xl w-fit mb-4">
       {([['responsavel', 'Por responsável'], ['status', 'Por status']] as const).map(([v, label]) => (
         <button
           key={v}
           onClick={() => onChange(v)}
           className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-            view === v ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#64748b] hover:text-[#0f172a]'
+            view === v ? 'bg-[#1e293b] text-white border border-[#334155]' : 'text-[#94a3b8] hover:text-white'
           }`}
         >
           {label}
@@ -1998,10 +1999,10 @@ function WorkloadBar({ member, count }: { member: TeamMember; count: number }) {
       </div>
 
       {/* Nome */}
-      <span className="text-[12px] font-medium text-[#0f172a] w-32 truncate flex-shrink-0">{member.name}</span>
+      <span className="text-[12px] font-medium text-[#F8FAFC] w-32 truncate flex-shrink-0">{member.name}</span>
 
       {/* Barra */}
-      <div className="flex-1 h-2.5 rounded-full bg-[#f1f5f9] overflow-hidden">
+      <div className="flex-1 h-2.5 rounded-full bg-[#1e293b] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, backgroundColor: level.color }}
@@ -2035,7 +2036,7 @@ function DeleteConfirm({ name, onConfirm, onCancel }: {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 space-y-4"
+        className="bg-[#111827] border border-[#1e293b] rounded-2xl shadow-2xl w-full max-w-xs p-6 space-y-4"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -2043,7 +2044,7 @@ function DeleteConfirm({ name, onConfirm, onCancel }: {
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <p className="text-[14px] font-bold text-[#0f172a]">Remover membro?</p>
+            <p className="text-[14px] font-bold text-[#F8FAFC]">Remover membro?</p>
             <p className="text-[12px] text-[#64748b] mt-1">
               <strong>{name}</strong> será removido da equipe. As tarefas delegadas continuarão existindo, mas sem responsável.
             </p>
@@ -2053,7 +2054,7 @@ function DeleteConfirm({ name, onConfirm, onCancel }: {
           <button onClick={onConfirm} className="flex-1 h-9 rounded-lg bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600">
             Remover
           </button>
-          <button onClick={onCancel} className="flex-1 h-9 rounded-lg border border-[#e2e8f0] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
+          <button onClick={onCancel} className="flex-1 h-9 rounded-lg border border-[#1e293b] text-[13px] text-[#475569] hover:bg-[#f8fafc]">
             Cancelar
           </button>
         </div>
@@ -2113,13 +2114,18 @@ export function TeamPage() {
   const openEdit = (m: TeamMember) => { setEditing(m); setShowModal(true) }
   const closeModal = () => { setShowModal(false); setEditing(undefined) }
 
+  const [memberSearch, setMemberSearch] = useState('')
+  const visibleMembers = activeMembersWithCount.filter(({ member }) =>
+    member.name.toLowerCase().includes(memberSearch.trim().toLowerCase())
+  )
+
   return (
-    <div className="min-h-full bg-[#f5f5f7]">
+    <div className="min-h-full bg-[#0B1020]">
       <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
 
         {/* Tabs + Novo membro */}
         <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1 bg-white p-1 rounded-xl w-fit border border-[#e8e8e8]">
+        <div className="flex gap-1 bg-[#182233] p-1 rounded-xl w-fit border border-[#1e293b]">
           {([
             ['membros', Users,         'Membros'],
             ['board',   ClipboardList, 'Board de tarefas'],
@@ -2128,11 +2134,11 @@ export function TeamPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                tab === t ? 'bg-[#0f0f0f] text-white' : 'text-[#64748b] hover:text-[#0f0f0f]'
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-medium transition-all ${
+                tab === t ? 'bg-[#1e293b] text-white border border-[#334155]' : 'text-[#94a3b8] hover:text-white border border-transparent'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" /> {label}
+              <Icon className={`w-3.5 h-3.5 ${tab === t ? 'text-[#60A5FA]' : ''}`} /> {label}
             </button>
           ))}
         </div>
@@ -2145,37 +2151,53 @@ export function TeamPage() {
               }
               setEditing(undefined); setShowModal(true)
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-colors flex-shrink-0 ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-colors flex-shrink-0 ml-auto ${
               teamLimitReached
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#0f0f0f] text-white hover:bg-[#1a1a1a]'
+                ? 'bg-[#182233] text-[#475569] cursor-not-allowed border border-[#1e293b]'
+                : 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20'
             }`}
             title={teamLimitReached ? `Limite de ${maxTeamMembers} membro(s) do plano atingido` : undefined}
           >
-            <UserPlus className="w-3.5 h-3.5" /> Novo membro
+            <UserPlus className="w-4 h-4" /> Novo membro
             {teamLimitReached && <span className="text-[10px] ml-1 opacity-70">({activeMembers}/{maxTeamMembers})</span>}
           </button>
         </div>
 
         {/* ── Tab: Membros ── */}
         {tab === 'membros' && (
-          <div>
+          <div className="space-y-5">
+            {/* Busca + filtro */}
+            <div className="flex items-center justify-end gap-2">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
+                <input
+                  value={memberSearch}
+                  onChange={e => setMemberSearch(e.target.value)}
+                  placeholder="Buscar membro..."
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50"
+                />
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#182233] border border-[#1e293b] flex items-center justify-center flex-shrink-0">
+                <Filter className="w-3.5 h-3.5 text-[#94a3b8]" />
+              </div>
+            </div>
+
             {loadingMembers ? (
               <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-[#94a3b8]" /></div>
             ) : activeMembersWithCount.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Users className="w-10 h-10 text-[#cbd5e1]" />
+                <Users className="w-10 h-10 text-[#CBD5E1]" />
                 <p className="text-[14px] font-medium text-[#94a3b8]">Nenhum membro ainda</p>
                 <button
                   onClick={() => setShowModal(true)}
-                  className="px-4 py-2 rounded-xl bg-[#0f0f0f] text-white text-[13px] font-medium hover:bg-[#1a1a1a]"
+                  className="px-4 py-2 rounded-xl bg-[#2563EB] text-white text-[13px] font-semibold hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
                 >
                   Adicionar primeiro membro
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-w-0">
-                {activeMembersWithCount.map(({ member, count }) => (
+                {visibleMembers.map(({ member, count }) => (
                   <MemberCard
                     key={member.id}
                     member={member}
@@ -2199,8 +2221,8 @@ export function TeamPage() {
               <div className="flex gap-2 flex-wrap mb-4">
                 <button
                   onClick={() => setFiltered(null)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
-                    !filteredMemberId ? 'bg-[#0f0f0f] text-white' : 'bg-white text-[#64748b] border border-[#e8e8e8] hover:border-[#d0d0d0]'
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                    !filteredMemberId ? 'bg-[#2563EB] text-white' : 'bg-[#182233] text-[#94a3b8] border border-[#1e293b] hover:border-[#334155]'
                   }`}
                 >
                   Todos
@@ -2209,10 +2231,10 @@ export function TeamPage() {
                   <button
                     key={member.id}
                     onClick={() => setFiltered(f => f === member.id ? null : member.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
                       filteredMemberId === member.id
                         ? 'text-white'
-                        : 'bg-white text-[#64748b] border border-[#e8e8e8] hover:border-[#d0d0d0]'
+                        : 'bg-[#182233] text-[#94a3b8] border border-[#1e293b] hover:border-[#334155]'
                     }`}
                     style={filteredMemberId === member.id ? { backgroundColor: member.color } : undefined}
                   >
@@ -2230,9 +2252,9 @@ export function TeamPage() {
               <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-[#94a3b8]" /></div>
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <ClipboardList className="w-10 h-10 text-[#cbd5e1]" />
+                <ClipboardList className="w-10 h-10 text-[#CBD5E1]" />
                 <p className="text-[14px] font-medium text-[#94a3b8]">Nenhuma tarefa delegada</p>
-                <p className="text-[12px] text-[#cbd5e1]">Atribua um responsável nas tarefas para elas aparecerem aqui</p>
+                <p className="text-[12px] text-[#64748b]">Atribua um responsável nas tarefas para elas aparecerem aqui</p>
               </div>
             ) : (
               <Board
@@ -2247,10 +2269,10 @@ export function TeamPage() {
 
         {/* ── Tab: Carga ── */}
         {tab === 'carga' && (
-          <div className="bg-white rounded-2xl border border-[#e8e8e8] p-6">
-            <h3 className="text-[14px] font-bold text-[#0f172a] mb-4">Carga de trabalho da equipe</h3>
+          <div className="bg-[#111827] rounded-2xl border border-[#1e293b] p-6">
+            <h3 className="text-[14px] font-bold text-[#F8FAFC] mb-4">Carga de trabalho da equipe</h3>
             {activeMembersWithCount.length === 0 ? (
-              <p className="text-[13px] text-[#94a3b8] text-center py-8">Nenhum membro cadastrado</p>
+              <p className="text-[13px] text-[#64748b] text-center py-8">Nenhum membro cadastrado</p>
             ) : (
               <div className="space-y-4">
                 {activeMembersWithCount
@@ -2258,7 +2280,7 @@ export function TeamPage() {
                   .map(({ member, count }) => (
                     <WorkloadBar key={member.id} member={member} count={count} />
                   ))}
-                <div className="pt-4 border-t border-[#f1f5f9] flex gap-6 text-[11px]">
+                <div className="pt-4 border-t border-[#1e293b] flex gap-6 text-[11px] text-[#94a3b8]">
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Tranquilo</span>
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400" />Atenção</span>
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Sobrecarregado</span>
