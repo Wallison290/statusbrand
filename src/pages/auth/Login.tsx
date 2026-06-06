@@ -55,22 +55,22 @@ export function Login() {
     <div className="h-screen flex overflow-hidden">
 
       {/* ── Left panel — imagem ──────────────────────────────────────────────── */}
-      <div className="hidden lg:block lg:w-[45%] relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-[#0a1020] items-center justify-center">
         <img
           src="/planer.png"
           alt="Kairo Hub"
-          className="absolute inset-0 w-full h-full object-cover object-center select-none"
+          className="w-full h-full object-contain select-none"
           draggable={false}
         />
       </div>
 
-      {/* ── Right panel — formulário ─────────────────────────────────────────── */}
-      <div className="flex-1 bg-[#f4f4f8] flex items-center justify-center p-5 overflow-y-auto">
+      {/* ── Right panel — formulário (rola só se a tela for muito baixa) ──────── */}
+      <div className="flex-1 bg-[#f4f4f8] overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
+          className="min-h-full w-full max-w-sm mx-auto flex flex-col justify-center p-5"
         >
 
           {/* Card */}
