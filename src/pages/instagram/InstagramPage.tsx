@@ -1,4 +1,4 @@
-// ── Página: Instagram Dashboard ────────────────────────────────────────────────
+// ── Página: Instagram Dashboard (tema dark) ───────────────────────────────────
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
@@ -21,6 +21,11 @@ import {
   type InstagramAccount,
 } from '@/hooks/useInstagram'
 
+// ── Paleta dark ───────────────────────────────────────────────────────────────
+// bg #0B0F14 · surface #111827 · elevated #0F172A · border #1F2937
+// primary #2563EB hover #1D4ED8 · text #FFFFFF / #9CA3AF / #D1D5DB
+// success #22C55E · warning #F59E0B · error #EF4444 · neutral #6B7280
+
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 type TabType = 'all' | 'scheduled' | 'published' | 'failed' | 'cancelled'
@@ -32,11 +37,11 @@ const POST_TYPE_CFG = {
 } as const
 
 const STATUS_CFG = {
-  scheduled:  { label: 'Agendado',   color: 'text-blue-900',  bg: 'bg-blue-50 border-blue-200',   dot: 'bg-blue-400',   Icon: Clock,        spin: false },
-  publishing: { label: 'Publicando', color: 'text-amber-900', bg: 'bg-amber-50 border-amber-200', dot: 'bg-amber-400',  Icon: Loader2,      spin: true  },
-  published:  { label: 'Publicado',  color: 'text-green-900', bg: 'bg-green-50 border-green-200', dot: 'bg-green-400',  Icon: CheckCircle2, spin: false },
-  failed:     { label: 'Falhou',     color: 'text-red-900',   bg: 'bg-red-50 border-red-200',     dot: 'bg-red-400',    Icon: XCircle,      spin: false },
-  cancelled:  { label: 'Cancelado',  color: 'text-gray-700',  bg: 'bg-gray-50 border-gray-200',   dot: 'bg-gray-300',   Icon: X,            spin: false },
+  scheduled:  { label: 'Agendado',   color: 'text-[#60A5FA]', bg: 'bg-[#2563EB]/10 border-[#2563EB]/30', dot: 'bg-[#2563EB]', Icon: Clock,        spin: false },
+  publishing: { label: 'Publicando', color: 'text-[#FBBF24]', bg: 'bg-[#F59E0B]/10 border-[#F59E0B]/30', dot: 'bg-[#F59E0B]', Icon: Loader2,      spin: true  },
+  published:  { label: 'Publicado',  color: 'text-[#4ADE80]', bg: 'bg-[#22C55E]/10 border-[#22C55E]/30', dot: 'bg-[#22C55E]', Icon: CheckCircle2, spin: false },
+  failed:     { label: 'Falhou',     color: 'text-[#F87171]', bg: 'bg-[#EF4444]/10 border-[#EF4444]/30', dot: 'bg-[#EF4444]', Icon: XCircle,      spin: false },
+  cancelled:  { label: 'Cancelado',  color: 'text-[#9CA3AF]', bg: 'bg-[#6B7280]/10 border-[#6B7280]/30', dot: 'bg-[#6B7280]', Icon: X,            spin: false },
 } as const
 
 const TABS: { value: TabType; label: string; statuses: string[] }[] = [
@@ -69,14 +74,14 @@ function AccountListCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="w-full bg-white rounded-2xl border border-[#e8e8e8] p-4 flex items-center gap-3 hover:border-[#c7c7c7] hover:shadow-sm transition-all text-left group"
+      className="w-full bg-[#111827] rounded-2xl border border-[#1F2937] p-4 flex items-center gap-3 hover:border-[#2563EB]/50 hover:bg-[#151d2e] transition-all text-left group"
     >
       {/* Avatar */}
       {account.profile_picture_url ? (
         <img
           src={account.profile_picture_url}
           alt={account.username}
-          className="w-12 h-12 rounded-full object-cover border-2 border-[#E1306C]/20 flex-shrink-0"
+          className="w-12 h-12 rounded-full object-cover border-2 border-[#E1306C]/30 flex-shrink-0"
         />
       ) : (
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center flex-shrink-0">
@@ -87,27 +92,27 @@ function AccountListCard({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[14px] font-semibold text-[#0f0f0f] truncate">@{account.username}</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+          <span className="text-[14px] font-semibold text-white truncate">@{account.username}</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
         </div>
-        <p className="text-[12px] text-[#94a3b8]">
+        <p className="text-[12px] text-[#9CA3AF]">
           {account.followers_count.toLocaleString('pt-BR')} seguidores
         </p>
         {/* Mini-badges */}
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             {scheduledCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#2563EB]/10 text-[#60A5FA] border border-[#2563EB]/30">
                 {scheduledCount} ag.
               </span>
             )}
             {publishedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#22C55E]/10 text-[#4ADE80] border border-[#22C55E]/30">
                 {publishedCount} pub.
               </span>
             )}
             {failedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-800 border border-red-200">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#EF4444]/10 text-[#F87171] border border-[#EF4444]/30">
                 {failedCount} falha{failedCount > 1 ? 's' : ''}
               </span>
             )}
@@ -116,7 +121,7 @@ function AccountListCard({
       </div>
 
       {/* Seta */}
-      <ChevronRight className="w-4 h-4 text-[#c7c7c7] group-hover:text-[#64748b] transition-colors flex-shrink-0" />
+      <ChevronRight className="w-4 h-4 text-[#6B7280] group-hover:text-[#9CA3AF] transition-colors flex-shrink-0" />
     </motion.button>
   )
 }
@@ -134,10 +139,10 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <TypeIcon className="w-4 h-4 text-[#64748b]" />
-          <span className="text-[13px] font-medium text-[#0f0f0f]">{typeCfg?.label}</span>
+          <TypeIcon className="w-4 h-4 text-[#9CA3AF]" />
+          <span className="text-[13px] font-medium text-white">{typeCfg?.label}</span>
         </div>
-        <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white border ${cfg.color}`}>
+        <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#0B0F14]/60 border border-[#1F2937] ${cfg.color}`}>
           <StatusIcon className={`w-3 h-3 ${cfg.spin ? 'animate-spin' : ''}`} />
           {cfg.label}
         </div>
@@ -147,14 +152,14 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
       {post.media_urls.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {post.media_urls.slice(0, 4).map((url, i) => (
-            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-white shadow-sm flex-shrink-0">
+            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#1F2937] shadow-sm flex-shrink-0">
               {post.post_type === 'REELS'
                 ? <video src={url} className="w-full h-full object-cover" />
                 : <img src={url} alt="" className="w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
               }
               {i === 3 && post.media_urls.length > 4 && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-[11px] font-bold">
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[11px] font-bold">
                   +{post.media_urls.length - 4}
                 </div>
               )}
@@ -165,12 +170,12 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
 
       {/* Legenda */}
       {post.caption && (
-        <p className="text-[13px] text-[#374151] line-clamp-2 leading-relaxed">{post.caption}</p>
+        <p className="text-[13px] text-[#D1D5DB] line-clamp-2 leading-relaxed">{post.caption}</p>
       )}
 
       {/* Rodapé */}
       <div className="flex items-center justify-between pt-0.5 flex-wrap gap-2">
-        <div className="flex items-center gap-1.5 text-[12px] text-[#64748b]">
+        <div className="flex items-center gap-1.5 text-[12px] text-[#9CA3AF]">
           <Calendar className="w-3.5 h-3.5" />
           {format(parseISO(post.scheduled_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
         </div>
@@ -179,7 +184,7 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
           {post.status === 'scheduled' && (
             <button
               onClick={() => onCancel(post.id)}
-              className="text-[11px] text-red-500 hover:text-red-700 font-medium transition-colors"
+              className="text-[11px] text-[#F87171] hover:text-[#EF4444] font-medium transition-colors"
             >
               Cancelar
             </button>
@@ -189,7 +194,7 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
               href={`https://www.instagram.com/p/${post.ig_post_id}/`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[11px] text-[#6366f1] hover:underline font-medium"
+              className="flex items-center gap-1 text-[11px] text-[#60A5FA] hover:text-[#2563EB] hover:underline font-medium"
             >
               <ExternalLink className="w-3 h-3" />
               Ver no Instagram
@@ -200,7 +205,7 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
 
       {/* Mensagem de erro */}
       {post.error_message && (
-        <div className="flex items-start gap-2 text-[11px] text-red-700 bg-white rounded-xl px-3 py-2 border border-red-200">
+        <div className="flex items-start gap-2 text-[11px] text-[#F87171] bg-[#EF4444]/10 rounded-xl px-3 py-2 border border-[#EF4444]/30">
           <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
           <span className="break-all">{post.error_message}</span>
         </div>
@@ -253,7 +258,7 @@ function AccountDetailView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-9 h-9 rounded-xl border border-[#e8e8e8] bg-white flex items-center justify-center text-[#64748b] hover:text-[#0f0f0f] hover:border-[#c7c7c7] transition-colors flex-shrink-0"
+          className="w-9 h-9 rounded-xl border border-[#1F2937] bg-[#111827] flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#2563EB]/50 transition-colors flex-shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -262,7 +267,7 @@ function AccountDetailView({
           <img
             src={account.profile_picture_url}
             alt={account.username}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#E1306C]/20 flex-shrink-0"
+            className="w-10 h-10 rounded-full object-cover border-2 border-[#E1306C]/30 flex-shrink-0"
           />
         ) : (
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center flex-shrink-0">
@@ -272,10 +277,10 @@ function AccountDetailView({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[16px] font-bold text-[#0f0f0f] truncate">@{account.username}</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+            <span className="text-[16px] font-bold text-white truncate">@{account.username}</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
           </div>
-          <p className="text-[12px] text-[#94a3b8]">
+          <p className="text-[12px] text-[#9CA3AF]">
             {account.followers_count.toLocaleString('pt-BR')} seguidores
           </p>
         </div>
@@ -283,16 +288,16 @@ function AccountDetailView({
         {/* Botão desconectar */}
         {confirmDisconnect ? (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-[11px] text-red-600 font-medium">Desconectar?</span>
+            <span className="text-[11px] text-[#F87171] font-medium">Desconectar?</span>
             <button
               onClick={() => { onDisconnect(account.id); onBack() }}
-              className="px-2.5 py-1.5 rounded-lg bg-red-500 text-white text-[11px] font-semibold hover:bg-red-600 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#EF4444] text-white text-[11px] font-semibold hover:bg-[#dc2626] transition-colors"
             >
               Sim
             </button>
             <button
               onClick={() => setConfirmDisconnect(false)}
-              className="px-2.5 py-1.5 rounded-lg border border-[#e0e0e0] text-[11px] text-[#666] hover:bg-[#f5f5f5] transition-colors"
+              className="px-2.5 py-1.5 rounded-lg border border-[#1F2937] text-[11px] text-[#9CA3AF] hover:bg-[#1F2937] transition-colors"
             >
               Não
             </button>
@@ -300,7 +305,7 @@ function AccountDetailView({
         ) : (
           <button
             onClick={() => setConfirmDisconnect(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 text-red-500 text-[11px] font-medium hover:bg-red-50 transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EF4444]/30 text-[#F87171] text-[11px] font-medium hover:bg-[#EF4444]/10 transition-colors flex-shrink-0"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Desconectar
@@ -311,22 +316,22 @@ function AccountDetailView({
       {/* Stats da conta */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Agendados',  value: stats.scheduled, color: 'text-blue-800',  bg: 'bg-blue-50'  },
-          { label: 'Publicados', value: stats.published, color: 'text-green-800', bg: 'bg-green-50' },
-          { label: 'Falhas',     value: stats.failed,    color: 'text-red-800',   bg: 'bg-red-50'   },
-          { label: 'Cancelados', value: stats.cancelled, color: 'text-gray-700',  bg: 'bg-gray-50'  },
+          { label: 'Agendados',  value: stats.scheduled, color: 'text-[#60A5FA]', bg: 'bg-[#2563EB]/10 border-[#2563EB]/20'  },
+          { label: 'Publicados', value: stats.published, color: 'text-[#4ADE80]', bg: 'bg-[#22C55E]/10 border-[#22C55E]/20' },
+          { label: 'Falhas',     value: stats.failed,    color: 'text-[#F87171]', bg: 'bg-[#EF4444]/10 border-[#EF4444]/20'   },
+          { label: 'Cancelados', value: stats.cancelled, color: 'text-[#9CA3AF]', bg: 'bg-[#6B7280]/10 border-[#6B7280]/20'  },
         ].map(s => (
-          <div key={s.label} className={`rounded-2xl border border-[#e8e8e8] ${s.bg} p-4 text-center`}>
+          <div key={s.label} className={`rounded-2xl border ${s.bg} p-4 text-center`}>
             <div className={`text-[22px] font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-[11px] text-[#64748b] mt-0.5 font-medium">{s.label}</div>
+            <div className="text-[11px] text-[#9CA3AF] mt-0.5 font-medium">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Posts */}
-      <div className="bg-white rounded-3xl border border-[#e8e8e8] overflow-hidden">
+      <div className="bg-[#111827] rounded-3xl border border-[#1F2937] overflow-hidden">
         {/* Tabs */}
-        <div className="flex border-b border-[#f0f0f0] px-2 pt-2 overflow-x-auto">
+        <div className="flex border-b border-[#1F2937] px-2 pt-2 overflow-x-auto">
           {TABS.map(t => {
             const count  = accountPosts.filter(p => t.statuses.includes(p.status)).length
             const active = tab === t.value
@@ -335,13 +340,13 @@ function AccountDetailView({
                 key={t.value}
                 onClick={() => setTab(t.value)}
                 className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-medium rounded-t-xl transition-colors ${
-                  active ? 'text-[#0f0f0f]' : 'text-[#94a3b8] hover:text-[#64748b]'
+                  active ? 'text-white' : 'text-[#6B7280] hover:text-[#9CA3AF]'
                 }`}
               >
                 {t.label}
                 {count > 0 && (
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                    active ? 'bg-[#0f0f0f] text-white' : 'bg-[#f1f5f9] text-[#64748b]'
+                    active ? 'bg-[#2563EB] text-white' : 'bg-[#1F2937] text-[#9CA3AF]'
                   }`}>
                     {count}
                   </span>
@@ -349,7 +354,7 @@ function AccountDetailView({
                 {active && (
                   <motion.div
                     layoutId="tab-underline-detail"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0f0f0f] rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563EB] rounded-full"
                   />
                 )}
               </button>
@@ -361,11 +366,11 @@ function AccountDetailView({
         <div className="p-4">
           {filteredPosts.length === 0 ? (
             <div className="text-center py-10">
-              <div className="w-10 h-10 rounded-2xl bg-[#f1f5f9] flex items-center justify-center mx-auto mb-3">
-                <Calendar className="w-5 h-5 text-[#94a3b8]" />
+              <div className="w-10 h-10 rounded-2xl bg-[#1F2937] flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-5 h-5 text-[#9CA3AF]" />
               </div>
-              <p className="text-[14px] font-semibold text-[#0f0f0f]">Nenhum post aqui</p>
-              <p className="text-[12px] text-[#94a3b8] mt-1">
+              <p className="text-[14px] font-semibold text-white">Nenhum post aqui</p>
+              <p className="text-[12px] text-[#9CA3AF] mt-1">
                 Ainda não há posts nesta categoria para esta conta.
               </p>
             </div>
@@ -436,19 +441,19 @@ export function InstagramPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] p-6">
+    <div className="min-h-full bg-[#0B0F14] p-6">
       <div className="max-w-3xl mx-auto space-y-5">
 
         {/* ── Header global ────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[20px] font-bold text-[#0f0f0f] flex items-center gap-2.5">
+            <h1 className="text-[20px] font-bold text-white flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center">
                 <Instagram className="w-4 h-4 text-white" />
               </div>
               Instagram
             </h1>
-            <p className="text-[13px] text-[#64748b] mt-1">
+            <p className="text-[13px] text-[#9CA3AF] mt-1">
               {selectedAccount
                 ? 'Detalhes da conta selecionada'
                 : 'Selecione uma conta para ver os detalhes'}
@@ -457,10 +462,11 @@ export function InstagramPage() {
           <button
             onClick={() => { refetchAccounts(); refetchPosts() }}
             disabled={isRefreshing}
-            className="w-9 h-9 rounded-xl border border-[#e8e8e8] bg-white flex items-center justify-center text-[#94a3b8] hover:text-[#0f0f0f] hover:border-[#d0d0d0] transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium text-[#D1D5DB] hover:text-white hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
             title="Atualizar"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
           </button>
         </div>
 
@@ -488,30 +494,33 @@ export function InstagramPage() {
               className="space-y-3"
             >
               <div className="flex items-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-[#94a3b8]" />
-                <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-wider">
+                <Users className="w-4 h-4 text-[#6B7280]" />
+                <h2 className="text-[13px] font-semibold text-[#9CA3AF] uppercase tracking-wider">
                   Contas conectadas
                 </h2>
               </div>
 
               {isLoading ? (
-                <div className="bg-white rounded-2xl border border-[#e8e8e8] p-8 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#94a3b8]" />
+                <div className="bg-[#111827] rounded-2xl border border-[#1F2937] p-8 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-[#9CA3AF]" />
                 </div>
               ) : accounts.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-[#e8e8e8] p-8 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center mx-auto mb-3">
-                    <Instagram className="w-6 h-6 text-white" />
+                <div className="bg-[#0B0F14] rounded-2xl border border-dashed border-[#1F2937] p-12 text-center">
+                  <div className="relative w-20 h-20 mx-auto mb-5">
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#E1306C] to-[#833AB4] blur-2xl opacity-40" />
+                    <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center shadow-lg shadow-[#E1306C]/30">
+                      <Instagram className="w-9 h-9 text-white" />
+                    </div>
                   </div>
-                  <p className="text-[14px] font-semibold text-[#0f0f0f]">Nenhuma conta conectada</p>
-                  <p className="text-[13px] text-[#64748b] mt-1 max-w-xs mx-auto">
+                  <p className="text-[16px] font-semibold text-white">Nenhuma conta conectada</p>
+                  <p className="text-[13px] text-[#9CA3AF] mt-1.5 max-w-xs mx-auto">
                     Conecte o Instagram de cada cliente no perfil do cliente.
                   </p>
                   <Link
                     to="/clients"
-                    className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-[#0f0f0f] text-white rounded-xl text-[13px] font-medium hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-[#2563EB] text-white rounded-xl text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
                   >
-                    <Users className="w-3.5 h-3.5" />
+                    <Users className="w-4 h-4" />
                     Ir para Clientes
                   </Link>
                 </div>
