@@ -1407,19 +1407,23 @@ export function Planner() {
   const [existingIgMedia, setExistingIgMedia] = useState<PlannerAttachment[]>([])
   const [igMediaToDelete, setIgMediaToDelete] = useState<PlannerAttachment[]>([])
 
-  // IG drag handlers
-  const igOnDragStart = useCallback((i: number) => { igDragIdx.current = i }, [])
-  const igOnDragEnter = useCallback((i: number) => { setIgDragOver(i) }, [])
-  const igOnDragEnd   = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
-  const igOnDrop      = useCallback((targetIdx: number) => {
+  // IG drag handlers — reordenação ao vivo (funciona em todas as direções)
+  const igOnDragStart = useCallback((i: number) => {
+    igDragIdx.current = i
+    setIgDragOver(i)
+  }, [])
+  const igOnDragEnter = useCallback((i: number) => {
     const from = igDragIdx.current
-    if (from === null || from === targetIdx) { setIgDragOver(null); return }
+    if (from === null || from === i) { setIgDragOver(i); return }
     const reorder = <T,>(arr: T[]) => {
-      const next = [...arr]; const [item] = next.splice(from, 1); next.splice(targetIdx, 0, item); return next
+      const next = [...arr]; const [item] = next.splice(from, 1); next.splice(i, 0, item); return next
     }
     setIgFiles(reorder); setIgPreviews(reorder)
-    setIgDragOver(null); igDragIdx.current = null
+    igDragIdx.current = i           // o item arrastado agora está nesta posição
+    setIgDragOver(i)
   }, [])
+  const igOnDragEnd   = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
+  const igOnDrop      = useCallback(() => { setIgDragOver(null); igDragIdx.current = null }, [])
 
   const handleIgFiles = (list: FileList | null) => {
     if (!list || !form.ig_post_type) return
@@ -2770,8 +2774,8 @@ export function Planner() {
                                 }`}
                               >
                                 {isReel
-                                  ? <video src={url} className="w-full h-full object-cover" />
-                                  : <img src={url} alt="" className="w-full h-full object-cover" draggable={false} />
+                                  ? <video src={url} className="w-full h-full object-cover pointer-events-none" />
+                                  : <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
                                 }
                                 <div className={`absolute top-0.5 left-0.5 text-[8px] font-bold px-1 py-0.5 rounded leading-none ${
                                   globalIdx === 0 ? 'bg-pink-500 text-white' : 'bg-black/60 text-white'
