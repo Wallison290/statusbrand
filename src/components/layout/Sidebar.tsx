@@ -37,7 +37,7 @@ function InitialsAvatar({ name }: { name: string }) {
   return (
     <div
       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-[13px] font-bold select-none"
-      style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
     >
       {initials}
     </div>
@@ -143,7 +143,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                       </span>
                       <span
                         className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-white"
-                        style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
                       >
                         novo
                       </span>
@@ -161,7 +161,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                 <div
                   title={collapsed ? item.label : undefined}
                   className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
-                  style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
                 >
                   <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
                   {!collapsed && (

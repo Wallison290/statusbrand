@@ -175,7 +175,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               mode === key ? 'text-white shadow-sm' : 'text-[#CBD5E1] hover:text-white'
             }`}
-            style={mode === key ? { background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' } : undefined}
+            style={mode === key ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : undefined}
           >
             {label}
           </button>
@@ -235,7 +235,7 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
                 onClick={applyCustom}
                 disabled={!tempS || !tempE || tempE < tempS}
                 className="flex-1 h-8 rounded-lg text-[12px] text-white font-medium disabled:opacity-40 transition-colors"
-                style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
               >
                 Aplicar
               </button>
@@ -283,7 +283,7 @@ function KpiCard({
     <div
       className="h-full rounded-2xl p-5 flex flex-col gap-3 transition-opacity duration-200 hover:opacity-90"
       style={{
-        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)',
         boxShadow:  '0 4px 24px rgba(37,99,235,0.25)',
       }}
     >
@@ -404,7 +404,7 @@ function CalendarWidget({
               key={dayStr}
               onClick={onDayClick}
               className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none"
-              style={isCurrent ? { background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' } : { background: 'transparent' }}
+              style={isCurrent ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : { background: 'transparent' }}
               onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = '#101A2B' }}
               onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
