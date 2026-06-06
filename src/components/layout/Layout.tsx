@@ -46,23 +46,15 @@ export function Layout() {
         <Sidebar onMobileClose={() => setMobileOpen(false)} />
       </div>
 
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Mobile top bar — only visible below md */}
-        <div className="flex md:hidden items-center h-12 px-4 bg-[#0f0f0f] border-b border-white/10 flex-shrink-0 gap-3">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
-            aria-label="Abrir menu"
-          >
-            <Menu className="w-4 h-4 text-white/70" />
-          </button>
-          <div className="flex items-center gap-2">
-            <img src="/logo-icon.png" alt="KairoHub" className="w-5 h-5 object-contain flex-shrink-0" />
-            <span className="text-[13px] font-bold text-white tracking-tight">
-              Kairo<span className="text-[#a78bfa]">Hub</span>
-            </span>
-          </div>
-        </div>
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
+        {/* Botão de menu flutuante — só no mobile, sem barra ocupando o topo */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="md:hidden fixed top-3 left-3 z-30 w-9 h-9 flex items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 hover:bg-black/60 transition-colors"
+          aria-label="Abrir menu"
+        >
+          <Menu className="w-4 h-4 text-white/80" />
+        </button>
 
         <TrialBanner />
         <div className="flex-1 overflow-y-auto">
