@@ -47,23 +47,29 @@ function InitialsAvatar({ name }: { name: string }) {
 // ── Brand mark ────────────────────────────────────────────────────────────────
 
 function BrandMark({ collapsed }: { collapsed: boolean }) {
-  if (collapsed) {
-    return (
+  return (
+    <div className="flex items-center gap-2.5 flex-1 min-w-0">
       <img
         src="/logo-icon.png"
-        alt="KairoHub"
-        className="w-9 h-9 object-contain select-none"
+        alt="StatusMedia"
+        className="flex-shrink-0 w-8 h-8 object-contain select-none"
         draggable={false}
       />
-    )
-  }
-  return (
-    <img
-      src="/logo.png"
-      alt="KairoHub"
-      className="h-14 w-auto max-w-full object-contain object-left select-none"
-      draggable={false}
-    />
+      {!collapsed && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: 1 }}
+          className="min-w-0"
+        >
+          <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap text-white">
+            Status<span className="text-[#6f93c9]">Media</span>
+          </span>
+          <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide text-[#64748b]">
+            Organize. Produza. Escale.
+          </span>
+        </motion.div>
+      )}
+    </div>
   )
 }
 
@@ -106,7 +112,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       style={{ background: '#050816' }}
     >
       {/* ── Brand header ── */}
-      <div className={`flex items-center h-20 border-b border-[#1e2535] ${collapsed ? 'px-2 justify-center' : 'px-4'}`}>
+      <div className="flex items-center h-14 px-3.5 border-b border-[#1e2535]">
         <BrandMark collapsed={collapsed} />
       </div>
 
