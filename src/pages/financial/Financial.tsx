@@ -92,19 +92,19 @@ function KpiCard({
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
-      className={`rounded-2xl border bg-white shadow-sm p-4 flex flex-col gap-3.5 transition-all ${borderAccent} ${
-        onClick ? 'cursor-pointer hover:bg-[#fafafa] active:scale-[0.99]' : ''
+      className={`rounded-2xl border bg-[#111827] p-4 flex flex-col gap-3.5 transition-all ${borderAccent} ${
+        onClick ? 'cursor-pointer hover:bg-[#182233] active:scale-[0.99]' : ''
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
           {icon}
         </div>
-        <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide text-right leading-tight mt-1">{label}</p>
+        <p className="text-[10px] text-[#64748b] uppercase tracking-wide text-right leading-tight mt-1">{label}</p>
       </div>
       <div className="min-w-0">
-        <p className="text-[22px] font-bold text-[#0f0f0f] leading-tight break-words">{value}</p>
-        {sub && <p className="text-[11px] text-[#9ca3af] mt-0.5 break-words">{sub}</p>}
+        <p className="text-[22px] font-bold text-[#F8FAFC] leading-tight break-words">{value}</p>
+        {sub && <p className="text-[11px] text-[#64748b] mt-0.5 break-words">{sub}</p>}
       </div>
     </motion.div>
   )
@@ -202,21 +202,21 @@ function StatusDropdown({ client }: { client: Client }) {
       <button
         onClick={() => setOpen(o => !o)}
         disabled={saving}
-        className="h-7 px-2.5 flex items-center gap-1 rounded-lg text-[11px] text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
+        className="h-7 px-2.5 flex items-center gap-1 rounded-lg text-[11px] text-[#64748b] hover:text-white hover:bg-[#1e293b] border border-transparent hover:border-[#1e293b] transition-all"
       >
         <ChevronDown className="w-3 h-3" /> Status
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 w-44 max-w-[90vw] rounded-xl border border-[#e8e8e8] bg-white shadow-lg overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 z-20 w-44 max-w-[90vw] rounded-xl border border-[#1e293b] bg-[#182233] shadow-xl overflow-hidden">
             {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
               const st = statusStyles[s]
               return (
                 <button
                   key={s}
                   onClick={() => handleSelect(s)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#f0f0f0] ${st.text}`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#1e293b] ${st.text}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
                   {financialStatusLabel(s)}
@@ -369,21 +369,21 @@ function PaymentHistoryModal({
           {payments.map(p => (
             <div
               key={p.id}
-              className="flex items-center gap-3 p-3 rounded-xl border border-[#e8e8e8] bg-[#f7f7f7]"
+              className="flex items-center gap-3 p-3 rounded-xl border border-[#1e293b] bg-[#182233]"
             >
               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'pago' ? 'bg-emerald-400' : 'bg-red-400'}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-[#0f0f0f]">{p.reference_month}</p>
-                {p.notes && <p className="text-[10px] text-[#737373] truncate mt-0.5">{p.notes}</p>}
+                <p className="text-[12px] font-medium text-[#F8FAFC]">{p.reference_month}</p>
+                {p.notes && <p className="text-[10px] text-[#94a3b8] truncate mt-0.5">{p.notes}</p>}
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRLDecimal(p.amount)}</p>
-                <p className="text-[10px] text-zinc-600 mt-0.5">{fmtDate(p.payment_date)}</p>
+                <p className="text-[13px] font-semibold text-[#F8FAFC]">{fmtBRLDecimal(p.amount)}</p>
+                <p className="text-[10px] text-[#64748b] mt-0.5">{fmtDate(p.payment_date)}</p>
               </div>
               <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
                 p.status === 'pago'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                  : 'bg-red-50 border-red-200 text-red-700'
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                  : 'bg-red-500/15 border-red-500/30 text-red-400'
               }`}>
                 {p.status === 'pago' ? 'Pago' : 'Atrasado'}
               </span>
@@ -603,7 +603,7 @@ export function Financial() {
   }, [withStatus])
 
   return (
-    <div className="min-h-full bg-[#f5f7fb]">
+    <div className="min-h-full bg-[#0B1020]">
       <div className="p-4 md:p-6 space-y-6">
 
         {/* KPI Cards */}
@@ -613,7 +613,7 @@ export function Financial() {
             label="Recebido no mês"
             value={fmtBRL(kpis.receivedRevenue)}
             sub={`${kpis.receivedCount} pagamento${kpis.receivedCount !== 1 ? 's' : ''} confirmado${kpis.receivedCount !== 1 ? 's' : ''}`}
-            borderAccent="border-emerald-500/20"
+            borderAccent="border-emerald-500/30"
             iconBg="bg-emerald-500/15"
             delay={0}
           />
@@ -633,7 +633,7 @@ export function Financial() {
             sub={kpis.soonCount > 0
               ? `${kpis.soonCount} cliente${kpis.soonCount !== 1 ? 's' : ''} vence${kpis.soonCount !== 1 ? 'm' : ''} em até 5 dias`
               : 'nenhum vencimento próximo'}
-            borderAccent={kpis.soonCount > 0 ? 'border-amber-500/20' : 'border-[#e2e8f0]'}
+            borderAccent={kpis.soonCount > 0 ? 'border-amber-500/30' : 'border-[#1e293b]'}
             iconBg="bg-amber-500/15"
             delay={0.08}
             onClick={kpis.soonCount > 0 ? () => setFilter('vence_em_breve') : undefined}
@@ -643,7 +643,7 @@ export function Financial() {
             label="Em atraso"
             value={kpis.overdueCount > 0 ? fmtBRL(kpis.overdueRevenue) : '—'}
             sub={`${kpis.overdueCount} cliente${kpis.overdueCount !== 1 ? 's' : ''} em atraso`}
-            borderAccent={kpis.overdueCount > 0 ? 'border-red-500/20' : 'border-[#e2e8f0]'}
+            borderAccent={kpis.overdueCount > 0 ? 'border-red-500/30' : 'border-[#1e293b]'}
             iconBg="bg-red-500/15"
             delay={0.12}
             onClick={kpis.overdueCount > 0 ? () => setFilter('atrasado') : undefined}
@@ -678,16 +678,16 @@ export function Financial() {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-all border ${
                   filter === key
-                    ? 'bg-[#0f0f0f] text-white border-transparent'
-                    : 'bg-white text-[#6b7280] hover:text-[#0f0f0f] hover:bg-[#f0f4f8] border-[#e2e8f0]'
+                    ? 'bg-[#2563EB] text-white border-transparent'
+                    : 'bg-[#182233] text-[#94a3b8] hover:text-white hover:bg-[#1e293b] border-[#1e293b]'
                 }`}
               >
                 {filterLabels[key]}
                 {counts[key] > 0 && (
                   <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${
-                    filter === key ? 'bg-white/20 text-white' : 'bg-[#f0f4f8] text-[#6b7280]'
+                    filter === key ? 'bg-white/20 text-white' : 'bg-[#0d1424] text-[#94a3b8]'
                   }`}>
                     {counts[key]}
                   </span>
@@ -696,14 +696,14 @@ export function Financial() {
             ))}
           </div>
 
-          <div className="relative w-full sm:w-56">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9ca3af] pointer-events-none" />
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
             <input
               type="text"
               placeholder="Buscar cliente..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-8 pl-8 pr-3 rounded-lg border border-[#e8e8e8] bg-white text-[12px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#a0a0a0] transition-colors"
+              className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50 transition-colors"
             />
           </div>
         </div>
@@ -728,17 +728,17 @@ export function Financial() {
 
           {!isLoading && financialClients.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="w-12 h-12 rounded-xl border border-[#e2e8f0] bg-white shadow-sm flex items-center justify-center mb-4">
-                <DollarSign className="w-5 h-5 text-[#c7d2e0]" />
+              <div className="w-12 h-12 rounded-xl border border-[#1e293b] bg-[#182233] flex items-center justify-center mb-4">
+                <DollarSign className="w-5 h-5 text-[#475569]" />
               </div>
-              <p className="text-[14px] font-medium text-[#0f0f0f]">Nenhum cliente com dados financeiros</p>
-              <p className="text-[12px] text-[#6b7280] mt-1 max-w-xs">
+              <p className="text-[14px] font-medium text-[#F8FAFC]">Nenhum cliente com dados financeiros</p>
+              <p className="text-[12px] text-[#64748b] mt-1 max-w-xs">
                 Cadastre o valor mensal e o dia de vencimento no perfil de cada cliente.
               </p>
               <Link
                 to="/clients"
-                className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90"
-                style={{ background: '#0f0f0f', color: '#ffffff' }}
+                className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
+                style={{ background: '#2563EB', color: '#ffffff' }}
               >
                 Ver clientes
               </Link>
