@@ -52,7 +52,7 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex overflow-hidden">
 
       {/* ── Left panel — imagem ──────────────────────────────────────────────── */}
       <div className="hidden lg:block lg:w-[45%] relative overflow-hidden">
@@ -65,7 +65,7 @@ export function Login() {
       </div>
 
       {/* ── Right panel — formulário ─────────────────────────────────────────── */}
-      <div className="flex-1 bg-[#f4f4f8] flex items-center justify-center p-6 overflow-y-auto">
+      <div className="flex-1 bg-[#f4f4f8] flex items-center justify-center p-5 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,14 +74,14 @@ export function Login() {
         >
 
           {/* Card */}
-          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-8">
+          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-6">
 
             {/* Ícone no topo do card */}
-            <div className="flex justify-center mb-5">
-              <img src="/logo-icon.png" alt="Kairo Hub" className="w-44 h-44 object-contain" />
+            <div className="flex justify-center mb-2">
+              <img src="/logo-icon.png" alt="Kairo Hub" className="w-24 h-24 object-contain" />
             </div>
 
-            <div className="mb-6">
+            <div className="mb-5">
               <h2 className="text-[22px] font-bold text-[#0f0f0f]">Entrar</h2>
               <p className="text-[13px] text-[#a0a0a0] mt-1">Bem-vindo de volta.</p>
             </div>
@@ -139,7 +139,7 @@ export function Login() {
               </button>
             </form>
 
-            <p className="text-center text-[12px] text-[#a0a0a0] mt-6">
+            <p className="text-center text-[12px] text-[#a0a0a0] mt-5">
               Não tem conta?{' '}
               <Link to="/register" className="text-[#29457a] font-semibold hover:text-[#16284d] transition-colors">
                 Criar conta
@@ -148,7 +148,7 @@ export function Login() {
           </div>
 
           {/* Cliente da agência */}
-          <div className="mt-4 bg-white rounded-2xl border border-[#e8e8e8] shadow-sm px-5 py-4 flex items-center gap-4">
+          <div className="mt-3 bg-white rounded-2xl border border-[#e8e8e8] shadow-sm px-5 py-3.5 flex items-center gap-4">
             <div className="w-9 h-9 rounded-xl bg-[#eaf0f8] flex items-center justify-center flex-shrink-0">
               <UserCircle2 style={{ width: 18, height: 18, color: '#29457a' }} />
             </div>
@@ -165,7 +165,7 @@ export function Login() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-[11px] text-[#c0c0c0] mt-5">
+          <p className="text-center text-[11px] text-[#c0c0c0] mt-3">
             © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
           </p>
 
