@@ -953,7 +953,7 @@ function ConteudosTab() {
           <p className="text-[12px] text-[#64748b] mt-1">Adicione conteúdos à biblioteca ou ajuste os filtros.</p>
           <button
             className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
-            style={{ background: '#2563EB', color: '#ffffff' }}
+            style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
             onClick={() => setAddOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Adicionar conteúdo
@@ -1087,7 +1087,7 @@ function SnippetsTab() {
           <p className="text-[13px] text-[#64748b]">Biblioteca de snippets vazia.</p>
           <button
             className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
-            style={{ background: '#2563EB', color: '#ffffff' }}
+            style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
             onClick={() => setOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Adicionar snippet
@@ -1646,7 +1646,7 @@ export function Library() {
       <button
         onClick={() => setAddOpen(true)}
         className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
-        style={{ background: '#2563EB', color: '#ffffff' }}
+        style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
       >
         <Plus className="w-3.5 h-3.5" /> Novo conteúdo
       </button>

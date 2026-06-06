@@ -82,5 +82,17 @@
   .bg-clip-text.text-transparent { color: transparent !important; }
 
   body { background-color: #050816; color: #F8FAFC; }
+
+  /* ── Botões primários: azul fosco escuro com gradiente ─────────────────────── */
+  /* Remapeia globalmente o azul vivo #2563EB para um gradiente azul fosco */
+  .bg-\[\#2563EB\] {
+    background-image: linear-gradient(135deg, #29457a 0%, #16284d 100%) !important;
+    background-color: #1f3a6b !important;
+  }
+  .hover\:bg-\[\#1D4ED8\]:hover,
+  .bg-\[\#2563EB\]:hover {
+    background-image: linear-gradient(135deg, #305088 0%, #1b315c 100%) !important;
+    background-color: #264676 !important;
+  }
 }
 

@@ -535,7 +535,7 @@ export function Notes() {
               <button
                 onClick={() => setSelected('new')}
                 className="flex items-center gap-2 text-[13px] font-semibold px-4 py-2.5 rounded-xl hover:bg-[#1D4ED8] transition-colors mt-2 shadow-lg shadow-[#2563EB]/20"
-                style={{ background: '#2563EB', color: '#ffffff' }}
+                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
               >
                 <Plus className="w-4 h-4" />
                 Criar nota

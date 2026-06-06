@@ -104,7 +104,7 @@ function FeedGalleryCard({
         {versions.slice(0, 3).map((v, i) => (
           <span key={v.id} className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
             i === 0 ? '' : 'text-[#94a3b8] bg-[#101A2B]'
-          }`} style={i === 0 ? { background: '#2563EB', color: '#ffffff' } : undefined}>
+          }`} style={i === 0 ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' } : undefined}>
             {v.name}
           </span>
         ))}
@@ -120,7 +120,7 @@ function FeedGalleryCard({
         <button
           onClick={onEdit}
           className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors hover:bg-[#1D4ED8]"
-          style={{ background: '#2563EB', color: '#ffffff' }}
+          style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
         >
           <Pencil className="w-3 h-3" /> Editar feed
         </button>
@@ -220,7 +220,7 @@ function InstagramHeader({
               <div className="flex items-center gap-2">
                 <button onClick={saveBio}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium hover:bg-[#1D4ED8] transition-colors"
-                  style={{ background: '#2563EB', color: '#ffffff' }}>
+                  style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}>
                   <Check className="w-3.5 h-3.5" /> Salvar
                 </button>
                 <button onClick={() => setEditingBio(false)}
@@ -334,7 +334,7 @@ function VersionChip({ version, isActive, onClick, onRename, onDelete, onDuplica
       <div
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer transition-all whitespace-nowrap
           ${isActive ? 'shadow-sm' : 'bg-[#101A2B] text-[#94a3b8] hover:bg-[#1e293b]'}`}
-        style={isActive ? { background: '#2563EB', color: '#ffffff' } : undefined}
+        style={isActive ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' } : undefined}
         onClick={onClick}
       >
         {editing ? (
@@ -644,7 +644,7 @@ export function FeedOrganizer() {
               <button
                 onClick={() => setClientMenuOpen(m => !m)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#1D4ED8]"
-                style={{ background: '#2563EB', color: '#ffffff' }}
+                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
               >
                 <Plus className="w-3.5 h-3.5" /> Novo feed
               </button>
@@ -783,7 +783,7 @@ export function FeedOrganizer() {
         <button
           onClick={handleSaveAndBack}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#1D4ED8]"
-          style={{ background: '#2563EB', color: '#ffffff' }}
+          style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
         >
           <Save className="w-3.5 h-3.5" />
           Salvar e voltar
@@ -828,7 +828,7 @@ export function FeedOrganizer() {
                 <p className="text-sm font-medium text-[#94a3b8]">Crie uma versão para começar</p>
                 <button onClick={createVersion}
                   className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium hover:bg-[#1D4ED8] transition-colors"
-                  style={{ background: '#2563EB', color: '#ffffff' }}>
+                  style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}>
                   <Plus className="w-3.5 h-3.5" /> Criar Versão 1
                 </button>
               </div>
@@ -847,7 +847,7 @@ export function FeedOrganizer() {
                   </div>
                   <button onClick={() => setPickerOpen(true)} disabled={isUploading}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium disabled:opacity-60 hover:bg-[#1D4ED8] transition-colors"
-                    style={{ background: '#2563EB', color: '#ffffff' }}>
+                    style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}>
                     {isUploading
                       ? <><Upload className="w-3.5 h-3.5 animate-pulse" /> Enviando...</>
                       : <><Plus className="w-3.5 h-3.5" /> Adicionar post</>}
@@ -888,7 +888,7 @@ export function FeedOrganizer() {
                     <p className="text-sm font-medium text-[#94a3b8]">Feed vazio</p>
                     <button onClick={() => setPickerOpen(true)}
                       className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium hover:bg-[#1D4ED8] transition-colors"
-                      style={{ background: '#2563EB', color: '#ffffff' }}>
+                      style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}>
                       <Plus className="w-3.5 h-3.5" /> Adicionar primeiro post
                     </button>
                   </div>

@@ -738,7 +738,7 @@ export function Financial() {
               <Link
                 to="/clients"
                 className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#1D4ED8] shadow-lg shadow-[#2563EB]/20"
-                style={{ background: '#2563EB', color: '#ffffff' }}
+                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
               >
                 Ver clientes
               </Link>
