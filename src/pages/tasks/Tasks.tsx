@@ -284,7 +284,7 @@ function DayColumn({
 
   return (
     <div
-      className={['flex-shrink-0 w-[260px] flex flex-col rounded-2xl border p-3 transition-colors',
+      className={['flex-shrink-0 w-[260px] self-start flex flex-col rounded-2xl border p-3 transition-colors min-h-[440px]',
         isDragOver ? 'border-[#2563EB]/50 bg-[#2563EB]/5' : 'border-[#1e293b] bg-[#0d1424]'].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
@@ -311,8 +311,8 @@ function DayColumn({
         </div>
       </div>
 
-      {/* Corpo — tarefas ou estado vazio */}
-      <div className="flex-1 min-h-[380px] overflow-y-auto space-y-2.5" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
+      {/* Corpo — cresce com o conteúdo (sem scroll interno) */}
+      <div className="flex-1 flex flex-col space-y-2.5">
         <AnimatePresence>
           {tasks.map(task => (
             <motion.div key={task.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.14 }}>
@@ -323,7 +323,7 @@ function DayColumn({
 
         {tasks.length === 0 && !isDragOver && (
           <button onClick={() => onAddTask(day)}
-            className="w-full h-full min-h-[360px] rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors group hover:bg-white/[0.02]">
+            className="w-full flex-1 rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors group hover:bg-white/[0.02]">
             <span className="w-11 h-11 rounded-full border border-dashed border-[#334155] flex items-center justify-center group-hover:border-[#2563EB]/60 transition-colors">
               <Plus className="w-5 h-5 text-[#64748b] group-hover:text-[#60A5FA]" />
             </span>
@@ -369,8 +369,8 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
           ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Navegue com as setas ou use a aba <strong>Lista</strong> para ver todas.
         </div>
       )}
-      <div className="overflow-x-auto flex-1 min-h-0 px-5 md:px-6">
-        <div className="flex gap-4 h-full pb-4" style={{ minWidth: `${7 * 276}px` }}>
+      <div className="overflow-auto flex-1 min-h-0 px-5 md:px-6">
+        <div className="flex gap-4 items-start pb-4" style={{ minWidth: `${7 * 276}px` }}>
           {days.map(day => (
             <DayColumn key={day.toISOString()} day={day} tasks={tasksByDay(day)} draggingId={draggingId}
               onDrop={onDrop} onDragStart={onDragStart} onDragEnd={onDragEnd}
