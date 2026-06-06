@@ -202,8 +202,8 @@ export function ClientRegister() {
 
             <button
               onClick={() => navigate('/login')}
-              className="w-full h-10 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90 flex items-center justify-center gap-2"
-              style={{ background: '#0f0f0f', color: '#ffffff' }}
+              className="w-full h-11 rounded-xl text-[13px] font-semibold transition-opacity hover:opacity-95 flex items-center justify-center gap-2 shadow-md shadow-[#29457a]/25"
+              style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
             >
               Ir para o login
             </button>
@@ -272,7 +272,7 @@ export function ClientRegister() {
                     placeholder="seu@email.com"
                     required
                     autoComplete="email"
-                    className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#0f0f0f] focus:ring-1 focus:ring-[#0f0f0f]/10 transition-colors"
+                    className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#29457a]/60 focus:ring-1 focus:ring-[#29457a]/20 transition-colors"
                   />
                 </div>
               </div>
@@ -293,7 +293,7 @@ export function ClientRegister() {
                     placeholder="Mínimo 6 caracteres"
                     required
                     autoComplete="new-password"
-                    className="w-full h-10 pl-9 pr-10 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#0f0f0f] focus:ring-1 focus:ring-[#0f0f0f]/10 transition-colors"
+                    className="w-full h-10 pl-9 pr-10 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#29457a]/60 focus:ring-1 focus:ring-[#29457a]/20 transition-colors"
                   />
                   <button
                     type="button"
@@ -321,7 +321,7 @@ export function ClientRegister() {
                     placeholder="Repita a senha"
                     required
                     autoComplete="new-password"
-                    className="w-full h-10 pl-9 pr-10 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#0f0f0f] focus:ring-1 focus:ring-[#0f0f0f]/10 transition-colors"
+                    className="w-full h-10 pl-9 pr-10 rounded-xl border border-[#e8e8e8] bg-white text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:border-[#29457a]/60 focus:ring-1 focus:ring-[#29457a]/20 transition-colors"
                   />
                   <button
                     type="button"
@@ -344,8 +344,8 @@ export function ClientRegister() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-10 rounded-xl text-[13px] font-medium transition-colors hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-                style={{ background: '#0f0f0f', color: '#ffffff' }}
+                className="w-full h-11 rounded-xl text-[13px] font-semibold transition-opacity hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2 shadow-md shadow-[#29457a]/25"
+                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
               >
                 {loading
                   ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -358,7 +358,7 @@ export function ClientRegister() {
             <div className="mt-6 space-y-2 text-center">
               <p className="text-[12px] text-[#a0a0a0]">
                 Já tem acesso?{' '}
-                <Link to="/login" className="text-[#0f0f0f] font-medium hover:underline">
+                <Link to="/login" className="text-[#29457a] font-semibold hover:text-[#16284d] hover:underline">
                   Entrar
                 </Link>
               </p>
