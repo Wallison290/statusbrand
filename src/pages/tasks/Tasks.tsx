@@ -201,7 +201,7 @@ function MoreMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
 // ─── Task card ────────────────────────────────────────────────────────────────
 
 function TaskCard({
-  task, onView, dragging, onDragStart, onDragEnd,
+  task, onStatusChange, onDelete, onEdit, onView, dragging, onDragStart, onDragEnd,
 }: {
   task: Task; onStatusChange: (id: string, s: TaskStatus) => void
   onDelete: (id: string) => void; onEdit: (task: Task) => void; onView: (task: Task) => void
@@ -212,8 +212,6 @@ function TaskCard({
   const clientName     = (task.client as any)?.company_name
   const priCfg         = PRIORITY_CFG[task.priority]
 
-  const done = task.status === 'concluido'
-
   return (
     <div draggable
       onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
@@ -221,32 +219,47 @@ function TaskCard({
       }}
       onDragEnd={() => { setTimeout(() => { dragStarted.current = false }, 50); onDragEnd() }}
       onClick={() => { if (!dragStarted.current) onView(task) }}
-      title={`${task.due_time ? task.due_time.slice(0,5) + ' · ' : ''}${task.title}${clientName ? ' · ' + clientName : ''}`}
-      className={['group w-full min-w-0 bg-white rounded-lg pl-2 pr-1.5 py-1.5 shadow-sm',
-        'cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-150 select-none',
-        'flex items-center gap-1.5',
+      className={['w-full min-w-0 bg-white rounded-2xl p-4 shadow-sm border border-gray-100',
+        'cursor-pointer hover:shadow-md transition-all duration-150 select-none',
         dragging ? 'opacity-40 scale-95' : ''].join(' ')}
-      style={{ borderLeft: `3px solid ${priCfg.accent}` }}>
-
-      {/* Hora */}
-      {task.due_time && (
-        <span className={`text-[10px] font-bold tabular-nums flex-shrink-0 ${overdueAndOpen ? 'text-red-500' : 'text-gray-400'}`}>
-          {task.due_time.slice(0, 5)}
-        </span>
+      style={{ borderLeftWidth: 4, borderLeftColor: priCfg.accent }}>
+      {(task.due_time || overdueAndOpen) && (
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${overdueAndOpen ? 'text-red-400' : 'text-gray-400'}`} />
+          <span className={`text-[12px] font-medium ${overdueAndOpen ? 'text-red-500' : 'text-gray-500'}`}>
+            {task.due_time ? task.due_time.slice(0, 5) : ''}
+            {overdueAndOpen && <span className="ml-1">· Atrasada</span>}
+          </span>
+        </div>
       )}
-
-      {/* Título */}
-      <span className={`text-[11.5px] font-semibold flex-1 min-w-0 truncate ${done ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-        {task.title}
-      </span>
-
-      {/* Atrasada */}
-      {overdueAndOpen && (
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" title="Atrasada" />
+      <p className="text-[14px] font-bold text-gray-900 leading-snug mb-3 line-clamp-2">{task.title}</p>
+      <div className="flex items-center gap-1.5 flex-wrap mb-3">
+        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
+        {clientName && (
+          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700">{clientName}</span>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        {task.assignee ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <AvatarCircle name={task.assignee} />
+            <span className="text-[12px] text-gray-600 truncate">{task.assignee}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-gray-400">
+            <User className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="text-[12px]">Sem responsável</span>
+          </div>
+        )}
+        <div onClick={e => e.stopPropagation()}>
+          <MoreMenu onEdit={() => onEdit(task)} onDelete={() => onDelete(task.id)} />
+        </div>
+      </div>
+      {task.status !== 'a_fazer' && (
+        <div className="mt-3 pt-2.5 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+          <StatusPill status={task.status} onChange={s => onStatusChange(task.id, s)} />
+        </div>
       )}
-
-      {/* Avatar do responsável */}
-      {task.assignee && <AvatarCircle name={task.assignee} sm />}
     </div>
   )
 }
@@ -271,35 +284,35 @@ function DayColumn({
 
   return (
     <div
-      className={['w-full min-w-0 self-start flex flex-col rounded-2xl border p-2.5 transition-colors min-h-[440px]',
+      className={['w-full min-w-0 self-start flex flex-col rounded-2xl border p-3 transition-colors min-h-[440px]',
         isDragOver ? 'border-[#2563EB]/50 bg-[#2563EB]/5' : 'border-[#1e293b] bg-[#0d1424]'].join(' ')}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
       onDrop={e => { e.preventDefault(); setIsDragOver(false); const id = e.dataTransfer.getData('taskId'); if (id) onDrop(id, day) }}
     >
       {/* Header do dia */}
-      <div className="flex items-center justify-between gap-1 px-0.5 pb-3 min-w-0">
+      <div className="flex items-center justify-between gap-1 px-1 pb-3 min-w-0">
         <div className="min-w-0">
-          <div className="flex items-center gap-1">
-            <p className="text-[13px] font-bold text-[#F8FAFC] truncate">{dayName}</p>
-            {today && <span className="text-[7px] font-black px-1 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wide leading-none flex-shrink-0">Hoje</span>}
+          <div className="flex items-center gap-1.5">
+            <p className="text-[15px] font-bold text-[#F8FAFC] truncate">{dayName}</p>
+            {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wider leading-none flex-shrink-0">Hoje</span>}
           </div>
-          <p className="text-[11px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
+          <p className="text-[12px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {tasks.length > 0 && (
-            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold bg-violet-600 text-white">{tasks.length}</span>
+            <span className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold bg-violet-600 text-white">{tasks.length}</span>
           )}
           <button onClick={() => onAddTask(day)}
-            className="w-6 h-6 rounded-full text-[#94a3b8] hover:text-white flex items-center justify-center transition-all border border-[#1e293b] bg-[#182233] hover:bg-[#1e293b]"
+            className="w-7 h-7 rounded-full text-[#94a3b8] hover:text-white flex items-center justify-center transition-all border border-[#1e293b] bg-[#182233] hover:bg-[#1e293b]"
             title={`Nova tarefa — ${format(day, 'dd/MM')}`}>
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Corpo — cresce com o conteúdo (sem scroll interno) */}
-      <div className="flex-1 flex flex-col space-y-1.5">
+      <div className="flex-1 flex flex-col space-y-2.5">
         <AnimatePresence>
           {tasks.map(task => (
             <motion.div key={task.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.14 }}>
@@ -357,7 +370,7 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
         </div>
       )}
       <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 px-4 md:px-5">
-        <div className="grid grid-cols-7 gap-2.5 items-start pb-4">
+        <div className="grid gap-3 items-start pb-4" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
           {days.map(day => (
             <DayColumn key={day.toISOString()} day={day} tasks={tasksByDay(day)} draggingId={draggingId}
               onDrop={onDrop} onDragStart={onDragStart} onDragEnd={onDragEnd}
@@ -1155,6 +1168,14 @@ export function Tasks() {
   const weekEnd   = endOfWeek(weekBase,   { weekStartsOn: 1 })
   const days      = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
+  // Janela deslizante de 5 dias dentro da semana (0 = seg–sex, 1 = ter–sáb, 2 = qua–dom)
+  const DAY_WINDOW_SIZE = 5
+  const [dayWindow, setDayWindow] = useState(0)
+  const maxDayWindow = Math.max(0, days.length - DAY_WINDOW_SIZE)
+  const visibleDays  = days.slice(dayWindow, dayWindow + DAY_WINDOW_SIZE)
+  // Ao trocar de semana, volta a janela para o início (seg–sex)
+  useEffect(() => { setDayWindow(0) }, [weekBase])
+
   const [activeTab, setActiveTab]     = useState<ViewTab>('semanal')
   const [draggingId, setDraggingId]   = useState<string | null>(null)
   const [dialogOpen, setDialogOpen]   = useState(false)
@@ -1324,9 +1345,30 @@ export function Tasks() {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#94a3b8] border border-[#1e293b] rounded-lg hover:border-[#2563EB]/50 hover:text-white transition-all mb-1">
-            <Filter className="w-3.5 h-3.5" /> Filtrar
-          </button>
+          <div className="flex items-center gap-2 mb-1">
+            {/* Setas de janela de dias (só na visão semanal) */}
+            {activeTab === 'semanal' && (
+              <div className="flex items-center bg-[#182233] border border-[#1e293b] rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setDayWindow(w => Math.max(0, w - 1))}
+                  disabled={dayWindow === 0}
+                  title="Dias anteriores"
+                  className="w-8 h-8 flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-all border-r border-[#1e293b] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDayWindow(w => Math.min(maxDayWindow, w + 1))}
+                  disabled={dayWindow === maxDayWindow}
+                  title="Próximos dias"
+                  className="w-8 h-8 flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#94a3b8] border border-[#1e293b] rounded-lg hover:border-[#2563EB]/50 hover:text-white transition-all">
+              <Filter className="w-3.5 h-3.5" /> Filtrar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1334,7 +1376,7 @@ export function Tasks() {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0 pt-3">
 
         {activeTab === 'semanal' && (
-          <WeeklyView tasks={tasks} days={days} draggingId={draggingId}
+          <WeeklyView tasks={tasks} days={visibleDays} draggingId={draggingId}
             onDrop={handleDropOnDay} onDragStart={setDraggingId} onDragEnd={() => setDraggingId(null)}
             onStatusChange={handleStatusChange} onDelete={handleDelete}
             onEdit={handleEditTask} onView={setViewingTask} onAddTask={handleAddTask} />
