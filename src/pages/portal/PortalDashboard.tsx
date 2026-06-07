@@ -2794,6 +2794,9 @@ export function PortalDashboard() {
             <TabsTrigger value="materiais" className="flex-1 justify-center min-w-0">Materiais</TabsTrigger>
             <TabsTrigger value="resultados" className="flex-1 justify-center min-w-0">Resultados</TabsTrigger>
             <TabsTrigger value="financeiro" className="flex-1 justify-center min-w-0">Financeiro</TabsTrigger>
+            {formConfig?.is_active && (
+              <TabsTrigger value="formulario" className="flex-1 justify-center min-w-0">Formulário</TabsTrigger>
+            )}
           </TabsList>
 
           {/* Aba Dashboard */}
