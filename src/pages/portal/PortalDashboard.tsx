@@ -2783,22 +2783,17 @@ export function PortalDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex-wrap h-auto gap-1 mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1.5">
-              <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+          <TabsList className="w-full flex flex-wrap h-auto gap-1 mb-6">
+            <TabsTrigger value="dashboard" className="flex-1 justify-center min-w-0">
+              Dashboard
             </TabsTrigger>
-            <TabsTrigger value="planejamento">
+            <TabsTrigger value="planejamento" className="flex-1 justify-center min-w-0">
               Planejamento ({plannerItems?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="notas">Solicitações/Ideias</TabsTrigger>
-            <TabsTrigger value="materiais">Materiais</TabsTrigger>
-            <TabsTrigger value="resultados">Resultados</TabsTrigger>
-            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            {formConfig?.is_active && (
-              <TabsTrigger value="formulario" className="flex items-center gap-1.5">
-                <ClipboardList className="w-3.5 h-3.5" /> Formulário
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="notas" className="flex-1 justify-center min-w-0">Solicitações/Ideias</TabsTrigger>
+            <TabsTrigger value="materiais" className="flex-1 justify-center min-w-0">Materiais</TabsTrigger>
+            <TabsTrigger value="resultados" className="flex-1 justify-center min-w-0">Resultados</TabsTrigger>
+            <TabsTrigger value="financeiro" className="flex-1 justify-center min-w-0">Financeiro</TabsTrigger>
           </TabsList>
 
           {/* Aba Dashboard */}
