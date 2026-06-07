@@ -246,6 +246,7 @@ function WeeklyFormInner() {
             onChange={setFields}
             disabled={saving}
             questions={resolveQuestions(config)}
+            light
           />
 
           <div className="pt-5">
