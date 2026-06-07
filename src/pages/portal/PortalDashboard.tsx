@@ -2783,19 +2783,19 @@ export function PortalDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full flex flex-wrap h-auto gap-1 mb-6">
-            <TabsTrigger value="dashboard" className="flex-1 justify-center min-w-0">
+          <TabsList className="w-full flex flex-nowrap overflow-x-auto h-auto gap-1 mb-6 scrollbar-none lg:flex-wrap">
+            <TabsTrigger value="dashboard" className="flex-shrink-0 justify-center lg:flex-1">
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="planejamento" className="flex-1 justify-center min-w-0">
+            <TabsTrigger value="planejamento" className="flex-shrink-0 justify-center lg:flex-1">
               Planejamento ({plannerItems?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="notas" className="flex-1 justify-center min-w-0">Solicitações/Ideias</TabsTrigger>
-            <TabsTrigger value="materiais" className="flex-1 justify-center min-w-0">Materiais</TabsTrigger>
-            <TabsTrigger value="resultados" className="flex-1 justify-center min-w-0">Resultados</TabsTrigger>
-            <TabsTrigger value="financeiro" className="flex-1 justify-center min-w-0">Financeiro</TabsTrigger>
+            <TabsTrigger value="notas" className="flex-shrink-0 justify-center lg:flex-1">Solicitações/Ideias</TabsTrigger>
+            <TabsTrigger value="materiais" className="flex-shrink-0 justify-center lg:flex-1">Materiais</TabsTrigger>
+            <TabsTrigger value="resultados" className="flex-shrink-0 justify-center lg:flex-1">Resultados</TabsTrigger>
+            <TabsTrigger value="financeiro" className="flex-shrink-0 justify-center lg:flex-1">Financeiro</TabsTrigger>
             {formConfig?.is_active && (
-              <TabsTrigger value="formulario" className="flex-1 justify-center min-w-0">Formulário</TabsTrigger>
+              <TabsTrigger value="formulario" className="flex-shrink-0 justify-center lg:flex-1">Formulário</TabsTrigger>
             )}
           </TabsList>
 
