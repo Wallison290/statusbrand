@@ -297,7 +297,7 @@ function Pricing() {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Planos</h2>
-          <p className="text-[15px] text-[#94a3b8] mt-2">Escolha o tamanho da sua operação. Sem fidelidade. 7 dias pra testar.</p>
+          <p className="text-[15px] text-[#94a3b8] mt-2">Escolha o tamanho da sua operação. Sem fidelidade. 3 dias pra testar.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-5 items-start">
           {order.map(id => {
@@ -320,7 +320,7 @@ function Pricing() {
                 <Link to="/login"
                   className={`w-full py-3 rounded-xl text-[13px] font-semibold text-center transition-colors ${featured ? 'text-white hover:opacity-95' : 'text-[#CBD5E1] border border-[#1e293b] bg-[#182233] hover:border-[#334155]'}`}
                   style={featured ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : {}}>
-                  Começar teste de 7 dias
+                  Começar teste de 3 dias
                 </Link>
                 <ul className="space-y-2.5 mt-6">
                   {p.features.map(f => (
@@ -333,7 +333,7 @@ function Pricing() {
             )
           })}
         </div>
-        <p className="text-center text-[12px] text-[#64748b] mt-8">Todos os planos têm 7 dias de teste. Cancele quando quiser. Sem fidelidade.</p>
+        <p className="text-center text-[12px] text-[#64748b] mt-8">Todos os planos têm 3 dias de teste. Cancele quando quiser. Sem fidelidade.</p>
       </div>
     </section>
   )
@@ -346,10 +346,10 @@ function FAQ() {
     ['A StatusMedia é só uma IA?', 'Não. A IA é uma parte. Você tem hub por cliente, calendário editorial, agendamento de Instagram, organizador de feed, tarefas, financeiro, portal de aprovação e gestão de equipe — tudo integrado.'],
     ['Como funciona a IA da StatusMedia?', 'São 13 squads e 52 agentes especializados, movidos por GPT-4o. O Copilot faz busca na web em tempo real, gera imagens e usa o contexto de cada cliente para produzir do seu jeito.'],
     ['Por que não usar só o ChatGPT?', 'Porque o ChatGPT não conhece o contexto de cada cliente, não organiza calendário, não agenda no Instagram, não tem aprovação nem histórico. Aqui a IA já sabe o tom de voz e o DNA de cada cliente.'],
-    ['Serve pra quem tá começando?', 'Sim. O plano Starter é feito pra social media solo organizar os primeiros clientes. E são 7 dias de teste.'],
+    ['Serve pra quem tá começando?', 'Sim. O plano Starter é feito pra social media solo organizar os primeiros clientes. E são 3 dias de teste.'],
     ['Serve pra agência?', 'Sim. O plano Agency tem clientes e equipe ilimitados, portal do cliente e suporte prioritário.'],
     ['Posso editar o que a IA gera?', 'Claro. Tudo que a IA cria é editável. Ela acelera o trabalho, você dá o toque final.'],
-    ['Tem fidelidade?', 'Não. Sem fidelidade, cancela quando quiser, e os 7 primeiros dias são para testar.'],
+    ['Tem fidelidade?', 'Não. Sem fidelidade, cancela quando quiser, e os 3 primeiros dias são para testar.'],
   ]
   const [open, setOpen] = useState<number | null>(0)
   return (
@@ -393,7 +393,7 @@ function FinalCTA() {
           style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}>
           Conhecer planos <ArrowRight className="w-4 h-4" />
         </button>
-        <p className="text-[12px] text-[#64748b] mt-4">7 dias de teste. Sem fidelidade. Cancela quando quiser.</p>
+        <p className="text-[12px] text-[#64748b] mt-4">3 dias de teste. Sem fidelidade. Cancela quando quiser.</p>
       </div>
     </section>
   )
