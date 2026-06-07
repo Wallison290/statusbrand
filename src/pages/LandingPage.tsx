@@ -100,10 +100,17 @@ function Hero() {
         </div>
       </div>
 
-      {/* Mockup do produto */}
+      {/* Vídeo do produto */}
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
         className="max-w-4xl mx-auto mt-14 rounded-2xl border border-[#1e293b] overflow-hidden shadow-2xl shadow-black/40">
-        <img src="/planer.png" alt="Plataforma StatusMedia" className="w-full object-cover" />
+        <video
+          src="/logo-video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full object-cover block"
+        />
       </motion.div>
     </section>
   )
