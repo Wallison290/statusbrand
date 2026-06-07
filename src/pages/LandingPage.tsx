@@ -66,7 +66,7 @@ function Hero() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#111827] border border-[#1e293b] mb-6">
           <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-[#fbbf24] text-[#fbbf24]" />)}</div>
-          <span className="text-[12px] text-[#CBD5E1]">Mais de 200 social medias na comunidade</span>
+          <span className="text-[12px] text-[#CBD5E1]">A plataforma completa para social medias e agências</span>
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
@@ -109,20 +109,28 @@ function Hero() {
   )
 }
 
-// ─── Barra de IAs ─────────────────────────────────────────────────────────────
-function AIBar() {
-  const ais = ['OpenAI', 'Claude', 'Gemini', 'Perplexity', 'DeepSeek', 'Llama', 'Grok', 'Mistral', 'Leonardo AI', 'Ideogram']
+// ─── Squads de IA ─────────────────────────────────────────────────────────────
+function SquadsBar() {
+  const squads = [
+    ['🔥', 'Fábrica de Conteúdo'], ['🔍', 'Diagnóstico de Perfil'], ['💼', 'Máquina de Clientes'],
+    ['📊', 'Auditoria de Marketing'], ['🧠', 'Psicologia de Vendas'], ['🕵️', 'Inteligência Competitiva'],
+    ['🎨', 'Identidade de Marca'], ['💰', 'Tráfego Pago'], ['🌐', 'Presença Multiplataforma'],
+    ['⚡', 'Mineração de Anúncios'], ['🔎', 'Motor de Conteúdo SEO'], ['🌱', 'Comunidade e Retenção'],
+    ['🖌️', 'Design Criativo'],
+  ]
   return (
     <section className="py-14 px-4 sm:px-6 border-y border-[#1e293b] bg-[#0d1424]">
       <div className="max-w-5xl mx-auto text-center">
-        <h2 className="text-[20px] font-bold text-white">As melhores IAs do mundo</h2>
-        <p className="text-[13px] text-[#94a3b8] mt-1.5">Todas as IAs pagas que você realmente precisa, em um só lugar</p>
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-          {ais.map(ai => (
-            <span key={ai} className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1e293b] text-[13px] text-[#CBD5E1] font-medium">{ai}</span>
+        <h2 className="text-[20px] font-bold text-white">13 squads de IA, 52 agentes especializados</h2>
+        <p className="text-[13px] text-[#94a3b8] mt-1.5">Um time de IA por área da operação — do conteúdo ao tráfego, da venda à retenção</p>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-8">
+          {squads.map(([emoji, name]) => (
+            <span key={name} className="px-3.5 py-2 rounded-xl bg-[#111827] border border-[#1e293b] text-[12.5px] text-[#CBD5E1] font-medium flex items-center gap-1.5">
+              <span>{emoji}</span> {name}
+            </span>
           ))}
-          <span className="px-4 py-2 rounded-xl bg-[#29457a]/20 border border-[#29457a]/40 text-[13px] text-[#9bb6dd] font-semibold">+290 modelos via OpenRouter</span>
         </div>
+        <p className="text-[12px] text-[#64748b] mt-6">Movidos por GPT-4o, com busca na web em tempo real e geração de imagem por IA</p>
       </div>
     </section>
   )
@@ -164,9 +172,9 @@ function HowItWorks() {
 // ─── Por que funciona ─────────────────────────────────────────────────────────
 function WhyItWorks() {
   const diffs = [
-    { icon: Bot, title: 'Time de IA especializado', desc: 'Agentes para estratégia, copy, criativos, revisão, calendário e relatórios — cada um focado numa parte do trabalho.' },
-    { icon: BarChart3, title: '300+ modelos disponíveis', desc: 'Claude, GPT-4, Gemini e mais. Cada agente escolhe o melhor modelo pra cada tarefa, sem você se preocupar.' },
-    { icon: Workflow, title: 'Do briefing à aprovação', desc: 'Tudo no mesmo lugar. Seu cliente acompanha pelo portal, você produz com clareza e histórico salvo.' },
+    { icon: Bot, title: 'Time de IA especializado', desc: '13 squads e 52 agentes para conteúdo, diagnóstico, tráfego, vendas, SEO, retenção e mais — cada um focado numa parte do trabalho.' },
+    { icon: BarChart3, title: 'IA que conhece seu cliente', desc: 'O DNA da marca, o tom de voz e o histórico de cada cliente ficam salvos. A IA usa esse contexto pra produzir do seu jeito.' },
+    { icon: Workflow, title: 'Do briefing à aprovação', desc: 'Tudo no mesmo lugar. Seu cliente acompanha pelo portal, você produz com clareza e o histórico fica salvo.' },
   ]
   return (
     <section className="py-20 px-4 sm:px-6 bg-[#0d1424] border-y border-[#1e293b]">
@@ -195,8 +203,8 @@ function WhyItWorks() {
 function Platform() {
   const features = [
     { icon: FolderKanban, title: 'Hub do Cliente', subtitle: 'Cada cliente com o próprio espaço', bullets: ['Briefing estruturado e versionado', 'Arquivos, referências e links organizados', 'Tom de voz e persona memorizados pela IA', 'Histórico completo por cliente'] },
-    { icon: CalendarDays, title: 'Calendário Editorial', subtitle: 'O calendário que substitui a planilha', bullets: ['Visão mensal e semanal num só painel', 'Status de produção, revisão e aprovação', 'Filtro por cliente, campanha ou formato', 'Reaproveita o calendário do mês anterior'] },
-    { icon: Bot, title: 'Agentes de IA', subtitle: '13 squads especializados', bullets: ['48 agentes focados em social media e marketing', '300+ modelos de IA, incluindo Claude e GPT', 'Geração de posts, carrosséis e calendários', 'Cada agente já conhece o contexto do cliente'] },
+    { icon: CalendarDays, title: 'Calendário Editorial', subtitle: 'O calendário que substitui a planilha', bullets: ['Visão mensal e semanal num só painel', 'Status de produção, revisão e aprovação', 'Filtro por cliente e formato', 'Tudo organizado por cliente'] },
+    { icon: Bot, title: 'IA Copilot', subtitle: '13 squads especializados', bullets: ['52 agentes focados em social media e marketing', 'Movido por GPT-4o, com busca na web e geração de imagem', 'Posts, carrosséis, calendários e diagnósticos', 'A IA já conhece o contexto de cada cliente'] },
     { icon: Instagram, title: 'Agendamento Instagram', subtitle: 'Publique direto da plataforma', bullets: ['Conecte a conta Instagram de cada cliente', 'Agende posts, carrosséis e reels', 'Organize o feed antes de publicar', 'Aprovação do cliente antes de ir ao ar'] },
   ]
   return (
@@ -328,9 +336,9 @@ function Pricing() {
 function FAQ() {
   const faqs = [
     ['A StatusMedia substitui quais ferramentas?', 'Substitui a combinação de Trello/planilha (calendário), Drive (arquivos do cliente), ChatGPT e outras IAs pagas, e a bagunça de WhatsApp para aprovação. Tudo num fluxo só.'],
-    ['A StatusMedia é só uma IA?', 'Não. A IA é uma parte. Você tem hub por cliente, calendário editorial, agendamento de Instagram, portal de aprovação e gestão de equipe — tudo integrado.'],
-    ['Quais modelos de IA estão disponíveis?', 'Claude, GPT-4, Gemini e mais de 290 modelos via OpenRouter. Cada agente escolhe o melhor modelo para cada tarefa.'],
-    ['Por que não usar só o ChatGPT?', 'Porque o ChatGPT não conhece o contexto de cada cliente, não organiza calendário, não tem aprovação nem histórico. Aqui a IA já sabe o tom de voz e a persona de cada cliente.'],
+    ['A StatusMedia é só uma IA?', 'Não. A IA é uma parte. Você tem hub por cliente, calendário editorial, agendamento de Instagram, organizador de feed, tarefas, financeiro, portal de aprovação e gestão de equipe — tudo integrado.'],
+    ['Como funciona a IA da StatusMedia?', 'São 13 squads e 52 agentes especializados, movidos por GPT-4o. O Copilot faz busca na web em tempo real, gera imagens e usa o contexto de cada cliente para produzir do seu jeito.'],
+    ['Por que não usar só o ChatGPT?', 'Porque o ChatGPT não conhece o contexto de cada cliente, não organiza calendário, não agenda no Instagram, não tem aprovação nem histórico. Aqui a IA já sabe o tom de voz e o DNA de cada cliente.'],
     ['Serve pra quem tá começando?', 'Sim. O plano Starter é feito pra social media solo organizar os primeiros clientes. E são 7 dias de teste.'],
     ['Serve pra agência?', 'Sim. O plano Agency tem clientes e equipe ilimitados, portal do cliente e suporte prioritário.'],
     ['Posso editar o que a IA gera?', 'Claro. Tudo que a IA cria é editável. Ela acelera o trabalho, você dá o toque final.'],
@@ -423,7 +431,7 @@ export function LandingPage() {
     <div className="min-h-screen bg-[#0B1020] text-white">
       <Navbar />
       <Hero />
-      <AIBar />
+      <SquadsBar />
       <HowItWorks />
       <WhyItWorks />
       <Platform />
