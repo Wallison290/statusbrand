@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Trash2, Pencil, Check, X, ChevronDown, Upload,
   Images, GripVertical, Instagram, Copy, Link2,
-  Save, ArrowLeft, LayoutGrid,
+  Save, ArrowLeft, LayoutGrid, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
@@ -468,6 +468,7 @@ export function FeedOrganizer() {
   // ── View state ─────────────────────────────────────────────────────────────
   const [view,             setView]            = useState<AppView>('gallery')
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const [galleryIdx,       setGalleryIdx]      = useState(0)
 
   // ── Editor state ───────────────────────────────────────────────────────────
   const [clientMenuOpen,  setClientMenuOpen]  = useState(false)
@@ -687,20 +688,142 @@ export function FeedOrganizer() {
             </div>
           </div>
 
-          {/* Clients WITH feeds */}
-          {clientsWithFeeds.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {clientsWithFeeds.map(c => {
-                const vv = versionsByClient[c.id] ?? []
-                return (
-                  <FeedGalleryCard
-                    key={c.id}
-                    client={c}
-                    versions={vv}
-                    onEdit={() => openEditor(c.id)}
-                  />
-                )
-              })}
+          {/* Clients WITH feeds — prévia central com setas */}
+          {clientsWithFeeds.length > 0 && (() => {
+            const idx = Math.min(galleryIdx, clientsWithFeeds.length - 1)
+            const activeClient   = clientsWithFeeds[idx]
+            const activeVersions = versionsByClient[activeClient.id] ?? []
+            const activePosts    = activeVersions[0]?.posts ?? []
+            const activeMeta     = feedMeta?.[activeClient.id] ?? { bio: '', link: '' }
+            const initial        = activeClient.company_name.charAt(0).toUpperCase()
+            const username       = activeClient.instagram
+              ? activeClient.instagram.replace(/^@/, '')
+              : activeClient.company_name.toLowerCase().replace(/\s+/g, '_')
+            const go = (d: 1 | -1) => setGalleryIdx(i => {
+              const n = Math.min(galleryIdx, clientsWithFeeds.length - 1)
+              return (n + d + clientsWithFeeds.length) % clientsWithFeeds.length
+            })
+            const cells = Array.from({ length: Math.max(9, Math.ceil(activePosts.length / 3) * 3) }, (_, i) => activePosts[i] ?? null)
+
+            return (
+              <div className="flex items-center justify-center gap-3 sm:gap-5">
+                {/* Seta esquerda */}
+                {clientsWithFeeds.length > 1 && (
+                  <button
+                    onClick={() => go(-1)}
+                    aria-label="Feed anterior"
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-[#182233] border border-[#1e293b] flex items-center justify-center text-[#94a3b8] hover:text-white hover:border-[#2563EB]/50 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                )}
+
+                {/* Prévia central (estilo perfil do Instagram) */}
+                <div className="w-full max-w-md bg-[#111827] rounded-3xl border border-[#1e293b] overflow-hidden shadow-xl">
+                  {/* Header do perfil */}
+                  <div className="px-5 pt-5 pb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-[72px] h-[72px] rounded-full p-[2px] flex-shrink-0"
+                        style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
+                        <div className="w-full h-full rounded-full bg-[#111827] p-[2px]">
+                          {activeClient.logo_url ? (
+                            <img src={activeClient.logo_url} alt="" className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full rounded-full bg-[#0B1020] flex items-center justify-center text-xl font-bold text-[#94a3b8]">{initial}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-semibold text-[#F8FAFC] truncate">{username}</p>
+                        <div className="flex items-center gap-5 mt-1.5">
+                          <div className="text-center">
+                            <p className="text-[13px] font-bold text-[#F8FAFC] leading-none">{activePosts.length}</p>
+                            <p className="text-[10px] text-[#94a3b8] mt-0.5">posts</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[13px] font-bold text-[#F8FAFC] leading-none">—</p>
+                            <p className="text-[10px] text-[#94a3b8] mt-0.5">seguidores</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[13px] font-bold text-[#F8FAFC] leading-none">—</p>
+                            <p className="text-[10px] text-[#94a3b8] mt-0.5">seguindo</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bio */}
+                    <div className="mt-3 space-y-1">
+                      <p className="text-[12px] font-semibold text-[#F8FAFC]">{activeClient.company_name}</p>
+                      {activeMeta.bio ? (
+                        <p className="text-[12.5px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap">{activeMeta.bio}</p>
+                      ) : (
+                        <p className="text-[12px] text-[#64748b] italic">Sem bio cadastrada — edite o feed para adicionar.</p>
+                      )}
+                      {activeMeta.link && (
+                        <a href={activeMeta.link.startsWith('http') ? activeMeta.link : `https://${activeMeta.link}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[12px] text-[#60A5FA] font-medium hover:underline">
+                          <Link2 className="w-3 h-3" /> {activeMeta.link.replace(/^https?:\/\//, '')}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Grade do feed (maior) */}
+                  <div className="grid grid-cols-3 gap-[2px] bg-[#1e293b]">
+                    {cells.map((post, i) => (
+                      <div key={i} className="aspect-square bg-[#0B1020]">
+                        {post && <img src={post.image_url} alt="" className="w-full h-full object-cover" draggable={false} />}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Rodapé: versões + editar */}
+                  <div className="px-4 py-3.5 flex items-center justify-between gap-3 border-t border-[#1e293b]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-[#64748b]">
+                        {activeVersions.length} {activeVersions.length === 1 ? 'versão' : 'versões'}
+                      </span>
+                      <span className="text-[10px] text-[#94a3b8] bg-[#182233] border border-[#1e293b] px-2 py-0.5 rounded-full">Versão 1</span>
+                    </div>
+                    <button
+                      onClick={() => openEditor(activeClient.id)}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold transition-colors hover:bg-[#1D4ED8]"
+                      style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Editar feed
+                    </button>
+                  </div>
+                </div>
+
+                {/* Seta direita */}
+                {clientsWithFeeds.length > 1 && (
+                  <button
+                    onClick={() => go(1)}
+                    aria-label="Próximo feed"
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-[#182233] border border-[#1e293b] flex items-center justify-center text-[#94a3b8] hover:text-white hover:border-[#2563EB]/50 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* Indicadores do carrossel */}
+          {clientsWithFeeds.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5">
+              {clientsWithFeeds.map((c, i) => (
+                <button
+                  key={c.id}
+                  onClick={() => setGalleryIdx(i)}
+                  aria-label={`Ir para ${c.company_name}`}
+                  className={`rounded-full transition-all ${
+                    Math.min(galleryIdx, clientsWithFeeds.length - 1) === i ? 'w-5 h-1.5 bg-[#29457a]' : 'w-1.5 h-1.5 bg-[#1e293b] hover:bg-[#334155]'
+                  }`}
+                />
+              ))}
             </div>
           )}
 
