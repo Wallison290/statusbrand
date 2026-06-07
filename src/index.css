@@ -94,5 +94,20 @@
     background-image: linear-gradient(135deg, #305088 0%, #1b315c 100%) !important;
     background-color: #264676 !important;
   }
+
+  /* ── Portal do cliente: força tema CLARO nos componentes compartilhados ──────── */
+  /* O app da agência é dark, mas o portal do cliente é claro. Reverte os tokens
+     dos componentes compartilhados (Card, Tabs, Input, Dialog) dentro do portal. */
+  .portal-light .bg-\[\#111827\] { background-color: #ffffff !important; background-image: none !important; }
+  .portal-light .bg-\[\#182233\] { background-color: #ffffff !important; }
+  .portal-light .bg-\[\#0d1424\] { background-color: #f7f8fa !important; }
+  .portal-light .bg-\[\#101A2B\] { background-color: #f7f8fa !important; }
+  .portal-light .border-\[\#1e293b\] { border-color: #e8e8e8 !important; }
+  .portal-light .border-\[\#334155\] { border-color: #e2e8f0 !important; }
+  .portal-light .text-\[\#F8FAFC\] { color: #0f172a !important; }
+  .portal-light .text-\[\#E2E8F0\] { color: #0f172a !important; }
+  .portal-light .text-\[\#CBD5E1\] { color: #374151 !important; }
+  /* aba ativa: mantém azul fosco com texto branco */
+  .portal-light .bg-\[\#29457a\] { color: #ffffff !important; }
 }
 

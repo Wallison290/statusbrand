@@ -27,7 +27,7 @@ export function PortalLayout({
   const initial   = (rawName || profile?.email || 'C')[0].toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] flex flex-col">
+    <div className="portal-light min-h-screen bg-[#f5f7fb] flex flex-col">
       {/* Top bar */}
       <header className="h-14 border-b border-[#e2e8f0] bg-white flex items-center px-6 flex-shrink-0 sticky top-0 z-30 shadow-sm">
 
