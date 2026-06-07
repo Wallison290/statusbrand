@@ -34,6 +34,7 @@ import { InstagramPage } from '@/pages/instagram/InstagramPage'
 import { PrivacyPage } from '@/pages/PrivacyPage'
 import { TermsPage } from '@/pages/TermsPage'
 import { WeeklyFormPage } from '@/pages/public/WeeklyFormPage'
+import { LandingPage } from '@/pages/LandingPage'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -68,9 +69,22 @@ function GuestGuard({ children }: { children: React.ReactNode }) {
     // Cliente que ainda não criou senha vai para setup, não para o portal
     if (user.user_metadata?.needs_password_setup === true) return <Navigate to="/client-setup" replace />
     if (profile?.role === 'client') return <Navigate to="/portal" replace />
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
   return <>{children}</>
+}
+
+/** Página inicial pública: mostra a landing para visitantes,
+ *  redireciona usuários autenticados para a área correta. */
+function HomeGate() {
+  const { user, profile, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (user) {
+    if (user.user_metadata?.needs_password_setup === true) return <Navigate to="/client-setup" replace />
+    if (profile?.role === 'client') return <Navigate to="/portal" replace />
+    return <Navigate to="/dashboard" replace />
+  }
+  return <LandingPage />
 }
 
 /** Exige autenticação. Redireciona client-role para o portal. */
@@ -103,7 +117,7 @@ function ActivePlanRedirect({ children }: { children: React.ReactNode }) {
   const { data: subData, isLoading, isFetched } = useSubscription()
   if (isLoading || !isFetched) return null
   // Só redireciona quem já pagou (status=active). Trial não bloqueia.
-  if (subData?.subscription.status === 'active') return <Navigate to="/" replace />
+  if (subData?.subscription.status === 'active') return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
 
@@ -112,7 +126,7 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth()
   if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
-  if (profile && profile.role !== 'client') return <Navigate to="/" replace />
+  if (profile && profile.role !== 'client') return <Navigate to="/dashboard" replace />
   // Se o cliente ainda não criou senha (chegou via convite), vai para setup
   if (user.user_metadata?.needs_password_setup === true) {
     return <Navigate to="/client-setup" replace />
@@ -129,6 +143,9 @@ function AppRoutes() {
       <Route path="/formulario/:token" element={<WeeklyFormPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms"   element={<TermsPage />} />
+
+      {/* Página de vendas pública — visitante vê a landing, logado vai para o app */}
+      <Route path="/" element={<HomeGate />} />
 
       {/* Receptor de links do Supabase (convite, reset de senha, magic link) */}
       <Route path="/auth/callback" element={<AuthCallback />} />
@@ -153,15 +170,15 @@ function AppRoutes() {
 
       {/* App da agência — auth + assinatura ativa obrigatórias */}
       <Route element={<AuthGuard><SubscriptionGuard><Layout /></SubscriptionGuard></AuthGuard>}>
-        <Route path="/"              element={<Dashboard />} />
+        <Route path="/dashboard"     element={<Dashboard />} />
         <Route path="/clients"       element={<ClientList />} />
         <Route path="/clients/new"   element={<ClientForm />} />
         <Route path="/clients/:id"   element={<ClientProfile />} />
         <Route path="/clients/:id/edit" element={<ClientForm />} />
         <Route path="/feed"          element={<FeedOrganizer />} />
-        <Route path="/content"       element={<Navigate to="/" replace />} />
-        <Route path="/history"       element={<Navigate to="/" replace />} />
-        <Route path="/history/:id"   element={<Navigate to="/" replace />} />
+        <Route path="/content"       element={<Navigate to="/dashboard" replace />} />
+        <Route path="/history"       element={<Navigate to="/dashboard" replace />} />
+        <Route path="/history/:id"   element={<Navigate to="/dashboard" replace />} />
         <Route path="/planner"       element={<Planner />} />
         <Route path="/tasks"         element={<Tasks />} />
         <Route path="/notes"         element={<Notes />} />

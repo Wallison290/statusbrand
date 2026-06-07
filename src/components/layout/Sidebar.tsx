@@ -12,7 +12,7 @@ import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
 
 const navItems = [
-  { href: '/',          icon: LayoutDashboard, label: 'Dashboard'      },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard'      },
   { href: '/clients',   icon: Users,            label: 'Clientes'       },
   { href: '/feed',      icon: LayoutGrid,       label: 'Feed do Perfil' },
   { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },

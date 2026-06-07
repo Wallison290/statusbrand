@@ -237,7 +237,7 @@ export function Pricing() {
         <div className="flex items-center gap-3">
           {isActive && (
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 text-[12.5px] font-medium text-violet-600 hover:text-violet-700 transition-colors"
             >
               Acessar o sistema
