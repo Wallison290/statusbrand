@@ -56,10 +56,10 @@ function AssetCard({
   const isImage = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
 
   return (
-    <div className="group relative rounded-xl border border-[#e2e8f0] overflow-hidden bg-white shadow-sm">
+    <div className="group relative rounded-xl border border-[#1e293b] overflow-hidden bg-[#111827] shadow-sm">
       {/* Preview */}
       <div
-        className="aspect-square overflow-hidden bg-[#f8fafc] cursor-pointer"
+        className="aspect-square overflow-hidden bg-[#182233] cursor-pointer"
         onClick={onView}
       >
         {isImage ? (
@@ -70,35 +70,35 @@ function AssetCard({
           />
         ) : asset.media_url ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
-            <ImageIcon className="w-7 h-7 text-[#c8d4e4]" />
-            <span className="text-[10px] text-[#9ca3af]">
+            <ImageIcon className="w-7 h-7 text-[#94a3b8]" />
+            <span className="text-[10px] text-[#64748b]">
               {asset.media_url.split('.').pop()?.split('?')[0]?.toUpperCase() || 'ARQUIVO'}
             </span>
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-7 h-7 text-[#c8d4e4]" />
+            <ImageIcon className="w-7 h-7 text-[#94a3b8]" />
           </div>
         )}
       </div>
 
       {/* Info */}
       <div className="px-2.5 pt-2 pb-1.5">
-        <p className="text-[12px] font-normal text-[#0f0f0f] truncate">{asset.title}</p>
-        <p className="text-[11px] text-[#9ca3af] mt-0.5">{contentTypeLabels[asset.content_type]}</p>
+        <p className="text-[12px] font-normal text-[#F8FAFC] truncate">{asset.title}</p>
+        <p className="text-[11px] text-[#64748b] mt-0.5">{contentTypeLabels[asset.content_type]}</p>
       </div>
 
       {/* Actions */}
       {confirming ? (
         <div className="px-2 pb-2 flex items-center gap-1.5">
-          <span className="text-[10px] text-[#9ca3af] flex-1">Excluir?</span>
+          <span className="text-[10px] text-[#64748b] flex-1">Excluir?</span>
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setConfirming(false)}>
             Não
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 px-2 text-[10px] text-red-500 hover:text-red-600"
+            className="h-6 px-2 text-[10px] text-red-500 hover:text-[#f87171]"
             onClick={() => { setConfirming(false); onDelete() }}
           >
             Sim
@@ -109,7 +109,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-[#374151]"
+            className="h-6 w-6 p-0 text-[#64748b] hover:text-[#CBD5E1]"
             onClick={onView}
           >
             <Eye className="w-3 h-3" />
@@ -117,7 +117,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-[#374151]"
+            className="h-6 w-6 p-0 text-[#64748b] hover:text-[#CBD5E1]"
             onClick={onEdit}
           >
             <Pencil className="w-3 h-3" />
@@ -125,7 +125,7 @@ function AssetCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-[#9ca3af] hover:text-red-500 ml-auto"
+            className="h-6 w-6 p-0 text-[#64748b] hover:text-red-500 ml-auto"
             onClick={() => setConfirming(true)}
           >
             <Trash2 className="w-3 h-3" />
@@ -157,7 +157,7 @@ function AssetViewDialog({
       <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-[14px] break-words">{asset.title}</DialogTitle>
-          <p className="text-[11px] text-[#9ca3af] mt-0.5">
+          <p className="text-[11px] text-[#64748b] mt-0.5">
             {contentTypeLabels[asset.content_type]} · {formatDate(asset.created_at)}
           </p>
         </DialogHeader>
@@ -168,7 +168,7 @@ function AssetViewDialog({
                 <img
                   src={asset.media_url}
                   alt={asset.title}
-                  className="w-full max-w-full max-h-[60vh] rounded-lg border border-[#e2e8f0] object-contain"
+                  className="w-full max-w-full max-h-[60vh] rounded-lg border border-[#1e293b] object-contain"
                 />
               </a>
             ) : (
@@ -176,23 +176,23 @@ function AssetViewDialog({
                 href={asset.media_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f0f4ff] transition-colors"
+                className="flex items-center gap-2.5 p-3 rounded-lg border border-[#1e293b] bg-[#182233] hover:bg-[#2563EB]/10 transition-colors"
               >
-                <ImageIcon className="w-4 h-4 text-[#9ca3af]" />
-                <span className="text-[12px] text-[#374151] flex-1 truncate">Abrir arquivo</span>
+                <ImageIcon className="w-4 h-4 text-[#64748b]" />
+                <span className="text-[12px] text-[#CBD5E1] flex-1 truncate">Abrir arquivo</span>
               </a>
             )
           )}
           {asset.caption && (
-            <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
-              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1.5">Legenda</p>
-              <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
+            <div className="p-3 rounded-lg bg-[#182233] border border-[#1e293b]">
+              <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1.5">Legenda</p>
+              <p className="text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap break-words">{asset.caption}</p>
             </div>
           )}
           {asset.observations && (
-            <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
-              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1.5">Observações</p>
-              <p className="text-[13px] text-[#6b7280] leading-relaxed break-words">{asset.observations}</p>
+            <div className="p-3 rounded-lg bg-[#182233] border border-[#1e293b]">
+              <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1.5">Observações</p>
+              <p className="text-[13px] text-[#94a3b8] leading-relaxed break-words">{asset.observations}</p>
             </div>
           )}
           {asset.link_url && (
@@ -200,11 +200,11 @@ function AssetViewDialog({
               href={asset.link_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f0f4ff] transition-colors min-w-0 max-w-full overflow-hidden"
+              className="flex items-center gap-2.5 p-3 rounded-lg border border-[#1e293b] bg-[#182233] hover:bg-[#2563EB]/10 transition-colors min-w-0 max-w-full overflow-hidden"
             >
               <Link2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
               <span className="text-[12px] text-blue-600 flex-1 min-w-0 break-all">{asset.link_url}</span>
-              <ExternalLink className="w-3.5 h-3.5 text-[#9ca3af] flex-shrink-0" />
+              <ExternalLink className="w-3.5 h-3.5 text-[#64748b] flex-shrink-0" />
             </a>
           )}
         </div>
@@ -220,10 +220,10 @@ function AssetViewDialog({
 // ─── Financial Status Card ────────────────────────────────────────────────────
 
 const financialBadgeStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:          { bg: 'bg-emerald-50 border-emerald-200',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:       { bg: 'bg-red-50 border-red-200',          text: 'text-red-700',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:      { bg: 'bg-gray-100 border-gray-200',       text: 'text-gray-600',    dot: 'bg-gray-400',    icon: <Ban className="w-3 h-3" /> },
+  ativo:          { bg: 'bg-[#22C55E]/15 border-[#22C55E]/30',  text: 'text-[#4ade80]', dot: 'bg-[#22C55E]/150', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-[#F5A623]/15 border-[#F5A623]/30',     text: 'text-[#fbbf24]',   dot: 'bg-[#F5A623]/150',   icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-[#ef4444]/15 border-[#ef4444]/30',          text: 'text-[#f87171]',     dot: 'bg-[#ef4444]/150',     icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-[#1e293b] border-[#334155]',       text: 'text-[#94a3b8]',    dot: 'bg-[#64748b]',    icon: <Ban className="w-3 h-3" /> },
 }
 
 function FinancialCard({ client }: { client: import('@/types').Client }) {
@@ -273,19 +273,19 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.08 }}
-      className="flex flex-col gap-3 mb-6 p-4 rounded-xl border border-[#e2e8f0] bg-white shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+      className="flex flex-col gap-3 mb-6 p-4 rounded-xl border border-[#1e293b] bg-[#111827] shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
     >
       {/* Ícone + dados */}
       <div className="flex items-start gap-3 flex-1 min-w-0">
-        <div className="w-9 h-9 rounded-lg bg-[#f0f4ff] border border-[#c7d4f5] flex items-center justify-center flex-shrink-0 mt-0.5">
-          <DollarSign className="w-4 h-4 text-[#4464c4]" />
+        <div className="w-9 h-9 rounded-lg bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <DollarSign className="w-4 h-4 text-[#6f93c9]" />
         </div>
 
         <div className="flex flex-wrap items-start gap-x-5 gap-y-3 flex-1 min-w-0">
           {client.valor_mensal != null && (
             <div className="min-w-0">
-              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Mensalidade</p>
-              <p className="text-[14px] font-semibold text-[#0f0f0f] break-words whitespace-normal">
+              <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Mensalidade</p>
+              <p className="text-[14px] font-semibold text-[#F8FAFC] break-words whitespace-normal">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.valor_mensal)}
               </p>
             </div>
@@ -293,16 +293,16 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
 
           {client.dia_vencimento != null && (
             <div className="min-w-0">
-              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Vencimento</p>
-              <p className="text-[13px] font-medium text-[#374151] flex items-center gap-1.5">
-                <CalendarDays className="w-3 h-3 text-[#9ca3af] flex-shrink-0" />
+              <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Vencimento</p>
+              <p className="text-[13px] font-medium text-[#CBD5E1] flex items-center gap-1.5">
+                <CalendarDays className="w-3 h-3 text-[#64748b] flex-shrink-0" />
                 Dia {client.dia_vencimento}
               </p>
             </div>
           )}
 
           <div className="min-w-0">
-            <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide mb-1">Status financeiro</p>
+            <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1">Status financeiro</p>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ${styles.bg} ${styles.text}`}>
               {styles.icon}
               {financialStatusLabel(computedStatus)}
@@ -311,10 +311,10 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
 
           {auxText && (
             <div className="min-w-0 hidden sm:block">
-              <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Info</p>
+              <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Info</p>
               <p className={`text-[12px] font-medium break-words whitespace-normal ${
-                computedStatus === 'atrasado' ? 'text-red-600' :
-                computedStatus === 'vence_em_breve' ? 'text-amber-600' : 'text-[#6b7280]'
+                computedStatus === 'atrasado' ? 'text-[#f87171]' :
+                computedStatus === 'vence_em_breve' ? 'text-[#fbbf24]' : 'text-[#94a3b8]'
               }`}>{auxText}</p>
             </div>
           )}
@@ -341,14 +341,14 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
             size="sm"
             variant="ghost"
             onClick={() => setOverrideOpen(o => !o)}
-            className="text-[11px] h-7 px-2.5 text-[#9ca3af] hover:text-[#374151] w-full sm:w-auto justify-center"
+            className="text-[11px] h-7 px-2.5 text-[#64748b] hover:text-[#CBD5E1] w-full sm:w-auto justify-center"
           >
             <ChevronDown className="w-3 h-3" /> Alterar
           </Button>
           {overrideOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setOverrideOpen(false)} />
-              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-[#e2e8f0] bg-white shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-[#1e293b] bg-[#111827] shadow-lg overflow-hidden">
                 {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
                   const st = financialBadgeStyles[s]
                   return (
@@ -356,7 +356,7 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
                       key={s}
                       disabled={saving}
                       onClick={() => handleManualStatus(s)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#f5f7fb] ${st.text}`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#0B1020] ${st.text}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
                       {financialStatusLabel(s)}
@@ -460,13 +460,13 @@ function groupPlannerByWeek(items: PlannerItem[]): WeekGroup[] {
 }
 
 function getPlannerBadge(item: PlannerItem): { label: string; cls: string } {
-  if (item.status === 'publicado') return { label: 'Publicado', cls: 'bg-emerald-50 text-emerald-900 border border-emerald-200' }
+  if (item.status === 'publicado') return { label: 'Publicado', cls: 'bg-[#22C55E]/15 text-emerald-900 border border-[#22C55E]/30' }
   switch (item.approval_status) {
-    case 'aprovado':          return { label: 'Aprovado',     cls: 'bg-green-50 text-green-900 border border-green-200' }
-    case 'reprovado':         return { label: 'Reprovado',    cls: 'bg-red-50 text-red-900 border border-red-200' }
-    case 'ajuste_solicitado': return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-900 border border-orange-200' }
-    case 'ajuste_realizado':  return { label: 'Ajuste Feito', cls: 'bg-blue-50 text-blue-900 border border-blue-200' }
-    default:                  return { label: 'Em Aprovação', cls: 'bg-amber-50 text-amber-900 border border-amber-200' }
+    case 'aprovado':          return { label: 'Aprovado',     cls: 'bg-[#22C55E]/15 text-[#4ade80] border border-green-200' }
+    case 'reprovado':         return { label: 'Reprovado',    cls: 'bg-[#ef4444]/15 text-[#f87171] border border-[#ef4444]/30' }
+    case 'ajuste_solicitado': return { label: 'Ajuste',       cls: 'bg-[#f97316]/15 text-[#fb923c] border border-[#f97316]/30' }
+    case 'ajuste_realizado':  return { label: 'Ajuste Feito', cls: 'bg-[#2563EB]/15 text-[#60a5fa] border border-[#2563EB]/30' }
+    default:                  return { label: 'Em Aprovação', cls: 'bg-[#F5A623]/15 text-amber-900 border border-[#F5A623]/30' }
   }
 }
 
@@ -486,11 +486,11 @@ function getWeekSummaryBadge(items: PlannerItem[]): { label: string; cls: string
   const hasReprovado = items.some(i => i.approval_status === 'reprovado')
   const allPublished = items.length > 0 && items.every(i => i.status === 'publicado')
   const allApproved  = items.length > 0 && items.every(i => i.approval_status === 'aprovado' || i.status === 'publicado')
-  if (hasReprovado) return { label: 'Reprovado',   cls: 'bg-red-50 text-red-800' }
-  if (hasAjuste)    return { label: 'Ajuste',       cls: 'bg-orange-50 text-orange-800' }
-  if (allPublished) return { label: 'Publicado',    cls: 'bg-emerald-50 text-emerald-800' }
-  if (allApproved)  return { label: 'Aprovado',     cls: 'bg-green-50 text-green-800' }
-  return              { label: 'Em Aprovação',  cls: 'bg-amber-50 text-amber-800' }
+  if (hasReprovado) return { label: 'Reprovado',   cls: 'bg-[#ef4444]/15 text-[#f87171]' }
+  if (hasAjuste)    return { label: 'Ajuste',       cls: 'bg-[#f97316]/15 text-[#fb923c]' }
+  if (allPublished) return { label: 'Publicado',    cls: 'bg-[#22C55E]/15 text-emerald-800' }
+  if (allApproved)  return { label: 'Aprovado',     cls: 'bg-[#22C55E]/15 text-[#4ade80]' }
+  return              { label: 'Em Aprovação',  cls: 'bg-[#F5A623]/15 text-amber-800' }
 }
 
 // ─── Instagram Tab ────────────────────────────────────────────────────────────
@@ -572,13 +572,13 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
           <Instagram className="w-8 h-8 text-white" />
         </div>
         <div className="text-center">
-          <p className="text-[14px] font-semibold text-[#0f0f0f]">Instagram não conectado</p>
-          <p className="text-[12px] text-[#9ca3af] mt-1">
+          <p className="text-[14px] font-semibold text-[#F8FAFC]">Instagram não conectado</p>
+          <p className="text-[12px] text-[#64748b] mt-1">
             Conecte a conta Business ou Creator deste cliente para agendar posts.
           </p>
           {/* Indicador de uso do limite */}
           {maxProfiles !== -1 && (
-            <p className={`text-[11px] mt-2 font-medium ${limitReached ? 'text-red-500' : 'text-[#6366f1]'}`}>
+            <p className={`text-[11px] mt-2 font-medium ${limitReached ? 'text-red-500' : 'text-[#6f93c9]'}`}>
               {activeCount}/{maxProfiles} perfil{maxProfiles === 1 ? '' : 's'} usados do plano {subData?.plan.name ?? ''}
             </p>
           )}
@@ -604,12 +604,12 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
   return (
     <div className="space-y-4">
       {/* Conta conectada */}
-      <div className="flex items-center gap-4 p-4 rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+      <div className="flex items-center gap-4 p-4 rounded-xl border border-[#1e293b] bg-[#111827] shadow-sm">
         {igAccount.profile_picture_url ? (
           <img
             src={igAccount.profile_picture_url}
             alt={igAccount.username}
-            className="w-14 h-14 rounded-full border-2 border-[#e2e8f0] object-cover flex-shrink-0"
+            className="w-14 h-14 rounded-full border-2 border-[#1e293b] object-cover flex-shrink-0"
           />
         ) : (
           <div
@@ -621,27 +621,27 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[14px] font-semibold text-[#0f0f0f]">@{igAccount.username}</p>
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <p className="text-[14px] font-semibold text-[#F8FAFC]">@{igAccount.username}</p>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#22C55E]/15 text-[#4ade80] border border-[#22C55E]/30">
               Conectado
             </span>
           </div>
           {igAccount.name && (
-            <p className="text-[12px] text-[#6b7280] mt-0.5">{igAccount.name}</p>
+            <p className="text-[12px] text-[#94a3b8] mt-0.5">{igAccount.name}</p>
           )}
-          <p className="text-[12px] text-[#9ca3af] mt-0.5">
+          <p className="text-[12px] text-[#64748b] mt-0.5">
             {igAccount.followers_count.toLocaleString('pt-BR')} seguidores
           </p>
         </div>
         <div className="flex-shrink-0">
           {confirming ? (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-[#9ca3af]">Desconectar?</span>
+              <span className="text-[11px] text-[#64748b]">Desconectar?</span>
               <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>Não</Button>
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-red-500 hover:text-red-600"
+                className="text-red-500 hover:text-[#f87171]"
                 onClick={handleDisconnect}
                 disabled={disconnect.isPending}
               >
@@ -657,8 +657,8 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
       </div>
 
       {/* Info */}
-      <div className="p-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc]">
-        <p className="text-[12px] text-[#6b7280] leading-relaxed">
+      <div className="p-4 rounded-xl border border-[#1e293b] bg-[#182233]">
+        <p className="text-[12px] text-[#94a3b8] leading-relaxed">
           Com o Instagram conectado, você pode agendar posts diretamente pelo modal de planejamento.
           Basta abrir qualquer post no planejador e usar a aba <strong>"Agendar no Instagram"</strong>.
         </p>
@@ -902,37 +902,37 @@ export function ClientProfile() {
 
   if (!client) return (
     <div className="flex items-center justify-center h-full">
-      <p className="text-[#9ca3af] text-sm">Cliente não encontrado.</p>
+      <p className="text-[#64748b] text-sm">Cliente não encontrado.</p>
     </div>
   )
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex-1 p-4 md:p-6" style={{ background: '#f5f7fb' }}>
+      <div className="flex-1 p-4 md:p-6" style={{ background: '#0B1020' }}>
 
         {/* ── Profile header ───────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-4 mb-5 p-5 rounded-xl border border-[#e2e8f0] bg-white shadow-sm"
+          className="flex items-start gap-4 mb-5 p-5 rounded-xl border border-[#1e293b] bg-[#111827] shadow-sm"
         >
           {client.logo_url ? (
             <img
               src={client.logo_url}
               alt={client.company_name}
-              className="w-14 h-14 rounded-xl object-cover border border-[#e2e8f0] flex-shrink-0"
+              className="w-14 h-14 rounded-xl object-cover border border-[#1e293b] flex-shrink-0"
             />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-[#f5f7fb] border border-[#e2e8f0] flex items-center justify-center text-xl font-semibold text-[#6b7280] flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-[#0B1020] border border-[#1e293b] flex items-center justify-center text-xl font-semibold text-[#94a3b8] flex-shrink-0">
               {client.company_name[0].toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-[15px] font-semibold text-[#0f0f0f] flex-1">{client.company_name}</h2>
+              <h2 className="text-[15px] font-semibold text-[#F8FAFC] flex-1">{client.company_name}</h2>
               <Badge status={client.status} />
               <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                <Link to="/clients" className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#e2e8f0] text-[#6b7280] hover:bg-[#f5f7fb] transition-colors">
+                <Link to="/clients" className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:bg-[#0B1020] transition-colors">
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
                 {client.email && (
@@ -940,7 +940,7 @@ export function ClientProfile() {
                     onClick={handleResendInvite}
                     disabled={resendingInvite}
                     title="Reenviar convite de acesso ao portal"
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#6b7280] hover:bg-[#f5f7fb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#1e293b] text-[12px] font-medium text-[#94a3b8] hover:bg-[#0B1020] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {resendingInvite
                       ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -949,38 +949,38 @@ export function ClientProfile() {
                     <span className="hidden sm:inline">{resendingInvite ? 'Enviando…' : 'Reenviar convite'}</span>
                   </button>
                 )}
-                <Link to={`/clients/${id}/edit`} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#e2e8f0] text-[12px] font-medium text-[#0f0f0f] hover:bg-[#f5f7fb] transition-colors">
+                <Link to={`/clients/${id}/edit`} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#1e293b] text-[12px] font-medium text-[#F8FAFC] hover:bg-[#0B1020] transition-colors">
                   <Edit className="w-3.5 h-3.5" /> Editar
                 </Link>
               </div>
             </div>
-            <p className="text-[#6b7280] text-[12px] mt-0.5">{client.responsible_name} · {client.niche}</p>
+            <p className="text-[#94a3b8] text-[12px] mt-0.5">{client.responsible_name} · {client.niche}</p>
             <div className="flex flex-wrap gap-3 mt-1.5">
               {client.instagram && (
-                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                <span className="flex items-center gap-1 text-[11px] text-[#64748b]">
                   <Instagram className="w-3 h-3" /> @{client.instagram.replace('@', '')}
                 </span>
               )}
               {client.email && (
-                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                <span className="flex items-center gap-1 text-[11px] text-[#64748b]">
                   <Mail className="w-3 h-3" /> {client.email}
                 </span>
               )}
               {client.whatsapp && (
-                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                <span className="flex items-center gap-1 text-[11px] text-[#64748b]">
                   <Phone className="w-3 h-3" /> {client.whatsapp}
                 </span>
               )}
               {client.website && (
-                <span className="flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                <span className="flex items-center gap-1 text-[11px] text-[#64748b]">
                   <Globe className="w-3 h-3" /> {client.website}
                 </span>
               )}
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[10px] text-[#9ca3af]">Desde</p>
-            <p className="text-[12px] font-medium text-[#374151]">{formatDate(client.entry_date)}</p>
+            <p className="text-[10px] text-[#64748b]">Desde</p>
+            <p className="text-[12px] font-medium text-[#CBD5E1]">{formatDate(client.entry_date)}</p>
           </div>
         </motion.div>
 
@@ -1023,10 +1023,10 @@ export function ClientProfile() {
               ].map(({ label, value }) => value && (
                 <Card key={label}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[11px] text-[#9ca3af] uppercase tracking-wide">{label}</CardTitle>
+                    <CardTitle className="text-[11px] text-[#64748b] uppercase tracking-wide">{label}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-[13px] text-[#374151]">{value}</p>
+                    <p className="text-[13px] text-[#CBD5E1]">{value}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -1038,7 +1038,7 @@ export function ClientProfile() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Brain className="w-3.5 h-3.5 text-[#6b7280]" />
+                  <Brain className="w-3.5 h-3.5 text-[#94a3b8]" />
                   <CardTitle>DNA da Marca</CardTitle>
                 </div>
                 <Button onClick={handleSaveDNA} size="sm" disabled={upsertDNA.isPending}>
@@ -1066,8 +1066,8 @@ export function ClientProfile() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-[13px] font-medium text-[#0f0f0f]">Arsenal Manual</p>
-                  <p className="text-[11px] text-[#9ca3af] mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
+                  <p className="text-[13px] font-medium text-[#F8FAFC]">Arsenal Manual</p>
+                  <p className="text-[11px] text-[#64748b] mt-0.5">{assets?.length || 0} conteúdos armazenados</p>
                 </div>
                 <Button size="sm" onClick={openCreateAsset}>
                   <Plus className="w-3 h-3" /> Adicionar conteúdo
@@ -1075,10 +1075,10 @@ export function ClientProfile() {
               </div>
 
               {(!assets || assets.length === 0) ? (
-                <div className="text-center py-10 border border-dashed border-[#e2e8f0] rounded-xl">
-                  <ImageIcon className="w-6 h-6 text-[#d1d5db] mx-auto mb-1.5" />
-                  <p className="text-[12px] text-[#9ca3af]">Nenhum conteúdo no arsenal ainda.</p>
-                  <p className="text-[11px] text-[#c8d4e4] mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
+                <div className="text-center py-10 border border-dashed border-[#1e293b] rounded-xl">
+                  <ImageIcon className="w-6 h-6 text-[#94a3b8] mx-auto mb-1.5" />
+                  <p className="text-[12px] text-[#64748b]">Nenhum conteúdo no arsenal ainda.</p>
+                  <p className="text-[11px] text-[#94a3b8] mt-0.5">Adicione imagens, vídeos e legendas prontos para usar.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -1118,8 +1118,8 @@ export function ClientProfile() {
                     onClick={() => setPlannerFilter(opt.key)}
                     className={`flex-shrink-0 text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-all ${
                       plannerFilter === opt.key
-                        ? 'bg-[#4464c4] text-white border-[#4464c4] shadow-sm'
-                        : 'bg-white text-[#6b7280] border-[#e2e8f0] hover:border-[#c7d4f5] hover:text-[#4464c4]'
+                        ? 'bg-[#29457a] text-white border-[#29457a] shadow-sm'
+                        : 'bg-[#111827] text-[#94a3b8] border-[#1e293b] hover:border-[#2563EB]/30 hover:text-[#6f93c9]'
                     }`}
                   >
                     {opt.label}
@@ -1133,7 +1133,7 @@ export function ClientProfile() {
                   <select
                     value={plannerMonth}
                     onChange={e => setPlannerMonth(e.target.value)}
-                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all cursor-pointer"
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#1e293b] bg-[#111827] text-[#CBD5E1] focus:outline-none focus:border-[#29457a] transition-all cursor-pointer"
                   >
                     {availableMonths.map(m => (
                       <option key={m} value={m}>{monthLabel(m)}</option>
@@ -1149,14 +1149,14 @@ export function ClientProfile() {
                     type="date"
                     value={plannerDateStart}
                     onChange={e => setPlannerDateStart(e.target.value)}
-                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all flex-1 min-w-[140px]"
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#1e293b] bg-[#111827] text-[#CBD5E1] focus:outline-none focus:border-[#29457a] transition-all flex-1 min-w-[140px]"
                   />
-                  <span className="text-[11px] text-[#9ca3af] flex-shrink-0">até</span>
+                  <span className="text-[11px] text-[#64748b] flex-shrink-0">até</span>
                   <input
                     type="date"
                     value={plannerDateEnd}
                     onChange={e => setPlannerDateEnd(e.target.value)}
-                    className="text-[12px] h-8 px-3 rounded-lg border border-[#e2e8f0] bg-white text-[#374151] focus:outline-none focus:border-[#4464c4] transition-all flex-1 min-w-[140px]"
+                    className="text-[12px] h-8 px-3 rounded-lg border border-[#1e293b] bg-[#111827] text-[#CBD5E1] focus:outline-none focus:border-[#29457a] transition-all flex-1 min-w-[140px]"
                   />
                 </div>
               )}
@@ -1169,9 +1169,9 @@ export function ClientProfile() {
               // Sem nenhum post cadastrado
               if ((planner || []).length === 0) {
                 return (
-                  <div className="text-center py-14 border border-dashed border-[#e2e8f0] rounded-xl">
-                    <CalendarDays className="w-7 h-7 text-[#d1d5db] mx-auto mb-2" />
-                    <p className="text-[12px] text-[#9ca3af]">Nenhum planejamento ainda.</p>
+                  <div className="text-center py-14 border border-dashed border-[#1e293b] rounded-xl">
+                    <CalendarDays className="w-7 h-7 text-[#94a3b8] mx-auto mb-2" />
+                    <p className="text-[12px] text-[#64748b]">Nenhum planejamento ainda.</p>
                   </div>
                 )
               }
@@ -1179,12 +1179,12 @@ export function ClientProfile() {
               // Sem posts no período filtrado
               if (weeks.length === 0) {
                 return (
-                  <div className="text-center py-14 border border-dashed border-[#e2e8f0] rounded-xl">
-                    <CalendarDays className="w-7 h-7 text-[#d1d5db] mx-auto mb-2" />
-                    <p className="text-[12px] text-[#9ca3af] mb-2">Nenhum post neste período.</p>
+                  <div className="text-center py-14 border border-dashed border-[#1e293b] rounded-xl">
+                    <CalendarDays className="w-7 h-7 text-[#94a3b8] mx-auto mb-2" />
+                    <p className="text-[12px] text-[#64748b] mb-2">Nenhum post neste período.</p>
                     <button
                       onClick={() => setPlannerFilter('todos')}
-                      className="text-[11px] font-medium text-[#4464c4] hover:underline"
+                      className="text-[11px] font-medium text-[#6f93c9] hover:underline"
                     >
                       Ver todos os planejamentos →
                     </button>
@@ -1201,14 +1201,14 @@ export function ClientProfile() {
                       return (
                         <div
                           key={week.key}
-                          className={`flex-shrink-0 w-[272px] px-4 ${!isLast ? 'border-r border-[#e8edf5]' : ''}`}
+                          className={`flex-shrink-0 w-[272px] px-4 ${!isLast ? 'border-r border-[#1e293b]' : ''}`}
                           style={{ paddingLeft: wi === 0 ? 0 : undefined, paddingRight: isLast ? 0 : undefined }}
                         >
                           {/* Week header */}
                           <div className="flex items-start justify-between mb-3">
                             <div>
-                              <p className="text-[13px] font-semibold text-[#0f0f0f]">{week.label}</p>
-                              <p className="text-[11px] text-[#9ca3af] mt-0.5">{week.dateRange}</p>
+                              <p className="text-[13px] font-semibold text-[#F8FAFC]">{week.label}</p>
+                              <p className="text-[11px] text-[#64748b] mt-0.5">{week.dateRange}</p>
                             </div>
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full mt-0.5 ${summary.cls}`}>
                               {summary.label}
@@ -1225,7 +1225,7 @@ export function ClientProfile() {
                                 <button
                                   key={item.id}
                                   onClick={() => { setSelectedPlannerItem(item); setPlannerItemOpen(true) }}
-                                  className="w-full text-left rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] hover:border-[#d0d8e8] transition-all group overflow-hidden shadow-sm"
+                                  className="w-full text-left rounded-xl border border-[#1e293b] bg-[#111827] hover:bg-[#182233] hover:border-[#1e293b] transition-all group overflow-hidden shadow-sm"
                                 >
                                   <div className="flex">
                                     {/* Left accent bar */}
@@ -1238,18 +1238,18 @@ export function ClientProfile() {
                                         <img
                                           src={thumb.file_url}
                                           alt=""
-                                          className="w-full h-28 object-cover rounded-lg mb-2.5 border border-[#e2e8f0]"
+                                          className="w-full h-28 object-cover rounded-lg mb-2.5 border border-[#1e293b]"
                                         />
                                       )}
 
                                       {/* Date */}
-                                      <p className="text-[10px] text-[#9ca3af] mb-1 font-medium tracking-wide">
+                                      <p className="text-[10px] text-[#64748b] mb-1 font-medium tracking-wide">
                                         {format(parseISO(item.scheduled_date), 'dd MMM', { locale: ptBR }).replace('.', '')}
                                         {item.scheduled_time ? ` · ${item.scheduled_time.slice(0, 5)}` : ''}
                                       </p>
 
                                       {/* Title */}
-                                      <p className="text-[12px] font-semibold text-[#0f0f0f] leading-snug mb-2.5 line-clamp-2">
+                                      <p className="text-[12px] font-semibold text-[#F8FAFC] leading-snug mb-2.5 line-clamp-2">
                                         {item.title}
                                       </p>
 
@@ -1261,7 +1261,7 @@ export function ClientProfile() {
                                         >
                                           <Instagram className="w-2.5 h-2.5 text-white" />
                                         </div>
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: '#f0f4ff', color: '#4464c4' }}>
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(37,99,235,0.12)', color: '#6f93c9' }}>
                                           {contentTypeLabels[item.content_type] || item.content_type}
                                         </span>
                                         <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${badge.cls}`}>
@@ -1356,7 +1356,7 @@ export function ClientProfile() {
             />
 
             <div>
-              <label className="block text-[12px] font-normal text-[#6b7280] mb-1.5">Tipo</label>
+              <label className="block text-[12px] font-normal text-[#94a3b8] mb-1.5">Tipo</label>
               <Select
                 value={assetForm.content_type}
                 onValueChange={v => setAssetForm(p => ({ ...p, content_type: v as ContentType }))}
@@ -1380,7 +1380,7 @@ export function ClientProfile() {
 
             {/* Mídia */}
             <div>
-              <label className="block text-[12px] font-normal text-[#6b7280] mb-1.5">Mídia</label>
+              <label className="block text-[12px] font-normal text-[#94a3b8] mb-1.5">Mídia</label>
 
               {editingAsset?.media_url && !assetFile && (() => {
                 const isImg = /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(editingAsset.media_url!)
@@ -1390,12 +1390,12 @@ export function ClientProfile() {
                       <img
                         src={editingAsset.media_url!}
                         alt=""
-                        className="w-full max-h-32 object-cover rounded-md border border-[#e2e8f0]"
+                        className="w-full max-h-32 object-cover rounded-md border border-[#1e293b]"
                       />
                     ) : (
-                      <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#e2e8f0] bg-[#f8fafc]">
-                        <ImageIcon className="w-3.5 h-3.5 text-[#9ca3af]" />
-                        <span className="text-[12px] text-[#6b7280] truncate flex-1">Arquivo atual</span>
+                      <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#1e293b] bg-[#182233]">
+                        <ImageIcon className="w-3.5 h-3.5 text-[#64748b]" />
+                        <span className="text-[12px] text-[#94a3b8] truncate flex-1">Arquivo atual</span>
                       </div>
                     )}
                     <button
@@ -1410,13 +1410,13 @@ export function ClientProfile() {
               })()}
 
               {assetFile ? (
-                <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#e2e8f0] bg-[#f8fafc]">
-                  <ImageIcon className="w-3.5 h-3.5 text-[#9ca3af]" />
-                  <span className="text-[12px] text-[#374151] truncate flex-1">{assetFile.name}</span>
+                <div className="flex items-center gap-2 p-2.5 rounded-md border border-[#1e293b] bg-[#182233]">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#64748b]" />
+                  <span className="text-[12px] text-[#CBD5E1] truncate flex-1">{assetFile.name}</span>
                   <button
                     type="button"
                     onClick={() => setAssetFile(null)}
-                    className="text-[#9ca3af] hover:text-red-500 flex-shrink-0"
+                    className="text-[#64748b] hover:text-red-500 flex-shrink-0"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1425,7 +1425,7 @@ export function ClientProfile() {
                 <button
                   type="button"
                   onClick={() => assetFileRef.current?.click()}
-                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-[#e2e8f0] bg-white text-[#9ca3af] text-[12px] hover:border-[#c7d4f5] hover:bg-[#f8fafc] transition-colors"
+                  className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-dashed border-[#1e293b] bg-[#111827] text-[#64748b] text-[12px] hover:border-[#2563EB]/30 hover:bg-[#182233] transition-colors"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   Clique para selecionar imagem ou vídeo
