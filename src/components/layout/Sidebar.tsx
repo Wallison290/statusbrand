@@ -216,8 +216,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
-                        width: `${aiPct}%`,
-                        background: aiPct >= 90 ? '#ef4444' : aiPct >= 70 ? '#F5A623' : 'linear-gradient(90deg, #2563EB, #1D4ED8)',
+                        width: `${aiPct > 0 ? Math.max(aiPct, 3) : 0}%`,
+                        background: aiPct >= 90 ? '#ef4444' : aiPct >= 70 ? '#F5A623' : 'linear-gradient(90deg, #29457a, #16284d)',
                       }}
                     />
                   </div>
@@ -237,8 +237,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
-                        width: `${stPct}%`,
-                        background: stPct >= 90 ? '#ef4444' : stPct >= 70 ? '#f59e0b' : '#2563eb',
+                        width: `${stPct > 0 ? Math.max(stPct, 3) : 0}%`,
+                        background: stPct >= 90 ? '#ef4444' : stPct >= 70 ? '#f59e0b' : 'linear-gradient(90deg, #29457a, #16284d)',
                       }}
                     />
                   </div>
