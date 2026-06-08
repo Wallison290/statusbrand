@@ -155,6 +155,39 @@ Deno.serve(async (req) => {
     // Remove os marcadores [[IMG:...]] da prompt
     const cleanPrompt = userPrompt.replace(/\[\[IMG:[\s\S]*?\]\]/g, '').trim() || 'imagem'
 
+    // ── Monta um prompt de imagem otimizado a partir da conversa ────────────
+    // Sem isso, cada geração usa só a última mensagem e os follow-ups
+    // ("sem essas cores", "tira o fundo branco") perdem o contexto.
+    let builtPrompt = cleanPrompt
+    try {
+      const stripMarkers = (t: string) => t
+        .replace(/\[\[IMG:[\s\S]*?\]\]/g, '[imagem de referência enviada pelo usuário]')
+        .replace(/\[\[GENERATED_IMAGE:[\s\S]*?\]\]/g, '[imagem que você gerou antes]')
+      const history = (messages as { role: string; content: string }[])
+        .slice(-8)
+        .map(m => ({
+          role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+          content: stripMarkers(m.content),
+        }))
+      const PROMPT_SYS = `Você é um engenheiro de prompts para um modelo de geração de imagens.
+Com base na conversa, escreva UM ÚNICO prompt detalhado e visual descrevendo exatamente a imagem a gerar AGORA.
+Regras:
+- Considere o histórico: se o usuário pediu ajustes numa imagem anterior ("sem essas cores", "tira o fundo branco", "deixa mais escuro"), aplique-os ao novo prompt.
+- Especifique estilo, paleta de cores (use os códigos hex quando o usuário informar), composição/layout, fundo e, se houver logo de referência, como incorporá-la fielmente.
+- Liste qualquer texto que deva aparecer na imagem EXATAMENTE como deve ser escrito, entre aspas.
+- Escreva o prompt em inglês (gera melhor), mas mantenha textos que aparecem na imagem no idioma original.
+- Responda SOMENTE com o prompt final, sem comentários.`
+      const pr = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: PROMPT_SYS }, ...history] as OpenAI.Chat.ChatCompletionMessageParam[],
+        max_tokens: 600,
+      })
+      const out = pr.choices[0]?.message?.content?.trim()
+      if (out) builtPrompt = out
+    } catch {
+      builtPrompt = cleanPrompt
+    }
+
     // Família gpt-image (dall-e-3 foi descontinuado). Tenta na ordem de qualidade
     // e cai para o próximo se um modelo falhar (ex: exigir verificação da org).
     // Esses modelos retornam a imagem em base64 (b64_json), não em URL.
@@ -175,13 +208,13 @@ Deno.serve(async (req) => {
           imgRes = await openai.images.edit({
             model,
             image: files.length === 1 ? files[0] : files,
-            prompt: cleanPrompt,
+            prompt: builtPrompt,
             n: 1,
             size: '1024x1024',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any)
         } else {
-          imgRes = await openai.images.generate({ model, prompt: cleanPrompt, n: 1, size: '1024x1024' })
+          imgRes = await openai.images.generate({ model, prompt: builtPrompt, n: 1, size: '1024x1024' })
         }
         const d = imgRes.data?.[0]
         imgUrl = d?.b64_json ? `data:image/png;base64,${d.b64_json}` : (d?.url ?? '')
