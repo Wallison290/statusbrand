@@ -276,6 +276,13 @@ export function useSubmitPartialApproval() {
         reviewed_by: user!.id,
       }
 
+      // Aprovação completa do cliente → o status do planner sobe para "aprovado".
+      // (Se houver auto-agendamento no Instagram, o trigger do banco eleva para
+      // "publicado" na mesma operação.)
+      if (overallStatus === 'aprovado') {
+        updatePayload.status = 'aprovado'
+      }
+
       if (field === 'art') {
         updatePayload.art_approval_status = status
         updatePayload.art_feedback = feedback.trim() || null
@@ -317,6 +324,7 @@ export function useApproveAll() {
         .from('planner')
         .update({
           approval_status: 'aprovado',
+          status: 'aprovado',
           art_approval_status: 'aprovado',
           copy_approval_status: 'aprovado',
           art_feedback: null,
