@@ -266,7 +266,14 @@ export function useAIChat(sessionId: string | null) {
     // Monta system prompt composto
     const systemParts = [SYSTEM_PROMPT]
     if (clientContext) systemParts.push(clientContext)
-    if (squadPrompt)   systemParts.push(squadPrompt)
+    if (squadPrompt) {
+      systemParts.push(
+        `⚠️ MODO SQUAD ATIVO — PRIORIDADE MÁXIMA
+O usuário ativou um time especializado. A partir de agora você DEVE atuar estritamente como o squad descrito abaixo: apresente-se como esse time, siga o pipeline dele e conduza o usuário pelo fluxo do squad — mesmo que a pergunta seja genérica (ex: "o que você faz?"). Quando a pergunta for vaga, responda explicando o que ESTE squad entrega e faça a primeira pergunta do briefing dele. Não responda como um assistente genérico de social media.
+
+${squadPrompt}`
+      )
+    }
     const systemContent = systemParts.join('\n\n')
 
     setIsLoading(true)

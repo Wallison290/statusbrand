@@ -135,15 +135,25 @@ function formatMessage(text: string): JSX.Element[] {
       )
       continue
     }
-    if (/^\d+\. /.test(line)) {
-      const items: string[] = []
-      while (i < lines.length && /^\d+\. /.test(lines[i])) { items.push(lines[i].replace(/^\d+\. /, '')); i++ }
+    if (/^\d+\.\s/.test(line)) {
+      const items: { num: number; text: string }[] = []
+      while (i < lines.length) {
+        const m = lines[i].match(/^(\d+)\.\s+(.*)$/)
+        if (m) { items.push({ num: parseInt(m[1], 10), text: m[2] }); i++; continue }
+        const blank = lines[i].trim() === ''
+        // pula linha(s) em branco entre itens numerados (mantém a mesma lista)
+        if (blank && /^\d+\.\s/.test(lines[i + 1] ?? '')) { i++; continue }
+        if (blank) break
+        // linha de continuação do item anterior (texto que quebrou em outra linha)
+        if (items.length) { items[items.length - 1].text += ' ' + lines[i].trim(); i++; continue }
+        break
+      }
       result.push(
         <ol key={i} className="my-2 space-y-1.5">
           {items.map((item, idx) => (
             <li key={idx} className="flex gap-2.5 text-[13.5px] leading-relaxed">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#f0f0f0] text-[#555] text-[11px] font-semibold flex items-center justify-center mt-0.5">{idx + 1}</span>
-              <span>{parseInline(item)}</span>
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#f0f0f0] text-[#555] text-[11px] font-semibold flex items-center justify-center mt-0.5">{item.num}</span>
+              <span>{parseInline(item.text)}</span>
             </li>
           ))}
         </ol>
