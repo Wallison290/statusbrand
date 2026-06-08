@@ -450,6 +450,7 @@ type IgPostType = 'IMAGE' | 'CAROUSEL_ALBUM' | 'REELS'
 function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string }) {
   const { data: igAccount, isLoading: igLoading } = useClientInstagramAccount(item.client_id ?? undefined)
   const createPost = useCreateScheduledPost()
+  const updatePlanner = useUpdatePlannerItem()
   const { toast }  = useToast()
 
   // Tipo vem direto do planner (sem re-seleção)
@@ -467,11 +468,11 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
             <Check className="w-3 h-3 text-white" />
           </div>
-          <p className="text-xs font-semibold text-emerald-800">Aprovado e agendado automaticamente</p>
+          <p className="text-xs font-semibold text-emerald-800">Aprovado e agendado</p>
         </div>
         <p className="text-[11px] text-emerald-700 leading-relaxed">
-          O cliente aprovou este {ptLabel} e ele foi agendado no Instagram automaticamente.
-          Acompanhe a publicação na aba <strong>Instagram</strong>.
+          Este {ptLabel} está agendado no Instagram e marcado como aprovado — o cliente
+          não vê mais como pendente de aprovação. Acompanhe a publicação na aba <strong>Instagram</strong>.
         </p>
       </div>
     )
@@ -558,6 +559,20 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
         media_urls:    igMedia.map(a => a.file_url),
         scheduled_at:  new Date(`${schedDate}T${schedTime}:00`).toISOString(),
       })
+
+      // Agendou manualmente pela agência → considera o conteúdo aprovado.
+      // O cliente deixa de ver "pendente de aprovação" e o item sobe para
+      // "publicado" na agência. Marcamos ig_scheduled=true para o trigger do
+      // banco NÃO reagendar (evita post duplicado).
+      await updatePlanner.mutateAsync({
+        id:                  item.id,
+        status:              'publicado',
+        approval_status:     'aprovado',
+        art_approval_status: 'aprovado',
+        copy_approval_status:'aprovado',
+        ig_scheduled:        true,
+      })
+
       setSuccess(true)
       toast('Post agendado no Instagram!', 'success')
     } catch (err: any) {
