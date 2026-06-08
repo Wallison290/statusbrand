@@ -5,6 +5,7 @@ import {
   Star, ArrowRight, ShieldCheck, Lock, CheckCircle2, Check,
   Users, Sparkles, CalendarDays, Bot, FolderKanban, Workflow,
   ChevronDown, Zap, Instagram, BarChart3, Menu, X,
+  LayoutGrid, ListChecks, StickyNote, BookOpen, Wallet,
 } from 'lucide-react'
 import { PLANS } from '@/config/plans'
 
@@ -209,23 +210,31 @@ function WhyItWorks() {
 // ─── Explorar a plataforma ────────────────────────────────────────────────────
 function Platform() {
   const features = [
-    { icon: FolderKanban, title: 'Hub do Cliente', subtitle: 'Cada cliente com o próprio espaço', bullets: ['Briefing estruturado e versionado', 'Arquivos, referências e links organizados', 'Tom de voz e persona memorizados pela IA', 'Histórico completo por cliente'] },
-    { icon: CalendarDays, title: 'Calendário Editorial', subtitle: 'O calendário que substitui a planilha', bullets: ['Visão mensal e semanal num só painel', 'Status de produção, revisão e aprovação', 'Filtro por cliente e formato', 'Tudo organizado por cliente'] },
-    { icon: Bot, title: 'IA Copilot', subtitle: '13 squads especializados', bullets: ['52 agentes focados em social media e marketing', 'Movido por GPT-4o, com busca na web e geração de imagem', 'Posts, carrosséis, calendários e diagnósticos', 'A IA já conhece o contexto de cada cliente'] },
-    { icon: Instagram, title: 'Agendamento Instagram', subtitle: 'Publique direto da plataforma', bullets: ['Conecte a conta Instagram de cada cliente', 'Agende posts, carrosséis e reels', 'Organize o feed antes de publicar', 'Aprovação do cliente antes de ir ao ar'] },
+    { icon: FolderKanban, title: 'Hub do Cliente', subtitle: 'Cada cliente com o próprio espaço', bullets: ['Briefing estruturado e versionado', 'Arquivos, referências e links organizados', 'Tom de voz e persona memorizados pela IA'] },
+    { icon: CalendarDays, title: 'Planejamento Editorial', subtitle: 'O calendário que substitui a planilha', bullets: ['Visão mensal e semanal num só painel', 'Status de ideia, produção, revisão e aprovação', 'Carrossel, reel e imagem com a ordem certa'] },
+    { icon: LayoutGrid, title: 'Feed do Perfil', subtitle: 'Monte o grid antes de publicar', bullets: ['Prévia real de como o feed vai ficar', 'Arraste e reorganize os posts', 'Puxe mídias do planejamento sem reenviar'] },
+    { icon: Instagram, title: 'Agendamento Instagram', subtitle: 'Publique direto da plataforma', bullets: ['Conecte a conta de cada cliente', 'Agende posts, carrosséis e reels', 'Agendou? O conteúdo já sobe como aprovado'] },
+    { icon: CheckCircle2, title: 'Portal de Aprovação', subtitle: 'O cliente acompanha e aprova', bullets: ['Acesso próprio para cada cliente', 'Aprova arte e legenda ou pede ajuste', 'Vê o carrossel completo, sem cortes'] },
+    { icon: Bot, title: 'IA Copilot', subtitle: '13 squads, 52 agentes', bullets: ['Focada em social media e marketing', 'Busca na web e geração de imagem', 'Já conhece o contexto de cada cliente'] },
+    { icon: ListChecks, title: 'Tarefas & Produção', subtitle: 'O fluxo do time num só lugar', bullets: ['Quadro de tarefas por cliente e etapa', 'Prazos e responsáveis definidos', 'Acompanhe o que está em produção'] },
+    { icon: StickyNote, title: 'Notas Rápidas', subtitle: 'Nada se perde entre reuniões', bullets: ['Anotações soltas ou vinculadas ao cliente', 'Ideias de pauta sempre à mão', 'Tudo pesquisável depois'] },
+    { icon: BookOpen, title: 'Biblioteca de Conteúdo', subtitle: 'Seu acervo reaproveitável', bullets: ['Modelos, referências e materiais salvos', 'Reaproveite o que já funcionou', 'Padronize a entrega entre clientes'] },
+    { icon: Wallet, title: 'Financeiro', subtitle: 'O caixa da operação sob controle', bullets: ['Pagamentos e recebimentos por cliente', 'Status financeiro de cada conta', 'Saúde do negócio numa olhada'] },
+    { icon: Users, title: 'Gestão de Equipe', subtitle: 'Escale com o time junto', bullets: ['Convide e organize seu time', 'Cada um sabe o que fazer', 'Trabalho dividido por cliente'] },
+    { icon: BarChart3, title: 'Visão Geral', subtitle: 'O dashboard que centraliza tudo', bullets: ['Resumo de clientes, conteúdo e prazos', 'O que precisa da sua atenção hoje', 'Comece o dia sabendo por onde ir'] },
   ]
   return (
     <section id="plataforma" className="py-20 px-4 sm:px-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Explore a plataforma</h2>
-          <p className="text-[15px] text-[#94a3b8] mt-2">Interface intuitiva e recursos pensados pra rotina real de quem atende cliente.</p>
+          <p className="text-[15px] text-[#94a3b8] mt-2">Tudo que a rotina de quem atende cliente precisa — do briefing ao financeiro, num só lugar.</p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map(f => (
-            <div key={f.title} className="bg-[#111827] border border-[#1e293b] rounded-2xl p-6">
+            <div key={f.title} className="bg-[#111827] border border-[#1e293b] rounded-2xl p-5 transition-colors hover:border-[#29457a]/60">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#29457a]/20 border border-[#29457a]/40 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[#29457a]/20 border border-[#29457a]/40 flex items-center justify-center flex-shrink-0">
                   <f.icon className="w-5 h-5 text-[#6f93c9]" />
                 </div>
                 <div>
