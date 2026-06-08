@@ -13,6 +13,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
 import { useContentAssets } from '@/hooks/useContentAssets'
+import { usePlanner } from '@/hooks/usePlanner'
 import {
   useFeeds, useFeedMeta, useCreateFeedVersion, useUpdateFeedVersion,
   useDeleteFeedVersion, useUpsertFeedMeta,
@@ -378,13 +379,15 @@ function VersionChip({ version, isActive, onClick, onRename, onDelete, onDuplica
 
 // ─── Asset picker dialog ──────────────────────────────────────────────────────
 
-function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
+function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSelectMedia }: {
   open: boolean; onClose: () => void; clientId: string | null
   onSelect: (asset: ContentAsset) => void; onUpload: (file: File) => void
+  onSelectMedia: (media: { url: string; caption?: string }) => void
 }) {
   const { data: allAssets } = useContentAssets()
+  const { data: plannerItems } = usePlanner(clientId || undefined)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [tab, setTab] = useState<'arsenal' | 'upload'>('arsenal')
+  const [tab, setTab] = useState<'arsenal' | 'planner' | 'upload'>('arsenal')
 
   const assets = (allAssets || []).filter(a => {
     const isImage = a.media_url && (
@@ -396,13 +399,31 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
     return true
   })
 
+  // Mídias já existentes no planejamento desse cliente (deduplicadas por file_url)
+  const plannerMedia = useMemo(() => {
+    const seen = new Set<string>()
+    const out: { url: string; caption?: string; isVideo: boolean; title: string }[] = []
+    for (const item of plannerItems || []) {
+      for (const att of (item as any).attachments || []) {
+        const url: string | undefined = att.file_url
+        const type: string = att.file_type || ''
+        const isImage = type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url || '')
+        const isVideo = type.startsWith('video/') || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url || '')
+        if (!url || (!isImage && !isVideo) || seen.has(url)) continue
+        seen.add(url)
+        out.push({ url, caption: (item as any).title || att.file_name, isVideo, title: (item as any).title || att.file_name || '' })
+      }
+    }
+    return out
+  }, [plannerItems])
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader><DialogTitle>Adicionar post ao feed</DialogTitle></DialogHeader>
         <div className="flex gap-1 p-1 bg-[#101A2B] rounded-xl mb-4">
-          {[{ id: 'arsenal', label: 'Arsenal de conteúdo', icon: Images }, { id: 'upload', label: 'Upload de imagem', icon: Upload }].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id as 'arsenal' | 'upload')}
+          {[{ id: 'arsenal', label: 'Arsenal', icon: Images }, { id: 'planner', label: 'Do planejamento', icon: LayoutGrid }, { id: 'upload', label: 'Upload', icon: Upload }].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id as 'arsenal' | 'planner' | 'upload')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium transition-all
                 ${tab === t.id ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#94a3b8] hover:text-[#F8FAFC]'}`}>
               <t.icon className="w-3.5 h-3.5" /> {t.label}
@@ -424,6 +445,39 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload }: {
                     <img src={asset.media_url!} alt={asset.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{asset.title}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : tab === 'planner' ? (
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {!clientId ? (
+              <div className="flex flex-col items-center justify-center py-16 text-[#64748b]">
+                <LayoutGrid className="w-10 h-10 mb-3 opacity-40" />
+                <p className="text-sm">Selecione um cliente para ver o planejamento</p>
+              </div>
+            ) : plannerMedia.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-[#64748b]">
+                <LayoutGrid className="w-10 h-10 mb-3 opacity-40" />
+                <p className="text-sm">Nenhuma mídia no planejamento deste cliente</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {plannerMedia.map(m => (
+                  <button key={m.url} onClick={() => { onSelectMedia({ url: m.url, caption: m.caption }); onClose() }}
+                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative bg-[#101A2B]">
+                    {m.isVideo ? (
+                      <video src={m.url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={m.url} alt={m.title} className="w-full h-full object-cover" />
+                    )}
+                    {m.isVideo && (
+                      <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-white font-medium">vídeo</span>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
+                      <span className="text-[10px] text-white font-medium line-clamp-2">{m.title}</span>
                     </div>
                   </button>
                 ))}
@@ -574,6 +628,12 @@ export function FeedOrganizer() {
   const addPostFromAsset = (asset: ContentAsset) => {
     if (!asset.media_url) return
     updatePosts([...posts, { id: crypto.randomUUID(), image_url: asset.media_url, caption: asset.title, asset_id: asset.id }])
+  }
+
+  // Reaproveita mídia que já existe no planejamento (sem re-upload)
+  const addPostFromMedia = ({ url, caption }: { url: string; caption?: string }) => {
+    if (!url) return
+    updatePosts([...posts, { id: crypto.randomUUID(), image_url: url, caption }])
   }
 
   const addPostFromUpload = async (file: File) => {
@@ -1025,6 +1085,7 @@ export function FeedOrganizer() {
       <AssetPickerDialog
         open={pickerOpen} onClose={() => setPickerOpen(false)}
         clientId={selectedClientId} onSelect={addPostFromAsset} onUpload={addPostFromUpload}
+        onSelectMedia={addPostFromMedia}
       />
     </div>
   )
