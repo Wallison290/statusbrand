@@ -532,7 +532,7 @@ export function AIPage() {
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-white/8 flex-shrink-0">
-          <p className="text-[10px] text-white/25 leading-relaxed">Powered by GPT-4o · gpt-image-1 · Voz pt-BR</p>
+          <p className="text-[10px] text-white/25 leading-relaxed">Powered by GPT-4o · gpt-image-1.5 · Voz pt-BR</p>
         </div>
       </div>
 
@@ -713,7 +713,7 @@ export function AIPage() {
               webSearch ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#666]',
             )}>
               {imageMode ? <Wand2 className="w-3 h-3" /> : webSearch ? <Globe className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-              {imageMode ? 'gpt-image-1' : webSearch ? 'gpt-4o-search' : 'gpt-4o'}
+              {imageMode ? 'gpt-image-1.5' : webSearch ? 'gpt-4o-search' : 'gpt-4o'}
             </div>
 
           </div>
@@ -878,11 +878,11 @@ export function AIPage() {
                     <span className="hidden sm:inline">{webSearch ? 'Web ativa' : 'Web'}</span>
                   </button>
 
-                  {/* Toggle gerar imagem (gpt-image-1) */}
+                  {/* Toggle gerar imagem (gpt-image-1.5) */}
                   <button
                     onClick={() => setImageMode(m => { const next = !m; if (next) setWebSearch(false); return next })}
                     disabled={isLoading || isStreaming}
-                    title={imageMode ? 'Desativar modo imagem' : 'Gerar imagem com IA (gpt-image-1)'}
+                    title={imageMode ? 'Desativar modo imagem' : 'Gerar imagem com IA (gpt-image-1.5)'}
                     className={cn(
                       'flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium transition-all disabled:opacity-40',
                       imageMode
@@ -917,7 +917,7 @@ export function AIPage() {
             </div>
 
             <p className="text-[10px] text-[#bbb] text-center mt-2">
-              Enter para enviar · Shift+Enter para nova linha · 📎 imagem · 🎤 voz · 🌐 web · 🎨 gpt-image-1
+              Enter para enviar · Shift+Enter para nova linha · 📎 imagem · 🎤 voz · 🌐 web · 🎨 gpt-image-1.5
             </p>
           </div>
         </div>
