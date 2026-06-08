@@ -1,7 +1,7 @@
 // ── ai-chat: streaming com limites por plano + visão + geração de imagens ──────
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import OpenAI from 'npm:openai@4'
+import OpenAI, { toFile } from 'npm:openai@4'
 
 const OPENAI_API_KEY       = Deno.env.get('OPENAI_API_KEY') ?? ''
 const SUPABASE_URL         = Deno.env.get('SUPABASE_URL') ?? ''
@@ -114,6 +114,16 @@ function sseResponse(content: string) {
   )
 }
 
+// ── Converte data URL (base64) em bytes + mime ─────────────────────────────
+function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
+  const [meta, b64] = dataUrl.split(',')
+  const mime = meta.match(/data:(.*?);base64/)?.[1] ?? 'image/png'
+  const bin = atob(b64 ?? '')
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return { bytes, mime }
+}
+
 // ── Serve ──────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
@@ -140,8 +150,10 @@ Deno.serve(async (req) => {
     }
 
     const userPrompt = messages[messages.length - 1]?.content ?? ''
-    // Remove [[IMG:...]] da prompt se houver
-    const cleanPrompt = userPrompt.replace(/\[\[IMG:[\s\S]*?\]\]/g, '').trim()
+    // Imagens de referência anexadas (para edição/geração guiada)
+    const refImages = [...userPrompt.matchAll(/\[\[IMG:([\s\S]*?)\]\]/g)].map(m => m[1]).slice(0, 4)
+    // Remove os marcadores [[IMG:...]] da prompt
+    const cleanPrompt = userPrompt.replace(/\[\[IMG:[\s\S]*?\]\]/g, '').trim() || 'imagem'
 
     // Família gpt-image (dall-e-3 foi descontinuado). Tenta na ordem de qualidade
     // e cai para o próximo se um modelo falhar (ex: exigir verificação da org).
@@ -151,14 +163,27 @@ Deno.serve(async (req) => {
     let lastErr = 'modelo de imagem indisponível'
     for (const model of IMAGE_MODELS) {
       try {
-        const imgRes = await openai.images.generate({
-          model,
-          prompt: cleanPrompt,
-          n: 1,
-          size: '1024x1024',
-        })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const d = imgRes.data?.[0] as any
+        let imgRes: any
+        if (refImages.length > 0) {
+          // Edição/geração guiada usando as imagens enviadas como referência
+          const files = await Promise.all(refImages.map(async (durl, idx) => {
+            const { bytes, mime } = dataUrlToBytes(durl)
+            const ext = (mime.split('/')[1] ?? 'png').replace('jpeg', 'jpg')
+            return await toFile(bytes, `ref-${idx}.${ext}`, { type: mime })
+          }))
+          imgRes = await openai.images.edit({
+            model,
+            image: files.length === 1 ? files[0] : files,
+            prompt: cleanPrompt,
+            n: 1,
+            size: '1024x1024',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any)
+        } else {
+          imgRes = await openai.images.generate({ model, prompt: cleanPrompt, n: 1, size: '1024x1024' })
+        }
+        const d = imgRes.data?.[0]
         imgUrl = d?.b64_json ? `data:image/png;base64,${d.b64_json}` : (d?.url ?? '')
         if (imgUrl) break
         lastErr = 'resposta vazia do modelo de imagem'
@@ -191,25 +216,38 @@ Deno.serve(async (req) => {
   const hasVision = messages.some((m: { role: string; content: string }) => m.role === 'user' && hasImages(m.content))
 
   if (useWebSearch) {
-    const res = await openai.chat.completions.create({
-      model: 'gpt-4o-search-preview',
-      messages: allMessages,
-      stream: false,
-      max_tokens: 2048,
-    } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming)
-    const content = res.choices[0]?.message?.content ?? ''
-    return sseResponse(content)
+    try {
+      const res = await openai.chat.completions.create({
+        model: 'gpt-4o-search-preview',
+        messages: allMessages,
+        stream: false,
+        max_tokens: 2048,
+      } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming)
+      const content = res.choices[0]?.message?.content ?? ''
+      return sseResponse(content)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      return sseResponse(`❌ Erro: ${msg}`)
+    }
   }
 
   // Usa gpt-4o para visão, gpt-4o-mini para texto
   const model = hasVision ? 'gpt-4o' : 'gpt-4o-mini'
 
-  const stream = await openai.chat.completions.create({
-    model,
-    messages: allMessages,
-    stream: true,
-    max_tokens: 2048,
-  })
+  // Cria o stream com try/catch para que erros da OpenAI voltem COM headers CORS
+  // (sem isso, uma exceção aqui gera um 500 sem CORS e o browser mostra "Failed to fetch")
+  let stream
+  try {
+    stream = await openai.chat.completions.create({
+      model,
+      messages: allMessages,
+      stream: true,
+      max_tokens: 2048,
+    })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return sseResponse(`❌ Erro: ${msg}`)
+  }
 
   const readable = new ReadableStream({
     async start(controller) {

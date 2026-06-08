@@ -220,8 +220,9 @@ export function useAIChat(sessionId: string | null) {
       fullContent = fullContent ? `${fullContent}${imgMarkers}` : imgMarkers.trim()
     }
 
-    // Gera imagem se: o botão Imagem estiver ligado OU o texto pedir — e não houver imagem anexada (visão)
-    const generateImage = (forceImage || isImageGenRequest(fullContent)) && !attachedImages?.length
+    // Gera imagem se: o botão Imagem estiver ligado (usa imagens anexadas como referência),
+    // OU o texto pedir geração e NÃO houver imagem anexada (sem botão, imagem anexada = análise/visão).
+    const generateImage = forceImage || (isImageGenRequest(fullContent) && !attachedImages?.length)
 
     let activeSessionId = sessionId
 
