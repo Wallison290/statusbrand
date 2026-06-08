@@ -144,14 +144,18 @@ Deno.serve(async (req) => {
     const cleanPrompt = userPrompt.replace(/\[\[IMG:[\s\S]*?\]\]/g, '').trim()
 
     try {
+      // gpt-image-1 substitui o dall-e-3 (descontinuado pela OpenAI).
+      // Esse modelo retorna a imagem em base64 (b64_json), não em URL.
       const imgRes = await openai.images.generate({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt: cleanPrompt,
         n: 1,
         size: '1024x1024',
-        quality: 'standard',
       })
-      const url = imgRes.data[0]?.url ?? ''
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = imgRes.data?.[0] as any
+      const url = d?.b64_json ? `data:image/png;base64,${d.b64_json}` : (d?.url ?? '')
+      if (!url) return sseResponse('❌ Erro ao gerar imagem: resposta vazia do modelo de imagem.')
       return sseResponse(`🎨 Imagem gerada com sucesso!\n\n[[GENERATED_IMAGE:${url}]]`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
