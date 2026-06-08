@@ -419,7 +419,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] !flex flex-col overflow-hidden">
         <DialogHeader><DialogTitle>Adicionar post ao feed</DialogTitle></DialogHeader>
         <div className="flex gap-1 p-1 bg-[#101A2B] rounded-xl mb-4">
           {[{ id: 'arsenal', label: 'Arsenal', icon: Images }, { id: 'planner', label: 'Do planejamento', icon: LayoutGrid }, { id: 'upload', label: 'Upload', icon: Upload }].map(t => (
