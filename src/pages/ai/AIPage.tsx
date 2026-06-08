@@ -3,18 +3,15 @@ import {
   Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
-  CalendarPlus, Check, Mic, MicOff, Paperclip, Download,
+  Mic, MicOff, Paperclip, Download,
   ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2,
 } from 'lucide-react'
-import { cn, contentTypeLabels } from '@/utils/formatters'
+import { cn } from '@/utils/formatters'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
-import { useCreatePlannerItem } from '@/hooks/usePlanner'
-import { useAuth } from '@/hooks/useAuth'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AI_SQUADS, type AISquad } from '@/data/aiSquads'
 import { DiagnosticoModal } from './DiagnosticoModal'
-import type { ContentType } from '@/types'
 import {
   useAISessions,
   useAIMessages,
@@ -230,12 +227,11 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
 
 // ─── Message bubble ───────────────────────────────────────────────────────────
 function MessageBubble({
-  message, isStreaming = false, streamContent = '', onAddToPlanner,
+  message, isStreaming = false, streamContent = '',
 }: {
   message?: AIMessage
   isStreaming?: boolean
   streamContent?: string
-  onAddToPlanner?: (c: string) => void
 }) {
   const isUser  = message?.role === 'user'
   const content = isStreaming ? streamContent : (message?.content ?? '')
@@ -280,15 +276,6 @@ function MessageBubble({
           </div>
         )}
 
-        {!isStreaming && content && onAddToPlanner && (
-          <button
-            onClick={() => onAddToPlanner(content)}
-            className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium text-[#6366f1] border border-[#e0d9ff] bg-[#f5f3ff] hover:bg-[#ede9ff] hover:border-[#c4b5fd] transition-all opacity-0 group-hover:opacity-100"
-          >
-            <CalendarPlus className="w-3.5 h-3.5" />
-            Adicionar ao planejamento
-          </button>
-        )}
       </div>
     </div>
   )
@@ -326,25 +313,16 @@ export function AIPage() {
   // Modal: Diagnóstico de Perfil
   const [diagnosticoOpen, setDiagnosticoOpen]   = useState(false)
 
-  // Modal: adicionar ao planejamento
-  const [plannerModal, setPlannerModal] = useState<{ content: string } | null>(null)
-  const [plannerForm, setPlannerForm]   = useState({
-    title: '', date: new Date().toISOString().split('T')[0], contentType: 'post' as ContentType,
-  })
-  const [plannerSaved, setPlannerSaved] = useState(false)
-
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pickerRef      = useRef<HTMLDivElement>(null)
   const squadPickerRef = useRef<HTMLDivElement>(null)
 
-  const { user }                                            = useAuth()
   const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
   const { data: clients  = [] }                             = useClients()
   const { data: clientCtx }                                 = useClientContext(activeClientId)
   const deleteSession  = useDeleteSession()
-  const createPlanner  = useCreatePlannerItem()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
   const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved } =
@@ -438,28 +416,6 @@ export function AIPage() {
       diagSquad?.systemPrompt ?? null,
       images.length > 0 ? images : undefined,
     )
-  }
-
-  const handleOpenPlannerModal = (content: string) => {
-    const firstLine = content.split('\n').find(l => l.trim()) ?? ''
-    const title = firstLine.replace(/^[#*_>\-•\d.]+\s*/, '').slice(0, 80).trim()
-    setPlannerForm(f => ({ ...f, title, date: new Date().toISOString().split('T')[0], contentType: 'post' }))
-    setPlannerSaved(false)
-    setPlannerModal({ content })
-  }
-
-  const handleSavePlanner = async () => {
-    if (!user || !plannerModal) return
-    await createPlanner.mutateAsync({
-      user_id: user.id, title: plannerForm.title || 'Post gerado pela IA',
-      content_type: plannerForm.contentType, status: 'ideia',
-      notes: plannerModal.content, client_id: activeClientId,
-      scheduled_date: plannerForm.date, scheduled_time: null,
-      content_id: null, asset_id: null, approval_status: null,
-      client_feedback: null, reviewed_at: null, reviewed_by: null,
-    })
-    setPlannerSaved(true)
-    setTimeout(() => { setPlannerModal(null); setPlannerSaved(false) }, 1500)
   }
 
   const handleDeleteSession = (id: string, e: React.MouseEvent) => {
@@ -775,7 +731,6 @@ export function AIPage() {
                     <MessageBubble
                       key={msg.id}
                       message={msg}
-                      onAddToPlanner={msg.role === 'assistant' && activeClientId ? handleOpenPlannerModal : undefined}
                     />
                   ))}
                   {(isLoading || isStreaming) && (
@@ -936,92 +891,6 @@ export function AIPage() {
       {/* ── Painel de memórias ── */}
       {memoryPanelOpen && activeClientId && clientCtx && (
         <AIMemoryPanel client={clientCtx.client} onClose={() => setMemoryPanelOpen(false)} />
-      )}
-
-      {/* ── Modal: adicionar ao planejamento ── */}
-      {plannerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPlannerModal(null)} />
-          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
-                  <CalendarPlus className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-[#0f0f0f]">Adicionar ao planejamento</p>
-                  {activeClientId && clientCtx && <p className="text-[10px] text-[#999]">{clientCtx.client.company_name}</p>}
-                </div>
-              </div>
-              <button onClick={() => setPlannerModal(null)} className="text-[#999] hover:text-[#333]">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="px-5 py-4 space-y-3.5">
-              <div>
-                <label className="block text-[11px] font-medium text-[#666] uppercase tracking-wide mb-1.5">Título do post</label>
-                <input
-                  type="text"
-                  value={plannerForm.title}
-                  onChange={e => setPlannerForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="Ex: Post sobre tendências..."
-                  className="w-full h-9 px-3 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[13px] text-[#0f0f0f] placeholder:text-[#aaa] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]/50"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-[#666] uppercase tracking-wide mb-1.5">Data</label>
-                <input
-                  type="date"
-                  value={plannerForm.date}
-                  onChange={e => setPlannerForm(f => ({ ...f, date: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]/50 [color-scheme:light]"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-[#666] uppercase tracking-wide mb-1.5">Tipo</label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {(['post', 'carrossel', 'reels', 'story'] as ContentType[]).map(type => (
-                    <button
-                      key={type}
-                      onClick={() => setPlannerForm(f => ({ ...f, contentType: type }))}
-                      className={cn(
-                        'py-1.5 px-2 rounded-lg text-[11px] font-medium border transition-all',
-                        plannerForm.contentType === type
-                          ? 'bg-[#6366f1] border-[#6366f1] text-white'
-                          : 'bg-[#f8fafc] border-[#e2e8f0] text-[#333] hover:border-[#6366f1]/30',
-                      )}
-                    >
-                      {contentTypeLabels[type] ?? type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl max-h-20 overflow-y-auto">
-                <p className="text-[10px] text-[#999] mb-1">Prévia do conteúdo</p>
-                <p className="text-[11px] text-[#555] leading-relaxed line-clamp-3">{plannerModal.content.replace(/\[\[.*?\]\]/g, '').slice(0, 200)}…</p>
-              </div>
-            </div>
-
-            <div className="px-5 py-4 border-t border-[#f0f0f0] flex gap-2">
-              <button onClick={() => setPlannerModal(null)} className="flex-1 py-2.5 rounded-xl border border-[#e2e8f0] text-[13px] text-[#555] hover:bg-[#f5f5f5] transition-all">
-                Cancelar
-              </button>
-              <button
-                onClick={handleSavePlanner}
-                disabled={createPlanner.isPending || plannerSaved || !plannerForm.title.trim()}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-medium transition-all',
-                  plannerSaved ? 'bg-emerald-500 text-white' : 'bg-[#6366f1] hover:bg-[#5558e3] text-white disabled:opacity-50',
-                )}
-              >
-                {createPlanner.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : plannerSaved ? <><Check className="w-3.5 h-3.5" /> Salvo!</>
-                  : <><CalendarPlus className="w-3.5 h-3.5" /> Salvar no planner</>}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* ── Modal Diagnóstico de Perfil ── */}
