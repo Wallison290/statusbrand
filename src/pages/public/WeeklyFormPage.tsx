@@ -264,7 +264,7 @@ function WeeklyFormInner() {
         </div>
 
         <p className="text-center text-[11px] text-[#c8d4e4] mt-6 pb-4">
-          Powered by KairoHub
+          Powered by StatusMedia
         </p>
       </div>
     </div>

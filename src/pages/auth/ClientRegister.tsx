@@ -210,7 +210,7 @@ export function ClientRegister() {
           </div>
 
           <p className="text-center text-[11px] text-[#c0c0c0] mt-5">
-            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
+            © {new Date().getFullYear()} StatusMedia. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>
@@ -226,7 +226,7 @@ export function ClientRegister() {
       <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
         <img
           src="/planer.png"
-          alt="Kairo Hub"
+          alt="StatusMedia"
           className="absolute inset-0 w-full h-full object-cover object-center select-none"
           draggable={false}
         />
@@ -382,7 +382,7 @@ export function ClientRegister() {
           </div>
 
           <p className="text-center text-[11px] text-[#c0c0c0] mt-3">
-            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
+            © {new Date().getFullYear()} StatusMedia. Todos os direitos reservados.
           </p>
         </motion.div>
       </div>

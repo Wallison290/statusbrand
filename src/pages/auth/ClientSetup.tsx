@@ -101,7 +101,7 @@ export function ClientSetup() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2.5 bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3">
-            <img src="/logo-icon.png" alt="KairoHub" className="w-6 h-6 object-contain" />
+            <img src="/logo-icon.png" alt="StatusMedia" className="w-6 h-6 object-contain" />
             <span className="text-white font-bold text-lg tracking-tight">
               Kairo<span className="text-[#a78bfa]">Hub</span>
             </span>
@@ -199,7 +199,7 @@ export function ClientSetup() {
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          © 2025 Kairo Hub — Organize. Produza. Escale.
+          © 2025 StatusMedia — Organize. Produza. Escale.
         </p>
       </div>
     </div>

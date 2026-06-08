@@ -58,7 +58,7 @@ export function Login() {
       <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
         <img
           src="/planer.png"
-          alt="Kairo Hub"
+          alt="StatusMedia"
           className="absolute inset-0 w-full h-full object-cover object-center select-none"
           draggable={false}
         />
@@ -78,7 +78,7 @@ export function Login() {
 
             {/* Ícone no topo do card */}
             <div className="flex justify-center mb-1">
-              <img src="/logo-icon.png" alt="Kairo Hub" className="w-16 h-16 object-contain" />
+              <img src="/logo-icon.png" alt="StatusMedia" className="w-16 h-16 object-contain" />
             </div>
 
             <div className="mb-4">
@@ -166,7 +166,7 @@ export function Login() {
 
           {/* Footer */}
           <p className="text-center text-[11px] text-[#c0c0c0] mt-3">
-            © {new Date().getFullYear()} Kairo Hub. Todos os direitos reservados.
+            © {new Date().getFullYear()} StatusMedia. Todos os direitos reservados.
           </p>
 
         </motion.div>

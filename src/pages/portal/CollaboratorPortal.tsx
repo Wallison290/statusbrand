@@ -682,7 +682,7 @@ export function CollaboratorPortal() {
         )}
 
         <div className="text-center pt-4 pb-8">
-          <p className="text-xs text-slate-300">Powered by Kairo Hub</p>
+          <p className="text-xs text-slate-300">Powered by StatusMedia</p>
         </div>
       </div>
 

@@ -34,13 +34,10 @@ export function PortalLayout({
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-1">
           <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-            <img src="/logo-icon.png" alt="Kairo Hub" className="w-full h-full object-contain select-none" draggable={false} />
+            <img src="/logo-icon.png" alt="StatusMedia" className="w-full h-full object-contain select-none" draggable={false} />
           </div>
-          <span
-            className="text-[#0f0f0f] font-semibold text-[13px] tracking-tight"
-            style={{ fontFamily: "'Georgia', serif" }}
-          >
-            Kairo Hub
+          <span className="text-[#0f0f0f] font-bold text-[14px] tracking-tight">
+            Status<span className="text-[#29457a]">Media</span>
           </span>
           {clientName && (
             <>

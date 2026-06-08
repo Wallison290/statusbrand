@@ -476,7 +476,7 @@ export function AIPage() {
           <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="text-[13px] font-semibold text-white/90 truncate">IA Kairo Hub</span>
+          <span className="text-[13px] font-semibold text-white/90 truncate">IA StatusMedia</span>
         </div>
 
         {/* Nova conversa */}

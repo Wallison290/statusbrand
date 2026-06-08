@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/toast'
 import type { PlannerItem, ContentType } from '@/types'
 
 // ── System prompt base ────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema Kairo Hub.
+const SYSTEM_PROMPT = `Você é um assistente de IA especializado em Social Media e Marketing Digital, integrado ao sistema StatusMedia.
 Responda sempre em português brasileiro. Seja direto, objetivo e orientado a resultados práticos.
 Data atual: ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
 
