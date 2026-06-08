@@ -748,71 +748,92 @@ function PlannerItemView({
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row h-full overflow-hidden">
 
-          {/* ══ ESQUERDA: Mídia — preenche todo o painel, sem fundo preto ══ */}
+          {/* ══ ESQUERDA: Mídia — igual ao portal do cliente: imagem inteira + tira de slides ══ */}
           {hasMedia && (
-            /* mobile: altura fixa 45vw (aprox. quadrado); desktop: 50% da largura, altura total do modal */
-            <div className="lg:w-1/2 flex-shrink-0 relative bg-[#101A2B] overflow-hidden h-[45vw] lg:h-full">
+            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[#101A2B] overflow-hidden lg:h-full">
 
-              {/* Mídia — cobre todo o espaço, centralizada */}
-              {currentMedia?.kind === 'image' ? (
-                <img
-                  src={currentMedia.file_url}
-                  alt={currentMedia.file_name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : currentMedia?.kind === 'video' ? (
-                <video
-                  key={currentMedia.file_url}
-                  src={currentMedia.file_url}
-                  autoPlay muted loop playsInline controls
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : null}
+              {/* Mídia principal — object-contain no mobile (vê a imagem inteira, sem cortar) */}
+              <div className="relative bg-[#0B1020] h-72 lg:h-auto lg:flex-1 lg:min-h-0">
+                {currentMedia?.kind === 'image' ? (
+                  <img
+                    src={currentMedia.file_url}
+                    alt={currentMedia.file_name}
+                    className="absolute inset-0 w-full h-full object-contain lg:object-cover"
+                  />
+                ) : currentMedia?.kind === 'video' ? (
+                  <video
+                    key={currentMedia.file_url}
+                    src={currentMedia.file_url}
+                    autoPlay muted loop playsInline controls
+                    className="absolute inset-0 w-full h-full object-contain lg:object-cover"
+                  />
+                ) : null}
 
-              {/* Setas de navegação */}
-              {mediaItems.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setMediaIdx(i => Math.max(0, i - 1))}
-                    disabled={mediaIdx === 0}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))}
-                    disabled={mediaIdx === mediaItems.length - 1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all disabled:opacity-20"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              {/* Dots + contador — sobreposto na base */}
-              {mediaItems.length > 1 && (
-                <div className="absolute bottom-3 left-0 right-0 z-10 flex items-center justify-center gap-1.5">
-                  {mediaItems.map((_, i) => (
+                {/* Setas de navegação */}
+                {mediaItems.length > 1 && (
+                  <>
                     <button
-                      key={i}
-                      onClick={() => setMediaIdx(i)}
-                      className={`rounded-full transition-all ${i === mediaIdx ? 'w-2 h-2 bg-white shadow' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`}
-                    />
-                  ))}
-                  <span className="ml-1.5 text-[10px] text-white font-semibold drop-shadow">{mediaIdx + 1}/{mediaItems.length}</span>
-                </div>
-              )}
+                      onClick={() => setMediaIdx(i => Math.max(0, i - 1))}
+                      disabled={mediaIdx === 0}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 flex items-center justify-center text-white transition-all disabled:opacity-20 active:scale-95"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setMediaIdx(i => Math.min(mediaItems.length - 1, i + 1))}
+                      disabled={mediaIdx === mediaItems.length - 1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 flex items-center justify-center text-white transition-all disabled:opacity-20 active:scale-95"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
 
-              {/* Abrir original */}
-              {currentMedia && (
-                <a
-                  href={currentMedia.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/80 hover:text-white transition-all"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                {/* Dots + contador — sobreposto na base */}
+                {mediaItems.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
+                    {mediaItems.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setMediaIdx(i)}
+                        className={`rounded-full transition-all ${i === mediaIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`}
+                      />
+                    ))}
+                    <span className="ml-1 text-[10px] text-white font-semibold">{mediaIdx + 1}/{mediaItems.length}</span>
+                  </div>
+                )}
+
+                {/* Abrir original */}
+                {currentMedia && (
+                  <a
+                    href={currentMedia.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/80 hover:text-white transition-all"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+
+              {/* Tira de miniaturas dos slides (carrossel) — igual ao acesso do cliente */}
+              {mediaItems.length > 1 && (
+                <div className="flex-shrink-0 bg-[#0d0f14] border-t border-white/10 px-3 py-2.5">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {mediaItems.map((m, i) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setMediaIdx(i)}
+                        className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === mediaIdx ? 'border-[#2563EB]' : 'border-white/10 hover:border-white/25 opacity-60 hover:opacity-100'}`}
+                      >
+                        {m.kind === 'image'
+                          ? <img src={m.file_url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-[#101A2B] flex items-center justify-center"><Film className="w-4 h-4 text-[#64748b]" /></div>}
+                        <div className="absolute bottom-0 right-0 bg-black/60 text-[8px] px-1 leading-4 rounded-tl font-bold text-white">{i + 1}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
