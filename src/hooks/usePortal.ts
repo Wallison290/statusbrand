@@ -62,6 +62,8 @@ export function usePortalPlanner() {
         .eq('client_id', clientId!)
         .eq('sent_to_client' as any, true)
         .order('scheduled_date', { ascending: true })
+        // Garante que os anexos venham na ordem dos slides (sort_order)
+        .order('sort_order', { referencedTable: 'planner_attachments', ascending: true })
       if (error) throw error
       return data as PlannerItem[]
     },

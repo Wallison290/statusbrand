@@ -537,6 +537,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
     .sort((a, b) => a.sort_order - b.sort_order)
   const igMediaFallback = (item.attachments ?? [])
     .filter(a => isImageAttachment(a) || isVideoAttachment(a))
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const igMedia = igMediaExplicit.length > 0 ? igMediaExplicit : igMediaFallback
 
   const [caption, setCaption]       = useState(item.notes ?? '')
@@ -685,15 +686,18 @@ function PlannerItemView({
   onEdit: () => void
   userId: string
 }) {
-  const images           = item.attachments?.filter(a => isImageAttachment(a)) || []
-  const videos           = item.attachments?.filter(a => isVideoAttachment(a)) || []
   const otherAttachments = item.attachments?.filter(a => !isImageAttachment(a) && !isVideoAttachment(a)) || []
 
-  // Carrossel: imagens + vídeos juntos no painel esquerdo
-  const mediaItems = [
-    ...images.map(a => ({ ...a, kind: 'image' as const })),
-    ...videos.map(a => ({ ...a, kind: 'video' as const })),
-  ]
+  // Carrossel: segue a MESMA ordem dos slides (sort_order) que o cliente vê no
+  // portal e que é enviada ao Instagram. Ordena todas as imagens/vídeos do item
+  // por sort_order, de modo que a capa (slide 1) é sempre o menor sort_order.
+  const mediaItems = (item.attachments ?? [])
+    .filter(a => isImageAttachment(a) || isVideoAttachment(a))
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map(a => ({
+      ...a,
+      kind: isVideoAttachment(a) ? ('video' as const) : ('image' as const),
+    }))
   const [mediaIdx, setMediaIdx] = useState(0)
   const currentMedia = mediaItems[mediaIdx] ?? null
 
