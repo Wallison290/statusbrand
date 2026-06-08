@@ -399,19 +399,19 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
     return true
   })
 
-  // Mídias já existentes no planejamento desse cliente (deduplicadas por file_url)
+  // Imagens já existentes no planejamento desse cliente (deduplicadas por file_url)
+  // (apenas imagens — o grid do feed renderiza <img>, vídeo não tem preview)
   const plannerMedia = useMemo(() => {
     const seen = new Set<string>()
-    const out: { url: string; caption?: string; isVideo: boolean; title: string }[] = []
+    const out: { url: string; caption?: string; title: string }[] = []
     for (const item of plannerItems || []) {
       for (const att of (item as any).attachments || []) {
         const url: string | undefined = att.file_url
         const type: string = att.file_type || ''
         const isImage = type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url || '')
-        const isVideo = type.startsWith('video/') || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url || '')
-        if (!url || (!isImage && !isVideo) || seen.has(url)) continue
+        if (!url || !isImage || seen.has(url)) continue
         seen.add(url)
-        out.push({ url, caption: (item as any).title || att.file_name, isVideo, title: (item as any).title || att.file_name || '' })
+        out.push({ url, caption: (item as any).title || att.file_name, title: (item as any).title || att.file_name || '' })
       }
     }
     return out
@@ -442,7 +442,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
                 {assets.map(asset => (
                   <button key={asset.id} onClick={() => { onSelect(asset); onClose() }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative">
-                    <img src={asset.media_url!} alt={asset.title} className="w-full h-full object-cover" />
+                    <img src={asset.media_url!} alt={asset.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{asset.title}</span>
                     </div>
@@ -468,14 +468,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
                 {plannerMedia.map(m => (
                   <button key={m.url} onClick={() => { onSelectMedia({ url: m.url, caption: m.caption }); onClose() }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative bg-[#101A2B]">
-                    {m.isVideo ? (
-                      <video src={m.url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
-                    ) : (
-                      <img src={m.url} alt={m.title} className="w-full h-full object-cover" />
-                    )}
-                    {m.isVideo && (
-                      <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-white font-medium">vídeo</span>
-                    )}
+                    <img src={m.url} alt={m.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{m.title}</span>
                     </div>
