@@ -4,6 +4,7 @@ import {
   Users, CheckSquare, Clock,
   AlertTriangle, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, DollarSign, UserCheck, TrendingUp,
+  Instagram, Send,
 } from 'lucide-react'
 import { DashboardHero } from '@/components/dashboard/DashboardHero'
 import { useDashboardGreeting } from '@/hooks/useDashboardGreeting'
@@ -51,6 +52,8 @@ interface Stats {
   period_scheduled:           number   // status = aprovado (aprovado pelo cliente = agendado para publicar)
   period_published:           number   // status = publicado
   period_adjustments:         number   // approval_status = ajuste_solicitado
+  ig_scheduled:               number   // scheduled_posts: status scheduled/publishing (fila global)
+  ig_published:               number   // scheduled_posts: status published no período
 }
 
 interface PlannerDay {
@@ -625,7 +628,7 @@ export function Dashboard() {
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [statsReady, setStatsReady]             = useState(false)
-  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0, period_adjustments: 0 })
+  const [stats, setStats]                       = useState<Stats>({ total_clients: 0, active_clients: 0, pending_tasks: 0, overdue_tasks: 0, period_pending_approval: 0, period_approved: 0, period_scheduled: 0, period_published: 0, period_adjustments: 0, ig_scheduled: 0, ig_published: 0 })
   const [weeklyData, setWeeklyData]             = useState<any[]>([])
   const [assetTypes, setAssetTypes]             = useState<{ type: string; count: number }[]>([])
   const [plannerStatuses, setPlannerStatuses]   = useState<{ status: string; count: number }[]>([])
@@ -658,6 +661,7 @@ export function Dashboard() {
       assetsRes,
       plannerRes,
       plannerCalRes,
+      igPostsRes,
     ] = await Promise.all([
       // Clientes — sempre global (inclui todos os campos para calcFinancialStatus)
       supabase.from('clients').select('id, status, valor_mensal, financial_status, last_payment_date, dia_vencimento, manual_status_override').eq('user_id', user!.id),
@@ -688,6 +692,11 @@ export function Dashboard() {
         .eq('user_id', user!.id)
         .gte('scheduled_date', calStart)
         .lte('scheduled_date', calEnd),
+
+      // Posts do Instagram (agendados/publicados) — filtro de status/período no cliente
+      supabase.from('scheduled_posts')
+        .select('status, scheduled_at')
+        .eq('user_id', user!.id),
     ])
 
     const clients  = clientsRes.data  || []
@@ -722,6 +731,15 @@ export function Dashboard() {
     // Ajustes solicitados = cliente pediu correções (apenas ajuste_solicitado)
     const period_adjustments = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado').length
 
+    // ── Instagram (scheduled_posts) ──────────────────────────────────────────
+    const igPosts = igPostsRes.data || []
+    // Agendados = fila atual (independe do período): aguardando publicar
+    const ig_scheduled = igPosts.filter((p: any) => p.status === 'scheduled' || p.status === 'publishing').length
+    // Publicados = já foram ao ar dentro do período selecionado
+    const ig_published = igPosts.filter((p: any) =>
+      p.status === 'published' && p.scheduled_at >= startIso && p.scheduled_at <= endIso
+    ).length
+
     setStatsReady(true)
     setStats({
       total_clients:  clients.length,
@@ -733,6 +751,8 @@ export function Dashboard() {
       period_scheduled,
       period_published,
       period_adjustments,
+      ig_scheduled,
+      ig_published,
     })
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
@@ -836,23 +856,22 @@ export function Dashboard() {
             warning
           />
           <KpiCard
-            label="Tarefas em Aberto"
-            value={stats.pending_tasks}
-            subtitle="no período"
-            href="/tasks"
-            icon={CheckSquare}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-600"
+            label="Agendados no Instagram"
+            value={stats.ig_scheduled}
+            subtitle={stats.ig_scheduled > 0 ? 'aguardando publicação' : 'nenhum na fila'}
+            href="/instagram"
+            icon={Instagram}
+            iconBg="bg-fuchsia-50"
+            iconColor="text-fuchsia-600"
           />
           <KpiCard
-            label="Tarefas Atrasadas"
-            value={stats.overdue_tasks}
-            subtitle={stats.overdue_tasks > 0 ? 'requerem atenção' : 'tudo em dia'}
-            href="/tasks"
-            icon={AlertTriangle}
-            warning={stats.overdue_tasks > 0}
-            iconBg="bg-gray-50"
-            iconColor="text-gray-400"
+            label="Conteúdos Publicados"
+            value={stats.ig_published}
+            subtitle={stats.ig_published > 0 ? 'no período' : 'nada publicado ainda'}
+            href="/instagram"
+            icon={Send}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-600"
           />
         </div>
 
