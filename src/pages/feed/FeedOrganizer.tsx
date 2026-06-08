@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Trash2, Pencil, Check, X, ChevronDown, Upload,
   Images, GripVertical, Instagram, Copy, Link2,
-  Save, ArrowLeft, LayoutGrid, ChevronLeft, ChevronRight,
+  Save, ArrowLeft, LayoutGrid, ChevronLeft, ChevronRight, ZoomIn,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
@@ -419,7 +419,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] !flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] !flex flex-col overflow-hidden">
         <DialogHeader><DialogTitle>Adicionar post ao feed</DialogTitle></DialogHeader>
         <div className="flex gap-1 p-1 bg-[#101A2B] rounded-xl mb-4">
           {[{ id: 'arsenal', label: 'Arsenal', icon: Images }, { id: 'planner', label: 'Do planejamento', icon: LayoutGrid }, { id: 'upload', label: 'Upload', icon: Upload }].map(t => (
@@ -438,12 +438,17 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
                 <p className="text-sm">Nenhuma imagem no arsenal</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {assets.map(asset => (
                   <button key={asset.id} onClick={() => { onSelect(asset); onClose() }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative">
                     <img src={asset.media_url!} alt={asset.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
+                    <span onClick={(e) => { e.stopPropagation(); window.open(asset.media_url!, '_blank', 'noopener') }}
+                      title="Ver em resolução original"
+                      className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/55 text-white opacity-0 group-hover:opacity-100 hover:bg-black/80 transition-all">
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{asset.title}</span>
                     </div>
                   </button>
@@ -464,12 +469,17 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
                 <p className="text-sm">Nenhuma mídia no planejamento deste cliente</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {plannerMedia.map(m => (
                   <button key={m.url} onClick={() => { onSelectMedia({ url: m.url, caption: m.caption }); onClose() }}
                     className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-[#2563EB] transition-all hover:scale-[1.02] group relative bg-[#101A2B]">
                     <img src={m.url} alt={m.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-end p-2 opacity-0 group-hover:opacity-100">
+                    <span onClick={(e) => { e.stopPropagation(); window.open(m.url, '_blank', 'noopener') }}
+                      title="Ver em resolução original"
+                      className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/55 text-white opacity-0 group-hover:opacity-100 hover:bg-black/80 transition-all">
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="text-[10px] text-white font-medium line-clamp-2">{m.title}</span>
                     </div>
                   </button>
