@@ -177,9 +177,18 @@ Regras:
 - Liste qualquer texto que deva aparecer na imagem EXATAMENTE como deve ser escrito, entre aspas.
 - Escreva o prompt em inglês (gera melhor), mas mantenha textos que aparecem na imagem no idioma original.
 - Responda SOMENTE com o prompt final, sem comentários.`
+      // Contexto da marca/cliente e do squad ativo (se houver) — para que cores,
+      // tom e estilo entrem automaticamente na imagem.
+      const brandCtx = (systemPrompt ?? '').toString().slice(0, 4000)
       const pr = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        messages: [{ role: 'system', content: PROMPT_SYS }, ...history] as OpenAI.Chat.ChatCompletionMessageParam[],
+        messages: [
+          { role: 'system', content: PROMPT_SYS },
+          ...(brandCtx
+            ? [{ role: 'system' as const, content: `Contexto da marca/cliente e do time ativo (aplique cores, tom e estilo quando fizer sentido):\n${brandCtx}` }]
+            : []),
+          ...history,
+        ] as OpenAI.Chat.ChatCompletionMessageParam[],
         max_tokens: 600,
       })
       const out = pr.choices[0]?.message?.content?.trim()
