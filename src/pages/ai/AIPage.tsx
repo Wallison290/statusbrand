@@ -300,6 +300,7 @@ export function AIPage() {
   const [sidebarOpen, setSidebarOpen]           = useState(true)
   const [input, setInput]                       = useState('')
   const [webSearch, setWebSearch]               = useState(false)
+  const [imageMode, setImageMode]               = useState(false)
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
@@ -392,8 +393,9 @@ export function AIPage() {
       activeClientId,
       activeSquad?.systemPrompt ?? null,
       imgs.length > 0 ? imgs : undefined,
+      imageMode,
     )
-  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, webSearch, clientCtx, activeSquad, activeClientId])
+  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, webSearch, imageMode, clientCtx, activeSquad, activeClientId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -401,7 +403,7 @@ export function AIPage() {
 
   const handleNewChat = () => {
     setActiveSessionId(null); setPendingSessionId(null)
-    setInput(''); setWebSearch(false); setActiveSquad(null); setAttachedImages([])
+    setInput(''); setWebSearch(false); setImageMode(false); setActiveSquad(null); setAttachedImages([])
   }
 
   const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -707,10 +709,11 @@ export function AIPage() {
             {/* Badge modelo */}
             <div className={cn(
               'hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium border',
+              imageMode ? 'bg-violet-50 border-violet-200 text-violet-700' :
               webSearch ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#666]',
             )}>
-              {webSearch ? <Globe className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-              {webSearch ? 'gpt-4o-search' : 'gpt-4o'}
+              {imageMode ? <Wand2 className="w-3 h-3" /> : webSearch ? <Globe className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+              {imageMode ? 'dall-e-3' : webSearch ? 'gpt-4o-search' : 'gpt-4o'}
             </div>
 
           </div>
@@ -810,6 +813,7 @@ export function AIPage() {
                   onKeyDown={handleKeyDown}
                   placeholder={
                     isRecording ? '🔴 Ouvindo... fale agora' :
+                    imageMode ? '🎨 Descreva a imagem que quer gerar...' :
                     attachedImages.length > 0 ? 'Pergunte algo sobre essa imagem...' :
                     'Pergunte sobre estratégias, tendências, conteúdo...'
                   }
@@ -860,7 +864,7 @@ export function AIPage() {
 
                   {/* Toggle web search */}
                   <button
-                    onClick={() => setWebSearch(w => !w)}
+                    onClick={() => setWebSearch(w => { const next = !w; if (next) setImageMode(false); return next })}
                     disabled={isLoading || isStreaming}
                     title={webSearch ? 'Desativar busca web' : 'Ativar busca web'}
                     className={cn(
@@ -872,6 +876,22 @@ export function AIPage() {
                   >
                     {webSearch ? <Globe className="w-3.5 h-3.5" /> : <GlobeLock className="w-3.5 h-3.5" />}
                     <span className="hidden sm:inline">{webSearch ? 'Web ativa' : 'Web'}</span>
+                  </button>
+
+                  {/* Toggle gerar imagem (DALL-E 3) */}
+                  <button
+                    onClick={() => setImageMode(m => { const next = !m; if (next) setWebSearch(false); return next })}
+                    disabled={isLoading || isStreaming}
+                    title={imageMode ? 'Desativar modo imagem' : 'Gerar imagem com IA (DALL-E 3)'}
+                    className={cn(
+                      'flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium transition-all disabled:opacity-40',
+                      imageMode
+                        ? 'bg-violet-100 text-violet-600 hover:bg-violet-200'
+                        : 'text-[#888] hover:bg-[#f0f0f0] hover:text-[#333]',
+                    )}
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{imageMode ? 'Imagem ativa' : 'Imagem'}</span>
                   </button>
                 </div>
 

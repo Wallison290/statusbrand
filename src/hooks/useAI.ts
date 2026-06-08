@@ -191,15 +191,12 @@ export function useAIChat(sessionId: string | null) {
   const clearMemoriesSaved = useCallback(() => setMemoriesSaved([]), [])
 
   // ── Detecção de intent de geração de imagem ────────────────────────────────
-  const IMAGE_GEN_KEYWORDS = [
-    'crie uma imagem', 'gere uma imagem', 'gerar imagem', 'criar imagem',
-    'cria uma imagem', 'gera uma imagem', 'faça uma imagem', 'faz uma imagem',
-    'desenhe', 'desenha', 'ilustre', 'ilustra', 'make an image', 'generate image',
-    'create an image', 'draw me', 'dall-e',
-  ]
+  // verbo de criação + (artigo/qualquer coisa curta) + substantivo visual
+  const IMAGE_GEN_RE = /\b(crie|cria|criar|gere|gera|gerar|fa[çc]a|faz|fazer|desenh[ae]|ilustr[ae]|monte|monta|produza|produz|make|generate|create|draw)\b[\sa-zà-ú]{0,24}?\b(imagem|imagens|arte|ilustra[çc][ãa]o|desenho|logo|logotipo|banner|criativo|capa|thumbnail|figura|image)\b/i
+  const IMAGE_GEN_DIRECT = ['dall-e', 'dall e', 'gerar imagem', 'gerar uma imagem']
   function isImageGenRequest(text: string): boolean {
     const lower = text.toLowerCase()
-    return IMAGE_GEN_KEYWORDS.some(kw => lower.includes(kw))
+    return IMAGE_GEN_RE.test(lower) || IMAGE_GEN_DIRECT.some(kw => lower.includes(kw))
   }
 
   const sendMessage = useCallback(async (
@@ -211,6 +208,7 @@ export function useAIChat(sessionId: string | null) {
     clientId?: string | null,
     squadPrompt?: string | null,
     attachedImages?: string[],  // base64 data URLs
+    forceImage = false,         // botão "Imagem" liga geração explicitamente
   ) => {
     if (!content.trim() && (!attachedImages || attachedImages.length === 0)) return
     if (isStreaming || isLoading) return
@@ -222,7 +220,8 @@ export function useAIChat(sessionId: string | null) {
       fullContent = fullContent ? `${fullContent}${imgMarkers}` : imgMarkers.trim()
     }
 
-    const generateImage = isImageGenRequest(fullContent) && !attachedImages?.length
+    // Gera imagem se: o botão Imagem estiver ligado OU o texto pedir — e não houver imagem anexada (visão)
+    const generateImage = (forceImage || isImageGenRequest(fullContent)) && !attachedImages?.length
 
     let activeSessionId = sessionId
 
