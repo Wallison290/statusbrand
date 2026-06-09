@@ -194,7 +194,7 @@ function TaskCard({
         ) : (
           <div className="flex items-center gap-1.5 text-gray-400">
             <User className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="text-[12px]">Sem responsável</span>
+            <span className="text-[12px]">Agência</span>
           </div>
         )}
         <div onClick={e => e.stopPropagation()}>
@@ -877,7 +877,7 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
                   <span className="text-[13px] font-medium text-[#F8FAFC]">{member.name}</span>
                 </div>
               ) : task.assignee ? <p className="text-[13px] text-[#CBD5E1]">{task.assignee}</p>
-                : <p className="text-[13px] text-[#64748b]">Sem responsável</p>}
+                : <p className="text-[13px] text-[#64748b]">Agência</p>}
             </div>
           </div>
           {links.length > 0 && (
@@ -1029,9 +1029,9 @@ function TaskDialog({ open, onClose, prefillDate, clients, members, editingTask,
                 if (v === '__none__') { set('assignee_id', null); set('assignee', '') }
                 else { const m = members.find(m => m.id === v); set('assignee_id', v); set('assignee', m?.name || '') }
               }}>
-                <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Agência" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Sem responsável</SelectItem>
+                  <SelectItem value="__none__">Agência</SelectItem>
                   {members.map(m => (
                     <SelectItem key={m.id} value={m.id}>
                       <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />{m.name}</span>

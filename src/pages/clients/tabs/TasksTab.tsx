@@ -216,9 +216,9 @@ function TaskDialog({
                 else { const m = members.find(m => m.id === v); set('assignee_id', v); set('assignee', m?.name || '') }
               }}
             >
-              <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Agência" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Sem responsável</SelectItem>
+                <SelectItem value="__none__">Agência</SelectItem>
                 {members.map(m => (
                   <SelectItem key={m.id} value={m.id}>
                     <span className="flex items-center gap-2">
@@ -340,7 +340,7 @@ function TaskViewModal({
               ) : task.assignee ? (
                 <p className="text-[13px] text-[#374151]">{task.assignee}</p>
               ) : (
-                <p className="text-[13px] text-[#94a3b8]">Sem responsável</p>
+                <p className="text-[13px] text-[#94a3b8]">Agência</p>
               )}
             </div>
           </div>
