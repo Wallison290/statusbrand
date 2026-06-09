@@ -369,11 +369,11 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
     <div className="flex-1 overflow-auto px-4 pb-4">
       {/* Grid header */}
       <div className="flex sticky top-0 bg-[#0B1020] z-10 border-b border-[#1e293b] mb-1">
-        <div className="w-72 flex-shrink-0 px-3 py-2.5">
+        <div className="w-44 lg:w-72 flex-shrink-0 px-3 py-2.5">
           <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wide">Tarefa</span>
         </div>
         {days.map((day, di) => (
-          <div key={di} className={`flex-1 min-w-0 text-center py-2.5 border-l border-[#1e293b] ${isToday(day) ? 'bg-[#2563EB]/10' : ''}`}>
+          <div key={di} className={`flex-1 min-w-[44px] text-center py-2.5 border-l border-[#1e293b] ${isToday(day) ? 'bg-[#2563EB]/10' : ''}`}>
             <p className={`text-[10px] font-bold capitalize ${isToday(day) ? 'text-[#60A5FA]' : 'text-[#64748b]'}`}>
               {format(day, 'EEE', { locale: ptBR })}
             </p>
@@ -404,7 +404,7 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
         return (
           <div key={task.id} className="flex items-stretch border-b border-[#1e293b] hover:bg-white/[0.02] transition-colors group min-h-[56px]">
             {/* Task info */}
-            <div className="w-72 flex-shrink-0 px-3 py-2 cursor-pointer flex flex-col justify-center" onClick={() => onView(task)}>
+            <div className="w-44 lg:w-72 flex-shrink-0 px-3 py-2 cursor-pointer flex flex-col justify-center" onClick={() => onView(task)}>
               <p className="text-[13px] font-semibold text-[#F8FAFC] truncate">{task.title}</p>
               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${priCfg.pillBg} ${priCfg.pillText}`}>{priCfg.label}</span>
@@ -416,7 +416,7 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
 
             {/* Day columns */}
             {days.map((day, di) => (
-              <div key={di} className={`flex-1 min-w-0 border-l border-[#1e293b] px-1 py-2 flex items-center justify-center ${isToday(day) ? 'bg-[#2563EB]/5' : ''}`}>
+              <div key={di} className={`flex-1 min-w-[44px] border-l border-[#1e293b] px-1 py-2 flex items-center justify-center ${isToday(day) ? 'bg-[#2563EB]/5' : ''}`}>
                 {dueDayIdx === di && (
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${overdue ? 'bg-[#ef4444]/15 text-[#f87171]' : `${priCfg.pillBg} ${priCfg.pillText}`}`}
@@ -1184,7 +1184,7 @@ export function Tasks() {
   const showNoDate = (activeTab === 'semanal' || activeTab === 'timeline') && tasksWithoutDate.length > 0
 
   return (
-    <div className="flex flex-col h-full bg-[#0B1020]">
+    <div className="flex flex-col h-full bg-[#0B1020] overflow-x-hidden">
 
       {/* ── Local header ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 md:px-6 pt-5 pb-3 flex-shrink-0 border-b border-[#1e293b] bg-[#0B1020]">
@@ -1271,18 +1271,18 @@ export function Tasks() {
 
       {/* ── View tabs ───────────────────────────────────────────────────── */}
       <div className="px-5 md:px-6 mt-0 border-b border-[#1e293b] flex-shrink-0 bg-[#0B1020]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+        <div className="flex items-center justify-between gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center flex-shrink-0">
             {TABS.map(({ id, label, Icon }) => (
               <button key={id} onClick={() => setActiveTab(id)}
-                className={['flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-all border-b-2',
+                className={['flex flex-shrink-0 whitespace-nowrap items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-all border-b-2',
                   activeTab === id ? 'text-[#60A5FA] border-[#2563EB]' : 'text-[#64748b] border-transparent hover:text-[#CBD5E1]'].join(' ')}>
                 <Icon className="w-3.5 h-3.5" />
                 {label}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-shrink-0">
             {/* Setas de janela de dias (só na visão semanal) */}
             {activeTab === 'semanal' && (
               <div className="hidden lg:flex items-center bg-[#182233] border border-[#1e293b] rounded-lg overflow-hidden">
