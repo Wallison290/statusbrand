@@ -758,10 +758,10 @@ function PlannerItemView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
-      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 overflow-hidden !bg-[#0d0f14] flex flex-col h-[90vh]">
+      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 !bg-[#0d0f14] flex flex-col max-h-[90vh] overflow-y-auto lg:h-[90vh] lg:overflow-hidden">
 
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
-        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:h-full overflow-visible lg:overflow-hidden">
 
           {/* ══ ESQUERDA: Mídia — igual ao portal do cliente: imagem inteira + tira de slides ══ */}
           {hasMedia && (
@@ -854,7 +854,7 @@ function PlannerItemView({
           )}
 
           {/* ══ DIREITA: Informações — scroll independente ══ */}
-          <div className={`flex flex-col overflow-hidden bg-[#0d0f14] ${hasMedia ? 'lg:w-1/2 flex-shrink-0 lg:h-full border-l border-white/10' : 'w-full'} flex-1`}>
+          <div className={`flex flex-col lg:overflow-hidden bg-[#0d0f14] ${hasMedia ? 'lg:w-1/2 lg:flex-shrink-0 lg:h-full lg:border-l border-white/10' : 'w-full'} lg:flex-1`}>
             {/* Header fixo — não rola */}
             <div className="flex-shrink-0 px-5 pt-4 pb-3 border-b border-white/10">
               <div className="flex items-start justify-between gap-2">
@@ -913,7 +913,7 @@ function PlannerItemView({
             </div>
 
             {/* Corpo — rola independentemente */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
 
               {/* Legenda */}
               {item.notes && (
