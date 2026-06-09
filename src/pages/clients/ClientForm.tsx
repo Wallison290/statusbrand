@@ -13,13 +13,20 @@ import { useToast } from '@/components/ui/toast'
 import { useSubscription } from '@/hooks/useSubscription'
 import { supabase } from '@/integrations/supabase/client'
 import { checkStorageLimit } from '@/utils/storageGate'
+import { ApplyTemplateModal } from '@/components/tasks/ApplyTemplateModal'
 import type { Client } from '@/types'
+
+// Mapeia o tipo de serviço escolhido no cadastro para a categoria do modelo
+const serviceToCategory: Record<string, string | null> = {
+  trafego: 'trafego', social: 'social', completo: 'completo', outro: null, '': null,
+}
 
 const emptyForm = {
   company_name: '', responsible_name: '', niche: '', instagram: '', whatsapp: '',
   email: '', website: '', main_objective: '', target_audience: '', tone_of_voice: '',
   communication_style: '', differentials: '', services_offered: '', forbidden_words: '',
   observations: '', status: 'ativo' as Client['status'],
+  service_type: '',
   entry_date: new Date().toISOString().split('T')[0],
   logo_url: null as string | null,
   responsible_user_id: null as string | null,
@@ -43,6 +50,7 @@ export function ClientForm() {
   const updateClient = useUpdateClient()
   const [form, setForm] = useState(emptyForm)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [onboard, setOnboard] = useState<{ clientId: string; category: string | null } | null>(null)
   const logoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -124,7 +132,9 @@ export function ClientForm() {
           toast('Cliente cadastrado!', 'success')
         }
 
-        navigate(`/clients/${created.id}`)
+        // Abre a tela de criar tarefas (modelo pré-selecionado pelo tipo de serviço).
+        // Ao fechar/pular, navega para o perfil do cliente.
+        setOnboard({ clientId: created.id, category: serviceToCategory[form.service_type] ?? null })
         return
       }
       navigate(`/clients/${id}`)
@@ -228,6 +238,20 @@ export function ClientForm() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Tipo de serviço</label>
+                <Select value={form.service_type || 'none'} onValueChange={v => set('service_type', v === 'none' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não definir</SelectItem>
+                    <SelectItem value="trafego">💰 Tráfego Pago</SelectItem>
+                    <SelectItem value="social">📱 Social Media</SelectItem>
+                    <SelectItem value="completo">🎯 Completo (Social + Tráfego)</SelectItem>
+                    <SelectItem value="outro">⚙️ Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!isEdit && <p className="text-[11px] text-violet-600 mt-1">Sugere o modelo de tarefas certo ao salvar.</p>}
+              </div>
             </CardContent>
           </Card>
 
@@ -279,6 +303,16 @@ export function ClientForm() {
           </div>
         </form>
       </div>
+
+      {/* Após criar: oferece criar as primeiras tarefas a partir de um modelo */}
+      {onboard && (
+        <ApplyTemplateModal
+          clientId={onboard.clientId}
+          initialCategory={onboard.category}
+          open
+          onClose={() => { const cid = onboard.clientId; setOnboard(null); navigate(`/clients/${cid}`) }}
+        />
+      )}
     </div>
   )
 }

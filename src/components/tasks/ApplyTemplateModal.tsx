@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Loader2, Check, Repeat, ListChecks, ListTodo } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -14,13 +14,14 @@ import { cn } from '@/utils/formatters'
 const PRIORITY_LABEL: Record<string, string> = { baixa: 'Baixa', media: 'Média', alta: 'Alta', urgente: 'Urgente' }
 
 interface Props {
-  clientId:   string | null
-  open:       boolean
-  onClose:    () => void
-  onApplied?: (count: number) => void
+  clientId:        string | null
+  open:            boolean
+  onClose:         () => void
+  onApplied?:      (count: number) => void
+  initialCategory?: string | null   // pré-seleciona o modelo do sistema dessa categoria
 }
 
-export function ApplyTemplateModal({ clientId, open, onClose, onApplied }: Props) {
+export function ApplyTemplateModal({ clientId, open, onClose, onApplied, initialCategory }: Props) {
   const { toast } = useToast()
   const { data: templates = [], isLoading } = useTaskTemplates()
   const { data: members = [] }              = useTeamMembers()
@@ -34,6 +35,14 @@ export function ApplyTemplateModal({ clientId, open, onClose, onApplied }: Props
 
   const { data: items = [] } = useTaskTemplateItems(selectedId)
   const selected = useMemo(() => templates.find(t => t.id === selectedId) ?? null, [templates, selectedId])
+
+  // Pré-seleciona o modelo do sistema da categoria informada (ex: vindo do cadastro)
+  useEffect(() => {
+    if (open && initialCategory && selectedId === null) {
+      const match = templates.find(t => t.is_system && t.category === initialCategory)
+      if (match) setSelectedId(match.id)
+    }
+  }, [open, initialCategory, templates, selectedId])
 
   function reset() {
     setSelectedId(null); setMode('separate'); setAssigneeId('none')
