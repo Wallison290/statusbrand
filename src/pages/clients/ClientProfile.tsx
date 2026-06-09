@@ -994,14 +994,14 @@ export function ClientProfile() {
             <TabsTrigger value="instagram" className="gap-1">
               <Instagram className="w-3 h-3" />Instagram
             </TabsTrigger>
-            <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
+            <TabsTrigger value="tasks">Tarefas ({tasks?.length || 0})</TabsTrigger>
             <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+            <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
             <TabsTrigger value="contents">Arsenal ({assets?.length || 0})</TabsTrigger>
             <TabsTrigger value="planner">Planejamento ({planner?.length || 0})</TabsTrigger>
             <TabsTrigger value="requests" className="gap-1">
               <Lightbulb className="w-3 h-3" />Solicitações e Ideias
             </TabsTrigger>
-            <TabsTrigger value="tasks">Tarefas ({tasks?.length || 0})</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>
             <TabsTrigger value="support">Suporte</TabsTrigger>
             <TabsTrigger value="results">Resultados</TabsTrigger>
