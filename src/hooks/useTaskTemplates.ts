@@ -62,6 +62,87 @@ export function useTaskTemplateItems(templateId: string | null) {
   })
 }
 
+/** Busca avulsa dos itens de um modelo (para editar/duplicar). */
+export async function getTemplateItems(templateId: string): Promise<TaskTemplateItem[]> {
+  const { data, error } = await (supabase as any)
+    .from('task_template_items')
+    .select('*')
+    .eq('template_id', templateId)
+    .order('position')
+  if (error) throw error
+  return data ?? []
+}
+
+// ── Criar / editar / excluir modelos do usuário ─────────────────────────────────
+export interface SaveTemplateItem {
+  title:           string
+  description:     string | null
+  priority:        'baixa' | 'media' | 'alta' | 'urgente'
+  tags:            string[]
+  due_offset_days: number | null
+  is_recurring:    boolean
+  squad_id:        string | null
+}
+export interface SaveTemplateInput {
+  id?:         string
+  name:        string
+  description: string | null
+  emoji:       string | null
+  category:    string
+  items:       SaveTemplateItem[]
+}
+
+export function useSaveTemplate() {
+  const qc = useQueryClient()
+  const { user } = useAuth()
+  return useMutation({
+    mutationFn: async (input: SaveTemplateInput): Promise<string> => {
+      if (!user) throw new Error('Não autenticado')
+      let templateId = input.id
+
+      if (templateId) {
+        const { error } = await (supabase as any).from('task_templates')
+          .update({ name: input.name, description: input.description, emoji: input.emoji, category: input.category })
+          .eq('id', templateId)
+        if (error) throw error
+        await (supabase as any).from('task_template_items').delete().eq('template_id', templateId)
+      } else {
+        const { data, error } = await (supabase as any).from('task_templates')
+          .insert({ user_id: user.id, name: input.name, description: input.description, emoji: input.emoji, category: input.category, is_system: false })
+          .select().single()
+        if (error) throw error
+        templateId = data.id
+      }
+
+      if (input.items.length > 0) {
+        const rows = input.items.map((it, i) => ({
+          template_id: templateId, position: i + 1,
+          title: it.title, description: it.description, priority: it.priority,
+          tags: it.tags, due_offset_days: it.due_offset_days, is_recurring: it.is_recurring, squad_id: it.squad_id,
+        }))
+        const { error } = await (supabase as any).from('task_template_items').insert(rows)
+        if (error) throw error
+      }
+      return templateId!
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['task_templates'] })
+      qc.invalidateQueries({ queryKey: ['task_template_items'] })
+    },
+  })
+}
+
+export function useDeleteTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from('task_templates').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task_templates'] }),
+  })
+}
+
 // ── Aplicação (cria as tarefas no kanban) ───────────────────────────────────────
 export interface ApplyTemplateInput {
   templateId:   string

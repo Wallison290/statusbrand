@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { TemplatesManagerModal } from '@/components/tasks/TemplatesManagerModal'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks'
 import { useClients } from '@/hooks/useClients'
 import { useTeamMembers } from '@/hooks/useTeamMembers'
@@ -1093,6 +1094,7 @@ export function Tasks() {
   const [activeTab, setActiveTab]     = useState<ViewTab>('semanal')
   const [draggingId, setDraggingId]   = useState<string | null>(null)
   const [noDateOpen, setNoDateOpen]   = useState(false)
+  const [templatesOpen, setTemplatesOpen] = useState(false)
   const [dialogOpen, setDialogOpen]   = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [prefillDate, setPrefillDate] = useState('')
@@ -1176,10 +1178,16 @@ export function Tasks() {
           <h1 className="text-[20px] font-bold text-[#F8FAFC]">Tarefas</h1>
           <p className="text-[12px] text-[#64748b] mt-0.5">Gerencie e acompanhe todas as tarefas</p>
         </div>
-        <button onClick={handleNewTask}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:scale-95 transition-all shadow-lg shadow-[#2563EB]/20">
-          <Plus className="w-4 h-4" /> Nova tarefa
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setTemplatesOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium border border-[#1e293b] bg-[#111827] text-[#CBD5E1] hover:border-[#334155] transition-all">
+            <ClipboardList className="w-4 h-4" /> Modelos
+          </button>
+          <button onClick={handleNewTask}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:scale-95 transition-all shadow-lg shadow-[#2563EB]/20">
+            <Plus className="w-4 h-4" /> Nova tarefa
+          </button>
+        </div>
       </div>
 
       {/* ── Stats + date nav ─────────────────────────────────────────────── */}
@@ -1356,6 +1364,8 @@ export function Tasks() {
         onClose={() => setViewingTask(null)}
         onEdit={task => { setViewingTask(null); handleEditTask(task) }}
         onDelete={id => { setViewingTask(null); handleDelete(id) }} />
+
+      <TemplatesManagerModal open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
     </div>
   )
 }
