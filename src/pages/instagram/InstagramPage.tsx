@@ -17,6 +17,7 @@ import {
   useAllInstagramAccounts,
   useScheduledPosts,
   useCancelScheduledPost,
+  useRetryScheduledPost,
   type ScheduledPost,
   type InstagramAccount,
 } from '@/hooks/useInstagram'
@@ -131,7 +132,7 @@ function AccountListCard({
 
 // ── Post Card ─────────────────────────────────────────────────────────────────
 
-function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: string) => void }) {
+function PostCard({ post, onCancel, onRetry }: { post: ScheduledPost; onCancel: (id: string) => void; onRetry: (id: string) => void }) {
   const cfg        = STATUS_CFG[post.status]
   const StatusIcon = cfg.Icon
   const typeCfg    = POST_TYPE_CFG[post.post_type]
@@ -196,6 +197,15 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
         </div>
 
         <div className="flex items-center gap-3">
+          {post.status === 'failed' && (
+            <button
+              onClick={() => onRetry(post.id)}
+              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Tentar novamente
+            </button>
+          )}
           {post.status === 'scheduled' && (
             <button
               onClick={() => onCancel(post.id)}
@@ -236,12 +246,14 @@ function AccountDetailView({
   posts,
   onBack,
   onCancel,
+  onRetry,
   onDisconnect,
 }: {
   account: InstagramAccount
   posts: ScheduledPost[]
   onBack: () => void
   onCancel: (id: string) => void
+  onRetry: (id: string) => void
   onDisconnect: (id: string) => void
 }) {
   const [tab, setTab] = useState<TabType>('all')
@@ -392,7 +404,7 @@ function AccountDetailView({
           ) : (
             <div className="space-y-3">
               {filteredPosts.map(post => (
-                <PostCard key={post.id} post={post} onCancel={onCancel} />
+                <PostCard key={post.id} post={post} onCancel={onCancel} onRetry={onRetry} />
               ))}
             </div>
           )}
@@ -409,6 +421,7 @@ export function InstagramPage() {
   const [selectedAccount, setSelectedAccount] = useState<InstagramAccount | null>(null)
   const { toast }       = useToast()
   const cancelPost      = useCancelScheduledPost()
+  const retryPost       = useRetryScheduledPost()
 
   const { data: rawAccounts = [], isLoading: loadingAccounts, refetch: refetchAccounts, isRefetching: refetchingAccounts } = useAllInstagramAccounts()
   const { data: posts       = [], isLoading: loadingPosts,    refetch: refetchPosts,    isRefetching: refetchingPosts    } = useScheduledPosts()
@@ -455,6 +468,15 @@ export function InstagramPage() {
     toast('Post cancelado', 'success')
   }
 
+  const handleRetry = async (id: string) => {
+    try {
+      await retryPost.mutateAsync(id)
+      toast('Post recolocado na fila — será publicado em instantes.', 'success')
+    } catch (err: any) {
+      toast(err?.message ?? 'Não foi possível reagendar o post.', 'error')
+    }
+  }
+
   return (
     <div className="min-h-full bg-[#0B0F14] p-6">
       <div className="max-w-3xl mx-auto space-y-5">
@@ -494,6 +516,7 @@ export function InstagramPage() {
               posts={posts}
               onBack={() => setSelectedAccount(null)}
               onCancel={handleCancel}
+              onRetry={handleRetry}
               onDisconnect={async (id) => {
                 await (supabase as any).from('instagram_accounts').delete().eq('id', id)
                 setSelectedAccount(null)

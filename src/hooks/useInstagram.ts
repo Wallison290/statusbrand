@@ -162,6 +162,29 @@ export function useCancelScheduledPost() {
   })
 }
 
+// Recoloca um post que falhou de volta na fila de publicação.
+// Zera retry_count para o post ter direito às 3 tentativas automáticas de novo
+// e limpa a mensagem de erro anterior. O cron pega no próximo ciclo.
+export function useRetryScheduledPost() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from('scheduled_posts')
+        .update({
+          status:        'scheduled',
+          retry_count:   0,
+          error_message: null,
+          updated_at:    new Date().toISOString(),
+        })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scheduled_posts'] }),
+  })
+}
+
 export function useDisconnectInstagram() {
   const qc = useQueryClient()
 
