@@ -9,6 +9,30 @@ const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET      = Deno.env.get('CRON_SECRET') ?? 'kairohub-cron-2025'
 const IG_API           = 'https://graph.instagram.com/v21.0'
 
+// Quantas tentativas automáticas fazer antes de marcar como "failed".
+// Cada tentativa acontece na próxima execução do cron (~1 min depois).
+const MAX_RETRIES = 3
+
+// Decide se vale a pena tentar de novo. Cobre os erros transitórios típicos:
+// o Instagram baixa a mídia a partir da URL e, se demora demais, retorna
+// "Timeout" / subcode 2207003. Esses erros costumam passar numa nova tentativa.
+// Erros permanentes (formato inválido, mídia inacessível, etc.) NÃO são repetidos.
+function isRetryableError(msg: string): boolean {
+  const m = (msg || '').toLowerCase()
+  return (
+    m.includes('2207003') ||              // download da mídia demorou (timeout)
+    m.includes('2207001') ||              // erro transitório de processamento
+    m.includes('"message":"timeout"') ||
+    m.includes('timeout aguardando') ||   // nosso próprio timeout em waitContainerReady
+    m.includes('"is_transient":true') ||
+    m.includes('failed to fetch') ||
+    m.includes('fetch failed') ||
+    m.includes('econnreset') ||
+    m.includes('network') ||
+    /\b50\d\b/.test(m)                     // 500/502/503/504
+  )
+}
+
 // ── Helpers de publicação ─────────────────────────────────────────────────────
 
 async function createContainer(
@@ -200,6 +224,29 @@ Deno.serve(async (req) => {
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
+      const attempts = post.retry_count ?? 0
+
+      // Erro transitório (ex.: timeout do Instagram baixando a mídia) e ainda
+      // há tentativas → devolve para "scheduled" e tenta de novo no próximo
+      // ciclo do cron (~1 min depois). Não notifica e não marca como falha.
+      if (isRetryableError(msg) && attempts < MAX_RETRIES) {
+        const nextAttempt = attempts + 1
+        await supabase
+          .from('scheduled_posts')
+          .update({
+            status:        'scheduled',
+            retry_count:   nextAttempt,
+            error_message: null,
+            updated_at:    new Date().toISOString(),
+          })
+          .eq('id', post.id)
+
+        console.log(`Post ${post.id}: erro transitório, reagendando (tentativa ${nextAttempt}/${MAX_RETRIES}). ${msg}`)
+        results.push({ id: post.id, status: 'retry_scheduled', attempt: nextAttempt, error: msg })
+        continue
+      }
+
+      // Erro permanente ou tentativas esgotadas → falha definitiva.
       await supabase
         .from('scheduled_posts')
         .update({ status: 'failed', error_message: msg, updated_at: new Date().toISOString() })
@@ -207,12 +254,15 @@ Deno.serve(async (req) => {
 
       // Notifica a agência que o post falhou
       if (post.user_id) {
+        const exhausted = attempts >= MAX_RETRIES
         await (supabase as any).from('notifications').insert({
           user_id:   post.user_id,
           client_id: post.client_id ?? null,
           type:      'POST_FAILED',
           title:     'Falha ao publicar no Instagram ❌',
-          message:   'Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.',
+          message:   exhausted
+            ? `Não foi possível publicar mesmo após ${MAX_RETRIES} tentativas automáticas. Verifique a aba Instagram.`
+            : 'Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.',
           link:      null,
           is_read:   false,
         })
