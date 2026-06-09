@@ -23,12 +23,12 @@ import type { Client, ClientStatus, BriefingData } from '@/types'
 
 // 'fechado' é gatilho de transição — não aparece como pill navegável
 const CLIENT_STATUSES: { value: ClientStatus; label: string; color: string; bg: string }[] = [
-  { value: 'lead',        label: 'Lead',        color: 'text-slate-700',   bg: 'bg-slate-100 border-slate-300' },
-  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-800',    bg: 'bg-blue-50 border-blue-200' },
-  { value: 'onboarding',  label: 'Onboarding',  color: 'text-amber-800',   bg: 'bg-amber-50 border-amber-200' },
-  { value: 'ativo',       label: 'Ativo',       color: 'text-green-800',   bg: 'bg-green-50 border-green-200' },
-  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-800',  bg: 'bg-orange-50 border-orange-200' },
-  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-800',     bg: 'bg-red-50 border-red-200' },
+  { value: 'lead',        label: 'Lead',        color: 'text-slate-300',   bg: 'bg-slate-500/10 border-slate-500/30' },
+  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
+  { value: 'onboarding',  label: 'Onboarding',  color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
+  { value: 'ativo',       label: 'Ativo',       color: 'text-green-300',   bg: 'bg-green-500/10 border-green-500/30' },
+  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-300',  bg: 'bg-orange-500/10 border-orange-500/30' },
+  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-300',     bg: 'bg-red-500/10 border-red-500/30' },
 ]
 
 function getStatusConfig(status: string) {
@@ -38,9 +38,9 @@ function getStatusConfig(status: string) {
 // ─── Ícone de tipo de arquivo ─────────────────────────────────────────────────
 
 function DocTypeIcon({ type }: { type: string }) {
-  if (type.startsWith('image/')) return <ImageIcon className="w-3.5 h-3.5 text-blue-700 flex-shrink-0" />
-  if (type.startsWith('video/')) return <Video className="w-3.5 h-3.5 text-purple-700 flex-shrink-0" />
-  if (type === 'application/pdf') return <FileText className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
+  if (type.startsWith('image/')) return <ImageIcon className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+  if (type.startsWith('video/')) return <Video className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+  if (type === 'application/pdf') return <FileText className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
   return <File className="w-3.5 h-3.5 text-[#64748b] flex-shrink-0" />
 }
 
@@ -89,7 +89,7 @@ function StatusSection({ client }: { client: Client }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-zinc-500 uppercase tracking-wide">Status do cliente</p>
+        <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide">Status do cliente</p>
         <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-normal ${current.color} ${current.bg}`}>
           {current.label}
         </span>
@@ -105,7 +105,7 @@ function StatusSection({ client }: { client: Client }) {
             className={`px-3 py-1.5 rounded-md border text-[12px] transition-colors ${
               client.status === s.value
                 ? `${s.color} ${s.bg} font-medium`
-                : 'text-[#64748b] bg-white border-[#e8e8e8] hover:bg-[#f5f5f5] hover:text-[#0f0f0f]'
+                : 'text-[#64748b] bg-[#182233] border-[#1e293b] hover:bg-[#1e293b] hover:text-[#F8FAFC]'
             }`}
           >
             {s.label}
@@ -119,11 +119,11 @@ function StatusSection({ client }: { client: Client }) {
           <button
             onClick={handleFechado}
             disabled={updateStatus.isPending}
-            className="px-3 py-1.5 rounded-md border border-purple-300 bg-purple-50 text-purple-800 text-[12px] hover:bg-purple-100 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 rounded-md border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[12px] hover:bg-purple-500/20 transition-colors disabled:opacity-50"
           >
             Negócio fechado → Iniciar onboarding
           </button>
-          <p className="text-[11px] text-zinc-600">Cria checklist e inicia o processo.</p>
+          <p className="text-[11px] text-[#94a3b8]">Cria checklist e inicia o processo.</p>
         </div>
       )}
 
@@ -132,7 +132,7 @@ function StatusSection({ client }: { client: Client }) {
         <button
           onClick={handleFinalizar}
           disabled={updateStatus.isPending}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-green-200 bg-green-50 text-green-900 text-[13px] font-medium hover:bg-green-100 transition-colors disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-300 text-[13px] font-medium hover:bg-green-500/20 transition-colors disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" />
           Finalizar onboarding → Marcar como Ativo
@@ -155,8 +155,8 @@ function ChecklistSection({ clientId }: { clientId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] text-zinc-500 uppercase tracking-wide">Checklist de Onboarding</p>
-        <span className="text-[11px] text-zinc-500 tabular-nums">{completed}/{total}</span>
+        <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide">Checklist de Onboarding</p>
+        <span className="text-[11px] text-[#94a3b8] tabular-nums">{completed}/{total}</span>
       </div>
 
       {/* Barra de progresso */}
@@ -172,17 +172,17 @@ function ChecklistSection({ clientId }: { clientId: string }) {
           <button
             key={item.id}
             onClick={() => toggle.mutate({ id: item.id, completed: !item.completed, clientId })}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[#f5f5f5] transition-colors group text-left"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[#1e293b] transition-colors group text-left"
           >
             <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
               item.completed
                 ? 'bg-green-600 border-green-600'
-                : 'border-[#d0d0d0] group-hover:border-[#a0a0a0]'
+                : 'border-[#334155] group-hover:border-[#a0a0a0]'
             }`}>
               {item.completed && <Check className="w-2.5 h-2.5 text-white" />}
             </div>
             <span className={`text-[13px] transition-colors ${
-              item.completed ? 'text-[#9ca3af] line-through' : 'text-[#374151]'
+              item.completed ? 'text-[#64748b] line-through' : 'text-[#CBD5E1]'
             }`}>
               {item.title}
             </span>
@@ -214,14 +214,14 @@ function ResponsibleSection({ client }: { client: Client }) {
 
   return (
     <div>
-      <p className="text-[11px] text-zinc-500 uppercase tracking-wide mb-3">Responsável Interno</p>
+      <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide mb-3">Responsável Interno</p>
       <Select
         value={client.responsible_user_id ?? '__none__'}
         onValueChange={handleChange}
       >
         <SelectTrigger>
           <div className="flex items-center gap-2">
-            <User className="w-3.5 h-3.5 text-zinc-500" />
+            <User className="w-3.5 h-3.5 text-[#94a3b8]" />
             <SelectValue placeholder="Sem responsável">
               {current
                 ? (current.full_name || current.email)
@@ -295,7 +295,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] text-zinc-500 uppercase tracking-wide">Documentos</p>
+        <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide">Documentos</p>
         <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
           {uploading ? (
             <><Upload className="w-3 h-3 animate-pulse" /> Enviando...</>
@@ -313,7 +313,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
       </div>
 
       {docs.length === 0 ? (
-        <div className="text-center py-6 border border-dashed border-[#d0d0d0] rounded-lg">
+        <div className="text-center py-6 border border-dashed border-[#334155] rounded-lg">
           <p className="text-[12px] text-[#64748b]">Nenhum documento ainda. Faça upload de logos, manuais, fotos...</p>
         </div>
       ) : (
@@ -323,7 +323,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
             return (
               <div
                 key={doc.id}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-[#e8e8e8] bg-[#fafafa] group"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-[#1e293b] bg-[#182233] group"
               >
                 {isImg ? (
                   <img
@@ -332,19 +332,19 @@ function DocumentsSection({ clientId }: { clientId: string }) {
                     className="w-8 h-8 rounded object-cover flex-shrink-0 border border-white/[0.08]"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded bg-[#f0f0f0] flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded bg-[#182233] flex items-center justify-center flex-shrink-0">
                     <DocTypeIcon type={doc.file_type} />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-[#0f0f0f] truncate">{doc.name}</p>
+                  <p className="text-[12px] text-[#F8FAFC] truncate">{doc.name}</p>
                   <p className="text-[10px] text-[#94a3b8]">{formatDate(doc.created_at)}{doc.file_size ? ` · ${formatSize(doc.file_size)}` : ''}</p>
                 </div>
                 <a
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#94a3b8] hover:text-[#0f0f0f] transition-colors flex-shrink-0"
+                  className="text-[#94a3b8] hover:text-[#F8FAFC] transition-colors flex-shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -352,7 +352,7 @@ function DocumentsSection({ clientId }: { clientId: string }) {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setConfirmingId(null)}
-                      className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1.5"
+                      className="text-[10px] text-[#94a3b8] hover:text-[#CBD5E1] px-1.5"
                     >Não</button>
                     <button
                       onClick={() => handleDelete(doc.id, doc.file_url)}
@@ -468,7 +468,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] text-zinc-500 uppercase tracking-wide">Briefing Completo</p>
+        <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide">Briefing Completo</p>
         <Button size="sm" onClick={handleSave} disabled={upsert.isPending}>
           {upsert.isPending ? 'Salvando...' : 'Salvar briefing'}
         </Button>
@@ -478,24 +478,24 @@ function BriefingSection({ clientId }: { clientId: string }) {
         {BRIEFING_BLOCKS.map(block => (
           <div
             key={block.key}
-            className="rounded-lg border border-[#e8e8e8] overflow-hidden"
+            className="rounded-lg border border-[#1e293b] overflow-hidden"
           >
             {/* Header do bloco */}
             <button
               type="button"
               onClick={() => toggleBlock(block.key)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-[#fafafa] hover:bg-[#f5f5f5] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#182233] hover:bg-[#1e293b] transition-colors"
             >
-              <p className="text-[13px] font-medium text-[#0f0f0f]">{block.title}</p>
+              <p className="text-[13px] font-medium text-[#F8FAFC]">{block.title}</p>
               {openBlocks[block.key]
-                ? <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
-                : <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                ? <ChevronUp className="w-3.5 h-3.5 text-[#94a3b8]" />
+                : <ChevronDown className="w-3.5 h-3.5 text-[#94a3b8]" />
               }
             </button>
 
             {/* Campos do bloco */}
             {openBlocks[block.key] && (
-              <div className="p-4 space-y-3 border-t border-[#e8e8e8]">
+              <div className="p-4 space-y-3 border-t border-[#1e293b]">
                 {block.fields.map(field => {
                   if (field.type === 'textarea') {
                     return (
@@ -513,7 +513,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                   if (field.type === 'input') {
                     return (
                       <div key={field.key as string}>
-                        <label className="block text-[12px] font-normal text-zinc-500 mb-1.5">
+                        <label className="block text-[12px] font-normal text-[#94a3b8] mb-1.5">
                           {field.label}
                         </label>
                         <input
@@ -521,7 +521,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                           value={(form[field.key] as string) || ''}
                           onChange={e => setField(field.key, e.target.value)}
                           placeholder={field.placeholder}
-                          className="flex h-8 w-full rounded-md border border-[#e8e8e8] bg-white px-3 text-[13px] text-[#0f0f0f] placeholder:text-[#9ca3af] focus:outline-none focus:ring-1 focus:ring-[#0f0f0f]/10 focus:border-[#c0c0c0] transition-colors"
+                          className="flex h-8 w-full rounded-md border border-[#1e293b] bg-[#182233] px-3 text-[13px] text-[#F8FAFC] placeholder:text-[#64748b] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/30 focus:border-[#334155] transition-colors"
                         />
                       </div>
                     )
@@ -531,15 +531,15 @@ function BriefingSection({ clientId }: { clientId: string }) {
                     const val = form[field.key] as boolean | undefined
                     return (
                       <div key={field.key as string} className="flex items-center justify-between">
-                        <label className="text-[13px] text-[#374151]">{field.label}</label>
+                        <label className="text-[13px] text-[#CBD5E1]">{field.label}</label>
                         <div className="flex gap-1">
                           <button
                             type="button"
                             onClick={() => setField(field.key, true)}
                             className={`px-3 py-1 rounded-md text-[12px] border transition-colors ${
                               val === true
-                                ? 'bg-green-50 border-green-200 text-green-800 font-medium'
-                                : 'bg-white border-[#e8e8e8] text-[#64748b] hover:text-[#0f0f0f]'
+                                ? 'bg-green-500/15 border-green-500/40 text-green-300 font-medium'
+                                : 'bg-[#182233] border-[#1e293b] text-[#64748b] hover:text-[#F8FAFC]'
                             }`}
                           >Sim</button>
                           <button
@@ -547,8 +547,8 @@ function BriefingSection({ clientId }: { clientId: string }) {
                             onClick={() => setField(field.key, false)}
                             className={`px-3 py-1 rounded-md text-[12px] border transition-colors ${
                               val === false
-                                ? 'bg-red-50 border-red-200 text-red-800 font-medium'
-                                : 'bg-white border-[#e8e8e8] text-[#64748b] hover:text-[#0f0f0f]'
+                                ? 'bg-red-500/15 border-red-500/40 text-red-300 font-medium'
+                                : 'bg-[#182233] border-[#1e293b] text-[#64748b] hover:text-[#F8FAFC]'
                             }`}
                           >Não</button>
                         </div>
@@ -563,7 +563,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                         key={field.key as string}
                         type="button"
                         onClick={() => setField(field.key, !val)}
-                        className="flex items-center gap-2.5 w-full text-left hover:bg-white/[0.02] rounded px-1 py-1 transition-colors"
+                        className="flex items-center gap-2.5 w-full text-left hover:bg-[#cbd5e1]/[0.05] rounded px-1 py-1 transition-colors"
                       >
                         <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
                           val
@@ -572,7 +572,7 @@ function BriefingSection({ clientId }: { clientId: string }) {
                         }`}>
                           {val && <Check className="w-2.5 h-2.5 text-white" />}
                         </div>
-                        <span className={`text-[13px] ${val ? 'text-[#0f0f0f]' : 'text-[#64748b]'}`}>
+                        <span className={`text-[13px] ${val ? 'text-[#F8FAFC]' : 'text-[#64748b]'}`}>
                           {field.label}
                         </span>
                       </button>
@@ -596,37 +596,37 @@ export function OnboardingTab({ client }: { client: Client }) {
   return (
     <div className="space-y-8">
       {/* 1. Status */}
-      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
+      <div className="p-4 rounded-lg border border-[#1e293b] bg-[#182233]">
         <StatusSection client={client} />
       </div>
 
       {/* 2. Checklist — só visível durante onboarding */}
       {client.status === 'onboarding' ? (
-        <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
+        <div className="p-4 rounded-lg border border-[#1e293b] bg-[#182233]">
           <ChecklistSection clientId={client.id} />
         </div>
       ) : (
-        <div className="p-4 rounded-lg border border-dashed border-[#d0d0d0] bg-[#fafafa]">
+        <div className="p-4 rounded-lg border border-dashed border-[#334155] bg-[#182233]">
           <p className="text-[11px] text-[#64748b] uppercase tracking-wide mb-2">Checklist de Onboarding</p>
           <p className="text-[12px] text-[#64748b]">
             O checklist fica disponível quando o cliente está em <span className="text-amber-700 font-medium">Onboarding</span>.
-            {' '}Use o botão <span className="text-purple-700 font-medium">Negócio fechado → Iniciar onboarding</span> acima para começar.
+            {' '}Use o botão <span className="text-purple-400 font-medium">Negócio fechado → Iniciar onboarding</span> acima para começar.
           </p>
         </div>
       )}
 
       {/* 3. Responsável */}
-      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
+      <div className="p-4 rounded-lg border border-[#1e293b] bg-[#182233]">
         <ResponsibleSection client={client} />
       </div>
 
       {/* 4. Documentos */}
-      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
+      <div className="p-4 rounded-lg border border-[#1e293b] bg-[#182233]">
         <DocumentsSection clientId={client.id} />
       </div>
 
       {/* 5. Briefing */}
-      <div className="p-4 rounded-lg border border-[#e8e8e8] bg-white">
+      <div className="p-4 rounded-lg border border-[#1e293b] bg-[#182233]">
         <BriefingSection clientId={client.id} />
       </div>
     </div>
