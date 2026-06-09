@@ -143,9 +143,9 @@ export function ApplyTemplateModal({ clientId, open, onClose, onApplied, initial
                 <div>
                   <label className="block text-[11px] font-medium text-[#94a3b8] uppercase tracking-wide mb-1.5">Responsável</label>
                   <Select value={assigneeId} onValueChange={setAssigneeId}>
-                    <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Agência" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Sem responsável</SelectItem>
+                      <SelectItem value="none">Agência</SelectItem>
                       {activeMembers.map(m => (
                         <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                       ))}
