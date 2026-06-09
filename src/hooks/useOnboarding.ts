@@ -65,6 +65,16 @@ export function useToggleChecklist() {
   })
 }
 
+/** Garante o checklist padrão para um cliente (idempotente). Usado quando o
+ *  cliente já está em onboarding mas o checklist nunca foi semeado. */
+export function useEnsureChecklist() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (clientId: string) => { await ensureDefaultChecklist(clientId) },
+    onSuccess: (_d, clientId) => qc.invalidateQueries({ queryKey: ['checklist', clientId] }),
+  })
+}
+
 // ─── Status do cliente (com criação automática do checklist) ──────────────────
 
 export function useUpdateClientStatus() {

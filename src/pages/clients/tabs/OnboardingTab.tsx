@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useUpdateClient } from '@/hooks/useClients'
 import { useToast } from '@/components/ui/toast'
 import {
-  useChecklist, useToggleChecklist, useUpdateClientStatus,
+  useChecklist, useToggleChecklist, useEnsureChecklist, useUpdateClientStatus,
   useClientDocuments, useAddDocument, useDeleteDocument,
   useClientBriefing, useUpsertBriefing,
   useTeamMembers,
@@ -145,8 +145,18 @@ function StatusSection({ client }: { client: Client }) {
 // ─── Seção: Checklist ─────────────────────────────────────────────────────────
 
 function ChecklistSection({ clientId }: { clientId: string }) {
-  const { data: items = [] } = useChecklist(clientId)
+  const { data: items = [], isFetched } = useChecklist(clientId)
   const toggle = useToggleChecklist()
+  const ensure = useEnsureChecklist()
+  const seededRef = useRef(false)
+
+  // Se o cliente está em onboarding mas nunca semeou o checklist, cria os itens padrão
+  useEffect(() => {
+    if (isFetched && items.length === 0 && !seededRef.current && !ensure.isPending) {
+      seededRef.current = true
+      ensure.mutate(clientId)
+    }
+  }, [isFetched, items.length, clientId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const completed = items.filter(i => i.completed).length
   const total = items.length
@@ -160,7 +170,7 @@ function ChecklistSection({ clientId }: { clientId: string }) {
       </div>
 
       {/* Barra de progresso */}
-      <div className="w-full h-1 bg-[#e8e8e8] rounded-full overflow-hidden mb-4">
+      <div className="w-full h-1 bg-[#1e293b] rounded-full overflow-hidden mb-4">
         <div
           className="h-full bg-green-600 rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}
