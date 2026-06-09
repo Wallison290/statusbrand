@@ -289,8 +289,8 @@ function DayColumn({
 
 // ─── View: Semanal (kanban) ───────────────────────────────────────────────────
 
-function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, onStatusChange, onDelete, onEdit, onView, onAddTask }: {
-  tasks: Task[]; days: Date[]; draggingId: string | null
+function WeeklyView({ tasks, days, weekDays, draggingId, onDrop, onDragStart, onDragEnd, onStatusChange, onDelete, onEdit, onView, onAddTask }: {
+  tasks: Task[]; days: Date[]; weekDays: Date[]; draggingId: string | null
   onDrop: (id: string, day: Date) => void; onDragStart: (id: string) => void; onDragEnd: () => void
   onStatusChange: (id: string, s: TaskStatus) => void; onDelete: (id: string) => void
   onEdit: (t: Task) => void; onView: (t: Task) => void; onAddTask: (d: Date) => void
@@ -306,23 +306,37 @@ function WeeklyView({ tasks, days, draggingId, onDrop, onDragStart, onDragEnd, o
       })
   }
 
-  const thisWeekTotal = days.reduce((acc, d) => acc + tasksByDay(d).length, 0)
+  const thisWeekTotal = weekDays.reduce((acc, d) => acc + tasksByDay(d).length, 0)
+
+  const columnProps = (day: Date) => ({
+    day, tasks: tasksByDay(day), draggingId,
+    onDrop, onDragStart, onDragEnd, onStatusChange, onDelete, onEdit, onView, onAddTask,
+  })
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col min-h-0">
       {thisWeekTotal === 0 && tasks.length > 0 && (
         <div className="mx-4 mb-2 px-4 py-2 bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-xl text-[12px] text-[#F5A623] flex-shrink-0">
-          ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Navegue com as setas ou use a aba <strong>Lista</strong> para ver todas.
+          ⚠ Nenhuma tarefa nesta semana — você tem <strong>{tasks.length}</strong> tarefa{tasks.length !== 1 ? 's' : ''} em outras semanas. Use as setas de semana ou a aba <strong>Lista</strong>.
         </div>
       )}
-      <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 px-4 md:px-5">
+
+      {/* ── Desktop: grid com janela de 4 dias ── */}
+      <div className="hidden lg:block overflow-y-auto overflow-x-hidden flex-1 min-h-0 px-4 md:px-5">
         <div className="grid gap-3 items-start pb-4" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
           {days.map(day => (
-            <DayColumn key={day.toISOString()} day={day} tasks={tasksByDay(day)} draggingId={draggingId}
-              onDrop={onDrop} onDragStart={onDragStart} onDragEnd={onDragEnd}
-              onStatusChange={onStatusChange} onDelete={onDelete} onEdit={onEdit} onView={onView} onAddTask={onAddTask} />
+            <DayColumn key={day.toISOString()} {...columnProps(day)} />
           ))}
         </div>
+      </div>
+
+      {/* ── Mobile: rolagem horizontal pelos 7 dias, colunas grandes (snap) ── */}
+      <div className="lg:hidden flex-1 min-h-0 flex gap-3 px-4 pb-4 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+        {weekDays.map(day => (
+          <div key={day.toISOString()} className="min-w-[86vw] max-w-[86vw] flex-shrink-0 snap-center h-full overflow-y-auto [&::-webkit-scrollbar]:hidden">
+            <DayColumn {...columnProps(day)} />
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -1271,7 +1285,7 @@ export function Tasks() {
           <div className="flex items-center gap-2 mb-1">
             {/* Setas de janela de dias (só na visão semanal) */}
             {activeTab === 'semanal' && (
-              <div className="flex items-center bg-[#182233] border border-[#1e293b] rounded-lg overflow-hidden">
+              <div className="hidden lg:flex items-center bg-[#182233] border border-[#1e293b] rounded-lg overflow-hidden">
                 <button
                   onClick={() => setDayWindow(w => Math.max(0, w - 1))}
                   disabled={dayWindow === 0}
@@ -1332,7 +1346,7 @@ export function Tasks() {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0 pt-3">
 
         {activeTab === 'semanal' && (
-          <WeeklyView tasks={tasks} days={visibleDays} draggingId={draggingId}
+          <WeeklyView tasks={tasks} days={visibleDays} weekDays={days} draggingId={draggingId}
             onDrop={handleDropOnDay} onDragStart={setDraggingId} onDragEnd={() => setDraggingId(null)}
             onStatusChange={handleStatusChange} onDelete={handleDelete}
             onEdit={handleEditTask} onView={setViewingTask} onAddTask={handleAddTask} />
