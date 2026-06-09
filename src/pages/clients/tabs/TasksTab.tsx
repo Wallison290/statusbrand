@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder, type LucideIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder, ListChecks, type LucideIcon } from 'lucide-react'
 import type { TaskLink } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks'
 import { useTeamMembers } from '@/hooks/useTeamMembers'
+import { ApplyTemplateModal } from '@/components/tasks/ApplyTemplateModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { formatDate, isOverdue } from '@/utils/formatters'
@@ -487,6 +488,7 @@ export function TasksTab({ clientId }: { clientId: string }) {
   const { toast }                        = useToast()
 
   const [dialogOpen, setDialogOpen]     = useState(false)
+  const [templateOpen, setTemplateOpen] = useState(false)
   const [editingTask, setEditingTask]   = useState<Task | null>(null)
   const [viewingTask, setViewingTask]   = useState<Task | null>(null)
   const [deletingId, setDeletingId]     = useState<string | null>(null)
@@ -556,12 +558,20 @@ export function TasksTab({ clientId }: { clientId: string }) {
         <p className="text-[12px] text-[#94a3b8]">
           {tasks.length} tarefa{tasks.length !== 1 ? 's' : ''}
         </p>
-        <button
-          onClick={handleNew}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" /> Nova tarefa
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTemplateOpen(true)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border border-[#1e293b] bg-[#111827] text-[#CBD5E1] hover:border-[#334155] transition-colors"
+          >
+            <ListChecks className="w-3.5 h-3.5" /> Usar modelo
+          </button>
+          <button
+            onClick={handleNew}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium bg-[#0f0f0f] text-white hover:bg-[#1e293b] transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Nova tarefa
+          </button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -726,6 +736,13 @@ export function TasksTab({ clientId }: { clientId: string }) {
         members={activeMembers}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
+      />
+
+      {/* Aplicar modelo de tarefas */}
+      <ApplyTemplateModal
+        clientId={clientId}
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
       />
     </div>
   )
