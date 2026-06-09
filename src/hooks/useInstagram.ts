@@ -31,6 +31,7 @@ export interface ScheduledPost {
   ig_post_id:    string | null
   error_message: string | null
   published_at:  string | null
+  retry_count:   number | null
   created_at:    string
   // Joined
   instagram_accounts?: { username: string; profile_picture_url: string | null } | null

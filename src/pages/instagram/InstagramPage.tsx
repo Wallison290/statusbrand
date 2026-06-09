@@ -30,6 +30,9 @@ import {
 
 type TabType = 'all' | 'scheduled' | 'published' | 'failed' | 'cancelled'
 
+// Mantém em sincronia com MAX_RETRIES da Edge Function instagram-publish-cron
+const MAX_RETRIES = 3
+
 const POST_TYPE_CFG = {
   IMAGE:          { label: 'Imagem',    Icon: Image      },
   CAROUSEL_ALBUM: { label: 'Carrossel', Icon: LayoutGrid },
@@ -142,9 +145,21 @@ function PostCard({ post, onCancel }: { post: ScheduledPost; onCancel: (id: stri
           <TypeIcon className="w-4 h-4 text-[#9CA3AF]" />
           <span className="text-[13px] font-medium text-white">{typeCfg?.label}</span>
         </div>
-        <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#0B0F14]/60 border border-[#1F2937] ${cfg.color}`}>
-          <StatusIcon className={`w-3 h-3 ${cfg.spin ? 'animate-spin' : ''}`} />
-          {cfg.label}
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          {/* Reprocessamento automático após falha transitória */}
+          {(post.retry_count ?? 0) > 0 && post.status !== 'published' && post.status !== 'cancelled' && (
+            <div
+              title={`Falha temporária ao publicar. Tentando novamente automaticamente (tentativa ${post.retry_count}/${MAX_RETRIES}).`}
+              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#FBBF24]"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Tentativa {post.retry_count}/{MAX_RETRIES}
+            </div>
+          )}
+          <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#0B0F14]/60 border border-[#1F2937] ${cfg.color}`}>
+            <StatusIcon className={`w-3 h-3 ${cfg.spin ? 'animate-spin' : ''}`} />
+            {cfg.label}
+          </div>
         </div>
       </div>
 
