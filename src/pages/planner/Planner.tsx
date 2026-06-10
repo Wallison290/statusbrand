@@ -1351,19 +1351,19 @@ function DayPreviewChip({
       {...attributes}
       onClick={e => { e.stopPropagation(); onItemClick() }}
       style={{ touchAction: 'none', backgroundColor: bg, borderColor: border, color: text }}
-      className={`w-full rounded-md border px-1.5 py-1 sm:px-1 sm:py-0.5 min-w-0 transition-opacity select-none
+      className={`w-full rounded-md border px-1.5 py-0.5 min-w-0 transition-opacity select-none
         ${isDragging ? 'opacity-0' : 'hover:brightness-95'}
         ${disabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
     >
-      <div className="flex items-start gap-1 min-w-0">
+      <div className="flex items-center gap-1 min-w-0">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-[9px] font-medium leading-tight line-clamp-2">{item.title}</p>
+          <p className="text-[10px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
           {typeLabel && (
             <p className="text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
           )}
         </div>
         <Instagram
-          className="w-2.5 h-2.5 flex-shrink-0 mt-px opacity-50"
+          className="w-2.5 h-2.5 flex-shrink-0 opacity-50"
           strokeWidth={1.5}
         />
       </div>
