@@ -404,6 +404,113 @@ export function NoteModal({
   )
 }
 
+// ─── NoteViewModal (somente leitura — notas enviadas pelo cliente) ─────────────
+
+function NoteViewModal({
+  note, onClose, onDelete,
+}: {
+  note: Note
+  onClose: () => void
+  onDelete: (id: string) => void
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] px-4">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, y: -12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+        className="relative w-full max-w-lg bg-[#111827] rounded-2xl shadow-2xl border border-[#1e293b] flex flex-col max-h-[85vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start gap-3 px-5 pt-5 pb-3 border-b border-[#1e293b]">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[16px] font-semibold text-[#F8FAFC] leading-snug break-words">{note.title || 'Sem título'}</h2>
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-[#2563EB]/15 text-[#60A5FA]">{typeLabels[note.type]}</span>
+              {note.client && (
+                <span className="text-[10px] text-[#94a3b8] bg-[#182233] px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                  <Building2 className="w-2.5 h-2.5" /> {note.client.company_name}
+                </span>
+              )}
+              <span className="text-[10px] text-purple-300 bg-purple-500/15 px-1.5 py-0.5 rounded-md">enviada pelo cliente</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#1e293b] transition-colors flex-shrink-0">
+            <X className="w-4 h-4 text-[#94a3b8]" />
+          </button>
+        </div>
+
+        {/* Body (somente leitura) */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {note.content && (
+            <p className="text-[13px] text-[#CBD5E1] whitespace-pre-wrap leading-relaxed">{note.content}</p>
+          )}
+          {note.checklist.length > 0 && (
+            <div className="space-y-1.5">
+              {note.checklist.map(it => (
+                <div key={it.id} className="flex items-center gap-2">
+                  <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${it.done ? 'bg-emerald-500 border-emerald-500' : 'border-[#334155]'}`}>
+                    {it.done && <Check className="w-2.5 h-2.5" style={{ color: '#fff' }} />}
+                  </span>
+                  <span className={`text-[13px] ${it.done ? 'line-through text-[#64748b]' : 'text-[#CBD5E1]'}`}>{it.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {!note.content && note.checklist.length === 0 && (
+            <p className="text-[13px] text-[#64748b]">Sem conteúdo.</p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-4 border-t border-[#1e293b]">
+          <span className="text-[11px] text-[#64748b]">🔒 Somente leitura</span>
+          {confirmDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-[#94a3b8]">Excluir?</span>
+              <button onClick={() => setConfirmDelete(false)} className="text-[12px] px-2.5 py-1 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:bg-[#1e293b]">Não</button>
+              <button onClick={() => onDelete(note.id)} className="text-[12px] px-2.5 py-1 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#f87171] hover:bg-[#ef4444]/20">Sim</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-[12px] text-[#64748b] hover:text-[#f87171] transition-colors">
+                <Trash2 className="w-3.5 h-3.5" /> Excluir
+              </button>
+              <button onClick={onClose} className="text-[13px] font-semibold px-4 py-2 rounded-xl bg-[#1e293b] text-[#CBD5E1] hover:bg-[#334155] transition-colors">Fechar</button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── NotesColumn ──────────────────────────────────────────────────────────────
+
+function NotesColumn({
+  title, Icon, accent, count, children,
+}: {
+  title: string; Icon: React.ElementType; accent: string; count: number; children: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col w-[80vw] sm:w-[300px] flex-shrink-0 h-full min-h-0 rounded-2xl border border-[#1e293b] bg-[#0d1424]/50">
+      <div className="flex items-center gap-2 px-3.5 py-3 border-b border-[#1e293b] flex-shrink-0">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${accent}22` }}>
+          <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+        </div>
+        <span className="text-[13px] font-semibold text-[#E2E8F0] truncate flex-1">{title}</span>
+        <span className="text-[11px] font-bold text-[#94a3b8] bg-[#182233] px-2 py-0.5 rounded-full flex-shrink-0">{count}</span>
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto p-2.5 space-y-2.5">
+        {children}
+      </div>
+    </div>
+  )
+}
+
 // ─── FilterBar ────────────────────────────────────────────────────────────────
 
 function FilterBar({
@@ -476,20 +583,44 @@ export function Notes() {
   const { data: notes = [], isLoading } = useNotes(filter)
   const { data: allClients = [] } = useClients()
   const [selected, setSelected] = useState<Note | null | 'new'>(null)
+  const [viewing, setViewing]   = useState<Note | null>(null)
+  const deleteNote = useDeleteNote()
+  const { toast } = useToast()
 
   const open = selected !== null
   const modalNote = selected === 'new' ? null : selected
 
   const clients = allClients.map(c => ({ id: c.id, company_name: c.company_name }))
 
+  // Notas da agência + uma coluna por cliente (solicitações enviadas pelo cliente)
+  const agencyNotes = notes.filter(n => n.origin !== 'client')
+  const clientCols = (() => {
+    const map = new Map<string, { id: string; name: string; notes: Note[] }>()
+    for (const n of notes) {
+      if (n.origin !== 'client') continue
+      const id = n.client_id ?? 'sem'
+      if (!map.has(id)) map.set(id, { id, name: n.client?.company_name ?? 'Sem cliente', notes: [] })
+      map.get(id)!.notes.push(n)
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
+  })()
+
+  // Notas do cliente abrem em modo leitura; notas da agência abrem editáveis
+  const openNote = (n: Note) => (n.origin === 'client' ? setViewing(n) : setSelected(n))
+
+  async function handleDeleteViewing(id: string) {
+    try { await deleteNote.mutateAsync(id); toast('Nota excluída.', 'success'); setViewing(null) }
+    catch (e: any) { toast(e.message, 'error') }
+  }
+
   return (
     <div className="h-full flex flex-col bg-[#0B1020]">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e293b] bg-[#0B1020] gap-4 flex-wrap">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e293b] bg-[#0B1020] gap-4 flex-wrap">
         <div>
           <h1 className="text-[20px] font-bold text-[#F8FAFC]">Notas</h1>
           <p className="text-[12px] text-[#64748b] mt-0.5">
-            {notes.length} {notes.length === 1 ? 'nota' : 'notas'}
+            {notes.length} {notes.length === 1 ? 'nota' : 'notas'} · {clientCols.length} {clientCols.length === 1 ? 'cliente' : 'clientes'}
           </p>
         </div>
 
@@ -506,54 +637,59 @@ export function Notes() {
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Board de colunas */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-6">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-[#182233] rounded-2xl h-36 animate-pulse" />
+          <div className="flex gap-4 h-full">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="w-[80vw] sm:w-[300px] flex-shrink-0 bg-[#182233] rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : notes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full min-h-[50vh] gap-4 text-center">
+          <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#182233] border border-[#1e293b] flex items-center justify-center">
               <StickyNote className="w-8 h-8 text-[#475569]" />
             </div>
             <div>
               <p className="text-[15px] font-semibold text-[#F8FAFC] mb-1">
-                {(filter.client_id || filter.type || filter.origin)
-                  ? 'Nenhuma nota encontrada com esses filtros'
-                  : 'Nenhuma nota ainda'}
+                {(filter.client_id || filter.type || filter.origin) ? 'Nenhuma nota com esses filtros' : 'Nenhuma nota ainda'}
               </p>
               <p className="text-[13px] text-[#64748b]">
-                {(filter.client_id || filter.type || filter.origin)
-                  ? 'Tente alterar ou limpar os filtros'
-                  : 'Crie sua primeira nota clicando em "Nova nota"'}
+                {(filter.client_id || filter.type || filter.origin) ? 'Tente alterar ou limpar os filtros' : 'Crie sua primeira nota em "Nova nota"'}
               </p>
             </div>
-            {!(filter.client_id || filter.type || filter.origin) && (
-              <button
-                onClick={() => setSelected('new')}
-                className="flex items-center gap-2 text-[13px] font-semibold px-4 py-2.5 rounded-xl hover:bg-[#1D4ED8] transition-colors mt-2 shadow-lg shadow-[#2563EB]/20"
-                style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)', color: '#ffffff' }}
-              >
-                <Plus className="w-4 h-4" />
-                Criar nota
-              </button>
-            )}
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            <AnimatePresence>
-              {notes.map(note => (
-                <NoteCard key={note.id} note={note} onOpen={() => setSelected(note)} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="flex gap-4 h-full min-h-0 items-stretch">
+            {/* Coluna da Agência */}
+            <NotesColumn title="Notas da Agência" Icon={NotebookPen} accent="#60A5FA" count={agencyNotes.length}>
+              <button
+                onClick={() => setSelected('new')}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-[#334155] text-[12px] font-medium text-[#94a3b8] hover:border-[#2563EB]/50 hover:text-[#CBD5E1] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Nova nota
+              </button>
+              <AnimatePresence>
+                {agencyNotes.map(n => <NoteCard key={n.id} note={n} onOpen={() => openNote(n)} />)}
+              </AnimatePresence>
+              {agencyNotes.length === 0 && (
+                <p className="text-[12px] text-[#475569] text-center py-4">Nenhuma nota da agência ainda.</p>
+              )}
+            </NotesColumn>
+
+            {/* Uma coluna por cliente */}
+            {clientCols.map(col => (
+              <NotesColumn key={col.id} title={col.name} Icon={Building2} accent="#c084fc" count={col.notes.length}>
+                <AnimatePresence>
+                  {col.notes.map(n => <NoteCard key={n.id} note={n} onOpen={() => openNote(n)} />)}
+                </AnimatePresence>
+              </NotesColumn>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal editável (notas da agência) */}
       <AnimatePresence>
         {open && (
           <NoteModal
@@ -562,6 +698,13 @@ export function Notes() {
             defaultClientId={filter.client_id}
             onClose={() => setSelected(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Modal somente leitura (notas do cliente) */}
+      <AnimatePresence>
+        {viewing && (
+          <NoteViewModal note={viewing} onClose={() => setViewing(null)} onDelete={handleDeleteViewing} />
         )}
       </AnimatePresence>
     </div>
