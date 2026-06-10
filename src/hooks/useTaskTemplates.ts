@@ -186,19 +186,32 @@ export function useApplyTaskTemplate() {
       }
 
       // Modo: tarefas separadas (uma por item, com prazo em dias úteis)
-      const rows = list.map(it => ({
-        user_id:     user.id,
-        client_id:   input.clientId,
-        title:       it.title,
-        description: it.description,
-        due_date:    it.is_recurring ? null : offsetToDate(input.startDate, it.due_offset_days),
-        due_time:    null,
-        priority:    it.priority,
-        status:      'a_fazer',
-        assignee:    input.assignee,
-        assignee_id: input.assigneeId,
-        tags:        it.tags ?? [],
-      }))
+      // Horário inteligente: por dia, distribui a partir das 08:00 de 2 em 2 horas
+      // (1ª tarefa 08:00, 2ª 10:00, 3ª 12:00...). Recorrentes/sem data ficam sem hora.
+      const perDay: Record<string, number> = {}
+      const rows = list.map(it => {
+        const due_date = it.is_recurring ? null : offsetToDate(input.startDate, it.due_offset_days)
+        let due_time: string | null = null
+        if (due_date) {
+          const idx = perDay[due_date] ?? 0
+          perDay[due_date] = idx + 1
+          const hour = Math.min(8 + idx * 2, 22)   // limita a 22:00 se houver muitas no dia
+          due_time = `${String(hour).padStart(2, '0')}:00`
+        }
+        return {
+          user_id:     user.id,
+          client_id:   input.clientId,
+          title:       it.title,
+          description: it.description,
+          due_date,
+          due_time,
+          priority:    it.priority,
+          status:      'a_fazer',
+          assignee:    input.assignee,
+          assignee_id: input.assigneeId,
+          tags:        it.tags ?? [],
+        }
+      })
       const { error: e3 } = await (supabase as any).from('tasks').insert(rows)
       if (e3) throw e3
       return rows.length
