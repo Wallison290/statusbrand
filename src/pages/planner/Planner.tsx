@@ -1357,9 +1357,9 @@ function DayPreviewChip({
     >
       <div className="flex items-start gap-1 min-w-0">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
+          <p className="text-[10px] sm:text-[9px] font-medium leading-tight line-clamp-2">{item.title}</p>
           {typeLabel && (
-            <p className="text-[8px] leading-tight truncate opacity-70">{typeLabel}</p>
+            <p className="text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
           )}
         </div>
         <Instagram
@@ -1396,7 +1396,7 @@ function DroppableDay({
       onMouseEnter={e => isCurrentMonth && !dragging && onMouseEnter(e)}
       onMouseLeave={() => !dragging && onMouseLeave()}
       className={`
-        min-h-[12vh] sm:min-h-[90px] p-1 sm:p-1.5 rounded-lg border transition-all
+        min-h-0 sm:min-h-[90px] overflow-hidden p-1 sm:p-1.5 rounded-lg border transition-all
         ${isCurrentMonth
           ? `cursor-pointer ${isOver
               ? 'border-[#2563EB]/60 bg-[#2563EB]/10 scale-[1.02]'
@@ -2427,7 +2427,7 @@ export function Planner() {
                 <div key={d} className="text-center text-[11px] sm:text-xs font-semibold text-[#CBD5E1] py-1.5 sm:py-2 truncate">{d}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1 auto-rows-fr h-[calc(100dvh-16rem)] sm:h-auto">
               {days.map(day => {
                 const dayItems = getItemsForDay(day)
                 const isCurrentMonth = isSameMonth(day, currentMonth)
@@ -2453,7 +2453,7 @@ export function Planner() {
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-0.5 sm:space-y-1">
-                      {dayItems.slice(0, 3).map(item => (
+                      {dayItems.slice(0, isMobile ? 2 : 3).map(item => (
                         <DayPreviewChip
                           key={item.id}
                           item={item}
@@ -2461,8 +2461,8 @@ export function Planner() {
                           onItemClick={() => openItemView(item)}
                         />
                       ))}
-                      {dayItems.length > 3 && (
-                        <p className="text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - 3} mais</p>
+                      {dayItems.length > (isMobile ? 2 : 3) && (
+                        <p className="text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - (isMobile ? 2 : 3)} mais</p>
                       )}
                     </div>
                   </DroppableDay>
