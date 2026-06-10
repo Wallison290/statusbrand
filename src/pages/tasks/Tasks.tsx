@@ -419,11 +419,16 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
               <div key={di} className={`flex-1 min-w-[44px] border-l border-[#1e293b] px-1 py-2 flex items-center justify-center ${isToday(day) ? 'bg-[#2563EB]/5' : ''}`}>
                 {dueDayIdx === di && (
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${overdue ? 'bg-[#ef4444]/15 text-[#f87171]' : `${priCfg.pillBg} ${priCfg.pillText}`}`}
+                    className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${
+                      task.status === 'concluido' ? 'bg-emerald-500/20 text-emerald-300'
+                      : overdue ? 'bg-[#ef4444]/15 text-[#f87171]'
+                      : `${priCfg.pillBg} ${priCfg.pillText}`}`}
                     onClick={() => onView(task)}>
-                    {task.due_time
-                      ? <p className="text-[11px] font-semibold truncate text-center">{task.due_time.slice(0, 5)}</p>
-                      : <Clock className="w-3.5 h-3.5 mx-auto opacity-90" />}
+                    {task.status === 'concluido'
+                      ? <CheckCircle2 className="w-3.5 h-3.5 mx-auto" />
+                      : task.due_time
+                        ? <p className="text-[11px] font-semibold truncate text-center">{task.due_time.slice(0, 5)}</p>
+                        : <Clock className="w-3.5 h-3.5 mx-auto opacity-90" />}
                   </motion.div>
                 )}
                 {/* Show indicator for tasks outside this week */}
