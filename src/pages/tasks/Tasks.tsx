@@ -5,7 +5,7 @@ import {
   User, CalendarDays, AlertCircle, Clock, Pencil,
   ExternalLink, Link2, FileText, Folder, CheckCircle2,
   MoreHorizontal, LayoutGrid, List, Calendar, Filter,
-  AlignLeft, ClipboardList, ArrowUpDown, CalendarOff,
+  AlignLeft, ClipboardList, ArrowUpDown, CalendarOff, ChevronDown,
 } from 'lucide-react'
 import {
   startOfWeek, endOfWeek, eachDayOfInterval,
@@ -832,9 +832,10 @@ function ListView({ tasks, onView, onEdit, onDelete, onStatusChange, onNewTask }
 
 // ─── Task view modal ──────────────────────────────────────────────────────────
 
-function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
+function TaskViewModal({ task, members, open, onClose, onEdit, onDelete, onStatusChange }: {
   task: Task | null; members: { id: string; name: string; color: string }[]
   open: boolean; onClose: () => void; onEdit: (t: Task) => void; onDelete: (id: string) => void
+  onStatusChange: (id: string, s: TaskStatus) => void
 }) {
   if (!task) return null
   const pCfg    = PRIORITY_CFG[task.priority]
@@ -859,9 +860,19 @@ function TaskViewModal({ task, members, open, onClose, onEdit, onDelete }: {
               style={{ color: pCfg.color, backgroundColor: `${pCfg.color}22` }}>
               {task.priority === 'urgente' && <AlertCircle className="w-3 h-3" />}{pCfg.label}
             </span>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${sCfg.bg} ${sCfg.text}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${sCfg.dot}`} />{sCfg.label}
-            </span>
+            <div className="relative inline-flex items-center">
+              <select
+                value={task.status}
+                onChange={e => { const next = e.target.value as TaskStatus; if (next !== task.status) onStatusChange(task.id, next) }}
+                title="Mudar status"
+                className={`appearance-none cursor-pointer rounded-full border pl-2.5 pr-7 py-1 text-[11px] font-medium outline-none transition-colors ${sCfg.bg} ${sCfg.text} ${sCfg.border}`}
+              >
+                {(Object.keys(STATUS_CFG) as TaskStatus[]).map(s => (
+                  <option key={s} value={s} className="bg-[#0d0f14] text-[#F8FAFC]">{STATUS_CFG[s].label}</option>
+                ))}
+              </select>
+              <ChevronDown className={`w-3 h-3 absolute right-1.5 pointer-events-none ${sCfg.text}`} />
+            </div>
             {overdue && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#ef4444]/15 text-[#f87171] border border-[#ef4444]/30">⚠ Atrasada</span>}
             {clientName && <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#2563EB]/15 text-[#60A5FA]">{clientName}</span>}
           </div>
@@ -1135,6 +1146,7 @@ export function Tasks() {
   }
 
   const handleStatusChange = async (taskId: string, status: TaskStatus) => {
+    setViewingTask(prev => (prev && prev.id === taskId ? { ...prev, status } : prev))
     try { await updateTask.mutateAsync({ id: taskId, status }) }
     catch (err: any) { toast(err.message, 'error') }
   }
@@ -1376,6 +1388,7 @@ export function Tasks() {
 
       <TaskViewModal task={viewingTask} members={activeMembers} open={!!viewingTask}
         onClose={() => setViewingTask(null)}
+        onStatusChange={handleStatusChange}
         onEdit={task => { setViewingTask(null); handleEditTask(task) }}
         onDelete={id => { setViewingTask(null); handleDelete(id) }} />
 

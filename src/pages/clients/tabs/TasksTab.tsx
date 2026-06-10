@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder, ListChecks, type LucideIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, CalendarDays, Clock, User, X, AlertCircle, ExternalLink, Link2, FileText, Folder, ListChecks, ChevronDown, type LucideIcon } from 'lucide-react'
 import type { TaskLink } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
@@ -246,7 +246,7 @@ function TaskDialog({
 // ─── Modal de visualização da tarefa ─────────────────────────────────────────
 
 function TaskViewModal({
-  task, members, open, onClose, onEdit, onDelete,
+  task, members, open, onClose, onEdit, onDelete, onStatusChange,
 }: {
   task:    Task | null
   members: { id: string; name: string; color: string }[]
@@ -254,6 +254,7 @@ function TaskViewModal({
   onClose: () => void
   onEdit:  (t: Task) => void
   onDelete:(id: string) => void
+  onStatusChange: (id: string, s: TaskStatus) => void
 }) {
   if (!task) return null
 
@@ -280,10 +281,19 @@ function TaskViewModal({
               {task.priority === 'urgente' && <AlertCircle className="w-3 h-3" />}
               {pCfg.label}
             </span>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${sCfg.bg} ${sCfg.text}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${sCfg.dot}`} />
-              {sCfg.label}
-            </span>
+            <div className="relative inline-flex items-center">
+              <select
+                value={task.status}
+                onChange={e => { const next = e.target.value as TaskStatus; if (next !== task.status) onStatusChange(task.id, next) }}
+                title="Mudar status"
+                className={`appearance-none cursor-pointer rounded-full border border-black/10 pl-2.5 pr-7 py-1 text-[11px] font-medium outline-none transition-colors ${sCfg.bg} ${sCfg.text}`}
+              >
+                {(Object.entries(STATUS_CFG) as [TaskStatus, typeof STATUS_CFG[TaskStatus]][]).map(([s, c]) => (
+                  <option key={s} value={s} className="bg-[#0d0f14] text-[#F8FAFC]">{c.label}</option>
+                ))}
+              </select>
+              <ChevronDown className={`w-3 h-3 absolute right-1.5 pointer-events-none ${sCfg.text}`} />
+            </div>
             {overdue && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-50 text-red-700 border border-red-200">
                 ⚠ Atrasada
@@ -723,6 +733,11 @@ export function TasksTab({ clientId }: { clientId: string }) {
         members={activeMembers}
         open={!!viewingTask}
         onClose={() => setViewingTask(null)}
+        onStatusChange={(id, s) => {
+          const t = tasks.find(x => x.id === id)
+          if (t) handleStatusChange(t, s)
+          setViewingTask(prev => (prev && prev.id === id ? { ...prev, status: s } : prev))
+        }}
         onEdit={task => { setViewingTask(null); handleEdit(task) }}
         onDelete={taskId => { setViewingTask(null); setDeletingId(taskId) }}
       />
