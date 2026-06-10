@@ -421,7 +421,9 @@ function TimelineView({ tasks, days, onView, onEdit, onDelete, onStatusChange, o
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     className={`w-full rounded-lg px-2 py-1.5 cursor-pointer ${overdue ? 'bg-[#ef4444]/15 text-[#f87171]' : `${priCfg.pillBg} ${priCfg.pillText}`}`}
                     onClick={() => onView(task)}>
-                    <p className="text-[11px] font-semibold truncate">{task.due_time ? task.due_time.slice(0, 5) : '✓'}</p>
+                    {task.due_time
+                      ? <p className="text-[11px] font-semibold truncate text-center">{task.due_time.slice(0, 5)}</p>
+                      : <Clock className="w-3.5 h-3.5 mx-auto opacity-90" />}
                   </motion.div>
                 )}
                 {/* Show indicator for tasks outside this week */}
