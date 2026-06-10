@@ -25,7 +25,7 @@ export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-[#0f0f0f] overflow-hidden">
+    <div className="flex h-screen h-[100dvh] bg-[#0f0f0f] overflow-hidden">
 
       {/* Mobile backdrop */}
       {mobileOpen && (
@@ -57,7 +57,7 @@ export function Layout() {
         </button>
 
         <TrialBanner />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           <Outlet />
         </div>
       </main>
