@@ -1351,19 +1351,19 @@ function DayPreviewChip({
       {...attributes}
       onClick={e => { e.stopPropagation(); onItemClick() }}
       style={{ touchAction: 'none', backgroundColor: bg, borderColor: border, color: text }}
-      className={`w-full rounded border px-1 py-0.5 min-w-0 transition-opacity select-none
+      className={`w-full rounded-md border px-1.5 py-1 sm:px-1 sm:py-0.5 min-w-0 transition-opacity select-none
         ${isDragging ? 'opacity-0' : 'hover:brightness-95'}
         ${disabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
     >
-      <div className="flex items-start gap-0.5 min-w-0">
+      <div className="flex items-start gap-1 min-w-0">
         <div className="flex-1 min-w-0">
-          <p className="text-[8px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
+          <p className="text-[10px] sm:text-[9px] font-medium leading-tight truncate">{item.title}</p>
           {typeLabel && (
-            <p className="text-[7px] sm:text-[8px] leading-tight truncate opacity-70 hidden sm:block">{typeLabel}</p>
+            <p className="text-[8px] leading-tight truncate opacity-70">{typeLabel}</p>
           )}
         </div>
         <Instagram
-          className="w-2 h-2 sm:w-2.5 sm:h-2.5 flex-shrink-0 mt-px opacity-50"
+          className="w-2.5 h-2.5 flex-shrink-0 mt-px opacity-50"
           strokeWidth={1.5}
         />
       </div>
@@ -1396,7 +1396,7 @@ function DroppableDay({
       onMouseEnter={e => isCurrentMonth && !dragging && onMouseEnter(e)}
       onMouseLeave={() => !dragging && onMouseLeave()}
       className={`
-        min-h-[52px] sm:min-h-[90px] p-0.5 sm:p-1.5 rounded sm:rounded-lg border transition-all
+        min-h-[12vh] sm:min-h-[90px] p-1 sm:p-1.5 rounded-lg border transition-all
         ${isCurrentMonth
           ? `cursor-pointer ${isOver
               ? 'border-[#2563EB]/60 bg-[#2563EB]/10 scale-[1.02]'
@@ -2424,7 +2424,7 @@ export function Planner() {
             <div className="w-full max-w-full min-w-0">
             <div className="grid grid-cols-7 mb-1 sm:mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-[9px] sm:text-xs font-semibold text-[#CBD5E1] py-1 sm:py-2 truncate">{d}</div>
+                <div key={d} className="text-center text-[11px] sm:text-xs font-semibold text-[#CBD5E1] py-1.5 sm:py-2 truncate">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
@@ -2447,13 +2447,13 @@ export function Planner() {
                     onMouseLeave={() => setHover(null)}
                   >
                     <div className={`
-                      text-[10px] sm:text-xs font-semibold mb-0.5 sm:mb-1 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
+                      text-[12px] sm:text-xs font-semibold mb-1 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
                       ${isCurrentDay ? 'bg-[#2563EB] text-white' : isCurrentMonth ? 'text-[#F8FAFC]' : 'text-[#475569]'}
                     `}>
                       {format(day, 'd')}
                     </div>
-                    <div className="space-y-0.5">
-                      {dayItems.slice(0, 2).map(item => (
+                    <div className="space-y-0.5 sm:space-y-1">
+                      {dayItems.slice(0, 3).map(item => (
                         <DayPreviewChip
                           key={item.id}
                           item={item}
@@ -2461,8 +2461,8 @@ export function Planner() {
                           onItemClick={() => openItemView(item)}
                         />
                       ))}
-                      {dayItems.length > 2 && (
-                        <p className="text-[7px] sm:text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - 2} mais</p>
+                      {dayItems.length > 3 && (
+                        <p className="text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - 3} mais</p>
                       )}
                     </div>
                   </DroppableDay>
