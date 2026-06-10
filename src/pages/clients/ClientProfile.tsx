@@ -5,11 +5,12 @@ import {
   Plus, Trash2, ImageIcon, X, Upload, Eye, Pencil, Link2, ExternalLink,
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
   Unlink, RefreshCw, Send, Lightbulb,
+  Home, CheckSquare, UserCircle, Dna, Briefcase, Folder, Headphones, TrendingUp, ClipboardList,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -30,7 +31,7 @@ import { ReportsTab } from './tabs/ReportsTab'
 import { WeeklyFormTab } from './tabs/WeeklyFormTab'
 import { RequestsIdeasTab } from './tabs/RequestsIdeasTab'
 import { useToast } from '@/components/ui/toast'
-import { formatDate, contentTypeLabels } from '@/utils/formatters'
+import { formatDate, contentTypeLabels, cn } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
@@ -715,6 +716,7 @@ export function ClientProfile() {
 
   const [selectedPlannerItem, setSelectedPlannerItem] = useState<PlannerItem | null>(null)
   const [plannerItemOpen, setPlannerItemOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
 
   // ── Planner filter ────────────────────────────────────────────────────────
   const [plannerFilter, setPlannerFilter]       = useState<PlannerFilterType>('este_mes')
@@ -988,25 +990,47 @@ export function ClientProfile() {
         <FinancialCard client={client} />
 
         {/* ── Tabs ─────────────────────────────────────────────────────────── */}
-        <Tabs defaultValue="overview">
-          <TabsList className="flex-wrap h-auto gap-1 overflow-x-auto max-w-full">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="instagram" className="gap-1">
-              <Instagram className="w-3 h-3" />Instagram
-            </TabsTrigger>
-            <TabsTrigger value="tasks">Tarefas ({tasks?.length || 0})</TabsTrigger>
-            <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
-            <TabsTrigger value="dna">DNA da Marca</TabsTrigger>
-            <TabsTrigger value="contents">Arsenal ({assets?.length || 0})</TabsTrigger>
-            <TabsTrigger value="planner">Planejamento ({planner?.length || 0})</TabsTrigger>
-            <TabsTrigger value="requests" className="gap-1">
-              <Lightbulb className="w-3 h-3" />Solicitações e Ideias
-            </TabsTrigger>
-            <TabsTrigger value="materials">Materiais</TabsTrigger>
-            <TabsTrigger value="support">Suporte</TabsTrigger>
-            <TabsTrigger value="results">Resultados</TabsTrigger>
-            <TabsTrigger value="formulario">📋 Formulário</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <div className="rounded-2xl border border-[#1e293b] bg-[#0d1424]/60 p-2.5 sm:p-3">
+            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
+              {([
+                { value: 'overview',   label: 'Visão Geral',           Icon: Home,          color: '#60A5FA' },
+                { value: 'instagram',  label: 'Instagram',             Icon: Instagram,     color: '#E1306C' },
+                { value: 'tasks',      label: 'Tarefas',               Icon: CheckSquare,   color: '#60A5FA', count: tasks?.length || 0 },
+                { value: 'onboarding', label: 'Onboarding',            Icon: UserCircle,    color: '#a78bfa' },
+                { value: 'dna',        label: 'DNA da Marca',          Icon: Dna,           color: '#2dd4bf' },
+                { value: 'contents',   label: 'Arsenal',               Icon: Briefcase,     color: '#fb923c', count: assets?.length || 0 },
+                { value: 'planner',    label: 'Planejamento',          Icon: CalendarDays,  color: '#60A5FA', count: planner?.length || 0 },
+                { value: 'requests',   label: 'Solicitações e Ideias', Icon: Lightbulb,     color: '#c084fc' },
+                { value: 'materials',  label: 'Materiais',             Icon: Folder,        color: '#4ade80' },
+                { value: 'support',    label: 'Suporte',               Icon: Headphones,    color: '#22d3ee' },
+                { value: 'results',    label: 'Resultados',            Icon: TrendingUp,    color: '#fb923c' },
+                { value: 'formulario', label: 'Formulário',            Icon: ClipboardList, color: '#f472b6' },
+              ] as { value: string; label: string; Icon: React.ElementType; color: string; count?: number }[]).map(t => {
+                const active = activeTab === t.value
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => setActiveTab(t.value)}
+                    className={cn(
+                      'relative flex flex-col items-center justify-start gap-1.5 pt-3 pb-2 px-1 rounded-2xl border transition-all',
+                      active
+                        ? 'border-[#2563EB]/50 bg-[#2563EB]/10 shadow-lg shadow-[#2563EB]/10'
+                        : 'border-[#1e293b] bg-[#111827] hover:border-[#334155] hover:bg-[#182233]',
+                    )}
+                  >
+                    <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center transition-colors', active ? 'bg-[#2563EB]/15' : 'bg-[#182233]')}>
+                      <t.Icon className="w-5 h-5" style={{ color: t.color }} strokeWidth={1.8} />
+                    </div>
+                    <span className={cn('text-[11px] font-medium text-center leading-tight', active ? 'text-[#E2E8F0]' : 'text-[#94a3b8]')}>{t.label}</span>
+                    {t.count != null
+                      ? <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#182233] border border-[#1e293b] text-[10px] font-bold text-[#cbd5e1] flex items-center justify-center">{t.count}</span>
+                      : <span className={cn('h-1 w-5 rounded-full', active ? 'bg-[#2563EB]' : 'bg-transparent')} />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           {/* ── Visão Geral ───────────────────────────────────────────────── */}
           <TabsContent value="overview">
