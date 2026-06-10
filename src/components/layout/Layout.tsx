@@ -57,7 +57,7 @@ export function Layout() {
         </button>
 
         <TrialBanner />
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
           <Outlet />
         </div>
       </main>
