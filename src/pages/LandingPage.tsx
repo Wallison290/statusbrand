@@ -144,6 +144,43 @@ function SquadsBar() {
   )
 }
 
+// ─── Problema ─────────────────────────────────────────────────────────────────
+function Problem() {
+  const pains = [
+    'Aprovação de conteúdo espalhada entre WhatsApp e Instagram',
+    'Calendário editorial vivendo numa planilha separada',
+    'Briefing repetido toda vez que abre o ChatGPT',
+    'Tarefas sem dono claro e sem visibilidade de status',
+    'Financeiro desconectado da operação',
+    'Cliente pedindo ajuste fora do fluxo',
+  ]
+  return (
+    <section className="py-20 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-white max-w-2xl mx-auto leading-tight">
+            Quando a operação depende de muitas abas, o problema deixa de ser produção e vira controle.
+          </h2>
+          <p className="text-[15px] text-[#94a3b8] mt-4 max-w-2xl mx-auto">
+            O maior custo da desorganização não é só tempo. É retrabalho, atraso, desalinhamento com o
+            cliente e perda de margem. A equipe passa mais tempo coordenando do que executando.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {pains.map(p => (
+            <div key={p} className="flex items-start gap-3 bg-[#111827] border border-[#1e293b] rounded-2xl p-4">
+              <div className="w-7 h-7 rounded-lg bg-[#f87171]/10 border border-[#f87171]/20 flex items-center justify-center flex-shrink-0">
+                <X className="w-4 h-4 text-[#f87171]" />
+              </div>
+              <p className="text-[13.5px] text-[#CBD5E1] leading-relaxed">{p}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Como funciona ────────────────────────────────────────────────────────────
 function HowItWorks() {
   const steps = [
@@ -298,6 +335,51 @@ function Testimonials() {
   )
 }
 
+// ─── Comparação ───────────────────────────────────────────────────────────────
+function Comparison() {
+  const rows = [
+    ['WhatsApp + planilhas + apps soltos', 'Aprovação e rotina espalhadas', 'Fluxo único para produção e validação'],
+    ['ChatGPT e IAs genéricas', 'Não conhecem o contexto de cada cliente', 'IA com o DNA, tom de voz e histórico salvos'],
+    ['Scheduler isolado', 'Publica, mas não organiza a operação', 'Une calendário, aprovação, equipe e financeiro'],
+    ['Processo manual', 'Depende demais de pessoas e memória', 'Cria padrão repetível para escalar'],
+  ]
+  return (
+    <section className="py-20 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-white max-w-2xl mx-auto leading-tight">
+            Centralizar a operação muda o jogo em relação ao modelo fragmentado.
+          </h2>
+        </div>
+        <div className="overflow-x-auto rounded-2xl border border-[#1e293b] bg-[#111827]">
+          <table className="w-full min-w-[640px] text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#1e293b] bg-[#0d1424]">
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#94a3b8]">Abordagem</th>
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#94a3b8]">Limitação</th>
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#6f93c9]">Com a StatusMedia</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([approach, limitation, advantage]) => (
+                <tr key={approach} className="border-b border-[#1e293b] last:border-b-0">
+                  <td className="px-5 py-4 text-[13.5px] text-white font-medium align-top">{approach}</td>
+                  <td className="px-5 py-4 text-[13.5px] text-[#94a3b8] align-top">{limitation}</td>
+                  <td className="px-5 py-4 text-[13.5px] text-[#CBD5E1] align-top">
+                    <span className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-[#6f93c9] flex-shrink-0 mt-0.5" /> {advantage}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Planos ───────────────────────────────────────────────────────────────────
 function Pricing() {
   const order: ('starter' | 'pro' | 'agency')[] = ['starter', 'pro', 'agency']
@@ -359,6 +441,8 @@ function FAQ() {
     ['Serve pra agência?', 'Sim. O plano Agency tem clientes e equipe ilimitados, portal do cliente e suporte prioritário.'],
     ['Posso editar o que a IA gera?', 'Claro. Tudo que a IA cria é editável. Ela acelera o trabalho, você dá o toque final.'],
     ['Tem fidelidade?', 'Não. Sem fidelidade, cancela quando quiser, e os 3 primeiros dias são para testar.'],
+    ['Posso usar para vários clientes ao mesmo tempo?', 'Sim. O conceito central é justamente organizar um hub por cliente, cada um com briefing, calendário, arquivos e aprovações no próprio espaço.'],
+    ['O sistema inclui financeiro?', 'Sim. Você acompanha pagamentos e recebimentos por cliente e vê a saúde do caixa sem sair da plataforma.'],
   ]
   const [open, setOpen] = useState<number | null>(0)
   return (
@@ -448,10 +532,12 @@ export function LandingPage() {
       <Navbar />
       <Hero />
       <SquadsBar />
+      <Problem />
       <HowItWorks />
       <WhyItWorks />
       <Platform />
       <Testimonials />
+      <Comparison />
       <Pricing />
       <FAQ />
       <FinalCTA />
