@@ -22,9 +22,9 @@ const typeLabels: Record<NoteType, string> = {
   solicitacao: 'Solicitação',
 }
 const typeBadgeColors: Record<NoteType, string> = {
-  interna:    'bg-[#f0f0f0] text-[#737373]',
-  ideia:      'bg-amber-50 text-amber-800',
-  solicitacao: 'bg-blue-50 text-blue-800',
+  interna:    'bg-[#1e293b] text-[#94a3b8]',
+  ideia:      'bg-amber-500/10 text-amber-300',
+  solicitacao: 'bg-[#2563EB]/15 text-[#60A5FA]',
 }
 const originLabels: Record<NoteOrigin, string> = {
   agency: 'Agência',
@@ -48,14 +48,14 @@ export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96 }}
       onClick={onOpen}
-      className="group bg-white border border-[#e8e8e8] rounded-2xl p-4 cursor-pointer hover:border-[#c8c8c8] hover:shadow-sm transition-all duration-150 select-none"
+      className="group bg-[#111827] border border-[#1e293b] rounded-2xl p-4 cursor-pointer hover:border-[#2563EB]/40 hover:bg-[#141d2e] transition-all duration-150 select-none"
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h3 className="text-[13px] font-semibold text-[#0f0f0f] leading-snug line-clamp-2 flex-1">
+        <h3 className="text-[13px] font-semibold text-[#F8FAFC] leading-snug line-clamp-2 flex-1">
           {note.title || 'Sem título'}
         </h3>
-        <NotebookPen className="w-3.5 h-3.5 text-[#a0a0a0] flex-shrink-0 mt-0.5" />
+        <NotebookPen className="w-3.5 h-3.5 text-[#64748b] group-hover:text-[#94a3b8] flex-shrink-0 mt-0.5 transition-colors" />
       </div>
 
       {/* Badges */}
@@ -64,39 +64,39 @@ export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
           {typeLabels[note.type]}
         </span>
         {note.client && (
-          <span className="text-[10px] text-[#737373] bg-[#f5f5f5] px-1.5 py-0.5 rounded-md flex items-center gap-1">
+          <span className="text-[10px] text-[#94a3b8] bg-[#1e293b] px-1.5 py-0.5 rounded-md flex items-center gap-1">
             <Building2 className="w-2.5 h-2.5" />
             {note.client.company_name}
           </span>
         )}
         {note.origin === 'client' && (
-          <span className="text-[10px] text-purple-800 bg-purple-50 px-1.5 py-0.5 rounded-md">
+          <span className="text-[10px] text-purple-300 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded-md">
             do cliente
           </span>
         )}
       </div>
 
       {preview && (
-        <p className="text-[12px] text-[#737373] leading-relaxed line-clamp-2 mb-2 whitespace-pre-wrap">
+        <p className="text-[12px] text-[#94a3b8] leading-relaxed line-clamp-2 mb-2 whitespace-pre-wrap">
           {preview}
         </p>
       )}
 
       {note.checklist.length > 0 && (
         <div className="flex items-center gap-1.5 mb-2">
-          <div className="h-1.5 flex-1 rounded-full bg-[#ede9fe] overflow-hidden">
+          <div className="h-1.5 flex-1 rounded-full bg-[#1e293b] overflow-hidden">
             <div
               className="h-full rounded-full transition-all"
-              style={{ width: `${(doneCount / note.checklist.length) * 100}%`, background: 'linear-gradient(90deg,#7c3aed,#4f46e5)' }}
+              style={{ width: `${(doneCount / note.checklist.length) * 100}%`, background: 'linear-gradient(90deg,#2563EB,#1D4ED8)' }}
             />
           </div>
-          <span className="text-[11px] text-[#a0a0a0] flex-shrink-0">
+          <span className="text-[11px] text-[#64748b] flex-shrink-0">
             {doneCount}/{note.checklist.length}
           </span>
         </div>
       )}
 
-      <p className="text-[11px] text-[#b0b0b0]">
+      <p className="text-[11px] text-[#64748b]">
         {formatDistanceToNow(parseISO(note.updated_at), { addSuffix: true, locale: ptBR })}
       </p>
     </motion.div>
