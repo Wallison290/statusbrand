@@ -39,6 +39,7 @@ import { useNotifications } from '@/hooks/useNotifications'
 import type { ApprovalStatus, Client, Content, ClientMaterial, ClientSupportContact, MaterialType, ContactType, ContentAsset, BrandDNA } from '@/types'
 import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatters'
 import { calcFinancialStatus, getFinancialAuxText, hasPaidCurrentCycle } from '@/utils/financial'
+import { isImageUrl, isVideoUrl } from '@/utils/media'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType } from '@/types'
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -1970,8 +1971,7 @@ const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
 
 function matIsImage(mat: ClientMaterial): boolean {
   if (mat.type === 'imagem') return true
-  if (!mat.file_url) return false
-  return /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(mat.file_url)
+  return isImageUrl(mat.file_url)
 }
 function matIsPdf(mat: ClientMaterial): boolean {
   if (mat.type === 'pdf') return true
@@ -1980,8 +1980,7 @@ function matIsPdf(mat: ClientMaterial): boolean {
 }
 function matIsVideo(mat: ClientMaterial): boolean {
   if (mat.type === 'video') return true
-  if (!mat.file_url) return false
-  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(mat.file_url)
+  return isVideoUrl(mat.file_url)
 }
 
 function PortalMaterialIcon({ type, size = 'sm' }: { type: MaterialType; size?: 'sm' | 'lg' }) {
@@ -2483,12 +2482,8 @@ function ContentAssetDetailModal({
   open,
   onClose,
 }: { asset: ContentAsset; open: boolean; onClose: () => void }) {
-  const isImg = asset.media_url
-    ? /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
-    : false
-  const isVid = asset.media_url
-    ? /\.(mp4|webm|ogg|mov)(\?|$)/i.test(asset.media_url)
-    : false
+  const isImg = isImageUrl(asset.media_url)
+  const isVid = isVideoUrl(asset.media_url)
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>

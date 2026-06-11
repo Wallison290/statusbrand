@@ -35,6 +35,7 @@ import { formatDate, contentTypeLabels, cn } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
+import { isImageUrl } from '@/utils/media'
 import type { FinancialStatus } from '@/types'
 import { supabase } from '@/integrations/supabase/client'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -54,7 +55,7 @@ function AssetCard({
   onView: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
-  const isImage = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
+  const isImage = isImageUrl(asset.media_url)
 
   return (
     <div className="group relative rounded-xl border border-[#1e293b] overflow-hidden bg-[#111827] shadow-sm">
@@ -151,7 +152,7 @@ function AssetViewDialog({
   onEdit: () => void
 }) {
   if (!asset) return null
-  const isImage = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
+  const isImage = isImageUrl(asset.media_url)
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
@@ -1407,7 +1408,7 @@ export function ClientProfile() {
               <label className="block text-[12px] font-normal text-[#94a3b8] mb-1.5">Mídia</label>
 
               {editingAsset?.media_url && !assetFile && (() => {
-                const isImg = /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(editingAsset.media_url!)
+                const isImg = isImageUrl(editingAsset.media_url)
                 return (
                   <div className="mb-2 relative">
                     {isImg ? (

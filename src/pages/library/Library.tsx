@@ -7,6 +7,7 @@ import {
   Building2, Loader2, X, Pencil, Eye, Upload,
   ExternalLink, Tag, Users, LayoutGrid,
 } from 'lucide-react'
+import { isImageUrl, isVideoUrl, extLabel } from '@/utils/media'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,9 +59,6 @@ function TypeIcon({ type, className }: { type: string; className?: string }) {
 
 // ─── Media helpers ────────────────────────────────────────────────────────────
 
-const isImageUrl = (url: string) => /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(url)
-const isVideoUrl = (url: string) => /\.(mp4|webm|mov|avi|mkv|ogv|ogg|m4v)(\?|$)/i.test(url)
-
 /** Card thumbnail: plays video silently on hover */
 function MediaThumbnail({ url, title }: { url: string; title: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -97,7 +95,7 @@ function MediaThumbnail({ url, title }: { url: string; title: string }) {
     <div className="flex flex-col items-center gap-1.5">
       <FileIcon className="w-7 h-7 text-[#b0b0b0]" />
       <span className="text-[10px] text-[#b0b0b0]">
-        {url.split('.').pop()?.split('?')[0]?.toUpperCase() || 'ARQUIVO'}
+        {extLabel(url)}
       </span>
     </div>
   )

@@ -32,6 +32,7 @@ import { useToast } from '@/components/ui/toast'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { checkStorageLimit } from '@/utils/storageGate'
+import { isImageUrl, isImageMedia, isVideoMedia, mimeFromUrl } from '@/utils/media'
 import { useContentAssets } from '@/hooks/useContentAssets'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
@@ -225,38 +226,22 @@ function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) 
 // ─── Helpers de mídia ────────────────────────────────────────────────────────
 
 function guessMediaType(url: string): string {
-  const lower = url.toLowerCase().split('?')[0]
-  if (/\.(jpg|jpeg|png|gif|webp|avif|svg)$/.test(lower)) return 'image/jpeg'
-  if (/\.(mp4|mov|webm|avi|mkv|m4v|ogv)$/.test(lower)) return 'video/mp4'
-  if (/\.(pdf)$/.test(lower)) return 'application/pdf'
-  return 'application/octet-stream'
+  return mimeFromUrl(url) ?? 'application/octet-stream'
 }
 
 // MIME type com fallback por extensão (para File objects que retornam '' em alguns browsers)
 function getMimeType(file: File): string {
   if (file.type && file.type !== 'application/octet-stream') return file.type
-  const ext = file.name.split('.').pop()?.toLowerCase() || ''
-  const map: Record<string, string> = {
-    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
-    avi: 'video/x-msvideo', mkv: 'video/x-matroska', m4v: 'video/mp4', ogv: 'video/ogg',
-    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-    gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml',
-    pdf: 'application/pdf',
-  }
-  return map[ext] || file.type || 'application/octet-stream'
+  return mimeFromUrl(file.name) || file.type || 'application/octet-stream'
 }
 
 // Detecção de vídeo/imagem com fallback por extensão da URL (cobre file_type salvo incorretamente)
 function isVideoAttachment(att: { file_type: string; file_url: string }): boolean {
-  if (att.file_type.startsWith('video/')) return true
-  const url = att.file_url.toLowerCase().split('?')[0]
-  return /\.(mp4|mov|webm|avi|mkv|m4v|ogv)$/.test(url)
+  return isVideoMedia(att.file_type, att.file_url)
 }
 
 function isImageAttachment(att: { file_type: string; file_url: string }): boolean {
-  if (att.file_type.startsWith('image/')) return true
-  const url = att.file_url.toLowerCase().split('?')[0]
-  return /\.(jpg|jpeg|png|gif|webp|avif|svg)$/.test(url)
+  return isImageMedia(att.file_type, att.file_url)
 }
 
 // ─── Content Picker Dialog ────────────────────────────────────────────────────
@@ -307,7 +292,7 @@ function ContentPickerDialog({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {filtered.map(asset => {
-                const isImg = asset.media_url && /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(asset.media_url)
+                const isImg = isImageUrl(asset.media_url)
                 return (
                   <button
                     key={asset.id}
@@ -2678,7 +2663,7 @@ export function Planner() {
                 </div>
                 {linkedAsset ? (
                   <div className="flex items-center gap-2.5 p-2 rounded-md bg-white/[0.04] border border-white/[0.08]">
-                    {linkedAsset.media_url && /\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(linkedAsset.media_url) ? (
+                    {isImageUrl(linkedAsset.media_url) ? (
                       <img
                         src={linkedAsset.media_url}
                         alt=""

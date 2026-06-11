@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
 import { checkStorageLimit } from '@/utils/storageGate'
+import { isImageUrl, isImageMedia } from '@/utils/media'
 import type { ContentAsset, Client } from '@/types'
 
 // ─── arrayMove (local) ────────────────────────────────────────────────────────
@@ -392,7 +393,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
   const assets = (allAssets || []).filter(a => {
     const isImage = a.media_url && (
       ['post', 'carousel', 'story', 'reels'].includes(a.content_type) ||
-      /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(a.media_url)
+      isImageUrl(a.media_url)
     )
     if (!isImage) return false
     if (clientId) return a.client_id === clientId
@@ -408,7 +409,7 @@ function AssetPickerDialog({ open, onClose, clientId, onSelect, onUpload, onSele
       for (const att of (item as any).attachments || []) {
         const url: string | undefined = att.file_url
         const type: string = att.file_type || ''
-        const isImage = type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url || '')
+        const isImage = isImageMedia(type, url)
         if (!url || !isImage || seen.has(url)) continue
         seen.add(url)
         out.push({ url, caption: (item as any).title || att.file_name, title: (item as any).title || att.file_name || '' })
