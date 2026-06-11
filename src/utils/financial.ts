@@ -1,12 +1,30 @@
 import type { Client, FinancialStatus } from '@/types'
 
-// Returns true when client_payments contains a 'pago' record for the current
-// billing cycle.
-// A payment counts for the current cycle if:
-//   1. It was made ON or AFTER the due date (paid on time / late)
-//   2. It was made BEFORE the due date (early payment) AND the due date hasn't
-//      passed yet — once the due date passes, early payments from this month no
-//      longer cover the cycle and the client becomes overdue.
+// Due date (dia_vencimento) `monthOffset` months away from a reference date.
+function dueOn(ref: Date, dayDue: number, monthOffset = 0): Date {
+  return new Date(ref.getFullYear(), ref.getMonth() + monthOffset, dayDue)
+}
+
+// Which billing cycle a payment is considered to cover: the dia_vencimento
+// nearest to the payment date. Paying on Jun 3 (vencimento dia 10) covers the
+// Jun 10 cycle (early payment); paying on May 15 covers the May 10 cycle (late).
+// Ties favor the earlier due date (treated as catching up the current cycle,
+// not prepaying the next).
+function cycleCoveredBy(paid: Date, dayDue: number): Date {
+  const candidates = [dueOn(paid, dayDue, -1), dueOn(paid, dayDue, 0), dueOn(paid, dayDue, 1)]
+  let best = candidates[0]
+  let bestDist = Infinity
+  for (const c of candidates) {
+    const dist = Math.abs(paid.getTime() - c.getTime())
+    if (dist < bestDist) { bestDist = dist; best = c }
+  }
+  return best
+}
+
+// Returns true when client_payments contains a 'pago' record that covers the
+// current billing cycle. A payment covers the current cycle when its nearest
+// due date is this month's due date (or a later one, i.e. paid ahead). This
+// keeps an early payment valid even after the due date passes.
 export function hasPaidCurrentCycle(
   payments: Array<{ status: string; payment_date: string }>,
   diaVencimento: number | null | undefined,
@@ -14,16 +32,11 @@ export function hasPaidCurrentCycle(
   if (!diaVencimento || payments.length === 0) return false
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), diaVencimento)
-  const prevDue = new Date(today.getFullYear(), today.getMonth() - 1, diaVencimento)
+  const dueThisMonth = dueOn(today, diaVencimento)
   return payments.some(p => {
     if (p.status !== 'pago') return false
     const paid = new Date(p.payment_date + 'T00:00:00')
-    // Paid on/after this month's due date → always counts
-    if (paid >= dueThisMonth) return true
-    // Paid early (before due date) → only counts if due date hasn't passed yet
-    if (today < dueThisMonth && paid >= prevDue) return true
-    return false
+    return cycleCoveredBy(paid, diaVencimento).getTime() >= dueThisMonth.getTime()
   })
 }
 
@@ -41,20 +54,16 @@ export function calcFinancialStatus(client: Client): FinancialStatus {
   today.setHours(0, 0, 0, 0)
   const dayDue = client.dia_vencimento
 
-  const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), dayDue)
-  const prevDue = new Date(today.getFullYear(), today.getMonth() - 1, dayDue)
+  const dueThisMonth = dueOn(today, dayDue)
   const lastPaid = client.last_payment_date
     ? new Date(client.last_payment_date + 'T00:00:00')
     : null
 
-  // Paid for this cycle if:
-  //   1. Payment is on/after the due date (on time or late catch-up), OR
-  //   2. Payment is before the due date (early) AND today is still before the due date.
-  //      Once the due date passes, early payments no longer cover the cycle.
-  const paidThisCycle = lastPaid != null && (
-    lastPaid >= dueThisMonth ||
-    (today < dueThisMonth && lastPaid >= prevDue)
-  )
+  // Paid for this cycle if the last payment covers this month's due date (or a
+  // later one). An early payment for the current cycle (ex.: pagou dia 3, vence
+  // dia 10) continua válido depois que o vencimento passa — não vira atraso.
+  const paidThisCycle = lastPaid != null &&
+    cycleCoveredBy(lastPaid, dayDue).getTime() >= dueThisMonth.getTime()
 
   if (paidThisCycle) {
     const nextDue = new Date(today.getFullYear(), today.getMonth() + 1, dayDue)
@@ -94,8 +103,9 @@ export function getFinancialAuxText(client: Client, status: FinancialStatus): st
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const dueThisMonth = new Date(today.getFullYear(), today.getMonth(), client.dia_vencimento)
-  const paidThisCycle = lastPaid != null && lastPaid >= dueThisMonth
+  const dueThisMonth = dueOn(today, client.dia_vencimento)
+  const paidThisCycle = lastPaid != null &&
+    cycleCoveredBy(lastPaid, client.dia_vencimento).getTime() >= dueThisMonth.getTime()
 
   if (status === 'atrasado') {
     const days = Math.abs(Math.ceil((dueThisMonth.getTime() - today.getTime()) / 86_400_000))
