@@ -2665,7 +2665,7 @@ export function Planner() {
                   <div className="flex items-center gap-2.5 p-2 rounded-md bg-white/[0.04] border border-white/[0.08]">
                     {isImageUrl(linkedAsset.media_url) ? (
                       <img
-                        src={linkedAsset.media_url}
+                        src={linkedAsset.media_url ?? undefined}
                         alt=""
                         className="w-10 h-10 object-cover rounded flex-shrink-0"
                       />
