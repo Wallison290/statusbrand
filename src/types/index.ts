@@ -8,7 +8,15 @@ export interface Profile {
   linked_client_id: string | null
   created_at: string
   updated_at: string
+  // Notificações via WhatsApp (Evolution API)
+  whatsapp?: string | null
+  whatsapp_opt_in?: boolean
+  whatsapp_verified?: boolean
+  whatsapp_prefs?: WhatsappPrefs | null
 }
+
+export type WhatsappCategory = 'aprovacoes' | 'tarefas' | 'instagram' | 'solicitacoes'
+export type WhatsappPrefs = Record<WhatsappCategory, boolean>
 
 export type ClientStatus =
   | 'lead'

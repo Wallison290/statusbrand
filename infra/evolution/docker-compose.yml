@@ -1,0 +1,73 @@
+# ── Evolution API — stack mínima para notificações do StatusMedia ─────────────
+# Sobe a Evolution API + Postgres + Redis. Conecte UM número dedicado (não use
+# seu WhatsApp pessoal) pela rota de QR code depois que o serviço estiver no ar.
+#
+# Uso:
+#   1. Copie .env.example para .env e troque os valores (principalmente AUTHENTICATION_API_KEY).
+#   2. docker compose up -d
+#   3. Crie a instância e leia o QR (ver README.md).
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  evolution-api:
+    image: atendai/evolution-api:v2.1.1
+    container_name: evolution-api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      # Autenticação — esta é a chave que vira o secret EVOLUTION_API_KEY no Supabase
+      AUTHENTICATION_API_KEY: ${AUTHENTICATION_API_KEY}
+      AUTHENTICATION_TYPE: apikey
+
+      # Servidor
+      SERVER_URL: ${SERVER_URL}
+
+      # Banco (Postgres do compose)
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+
+      # Cache (Redis)
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_LOCAL_ENABLED: "false"
+
+      # Mantém a sessão conectada após reiniciar o container
+      CONFIG_SESSION_PHONE_CLIENT: StatusMedia
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      QRCODE_LIMIT: "10"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: evolution-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: evolution
+    volumes:
+      - evolution_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: evolution-redis
+    restart: always
+    volumes:
+      - evolution_redis:/data
+
+volumes:
+  evolution_instances:
+  evolution_pgdata:
+  evolution_redis:
