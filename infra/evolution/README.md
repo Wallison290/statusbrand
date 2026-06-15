@@ -86,7 +86,7 @@ supabase secrets set \
   EVOLUTION_BASE_URL="https://evo.seudominio.com.br" \
   EVOLUTION_API_KEY="<AUTHENTICATION_API_KEY>" \
   EVOLUTION_INSTANCE="statusmedia" \
-  APP_PUBLIC_URL="https://kairohub.app.br"
+  APP_PUBLIC_URL="https://statusmedia.com.br"
 ```
 
 (`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` já existem no

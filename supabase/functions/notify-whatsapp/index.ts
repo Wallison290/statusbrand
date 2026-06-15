@@ -26,7 +26,7 @@ const EVOLUTION_API_KEY  = Deno.env.get('EVOLUTION_API_KEY') ?? ''
 const EVOLUTION_INSTANCE = Deno.env.get('EVOLUTION_INSTANCE') ?? ''
 
 // Domínio público do app, para montar o link clicável na mensagem.
-const APP_URL = (Deno.env.get('APP_PUBLIC_URL') ?? 'https://kairohub.app.br').replace(/\/$/, '')
+const APP_URL = (Deno.env.get('APP_PUBLIC_URL') ?? 'https://statusmedia.com.br').replace(/\/$/, '')
 
 // Quantas notificações o sweep reprocessa por execução.
 const SWEEP_LIMIT = 25
