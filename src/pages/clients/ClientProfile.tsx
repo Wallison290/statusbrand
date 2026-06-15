@@ -502,7 +502,7 @@ const SUPABASE_URL_CLIENT = import.meta.env.VITE_SUPABASE_URL as string
 
 function buildClientOAuthUrl(userId: string, clientId: string) {
   const redirectUri = `${SUPABASE_URL_CLIENT}/functions/v1/instagram-oauth`
-  const scope = ['instagram_business_basic', 'instagram_business_content_publish'].join(',')
+  const scope = ['instagram_business_basic', 'instagram_business_content_publish', 'instagram_business_manage_insights'].join(',')
   const state = `${userId}|${clientId}`
   return (
     `https://www.instagram.com/oauth/authorize` +

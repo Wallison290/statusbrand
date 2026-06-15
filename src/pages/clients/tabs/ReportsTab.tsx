@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Plus, Trash2, Upload, X, File, FileText, Link2,
   ExternalLink, TrendingUp, Users, Eye, Heart, DollarSign,
   Target, Zap, BookOpen, ChevronDown, Save, Pencil,
-  BarChart3, ImageIcon,
+  BarChart3, ImageIcon, RefreshCw, Instagram,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -352,9 +353,10 @@ function CreateReportModal({
 // ─── Report View / Edit ───────────────────────────────────────────────────────
 
 function ReportDetail({
-  report, onDeleted,
-}: { report: ClientReport; onDeleted: () => void }) {
+  report, clientId, onDeleted,
+}: { report: ClientReport; clientId: string; onDeleted: () => void }) {
   const { toast } = useToast()
+  const qc = useQueryClient()
   const updateReport = useUpdateReport()
   const deleteReport = useDeleteReport()
   const deleteAtt = useDeleteReportAttachment()
@@ -363,9 +365,32 @@ function ReportDetail({
   const [form, setForm] = useState<ReportForm>(toForm(report))
   const [confirmDel, setConfirmDel] = useState(false)
   const [attOpen, setAttOpen] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   // Sync form when switching reports
   useEffect(() => { setForm(toForm(report)); setEditMode(false) }, [report.id])
+
+  // Puxa as métricas do mês direto da conta de Instagram conectada ao cliente.
+  const handleAutoGenerate = async () => {
+    setSyncing(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('instagram-report', {
+        body: { client_id: clientId, month: report.month, year: report.year },
+      })
+      if (error) throw error
+      if (data && data.ok === false) {
+        toast(data.message ?? 'Não foi possível gerar o relatório.', 'error')
+        return
+      }
+      await qc.invalidateQueries({ queryKey: ['client-reports'] })
+      const w = data?.warnings?.length ? ` — ${data.warnings.length} métrica(s) sem dado` : ''
+      toast(`Relatório atualizado com dados do Instagram${w}.`, 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao gerar relatório.', 'error')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const f = (key: keyof ReportForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(p => ({ ...p, [key]: e.target.value }))
@@ -417,6 +442,12 @@ function ReportDetail({
             </>
           ) : (
             <>
+              <Button variant="outline" size="sm" onClick={handleAutoGenerate} disabled={syncing}
+                title="Preencher alcance, seguidores, engajamento e posts do mês com os dados da conta de Instagram conectada">
+                {syncing
+                  ? <><RefreshCw className="w-3 h-3 animate-spin" /> Gerando...</>
+                  : <><Instagram className="w-3 h-3" /> Gerar do Instagram</>}
+              </Button>
               {confirmDel ? (
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-gray-400">Excluir relatório?</span>
@@ -689,6 +720,7 @@ export function ReportsTab({ clientId }: { clientId: string }) {
             <ReportDetail
               key={selected.id}
               report={selected}
+              clientId={clientId}
               onDeleted={() => {
                 setSelectedId(reports.find(r => r.id !== selected.id)?.id ?? null)
               }}
