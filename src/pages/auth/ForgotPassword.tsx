@@ -42,7 +42,7 @@ export function ForgotPassword() {
               <Input
                 label="Email"
                 type="email"
-                placeholder="voce@kairohub.com.br"
+                placeholder="voce@statusmedia.com.br"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 icon={<Mail className="w-4 h-4" />}

@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
 
     // ── Envia convite ──────────────────────────────────────────────────────────
     const { data: inviteData, error } = await sb.auth.admin.inviteUserByEmail(email, {
-      redirectTo: redirectTo ?? 'https://kairohub.app.br/auth/callback',
+      redirectTo: redirectTo ?? 'https://statusmedia.com.br/auth/callback',
       data: {
         role: 'client',
         full_name: clientName ?? '',

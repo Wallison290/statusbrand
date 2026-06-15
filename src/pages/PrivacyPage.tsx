@@ -4,10 +4,10 @@ export function PrivacyPage() {
       {/* Header */}
       <header className="border-b border-gray-100 px-6 py-4 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-[#0f0f0f] flex items-center justify-center">
-          <span className="text-white font-bold text-sm">K</span>
+          <span className="text-white font-bold text-sm">S</span>
         </div>
         <span className="font-semibold text-[#0f0f0f]" style={{ fontFamily: 'Georgia, serif' }}>
-          KairoHub
+          StatusMedia
         </span>
       </header>
 
@@ -19,15 +19,15 @@ export function PrivacyPage() {
         <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-gray-700">
 
           <section>
-            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">1. Sobre o KairoHub</h2>
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">1. Sobre o StatusMedia</h2>
             <p>
-              O KairoHub é uma plataforma de gestão de redes sociais e marketing digital desenvolvida para agências e profissionais de marketing. Permitimos que nossos usuários conectem suas contas do Instagram e de outras redes sociais para agendar publicações, gerenciar conteúdo e acompanhar métricas.
+              O StatusMedia é uma plataforma de gestão de redes sociais e marketing digital desenvolvida para agências e profissionais de marketing. Permitimos que nossos usuários conectem suas contas do Instagram e de outras redes sociais para agendar publicações, gerenciar conteúdo e acompanhar métricas.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">2. Dados que Coletamos</h2>
-            <p>Ao usar o KairoHub, podemos coletar os seguintes dados:</p>
+            <p>Ao usar o StatusMedia, podemos coletar os seguintes dados:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li><strong>Dados de conta:</strong> nome, endereço de e-mail e informações de perfil fornecidas no cadastro.</li>
               <li><strong>Dados do Instagram:</strong> nome de usuário, foto de perfil, número de seguidores e dados necessários para publicação de conteúdo, obtidos por meio da autorização OAuth do Instagram.</li>
@@ -40,7 +40,7 @@ export function PrivacyPage() {
             <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">3. Como Usamos os Dados</h2>
             <p>Utilizamos os dados coletados exclusivamente para:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Fornecer, operar e melhorar os serviços do KairoHub.</li>
+              <li>Fornecer, operar e melhorar os serviços do StatusMedia.</li>
               <li>Publicar conteúdo agendado nas redes sociais conectadas, conforme autorizado pelo usuário.</li>
               <li>Exibir informações do perfil do Instagram dentro da plataforma.</li>
               <li>Enviar notificações relacionadas ao funcionamento da plataforma.</li>
@@ -54,14 +54,14 @@ export function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">4. Uso dos Dados do Instagram</h2>
             <p>
-              Ao conectar sua conta do Instagram ao KairoHub, você nos autoriza a acessar as informações necessárias para o funcionamento da plataforma, conforme as permissões concedidas durante o processo de autorização OAuth. Isso inclui:
+              Ao conectar sua conta do Instagram ao StatusMedia, você nos autoriza a acessar as informações necessárias para o funcionamento da plataforma, conforme as permissões concedidas durante o processo de autorização OAuth. Isso inclui:
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Leitura de informações básicas do perfil (<code>instagram_business_basic</code>).</li>
               <li>Publicação de conteúdo em seu nome (<code>instagram_business_content_publish</code>).</li>
             </ul>
             <p className="mt-3">
-              Esses dados são utilizados somente para as funcionalidades descritas e nunca são compartilhados sem seu consentimento explícito. Você pode revogar o acesso a qualquer momento desconectando sua conta na seção Instagram do KairoHub.
+              Esses dados são utilizados somente para as funcionalidades descritas e nunca são compartilhados sem seu consentimento explícito. Você pode revogar o acesso a qualquer momento desconectando sua conta na seção Instagram do StatusMedia.
             </p>
             <p className="mt-3">
               O uso dos dados do Instagram está em conformidade com as <a href="https://developers.facebook.com/policy/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Políticas da Plataforma Meta</a>.
@@ -116,7 +116,7 @@ export function PrivacyPage() {
             <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">10. Contato</h2>
             <p>
               Dúvidas sobre esta Política de Privacidade? Entre em contato:<br />
-              <strong>KairoHub</strong><br />
+              <strong>StatusMedia</strong><br />
               E-mail: <a href="mailto:wallisonsilva290@gmail.com" className="text-blue-600 underline">wallisonsilva290@gmail.com</a>
             </p>
           </section>
@@ -125,7 +125,7 @@ export function PrivacyPage() {
       </main>
 
       <footer className="border-t border-gray-100 py-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} KairoHub. Todos os direitos reservados.
+        © {new Date().getFullYear()} StatusMedia. Todos os direitos reservados.
       </footer>
     </div>
   )

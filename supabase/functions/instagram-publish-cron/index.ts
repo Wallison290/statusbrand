@@ -6,7 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const CRON_SECRET      = Deno.env.get('CRON_SECRET') ?? 'kairohub-cron-2025'
+const CRON_SECRET      = Deno.env.get('CRON_SECRET') ?? 'statusmedia-cron-2025'
 const IG_API           = 'https://graph.instagram.com/v21.0'
 
 // Quantas tentativas automáticas fazer antes de marcar como "failed".
