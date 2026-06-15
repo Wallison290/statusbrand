@@ -103,7 +103,7 @@ export function ClientSetup() {
           <div className="flex items-center gap-2.5 bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3">
             <img src="/logo-icon.png" alt="StatusMedia" className="w-6 h-6 object-contain" />
             <span className="text-white font-bold text-lg tracking-tight">
-              Kairo<span className="text-[#a78bfa]">Hub</span>
+              Status<span className="text-[#a78bfa]">Media</span>
             </span>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'kairohub-theme'
+const STORAGE_KEY = 'statusmedia-theme'
 
 function applyTheme(theme: Theme) {
   if (theme === 'dark') {

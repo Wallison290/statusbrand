@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: KairoHub
+name: StatusMedia
 description: Sistema de gestão de conteúdo e planejamento para agências e criadores. Interface minimalista, profissional, com tema escuro profundo e acento azul (#2563EB).
 
 colors:
@@ -164,7 +164,7 @@ components:
 
 ## Overview
 
-KairoHub é um sistema SaaS de gestão de conteúdo para agências e criadores de conteúdo. A interface combina minimalismo profissional com acentos de violeta e índigo, criando uma experiência séria mas não austere. O padrão visual segue a filosofia de um **dashboard analítico de alto desempenho**: informação densa, hierarquia clara, sem ornamentos desnecessários.
+StatusMedia é um sistema SaaS de gestão de conteúdo para agências e criadores de conteúdo. A interface combina minimalismo profissional com acentos de violeta e índigo, criando uma experiência séria mas não austere. O padrão visual segue a filosofia de um **dashboard analítico de alto desempenho**: informação densa, hierarquia clara, sem ornamentos desnecessários.
 
 Referência estética: interface administrativa moderna no estilo Linear, Vercel Dashboard e Notion — mas com a paleta de violeta/índigo como identidade própria.
 

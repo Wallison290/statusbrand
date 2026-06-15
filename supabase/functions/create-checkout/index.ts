@@ -7,7 +7,7 @@ import Stripe from 'npm:stripe@14'
 const STRIPE_SECRET_KEY  = Deno.env.get('STRIPE_SECRET_KEY') ?? ''
 const SUPABASE_URL        = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const APP_URL             = Deno.env.get('APP_URL') ?? 'https://kairohub.app.br'
+const APP_URL             = Deno.env.get('APP_URL') ?? 'https://statusmedia.com.br'
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
 

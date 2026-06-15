@@ -1,5 +1,5 @@
 -- =============================================
--- KairoHub — Auto-agendamento também marca o planner como "publicado"
+-- StatusMedia — Auto-agendamento também marca o planner como "publicado"
 -- Quando o cliente aprova e o post é agendado automaticamente no Instagram,
 -- o status do item no planner deve subir de "aprovado" para "publicado".
 -- (A aprovação em si já eleva o status para "aprovado" no app; este trigger

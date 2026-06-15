@@ -1,5 +1,5 @@
 -- =============================================
--- KairoHub — Retry automático de publicação no Instagram
+-- StatusMedia — Retry automático de publicação no Instagram
 -- Adiciona um contador de tentativas em scheduled_posts. Quando a publicação
 -- falha por erro transitório (ex.: o Instagram demora demais para baixar a
 -- mídia → subcode 2207003 "Timeout"), o cron reagenda o post para a próxima
