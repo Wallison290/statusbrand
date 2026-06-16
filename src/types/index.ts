@@ -375,6 +375,35 @@ export interface ReportAttachment {
   created_at: string
 }
 
+export interface IgTopPost {
+  id: string
+  permalink: string | null
+  thumbnail: string | null
+  media_type: string | null
+  caption: string | null
+  likes: number
+  comments: number
+  reach: number | null
+}
+
+export interface IgReportData {
+  profile_views: number | null
+  accounts_engaged: number | null
+  interactions: {
+    likes: number | null
+    comments: number | null
+    saves: number | null
+    shares: number | null
+  } | null
+  top_posts: IgTopPost[]
+  demographics: {
+    gender: Record<string, number> | null
+    age: Record<string, number> | null
+    cities: { name: string; value: number }[] | null
+  } | null
+  synced_at?: string
+}
+
 export interface ClientReport {
   id: string
   client_id: string
@@ -393,6 +422,9 @@ export interface ClientReport {
   paid_conversions: number | null
   paid_roas: number | null
   analysis_text: string | null
+  auto_generated?: boolean
+  ig_synced_at?: string | null
+  ig_data?: IgReportData | null
   created_at: string
   updated_at: string
   attachments?: ReportAttachment[]

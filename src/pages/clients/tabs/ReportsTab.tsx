@@ -116,6 +116,145 @@ function MetricCard({
   )
 }
 
+// ─── Instagram insights (dados ricos vindos da API) ───────────────────────────
+
+const GENDER_LABEL: Record<string, string> = { M: 'Masculino', F: 'Feminino', U: 'Outro' }
+
+function Bar({ label, value, max, suffix }: { label: string; value: number; max: number; suffix?: string }) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-[#64748b] w-24 flex-shrink-0 truncate">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
+        <div className="h-full rounded-full bg-[#29457a]" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[11px] font-semibold text-[#0f0f0f] w-14 text-right flex-shrink-0">{fmt(value)}{suffix ?? ''}</span>
+    </div>
+  )
+}
+
+function IgInsights({ report }: { report: ClientReport }) {
+  const ig = report.ig_data
+  if (!ig) return null
+
+  const inter = ig.interactions
+  const demo  = ig.demographics
+  const genderEntries = demo?.gender ? Object.entries(demo.gender).sort((a, b) => b[1] - a[1]) : []
+  const genderTotal   = genderEntries.reduce((s, [, v]) => s + v, 0)
+  const ageEntries    = demo?.age ? Object.entries(demo.age).sort((a, b) => a[0].localeCompare(b[0])) : []
+  const ageMax        = ageEntries.reduce((m, [, v]) => Math.max(m, v), 0)
+  const cities        = demo?.cities ?? []
+  const cityMax       = cities.reduce((m, c) => Math.max(m, c.value), 0)
+  const hasInter      = !!inter && [inter.likes, inter.comments, inter.saves, inter.shares].some(v => v != null)
+  const hasDemo       = genderEntries.length > 0 || ageEntries.length > 0 || cities.length > 0
+
+  return (
+    <>
+      {/* Visão extra (visitas ao perfil / contas engajadas) */}
+      {(ig.profile_views != null || ig.accounts_engaged != null) && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {ig.profile_views != null && (
+            <MetricCard icon={<Eye className="w-4 h-4 text-amber-600" />} label="Visitas ao perfil"
+              value={fmt(ig.profile_views)} accent="border-amber-200 bg-amber-50" />
+          )}
+          {ig.accounts_engaged != null && (
+            <MetricCard icon={<Users className="w-4 h-4 text-teal-600" />} label="Contas engajadas"
+              value={fmt(ig.accounts_engaged)} accent="border-teal-200 bg-teal-50" />
+          )}
+        </div>
+      )}
+
+      {/* Interações */}
+      {hasInter && (
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
+            <Heart className="w-3.5 h-3.5 text-[#64748b]" />
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Interações do mês</p>
+          </div>
+          <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {([
+              ['Curtidas', inter!.likes],
+              ['Comentários', inter!.comments],
+              ['Salvamentos', inter!.saves],
+              ['Compartilhamentos', inter!.shares],
+            ] as [string, number | null][]).map(([label, value]) => (
+              <div key={label}>
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1">{label}</p>
+                <p className="text-[16px] font-bold text-[#0f0f0f]">{fmt(value)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Top publicações */}
+      {ig.top_posts && ig.top_posts.length > 0 && (
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
+            <Instagram className="w-3.5 h-3.5 text-[#64748b]" />
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Top publicações do mês</p>
+          </div>
+          <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {ig.top_posts.map(post => (
+              <a key={post.id} href={post.permalink ?? undefined} target="_blank" rel="noopener noreferrer"
+                className="group rounded-xl border border-[#e8e8e8] overflow-hidden bg-[#fafafa] hover:border-[#29457a]/50 transition-colors">
+                <div className="aspect-square bg-[#eee] overflow-hidden">
+                  {post.thumbnail
+                    ? <img src={post.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    : <div className="w-full h-full flex items-center justify-center text-[#c0c0c0]"><ImageIcon className="w-6 h-6" /></div>}
+                </div>
+                <div className="p-2.5">
+                  {post.media_type && <p className="text-[9px] uppercase tracking-wide text-[#94a3b8] mb-1">{post.media_type}</p>}
+                  <div className="flex items-center gap-3 text-[11px] text-[#0f0f0f] font-medium">
+                    <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-pink-500" /> {fmt(post.likes)}</span>
+                    <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3 text-blue-500" /> {fmt(post.reach)}</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Audiência */}
+      {hasDemo && (
+        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-[#64748b]" />
+            <p className="text-[13px] font-semibold text-[#0f0f0f]">Audiência</p>
+          </div>
+          <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {genderEntries.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Gênero</p>
+                {genderEntries.map(([g, v]) => (
+                  <Bar key={g} label={GENDER_LABEL[g] ?? g} value={v} max={genderTotal} />
+                ))}
+              </div>
+            )}
+            {ageEntries.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Faixa etária</p>
+                {ageEntries.map(([a, v]) => (
+                  <Bar key={a} label={a} value={v} max={ageMax} />
+                ))}
+              </div>
+            )}
+            {cities.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Principais cidades</p>
+                {cities.map(c => (
+                  <Bar key={c.name} label={c.name} value={c.value} max={cityMax} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+    </>
+  )
+}
+
 // ─── Attachment item ──────────────────────────────────────────────────────────
 
 function AttachmentItem({
@@ -428,7 +567,13 @@ function ReportDetail({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h3 className="text-[16px] font-semibold text-[#0f0f0f]">{monthLabel(report.month, report.year)}</h3>
-          <p className="text-[11px] text-[#64748b] mt-0.5">Relatório de performance</p>
+          {report.ig_synced_at ? (
+            <p className="text-[11px] text-[#16a34a] mt-0.5 flex items-center gap-1">
+              <Instagram className="w-3 h-3" /> Sincronizado com o Instagram em {new Date(report.ig_synced_at).toLocaleDateString('pt-BR')}
+            </p>
+          ) : (
+            <p className="text-[11px] text-[#64748b] mt-0.5">Relatório de performance</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {editMode ? (
@@ -536,6 +681,9 @@ function ReportDetail({
           )}
         </div>
       </section>
+
+      {/* ── Insights ricos do Instagram ── */}
+      <IgInsights report={report} />
 
       {/* ── Tráfego Pago ── */}
       {showPaid && (
