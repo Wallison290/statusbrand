@@ -543,6 +543,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
         caption,
         media_urls:    igMedia.map(a => a.file_url),
         scheduled_at:  new Date(`${schedDate}T${schedTime}:00`).toISOString(),
+        planner_id:    item.id,
       })
 
       // Agendou manualmente pela agência → considera o conteúdo aprovado.

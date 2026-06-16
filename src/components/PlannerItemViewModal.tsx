@@ -262,6 +262,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
         caption,
         media_urls:    mediaUrls,
         scheduled_at:  scheduledAtISO,
+        planner_id:    item.id,
       })
       setSuccess(true)
       toast('Post agendado no Instagram!', 'success')

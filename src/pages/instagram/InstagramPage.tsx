@@ -18,6 +18,7 @@ import {
   useScheduledPosts,
   useCancelScheduledPost,
   useRetryScheduledPost,
+  useRescheduleScheduledPost,
   type ScheduledPost,
   type InstagramAccount,
 } from '@/hooks/useInstagram'
@@ -132,11 +133,28 @@ function AccountListCard({
 
 // ── Post Card ─────────────────────────────────────────────────────────────────
 
-function PostCard({ post, onCancel, onRetry }: { post: ScheduledPost; onCancel: (id: string) => void; onRetry: (id: string) => void }) {
+function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPost; onCancel: (id: string) => void; onRetry: (id: string) => void; onReschedule: (id: string, scheduledAt: string) => void }) {
   const cfg        = STATUS_CFG[post.status]
   const StatusIcon = cfg.Icon
   const typeCfg    = POST_TYPE_CFG[post.post_type]
   const TypeIcon   = typeCfg?.Icon ?? Image
+
+  // Edição de data/hora (posts ainda agendados)
+  const localDateTime = (iso: string) => {
+    const d = new Date(iso)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}` }
+  }
+  const [editing, setEditing] = useState(false)
+  const init = localDateTime(post.scheduled_at)
+  const [editDate, setEditDate] = useState(init.date)
+  const [editTime, setEditTime] = useState(init.time)
+
+  const saveReschedule = () => {
+    if (!editDate || !editTime) return
+    onReschedule(post.id, new Date(`${editDate}T${editTime}:00`).toISOString())
+    setEditing(false)
+  }
 
   return (
     <div className={`rounded-2xl border p-4 space-y-3 ${cfg.bg}`}>
@@ -207,12 +225,20 @@ function PostCard({ post, onCancel, onRetry }: { post: ScheduledPost; onCancel: 
             </button>
           )}
           {post.status === 'scheduled' && (
-            <button
-              onClick={() => onCancel(post.id)}
-              className="text-[11px] text-[#F87171] hover:text-[#EF4444] font-medium transition-colors"
-            >
-              Cancelar
-            </button>
+            <>
+              <button
+                onClick={() => { setEditing(e => !e); const i = localDateTime(post.scheduled_at); setEditDate(i.date); setEditTime(i.time) }}
+                className="text-[11px] text-[#60A5FA] hover:text-[#2563EB] font-medium transition-colors"
+              >
+                {editing ? 'Fechar' : 'Editar data'}
+              </button>
+              <button
+                onClick={() => onCancel(post.id)}
+                className="text-[11px] text-[#F87171] hover:text-[#EF4444] font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+            </>
           )}
           {post.ig_post_id && (
             <a
@@ -227,6 +253,28 @@ function PostCard({ post, onCancel, onRetry }: { post: ScheduledPost; onCancel: 
           )}
         </div>
       </div>
+
+      {/* Editor de data/hora (post agendado) */}
+      {post.status === 'scheduled' && editing && (
+        <div className="flex items-end gap-2 flex-wrap pt-1 border-t border-[#1F2937] mt-1">
+          <div>
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-wide mb-1">Data</p>
+            <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-[#2563EB]/60" />
+          </div>
+          <div>
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-wide mb-1">Horário</p>
+            <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
+              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-[#2563EB]/60" />
+          </div>
+          <button
+            onClick={saveReschedule}
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors"
+          >
+            Salvar
+          </button>
+        </div>
+      )}
 
       {/* Mensagem de erro */}
       {post.error_message && (
@@ -247,6 +295,7 @@ function AccountDetailView({
   onBack,
   onCancel,
   onRetry,
+  onReschedule,
   onDisconnect,
 }: {
   account: InstagramAccount
@@ -254,6 +303,7 @@ function AccountDetailView({
   onBack: () => void
   onCancel: (id: string) => void
   onRetry: (id: string) => void
+  onReschedule: (id: string, scheduledAt: string) => void
   onDisconnect: (id: string) => void
 }) {
   const [tab, setTab] = useState<TabType>('all')
@@ -404,7 +454,7 @@ function AccountDetailView({
           ) : (
             <div className="space-y-3">
               {filteredPosts.map(post => (
-                <PostCard key={post.id} post={post} onCancel={onCancel} onRetry={onRetry} />
+                <PostCard key={post.id} post={post} onCancel={onCancel} onRetry={onRetry} onReschedule={onReschedule} />
               ))}
             </div>
           )}
@@ -422,6 +472,7 @@ export function InstagramPage() {
   const { toast }       = useToast()
   const cancelPost      = useCancelScheduledPost()
   const retryPost       = useRetryScheduledPost()
+  const reschedulePost  = useRescheduleScheduledPost()
 
   const { data: rawAccounts = [], isLoading: loadingAccounts, refetch: refetchAccounts, isRefetching: refetchingAccounts } = useAllInstagramAccounts()
   const { data: posts       = [], isLoading: loadingPosts,    refetch: refetchPosts,    isRefetching: refetchingPosts    } = useScheduledPosts()
@@ -477,6 +528,15 @@ export function InstagramPage() {
     }
   }
 
+  const handleReschedule = async (id: string, scheduledAt: string) => {
+    try {
+      await reschedulePost.mutateAsync({ id, scheduled_at: scheduledAt })
+      toast('Agendamento atualizado!', 'success')
+    } catch (err: any) {
+      toast(err?.message ?? 'Não foi possível alterar a data.', 'error')
+    }
+  }
+
   return (
     <div className="min-h-full bg-[#0B0F14] p-6">
       <div className="max-w-3xl mx-auto space-y-5">
@@ -517,6 +577,7 @@ export function InstagramPage() {
               onBack={() => setSelectedAccount(null)}
               onCancel={handleCancel}
               onRetry={handleRetry}
+              onReschedule={handleReschedule}
               onDisconnect={async (id) => {
                 await (supabase as any).from('instagram_accounts').delete().eq('id', id)
                 setSelectedAccount(null)

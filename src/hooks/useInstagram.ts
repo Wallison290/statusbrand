@@ -137,6 +137,7 @@ export function useCreateScheduledPost() {
       caption:       string
       media_urls:    string[]
       scheduled_at:  string
+      planner_id?:   string | null
     }) => {
       const { error } = await (supabase as any)
         .from('scheduled_posts')
@@ -155,6 +156,26 @@ export function useCancelScheduledPost() {
       const { error } = await (supabase as any)
         .from('scheduled_posts')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['scheduled_posts'] })
+      // O cancelamento reverte o item do planner (trigger no banco) → atualiza a aba/modal de planejamento
+      qc.invalidateQueries({ queryKey: ['planner'] })
+    },
+  })
+}
+
+// Altera a data/hora de um post ainda agendado.
+export function useRescheduleScheduledPost() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, scheduled_at }: { id: string; scheduled_at: string }) => {
+      const { error } = await (supabase as any)
+        .from('scheduled_posts')
+        .update({ scheduled_at, status: 'scheduled', updated_at: new Date().toISOString() })
         .eq('id', id)
       if (error) throw error
     },
