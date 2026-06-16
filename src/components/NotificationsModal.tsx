@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell, CheckCircle2, XCircle, MessageSquare,
   Clock, FileText, Check, Wrench, ClipboardList,
-  Instagram, AlertTriangle, CheckCheck, Lightbulb, X,
+  Instagram, AlertTriangle, CheckCheck, Lightbulb, X, BarChart3,
 } from 'lucide-react'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -29,6 +29,7 @@ const typeConfig: Record<NotificationType, { Icon: React.ElementType; color: str
   POST_PUBLISHED:     { Icon: Instagram,     color: 'text-[#f472b6]', bg: 'bg-[#ec4899]/15' },
   POST_FAILED:        { Icon: AlertTriangle, color: 'text-[#f87171]', bg: 'bg-[#ef4444]/15' },
   NOTE_REQUEST:       { Icon: Lightbulb,     color: 'text-[#60a5fa]', bg: 'bg-[#2563eb]/15' },
+  NEW_REPORT:         { Icon: BarChart3,     color: 'text-[#4ade80]', bg: 'bg-[#22c55e]/15' },
 }
 
 // ─── Categorias (abas) ────────────────────────────────────────────────────────
@@ -48,15 +49,17 @@ const CATEGORY_OF: Record<NotificationType, string> = {
   TASK_STATUS_UPDATE: 'tarefas',
   FORM_SUBMITTED:     'solicitacoes',
   NOTE_REQUEST:       'solicitacoes',
+  NEW_REPORT:         'relatorios',
 }
 
-const CATEGORY_ORDER = ['aprovacoes', 'conteudo', 'instagram', 'tarefas', 'solicitacoes']
+const CATEGORY_ORDER = ['aprovacoes', 'conteudo', 'instagram', 'tarefas', 'solicitacoes', 'relatorios']
 const CATEGORY_LABEL: Record<string, string> = {
   aprovacoes:   'Aprovações',
   conteudo:     'Conteúdo',
   instagram:    'Instagram',
   tarefas:      'Tarefas',
   solicitacoes: 'Solicitações',
+  relatorios:   'Relatórios',
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

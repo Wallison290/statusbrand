@@ -2869,6 +2869,10 @@ export function PortalDashboard() {
       onClose={() => setShowNotifications(false)}
       onView={(notification) => {
         setShowNotifications(false)
+        if (notification.type === 'NEW_REPORT') {
+          setActiveTab('resultados')
+          return
+        }
         setActiveTab('planejamento')
         if (notification.link) {
           setAutoOpenPlannerItemId(notification.link)

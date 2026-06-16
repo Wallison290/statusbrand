@@ -16,6 +16,7 @@ export type NotificationType =
   | 'POST_PUBLISHED'
   | 'POST_FAILED'
   | 'NOTE_REQUEST'
+  | 'NEW_REPORT'
 
 export interface Notification {
   id: string

@@ -6,6 +6,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { usePortalReports } from '@/hooks/usePortal'
+import { IgInsights } from '@/components/reports/IgInsights'
 import type { ClientReport, ReportAttachment } from '@/types'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -166,6 +167,9 @@ function ReportView({ report }: { report: ClientReport }) {
           ))}
         </div>
       </section>
+
+      {/* Insights ricos do Instagram (visitas, interações, top posts, audiência) */}
+      <IgInsights report={report} />
 
       {/* Paid traffic — only if has data */}
       {hasPaid(report) && (
