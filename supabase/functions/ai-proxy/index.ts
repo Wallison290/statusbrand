@@ -149,6 +149,20 @@ Deno.serve(async (req) => {
         break
       }
 
+      case 'report-analysis': {
+        const res = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'Você é um analista de social media sênior de uma agência. Escreva uma análise mensal do desempenho no Instagram para apresentar AO CLIENTE, em português do Brasil. Estruture em parágrafos curtos: (1) visão geral do mês (crescimento de seguidores, alcance, engajamento); (2) destaques de conteúdo (as melhores publicações e por que performaram); (3) perfil da audiência (gênero, faixa etária e principais cidades); (4) 2 a 3 recomendações práticas para o próximo mês. Tom profissional, claro e positivo, sem exageros. Use APENAS os números fornecidos — não invente dados. Não use markdown nem títulos em negrito. Máximo ~200 palavras.' },
+            { role: 'user', content: `Dados do relatório (JSON):\n${JSON.stringify(payload)}` },
+          ],
+          temperature: 0.6,
+          max_tokens: 700,
+        })
+        content = res.choices[0].message.content?.trim() ?? null
+        break
+      }
+
       default:
         return json({ error: `Tipo desconhecido: ${type}` }, 400)
     }

@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Upload, X, File, FileText, Link2,
   ExternalLink, TrendingUp, Users, Eye, Heart, DollarSign,
   Target, Zap, BookOpen, ChevronDown, Save, Pencil,
-  BarChart3, ImageIcon, RefreshCw, Instagram,
+  BarChart3, ImageIcon, RefreshCw, Instagram, Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ import {
   useDeleteReport, useAddReportAttachment, useDeleteReportAttachment,
 } from '@/hooks/useReports'
 import { supabase } from '@/integrations/supabase/client'
+import { callProxy } from '@/lib/aiProxy'
 import { checkStorageLimit } from '@/utils/storageGate'
 import type { ClientReport, ReportAttachment, ReportAttachmentType } from '@/types'
 
@@ -146,21 +147,23 @@ function IgInsights({ report }: { report: ClientReport }) {
   const cities        = demo?.cities ?? []
   const cityMax       = cities.reduce((m, c) => Math.max(m, c.value), 0)
   const hasInter      = !!inter && [inter.likes, inter.comments, inter.saves, inter.shares].some(v => v != null)
+  const interTotal    = inter ? [inter.likes, inter.comments, inter.saves, inter.shares].reduce<number>((s, v) => s + (v ?? 0), 0) : null
   const hasDemo       = genderEntries.length > 0 || ageEntries.length > 0 || cities.length > 0
+  const hasExtraKpis  = ig.profile_views != null || ig.accounts_engaged != null || report.impressions != null || interTotal != null
 
   return (
     <>
-      {/* Visão extra (visitas ao perfil / contas engajadas) */}
-      {(ig.profile_views != null || ig.accounts_engaged != null) && (
+      {/* Visão extra — 4 KPIs preenchem a linha por completo */}
+      {hasExtraKpis && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {ig.profile_views != null && (
-            <MetricCard icon={<Eye className="w-4 h-4 text-amber-600" />} label="Visitas ao perfil"
-              value={fmt(ig.profile_views)} accent="border-amber-200 bg-amber-50" />
-          )}
-          {ig.accounts_engaged != null && (
-            <MetricCard icon={<Users className="w-4 h-4 text-teal-600" />} label="Contas engajadas"
-              value={fmt(ig.accounts_engaged)} accent="border-teal-200 bg-teal-50" />
-          )}
+          <MetricCard icon={<Eye className="w-4 h-4 text-amber-600" />} label="Visitas ao perfil"
+            value={fmt(ig.profile_views)} accent="border-amber-200 bg-amber-50" />
+          <MetricCard icon={<Users className="w-4 h-4 text-teal-600" />} label="Contas engajadas"
+            value={fmt(ig.accounts_engaged)} accent="border-teal-200 bg-teal-50" />
+          <MetricCard icon={<TrendingUp className="w-4 h-4 text-sky-600" />} label="Impressões"
+            value={fmt(report.impressions)} accent="border-sky-200 bg-sky-50" />
+          <MetricCard icon={<Zap className="w-4 h-4 text-violet-600" />} label="Interações totais"
+            value={fmt(interTotal)} accent="border-violet-200 bg-violet-50" />
         </div>
       )}
 
@@ -505,9 +508,40 @@ function ReportDetail({
   const [confirmDel, setConfirmDel] = useState(false)
   const [attOpen, setAttOpen] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
 
   // Sync form when switching reports
   useEffect(() => { setForm(toForm(report)); setEditMode(false) }, [report.id])
+
+  // Gera um resumo do mês com IA (OpenAI via ai-proxy) a partir dos números do relatório.
+  const handleAiAnalysis = async () => {
+    setAiLoading(true)
+    try {
+      const ig = report.ig_data
+      const payload = {
+        mes: monthLabel(report.month, report.year),
+        seguidores_inicio: report.followers_start,
+        seguidores_fim: report.followers_end,
+        alcance: report.reach,
+        impressoes: report.impressions,
+        engajamento_pct: report.engagement,
+        posts_publicados: report.posts_published,
+        visitas_perfil: ig?.profile_views ?? null,
+        contas_engajadas: ig?.accounts_engaged ?? null,
+        interacoes: ig?.interactions ?? null,
+        top_posts: ig?.top_posts?.map(p => ({ tipo: p.media_type, curtidas: p.likes, comentarios: p.comments, alcance: p.reach })) ?? null,
+        demografia: ig?.demographics ?? null,
+      }
+      const { content } = await callProxy<{ content?: string }>('report-analysis', payload)
+      if (!content) throw new Error('A IA não retornou texto.')
+      await updateReport.mutateAsync({ id: report.id, analysis_text: content })
+      toast('Análise gerada pela IA!', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao gerar análise.', 'error')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   // Puxa as métricas do mês direto da conta de Instagram conectada ao cliente.
   const handleAutoGenerate = async () => {
@@ -723,9 +757,20 @@ function ReportDetail({
 
       {/* ── Análise do mês ── */}
       <section className="rounded-2xl border border-indigo-200 bg-indigo-50 overflow-hidden">
-        <div className="px-5 py-4 border-b border-indigo-100 flex items-center gap-2">
-          <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-          <p className="text-[13px] font-semibold text-indigo-900">Análise do mês</p>
+        <div className="px-5 py-4 border-b border-indigo-100 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+            <p className="text-[13px] font-semibold text-indigo-900">Análise do mês</p>
+          </div>
+          {!editMode && (
+            <Button size="sm" onClick={handleAiAnalysis} disabled={aiLoading}
+              className="bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+              title="Gerar um resumo dos resultados com IA para apresentar ao cliente">
+              {aiLoading
+                ? <><RefreshCw className="w-3 h-3 animate-spin" /> Gerando...</>
+                : <><Sparkles className="w-3 h-3" /> {report.analysis_text ? 'Refazer com IA' : 'Gerar com IA'}</>}
+            </Button>
+          )}
         </div>
         <div className="p-5">
           {editMode ? (
@@ -739,7 +784,7 @@ function ReportDetail({
             <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
           ) : (
             <p className="text-[12px] text-[#64748b] italic">
-              Nenhuma análise escrita ainda. Clique em Editar para adicionar.
+              Nenhuma análise ainda. Clique em <strong>Gerar com IA</strong> para um resumo automático, ou em Editar para escrever.
             </p>
           )}
         </div>
