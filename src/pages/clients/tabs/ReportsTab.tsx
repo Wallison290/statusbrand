@@ -642,7 +642,7 @@ function ReportDetail({
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
-              <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+              <Button variant="outline" size="sm" onClick={() => { setForm(toForm(report)); setEditMode(true) }}>
                 <Pencil className="w-3 h-3" /> Editar
               </Button>
             </>
