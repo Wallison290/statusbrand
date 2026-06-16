@@ -444,6 +444,15 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
     : postType === 'CAROUSEL_ALBUM' ? 'carrossel'
     : postType === 'REELS' ? 'reel' : 'post'
 
+  // ⚠️ Hooks de estado ANTES de qualquer return condicional (Regras dos Hooks):
+  // quando o item vira ig_scheduled=true, o componente retorna cedo abaixo — se
+  // os useState ficassem após os returns, o React chamaria menos hooks e quebraria.
+  const [caption, setCaption]       = useState(item.notes ?? '')
+  const [schedDate, setSchedDate]   = useState(item.scheduled_date)
+  const [schedTime, setSchedTime]   = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
+  const [publishing, setPublishing] = useState(false)
+  const [success, setSuccess]       = useState(false)
+
   // ── Estados que bloqueiam agendamento ──────────────────────────────────────
   // Aprovado + agendado automaticamente
   if (item.ig_scheduled && item.approval_status === 'aprovado') {
@@ -525,12 +534,6 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
     .filter(a => isImageAttachment(a) || isVideoAttachment(a))
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const igMedia = igMediaExplicit.length > 0 ? igMediaExplicit : igMediaFallback
-
-  const [caption, setCaption]       = useState(item.notes ?? '')
-  const [schedDate, setSchedDate]   = useState(item.scheduled_date)
-  const [schedTime, setSchedTime]   = useState(item.scheduled_time?.slice(0, 5) ?? '09:00')
-  const [publishing, setPublishing] = useState(false)
-  const [success, setSuccess]       = useState(false)
 
   const handleSchedule = async () => {
     if (!igAccount || !postType) return
