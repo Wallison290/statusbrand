@@ -491,7 +491,10 @@ export function PlannerItemViewModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
-      <DialogContent className="w-[96vw] max-w-5xl p-0 h-[92vh] overflow-hidden [&>button.absolute]:hidden gap-0 rounded-2xl shadow-2xl border-0 flex flex-col">
+      <DialogContent
+        className="p-0 overflow-hidden [&>button.absolute]:hidden gap-0 rounded-2xl shadow-2xl border-0 flex flex-col"
+        style={{ width: '96vw', maxWidth: '64rem', height: '92vh' }}
+      >
         <DialogTitle className="sr-only">{item.title}</DialogTitle>
 
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
