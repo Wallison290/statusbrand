@@ -491,10 +491,10 @@ export function PlannerItemViewModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
-      <DialogContent className="w-[96vw] max-w-5xl p-0 max-h-[92vh] overflow-hidden [&>button.absolute]:hidden gap-0 rounded-2xl shadow-2xl border-0">
+      <DialogContent className="w-[96vw] max-w-5xl p-0 h-[92vh] overflow-hidden [&>button.absolute]:hidden gap-0 rounded-2xl shadow-2xl border-0 flex flex-col">
         <DialogTitle className="sr-only">{item.title}</DialogTitle>
 
-        <div className="flex h-full max-h-[92vh] overflow-hidden rounded-2xl">
+        <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
           {/* ── Coluna Esquerda: Prévia de Mídia ─────────────────────────── */}
           <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative overflow-hidden flex-shrink-0 hidden sm:flex">
