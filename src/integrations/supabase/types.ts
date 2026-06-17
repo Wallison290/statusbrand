@@ -663,6 +663,9 @@ export interface Database {
           paid_conversions: number | null
           paid_roas: number | null
           analysis_text: string | null
+          auto_generated: boolean
+          ig_synced_at: string | null
+          ig_data: Json | null
           created_at: string
           updated_at: string
         }
@@ -684,6 +687,9 @@ export interface Database {
           paid_conversions?: number | null
           paid_roas?: number | null
           analysis_text?: string | null
+          auto_generated?: boolean
+          ig_synced_at?: string | null
+          ig_data?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -702,6 +708,9 @@ export interface Database {
           paid_conversions?: number | null
           paid_roas?: number | null
           analysis_text?: string | null
+          auto_generated?: boolean
+          ig_synced_at?: string | null
+          ig_data?: Json | null
           updated_at?: string
         }
         Relationships: []

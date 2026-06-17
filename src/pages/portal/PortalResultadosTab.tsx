@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   TrendingUp, Users, Eye, Heart, BarChart3,
-  DollarSign, BookOpen, FileText, Link2, File, ExternalLink, ImageIcon,
+  DollarSign, BookOpen, FileText, Link2, File, ExternalLink, ImageIcon, Instagram,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -280,7 +280,14 @@ export function PortalResultadosTab() {
         <>
           <div className="mb-2">
             <h3 className="text-[15px] font-semibold text-[#0f0f0f]">{monthLabel(selected.month, selected.year)}</h3>
-            <p className="text-[11px] text-gray-600 mt-0.5">Relatório de performance</p>
+            {selected.ig_synced_at ? (
+              <p className="text-[11px] text-[#16a34a] mt-0.5 flex items-center gap-1">
+                <Instagram className="w-3 h-3" />
+                Sincronizado com o Instagram em {new Date(selected.ig_synced_at).toLocaleDateString('pt-BR')}
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-600 mt-0.5">Relatório de performance</p>
+            )}
           </div>
           <ReportView key={selected.id} report={selected} />
         </>

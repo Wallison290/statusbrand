@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from './useAuth'
-import type { Client, PlannerItem, Content, ApprovalStatus, ClientMaterial, ClientSupportContact, ContentAsset, BrandDNA } from '@/types'
+import type { Client, PlannerItem, Content, ApprovalStatus, ClientMaterial, ClientSupportContact, ContentAsset, BrandDNA, ClientReport } from '@/types'
 import type { ClientPayment } from './usePayments'
 
 function useIsPortalClient() {
@@ -179,7 +179,7 @@ export function usePortalReports() {
         .order('year', { ascending: false })
         .order('month', { ascending: false })
       if (error) throw error
-      return data
+      return data as ClientReport[]
     },
     enabled: isClient,
   })
