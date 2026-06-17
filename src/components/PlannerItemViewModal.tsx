@@ -950,7 +950,7 @@ export function PlannerItemViewModal({
               )}
 
               {/* ── Agendar no Instagram ────────────────────────────────── */}
-              {showAgencyActions && (
+              {showAgencyActions && item.status !== 'publicado' && (
                 <div>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                     <Instagram className="w-3 h-3" /> Agendar no Instagram
