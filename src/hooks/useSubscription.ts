@@ -14,6 +14,7 @@ export interface Subscription {
   current_period_end: string | null
   trial_ends_at: string | null
   canceled_at: string | null
+  cancel_at_period_end: boolean
 }
 
 export interface SubscriptionData {
@@ -25,6 +26,7 @@ export interface SubscriptionData {
   isPro: boolean
   isAgency: boolean
   aiLimit: number
+  cancelAtPeriodEnd: boolean
 }
 
 export function useSubscription() {
@@ -40,7 +42,7 @@ export function useSubscription() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('subscriptions')
-        .select('plan, status, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at, canceled_at')
+        .select('plan, status, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at, canceled_at, cancel_at_period_end')
         .eq('user_id', user.id)
         .maybeSingle()
 
@@ -55,6 +57,7 @@ export function useSubscription() {
         current_period_end: null,
         trial_ends_at: null,
         canceled_at: null,
+        cancel_at_period_end: false,
       }
 
       const planId = sub.plan as PlanId
@@ -78,9 +81,10 @@ export function useSubscription() {
         isActive,
         isTrialing,
         trialDaysLeft,
-        isPro:    planId === 'pro',
-        isAgency: planId === 'agency',
-        aiLimit:  PLAN_AI_LIMITS[planId] ?? 50,
+        isPro:             planId === 'pro',
+        isAgency:          planId === 'agency',
+        aiLimit:           PLAN_AI_LIMITS[planId] ?? 50,
+        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
       }
     },
   })

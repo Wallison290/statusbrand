@@ -46,9 +46,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Verifica se o usuário já existe no Auth ────────────────────────────────
-    const { data: existing } = await sb.auth.admin.listUsers()
-    const existingUser = existing?.users?.find(u => u.email === email)
+    // ── Verifica se o usuário já existe no Auth (O(1) via RPC, não O(n) listUsers) ─
+    const { data: existingUserId } = await sb.rpc('find_user_id_by_email', { p_email: email })
+    const existingUser = existingUserId ? { id: existingUserId as string } : null
 
     if (existingUser) {
       if (!resend) {
