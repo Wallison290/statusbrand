@@ -183,10 +183,24 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ published: 0, message: 'Nenhum post pendente' }))
   }
 
+  // Busca nomes dos clientes em lote
+  const clientIds = [...new Set(posts.map((p: any) => p.client_id).filter(Boolean))]
+  const clientNames: Record<string, string> = {}
+  if (clientIds.length > 0) {
+    const { data: clients } = await supabase
+      .from('clients')
+      .select('id, company_name')
+      .in('id', clientIds)
+    for (const c of (clients ?? []) as any[]) {
+      clientNames[c.id] = c.company_name
+    }
+  }
+
   let published = 0
   const results: any[] = []
 
   for (const post of posts) {
+    const clientName: string | null = post.client_id ? (clientNames[post.client_id] ?? null) : null
     await supabase
       .from('scheduled_posts')
       .update({ status: 'publishing', updated_at: new Date().toISOString() })
@@ -207,14 +221,17 @@ Deno.serve(async (req) => {
 
       // Notifica a agência que o post foi publicado com sucesso
       if (post.user_id) {
+        const prefix = clientName ? `[${clientName}] ` : ''
+        const caption = post.caption
+          ? ': "' + String(post.caption).slice(0, 60) + (post.caption.length > 60 ? '…' : '') + '"'
+          : '.'
         await (supabase as any).from('notifications').insert({
           user_id:   post.user_id,
           client_id: post.client_id ?? null,
           type:      'POST_PUBLISHED',
           title:     'Post publicado no Instagram ✅',
-          message:   'O conteúdo agendado foi publicado com sucesso' +
-            (post.caption ? ': "' + String(post.caption).slice(0, 60) + (post.caption.length > 60 ? '…' : '') + '"' : '.'),
-          link:      null,
+          message:   `${prefix}O conteúdo agendado foi publicado com sucesso${caption}`,
+          link:      '/instagram',
           is_read:   false,
         })
       }
@@ -255,15 +272,16 @@ Deno.serve(async (req) => {
       // Notifica a agência que o post falhou
       if (post.user_id) {
         const exhausted = attempts >= MAX_RETRIES
+        const prefix = clientName ? `[${clientName}] ` : ''
         await (supabase as any).from('notifications').insert({
           user_id:   post.user_id,
           client_id: post.client_id ?? null,
           type:      'POST_FAILED',
           title:     'Falha ao publicar no Instagram ❌',
           message:   exhausted
-            ? `Não foi possível publicar mesmo após ${MAX_RETRIES} tentativas automáticas. Verifique a aba Instagram.`
-            : 'Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.',
-          link:      null,
+            ? `${prefix}Não foi possível publicar mesmo após ${MAX_RETRIES} tentativas automáticas. Verifique a aba Instagram.`
+            : `${prefix}Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.`,
+          link:      '/instagram',
           is_read:   false,
         })
       }

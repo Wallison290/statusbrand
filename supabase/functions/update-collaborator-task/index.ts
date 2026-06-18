@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     // Verifica que a tarefa pertence ao membro
     const { data: task, error: taskErr } = await supabase
       .from('tasks')
-      .select('id, title, user_id, status')
+      .select('id, title, user_id, status, client_id')
       .eq('id', task_id)
       .eq('assignee_id', member.id)
       .single()
@@ -81,12 +81,24 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw updateErr
 
+    // Busca nome do cliente da tarefa (se houver)
+    let clientName: string | null = null
+    if ((task as any).client_id) {
+      const { data: client } = await supabase
+        .from('clients')
+        .select('company_name')
+        .eq('id', (task as any).client_id)
+        .maybeSingle()
+      clientName = (client as any)?.company_name ?? null
+    }
+
     // Cria notificação para o dono da agência
+    const clientSuffix = clientName ? ` · ${clientName}` : ''
     await supabase.from('notifications').insert({
       user_id: task.user_id,
       type:    'TASK_STATUS_UPDATE',
       title:   `${member.name} atualizou uma tarefa`,
-      message: `"${task.title}" → ${STATUS_LABELS[status]}`,
+      message: `"${task.title}" → ${STATUS_LABELS[status]}${clientSuffix}`,
       link:    task_id,
     })
 

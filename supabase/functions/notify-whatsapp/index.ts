@@ -58,8 +58,11 @@ const CATEGORY_OF: Record<string, string> = {
 // Link de destino por tipo (mesma lógica do Header.tsx onView).
 function buildLink(n: NotificationRow): string | null {
   if (n.type === 'NOTE_REQUEST') return `${APP_URL}${n.link || '/notes'}`
-  if (n.link) return `${APP_URL}/planner?item=${n.link}`
-  return null
+  if (!n.link) return null
+  if (['POST_PUBLISHED', 'POST_FAILED', 'FORM_SUBMITTED'].includes(n.type)) {
+    return `${APP_URL}${n.link}`
+  }
+  return `${APP_URL}/planner?item=${n.link}`
 }
 
 // Monta o texto final da mensagem. Título e mensagem já vêm prontos e
