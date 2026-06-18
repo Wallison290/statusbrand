@@ -11,7 +11,7 @@ import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
-  LayoutGrid, Film, ChevronDown,
+  LayoutGrid, Film, ChevronDown, Heart, MessageCircle, Bookmark, MoreHorizontal,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -752,24 +752,37 @@ function PlannerItemView({
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row lg:h-full overflow-visible lg:overflow-hidden">
 
-          {/* ══ ESQUERDA: Mídia — igual ao portal do cliente: imagem inteira + tira de slides ══ */}
+          {/* ══ ESQUERDA: Prévia estilo Instagram ══ */}
           {hasMedia && (
             <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[#101A2B] overflow-hidden lg:h-full">
 
-              {/* Mídia principal — object-contain no mobile (vê a imagem inteira, sem cortar) */}
+              {/* Header estilo Instagram */}
+              <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">
+                    {(item.client?.company_name ?? 'P')[0].toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-[13px] font-semibold text-[#F8FAFC] flex-1 truncate">
+                  {item.client?.company_name ?? 'Post'}
+                </span>
+                <MoreHorizontal className="w-5 h-5 text-[#64748b] flex-shrink-0" />
+              </div>
+
+              {/* Mídia principal — object-contain: exibe imagem inteira sem cortar */}
               <div className="relative bg-[#0B1020] h-72 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img
                     src={currentMedia.file_url}
                     alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-contain lg:object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                   />
                 ) : currentMedia?.kind === 'video' ? (
                   <video
                     key={currentMedia.file_url}
                     src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-contain lg:object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                   />
                 ) : null}
 
@@ -818,6 +831,16 @@ function PlannerItemView({
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
+              </div>
+
+              {/* Barra de ações estilo Instagram */}
+              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[#101A2B]">
+                <div className="flex items-center gap-4 flex-1">
+                  <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
+                  <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
+                  <Send className="w-6 h-6 text-white" strokeWidth={1.75} />
+                </div>
+                <Bookmark className="w-6 h-6 text-white" strokeWidth={1.75} />
               </div>
 
               {/* Tira de miniaturas dos slides (carrossel) — igual ao acesso do cliente */}
