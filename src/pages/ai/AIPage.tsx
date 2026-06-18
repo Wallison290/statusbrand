@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import {
-  Send, Plus, Trash2, Globe, GlobeLock, Loader2, Bot,
+  Send, Plus, Trash2, Globe, Loader2, Bot,
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
   Mic, MicOff, Paperclip, Download,
@@ -296,7 +296,7 @@ export function AIPage() {
   const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen]           = useState(true)
   const [input, setInput]                       = useState('')
-  const [webSearch, setWebSearch]               = useState(false)
+  const webSearch = true
   const [imageMode, setImageMode]               = useState(false)
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
@@ -383,7 +383,7 @@ export function AIPage() {
       imgs.length > 0 ? imgs : undefined,
       imageMode,
     )
-  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, webSearch, imageMode, clientCtx, activeSquad, activeClientId])
+  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -391,7 +391,7 @@ export function AIPage() {
 
   const handleNewChat = () => {
     setActiveSessionId(null); setPendingSessionId(null)
-    setInput(''); setWebSearch(false); setImageMode(false); setActiveSquad(null); setAttachedImages([])
+    setInput(''); setImageMode(false); setActiveSquad(null); setAttachedImages([])
   }
 
   const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -675,11 +675,10 @@ export function AIPage() {
             {/* Badge modelo */}
             <div className={cn(
               'hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium border',
-              imageMode ? 'bg-violet-50 border-violet-200 text-violet-700' :
-              webSearch ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#666]',
+              imageMode ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-blue-50 border-blue-200 text-blue-700',
             )}>
-              {imageMode ? <Wand2 className="w-3 h-3" /> : webSearch ? <Globe className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-              {imageMode ? 'gpt-image-1.5' : webSearch ? 'gpt-4o-search' : 'gpt-4o'}
+              {imageMode ? <Wand2 className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+              {imageMode ? 'gpt-image-1.5' : 'gpt-4o-search'}
             </div>
 
           </div>
@@ -827,25 +826,9 @@ export function AIPage() {
                     </button>
                   )}
 
-                  {/* Toggle web search */}
-                  <button
-                    onClick={() => setWebSearch(w => { const next = !w; if (next) setImageMode(false); return next })}
-                    disabled={isLoading || isStreaming}
-                    title={webSearch ? 'Desativar busca web' : 'Ativar busca web'}
-                    className={cn(
-                      'flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium transition-all disabled:opacity-40',
-                      webSearch
-                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                        : 'text-[#888] hover:bg-[#f0f0f0] hover:text-[#333]',
-                    )}
-                  >
-                    {webSearch ? <Globe className="w-3.5 h-3.5" /> : <GlobeLock className="w-3.5 h-3.5" />}
-                    <span className="hidden sm:inline">{webSearch ? 'Web ativa' : 'Web'}</span>
-                  </button>
-
                   {/* Toggle gerar imagem (gpt-image-1.5) */}
                   <button
-                    onClick={() => setImageMode(m => { const next = !m; if (next) setWebSearch(false); return next })}
+                    onClick={() => setImageMode(m => !m)}
                     disabled={isLoading || isStreaming}
                     title={imageMode ? 'Desativar modo imagem' : 'Gerar imagem com IA (gpt-image-1.5)'}
                     className={cn(
