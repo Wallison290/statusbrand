@@ -334,7 +334,7 @@ export function Subscription() {
               { label: 'Agendamento Instagram',  values: ['1 perfil', 'Até 5 perfis', 'Até 20 perfis'] },
               { label: 'WhatsApp notifications', values: [true, true, true] },
               { label: 'Suporte',                values: ['E-mail', 'Prioritário (24h)', 'WhatsApp + SLA 4h'] },
-              { label: 'Preço/mês',              values: [fmtBRL(57), fmtBRL(197), fmtBRL(397)] },
+              { label: 'Preço/mês',              values: [fmtBRL(57), fmtBRL(97), fmtBRL(197)] },
             ].map(row => (
               <tr key={row.label} className="hover:bg-[#fafafa]">
                 <td className="px-5 py-3 text-[#374151]">{row.label}</td>

@@ -54,7 +54,7 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 197,
+    price: 97,
     maxClients: 15,
     aiRequestsPerMonth: 600,
     storageGB: 50,
@@ -83,7 +83,7 @@ export const PLANS: Record<PlanId, Plan> = {
   agency: {
     id: 'agency',
     name: 'Agency',
-    price: 397,
+    price: 197,
     maxClients: 50,
     aiRequestsPerMonth: 2000,
     storageGB: 100,
