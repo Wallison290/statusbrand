@@ -88,7 +88,7 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: s
     return { ok: false, error: 'Evolution não configurado (faltam secrets)' }
   }
   try {
-    const res = await fetch(`${EVOLUTION_BASE_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
+    const res = await fetch(`${EVOLUTION_BASE_URL}/send/text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', token: EVOLUTION_API_KEY },
       body: JSON.stringify({ number: normalizeNumber(to), text }),
