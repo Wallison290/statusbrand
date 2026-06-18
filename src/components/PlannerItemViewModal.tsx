@@ -500,24 +500,24 @@ export function PlannerItemViewModal({
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
           {/* ── Coluna Esquerda: Prévia de Mídia ─────────────────────────── */}
-          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative overflow-hidden flex-shrink-0 hidden sm:flex">
+          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative flex-shrink-0 hidden sm:flex overflow-y-auto">
 
-            {/* Área principal da imagem */}
-            <div className="flex-1 flex items-center justify-center relative min-h-0 overflow-hidden bg-[#e8e8e8]">
+            {/* Área principal da imagem — proporção 4:5 (1080×1350) */}
+            <div className="w-full aspect-[4/5] relative bg-[#e8e8e8] flex-shrink-0 overflow-hidden">
               {allMedia.length > 0 ? (
                 <>
                   {allMedia[imgIdx].file_type.startsWith('image/') ? (
                     <img
                       src={allMedia[imgIdx].file_url}
                       alt=""
-                      className="max-w-full max-h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-contain"
                       draggable={false}
                     />
                   ) : (
                     <video
                       src={allMedia[imgIdx].file_url}
                       controls
-                      className="max-w-full max-h-full"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
                   )}
 
@@ -725,7 +725,7 @@ export function PlannerItemViewModal({
                   {/* Visualizador principal */}
                   <div className="relative rounded-2xl overflow-hidden bg-[#f0f0f0] border border-gray-200">
                     {/* Mídia atual */}
-                    <div className="relative w-full aspect-square flex items-center justify-center bg-[#e8e8e8]">
+                    <div className="relative w-full aspect-[4/5] flex items-center justify-center bg-[#e8e8e8]">
                       {allMedia[imgIdx].file_type.startsWith('image/') ? (
                         <img
                           src={allMedia[imgIdx].file_url}
