@@ -36,7 +36,7 @@ export const PLANS: Record<PlanId, Plan> = {
     instagramProfiles: 1,
     supportLevel: 'email',
     supportLabel: 'E-mail',
-    stripePriceId: 'price_1Te09b0khDYycmTv1muADpGv',
+    stripePriceId: 'price_1Tjj4F0khDYycmTvwkNmnfFk',
     description: 'Para quem está começando a agência',
     features: [
       'Até 5 clientes',
@@ -64,7 +64,7 @@ export const PLANS: Record<PlanId, Plan> = {
     instagramProfiles: 5,
     supportLevel: 'priority',
     supportLabel: 'Prioritário (24h)',
-    stripePriceId: 'price_1Te3yB0khDYycmTvPxQfIaPL',
+    stripePriceId: 'price_1Tjj4w0khDYycmTvDDOmCvi7',
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
     features: [
@@ -93,7 +93,7 @@ export const PLANS: Record<PlanId, Plan> = {
     instagramProfiles: 20,
     supportLevel: 'sla',
     supportLabel: 'WhatsApp + SLA 4h',
-    stripePriceId: 'price_1Te09n0khDYycmTvrseP5spd',
+    stripePriceId: 'price_1Tjj5c0khDYycmTvDDntAKuf',
     badge: 'Ilimitado',
     description: 'Para agências consolidadas',
     features: [
