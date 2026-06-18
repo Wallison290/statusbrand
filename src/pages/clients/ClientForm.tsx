@@ -218,7 +218,7 @@ export function ClientForm() {
                 {form.email && !isEdit && (
                   subData?.plan.hasClientPortal
                     ? <p className="text-[11px] text-violet-600 mt-1">✓ Convite de acesso ao portal será enviado automaticamente.</p>
-                    : <p className="text-[11px] text-amber-600 mt-1">⚠ Portal do cliente disponível nos planos Pro e Agency.</p>
+                    : <p className="text-[11px] text-amber-600 mt-1">⚠ Portal do cliente disponível a partir do plano Starter.</p>
                 )}
               </div>
               <Input label="Site" value={form.website || ''} onChange={e => set('website', e.target.value)} placeholder="https://empresa.com" />
