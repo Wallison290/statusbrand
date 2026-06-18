@@ -10,7 +10,7 @@ import { cn } from '@/utils/formatters'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
-import { AI_SQUADS, type AISquad } from '@/data/aiSquads'
+import { AI_SQUADS, detectSquad, type AISquad } from '@/data/aiSquads'
 import { DiagnosticoModal } from './DiagnosticoModal'
 import {
   useAISessions,
@@ -304,7 +304,7 @@ export function AIPage() {
   const [memoryPanelOpen, setMemoryPanelOpen]   = useState(false)
   const [memoryToast, setMemoryToast]           = useState<string[]>([])
   const [activeSquad, setActiveSquad]           = useState<AISquad | null>(null)
-  const [squadPickerOpen, setSquadPickerOpen]   = useState(false)
+  const [squadToast, setSquadToast]             = useState<AISquad | null>(null)
 
   // Imagens anexadas
   const [attachedImages, setAttachedImages]     = useState<string[]>([])
@@ -316,7 +316,6 @@ export function AIPage() {
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pickerRef      = useRef<HTMLDivElement>(null)
-  const squadPickerRef = useRef<HTMLDivElement>(null)
 
   const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
@@ -337,7 +336,6 @@ export function AIPage() {
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setClientPickerOpen(false)
-      if (squadPickerRef.current && !squadPickerRef.current.contains(e.target as Node)) setSquadPickerOpen(false)
     }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
@@ -374,12 +372,24 @@ export function AIPage() {
     const imgs = [...attachedImages]
     setAttachedImages([])
 
+    // Detecção automática de squad na primeira mensagem
+    let currentSquad = activeSquad
+    if (!currentSquad && messages.length === 0 && text) {
+      const detected = detectSquad(text)
+      if (detected) {
+        currentSquad = detected
+        setActiveSquad(detected)
+        setSquadToast(detected)
+        setTimeout(() => setSquadToast(null), 4000)
+      }
+    }
+
     await sendMessage(
       text, messages, webSearch,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
       clientCtx?.contextString ?? null,
       activeClientId,
-      activeSquad?.systemPrompt ?? null,
+      currentSquad?.systemPrompt ?? null,
       imgs.length > 0 ? imgs : undefined,
       imageMode,
     )
@@ -604,73 +614,23 @@ export function AIPage() {
               </button>
             )}
 
-            {/* Seletor de squad */}
-            <div className="relative" ref={squadPickerRef}>
-              <button
-                onClick={() => setSquadPickerOpen(o => !o)}
-                className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
-                  activeSquad
-                    ? 'border-[#c4b5fd] text-[#5b21b6]'
-                    : 'bg-[#f5f5f5] border-[#e8e8e8] text-[#555] hover:border-[#d0d0d0]',
-                )}
-                style={activeSquad ? { backgroundColor: activeSquad.color.bg } : {}}
+            {/* Squad ativo (detectado automaticamente) */}
+            {activeSquad && (
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
+                style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
               >
-                {activeSquad ? (
-                  <>
-                    <span>{activeSquad.emoji}</span>
-                    <span className="max-w-[90px] truncate">{activeSquad.name}</span>
-                    <button onClick={e => { e.stopPropagation(); setActiveSquad(null) }} className="hover:text-red-500 ml-0.5">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3" />
-                    <span>Squad</span>
-                  </>
-                )}
-              </button>
-
-              {squadPickerOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-[#e2e8f0] rounded-xl shadow-xl z-50 overflow-hidden">
-                  <div className="px-3 py-2 border-b border-[#f0f0f0]">
-                    <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Times especializados</p>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto py-1.5 px-1.5 space-y-0.5">
-                    {AI_SQUADS.map(squad => (
-                      <button
-                        key={squad.id}
-                        onClick={() => {
-                          setSquadPickerOpen(false)
-                          if (squad.id === 'diagnostico-perfil') {
-                            setActiveSquad(squad)
-                            setDiagnosticoOpen(true)
-                          } else {
-                            setActiveSquad(squad)
-                          }
-                        }}
-                        className={cn('w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all', activeSquad?.id === squad.id ? 'ring-1' : 'hover:bg-[#f5f5f5]')}
-                        style={activeSquad?.id === squad.id ? { backgroundColor: squad.color.bg } : {}}
-                      >
-                        <span className="text-[15px]">{squad.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-semibold text-[#0f0f0f]">{squad.name}</p>
-                          <p className="text-[10px] text-[#777] truncate">{squad.description}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  {activeSquad && (
-                    <div className="border-t border-[#f0f0f0] px-3 py-2">
-                      <button onClick={() => { setActiveSquad(null); setSquadPickerOpen(false) }} className="text-[11px] text-red-500 flex items-center gap-1">
-                        <X className="w-3 h-3" /> Remover squad
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                <span>{activeSquad.emoji}</span>
+                <span className="max-w-[90px] truncate">{activeSquad.name}</span>
+                <button
+                  onClick={() => setActiveSquad(null)}
+                  className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                  title="Remover squad"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
 
             {/* Badge modelo */}
             <div className={cn(
@@ -882,6 +842,29 @@ export function AIPage() {
           onClose={() => setDiagnosticoOpen(false)}
           onStart={handleDiagnosticoStart}
         />
+      )}
+
+      {/* ── Toast squad auto-detectado ── */}
+      {squadToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl border"
+            style={{ backgroundColor: squadToast.color.bg, borderColor: squadToast.color.border }}
+          >
+            <span className="text-[18px]">{squadToast.emoji}</span>
+            <div>
+              <p className="text-[12px] font-semibold" style={{ color: squadToast.color.text }}>
+                {squadToast.name} ativado
+              </p>
+              <p className="text-[11px] opacity-70" style={{ color: squadToast.color.text }}>
+                Squad detectado automaticamente
+              </p>
+            </div>
+            <button onClick={() => setSquadToast(null)} className="opacity-40 hover:opacity-80 ml-1" style={{ color: squadToast.color.text }}>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ── Toast memória salva ── */}

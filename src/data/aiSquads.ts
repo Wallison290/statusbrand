@@ -1018,7 +1018,7 @@ Defina:
 \`\`\``,
   },
 
-  // ── 13. Design Criativo ──────────────────────────────────────────────────────
+  // ── 13. Design Criativo ─────────────────────────────────────────────────────
   {
     id: 'design-criativo',
     name: 'Design Criativo',
@@ -1125,3 +1125,142 @@ Analise o que funciona visualmente no nicho do cliente:
 \`\`\``,
   },
 ]
+
+// ── Detecção automática de squad por palavras-chave ───────────────────────────
+
+const SQUAD_RULES: Array<{ id: string; keywords: string[] }> = [
+  {
+    id: 'fabrica-conteudo',
+    keywords: [
+      'calendário de conteúdo', 'calendario de conteudo', 'conteúdo do mês', 'conteudo do mes',
+      'planejar conteúdo', 'planejar conteudo', 'posts do mês', 'posts para o mês',
+      'calendário editorial', 'calendario editorial', 'pacote de conteúdo', 'pacote de conteudo',
+      'criar conteúdo', 'criar conteudo', 'produção de conteúdo', 'producao de conteudo',
+      'scripts de reels', 'roteiro de reels', 'planejamento de posts', 'planejamento de conteúdo',
+      'conteúdo para instagram', 'posts para instagram', 'copies para', 'legendas para',
+      'fábrica de conteúdo', 'fabrica de conteudo',
+    ],
+  },
+  {
+    id: 'trafego-pago',
+    keywords: [
+      'tráfego pago', 'trafego pago', 'meta ads', 'facebook ads', 'google ads',
+      'anúncios pagos', 'anuncios pagos', 'campanha de anúncios', 'campanha de anuncios',
+      'gestor de tráfego', 'gestor de trafego', 'criativo de anúncio', 'criativo de anuncio',
+      'roi de anúncio', 'funil de ads', 'conjunto de anúncios', 'estrutura de campanhas',
+      'verba de anúncio', 'orçamento de ads',
+    ],
+  },
+  {
+    id: 'diagnostico-perfil',
+    keywords: [
+      'diagnóstico do perfil', 'diagnostico do perfil', 'analisar meu perfil', 'analisar o perfil',
+      'análise do perfil', 'analise do perfil', 'crescer no instagram', 'crescimento de seguidores',
+      'perfil não cresce', 'perfil nao cresce', 'engajamento baixo', 'por que não cresce',
+      'por que nao cresce', 'melhorar o perfil', 'auditoria de perfil', 'manual de crescimento',
+    ],
+  },
+  {
+    id: 'maquina-clientes',
+    keywords: [
+      'proposta comercial', 'proposta para cliente', 'contrato de gestão', 'contrato de social media',
+      'quanto cobrar', 'precificação', 'precificacao', 'valor do serviço', 'preço do serviço',
+      'onboarding de cliente', 'fechar cliente', 'manual de onboarding', 'tabela de preços',
+      'kit de boas-vindas', 'carta de boas-vindas',
+    ],
+  },
+  {
+    id: 'psicologia-vendas',
+    keywords: [
+      'psicologia de vendas', 'gatilho mental', 'gatilhos mentais',
+      'script de vendas', 'script de venda', 'fechar venda', 'objeção de venda',
+      'objecao de venda', 'persuasão', 'persuasao', 'jornada de compra',
+      'converter leads', 'aumentar conversão', 'aumentar conversao',
+    ],
+  },
+  {
+    id: 'inteligencia-competitiva',
+    keywords: [
+      'análise da concorrência', 'analise da concorrencia', 'analisar concorrente',
+      'benchmark de concorrentes', 'espiar concorrente', 'o que o concorrente faz',
+      'pesquisa de concorrentes', 'inteligência competitiva', 'inteligencia competitiva',
+      'diferencial da concorrência', 'gap de mercado',
+    ],
+  },
+  {
+    id: 'identidade-marca',
+    keywords: [
+      'identidade de marca', 'tom de voz', 'branding', 'rebranding',
+      'guia de marca', 'identidade visual', 'personalidade da marca',
+      'posicionamento de marca', 'manual de marca', 'brand voice',
+      'reaproveitar conteúdo', 'reaproveitar conteudo', 'adaptar conteúdo para',
+    ],
+  },
+  {
+    id: 'presenca-multiplataforma',
+    keywords: [
+      'estratégia tiktok', 'estrategia tiktok', 'estratégia linkedin', 'estrategia linkedin',
+      'expandir para tiktok', 'expandir para linkedin', 'presença no tiktok', 'presença no linkedin',
+      'carrossel viral', 'adaptar para outras plataformas', 'multiplataforma',
+      'criar no youtube', 'script para tiktok',
+    ],
+  },
+  {
+    id: 'mineracao-anuncios',
+    keywords: [
+      'minerar anúncio', 'minerar anuncio', 'ângulos de anúncio', 'angulos de anuncio',
+      'hook de ad', 'banco de ângulos', 'banco de angulos', 'criativos para ads',
+      'criativos de anúncio', 'mineração de criativos', 'voz do cliente para ads',
+    ],
+  },
+  {
+    id: 'motor-conteudo-seo',
+    keywords: [
+      'seo', 'palavras-chave', 'keyword', 'ranquear no google', 'busca orgânica',
+      'busca organica', 'tráfego orgânico', 'trafego organico', 'artigo de blog',
+      'estratégia de blog', 'otimização seo', 'brief de conteúdo seo',
+    ],
+  },
+  {
+    id: 'comunidade-retencao',
+    keywords: [
+      'comunidade de clientes', 'retenção de clientes', 'retencao de clientes',
+      'email marketing', 'sequência de emails', 'sequencia de emails',
+      'anti-churn', 'reduzir churn', 'fidelização de clientes', 'fidelizacao',
+      'automação de whatsapp', 'automacao de whatsapp', 'recuperar cliente',
+    ],
+  },
+  {
+    id: 'design-criativo',
+    keywords: [
+      'relatório de resultados', 'relatorio de resultados', 'relatório mensal', 'relatorio mensal',
+      'dashboard de métricas', 'apresentação para cliente', 'slide de resultados',
+      'guia visual de marca', 'relatório de desempenho', 'relatorio de desempenho',
+    ],
+  },
+  {
+    id: 'auditoria-marketing',
+    keywords: [
+      'auditoria de marketing', 'auditar marketing', 'auditoria de copy',
+      'auditoria de funil', 'analisar funil', 'copy do site', 'taxa de conversão',
+      'taxa de conversao', 'auditoria de anúncios', 'revisar estratégia de marketing',
+    ],
+  },
+]
+
+export function detectSquad(text: string): AISquad | null {
+  const t = text.toLowerCase()
+  const scores: Record<string, number> = {}
+
+  for (const { id, keywords } of SQUAD_RULES) {
+    for (const kw of keywords) {
+      if (t.includes(kw)) {
+        scores[id] = (scores[id] ?? 0) + 1
+      }
+    }
+  }
+
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]
+  if (!best || best[1] === 0) return null
+  return AI_SQUADS.find(s => s.id === best[0]) ?? null
+}
