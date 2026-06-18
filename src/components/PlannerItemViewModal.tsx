@@ -501,10 +501,10 @@ export function PlannerItemViewModal({
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
           {/* ── Coluna Esquerda: Prévia estilo Instagram ─────────────── */}
-          <div className="w-[42%] min-w-[260px] bg-white flex-col flex-shrink-0 hidden sm:flex overflow-y-auto border-r border-gray-100">
+          <div className="w-[42%] min-w-[260px] hidden sm:flex flex-col flex-shrink-0 overflow-hidden border-r border-gray-100 bg-white">
 
-            {/* Header estilo Instagram */}
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-10">
+            {/* Header estilo Instagram — fixo no topo */}
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 flex-shrink-0 bg-white">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-bold">
                   {(item.client?.company_name ?? 'P')[0].toUpperCase()}
@@ -516,22 +516,22 @@ export function PlannerItemViewModal({
               <MoreHorizontal className="w-5 h-5 text-gray-600 flex-shrink-0" />
             </div>
 
-            {/* Imagem — tamanho natural, sem nenhum corte */}
-            <div className="relative bg-black flex-shrink-0">
+            {/* Área da imagem — ocupa todo espaço restante, sem cortar */}
+            <div className="flex-1 min-h-0 relative bg-black">
               {allMedia.length > 0 ? (
                 <>
                   {allMedia[imgIdx].file_type.startsWith('image/') ? (
                     <img
                       src={allMedia[imgIdx].file_url}
                       alt=""
-                      className="w-full block"
+                      className="absolute inset-0 w-full h-full object-contain"
                       draggable={false}
                     />
                   ) : (
                     <video
                       src={allMedia[imgIdx].file_url}
                       controls
-                      className="w-full block"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
                   )}
 
@@ -580,15 +580,15 @@ export function PlannerItemViewModal({
                   </a>
                 </>
               ) : (
-                <div className="aspect-square flex flex-col items-center justify-center gap-2 bg-gray-100">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-100">
                   <ImageIcon className="w-10 h-10 text-gray-300" />
                   <p className="text-sm text-gray-400">Sem mídia</p>
                 </div>
               )}
             </div>
 
-            {/* Barra de ações estilo Instagram */}
-            <div className="flex items-center px-3 py-2.5 flex-shrink-0">
+            {/* Barra de ações estilo Instagram — fixo na base */}
+            <div className="flex items-center px-3 py-2.5 flex-shrink-0 bg-white border-t border-gray-100">
               <div className="flex items-center gap-3.5 flex-1">
                 <Heart className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
                 <MessageCircle className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
@@ -597,9 +597,9 @@ export function PlannerItemViewModal({
               <Bookmark className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
             </div>
 
-            {/* Tira de thumbnails para carrossel */}
+            {/* Tira de thumbnails para carrossel — fixo na base */}
             {allMedia.length > 1 && (
-              <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto flex-shrink-0 border-t border-gray-100 pt-2 scrollbar-thin">
+              <div className="flex gap-1.5 px-3 py-2 overflow-x-auto flex-shrink-0 border-t border-gray-100 bg-white scrollbar-thin">
                 {allMedia.map((m, i) => (
                   <button
                     key={m.id}
@@ -622,7 +622,7 @@ export function PlannerItemViewModal({
 
             {/* Nome do arquivo */}
             {allMedia.length > 0 && (
-              <div className="px-3 py-2 border-t border-gray-100 flex-shrink-0">
+              <div className="px-3 py-1.5 border-t border-gray-100 flex-shrink-0 bg-white">
                 <p className="text-[10px] text-gray-400 truncate">
                   {allMedia[imgIdx].file_name}
                   {allMedia[imgIdx].file_size ? ` · ${formatFileSize(allMedia[imgIdx].file_size!)}` : ''}
