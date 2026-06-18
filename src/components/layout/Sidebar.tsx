@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -16,7 +17,7 @@ const navItems = [
   { href: '/clients',   icon: Users,            label: 'Clientes'       },
   { href: '/feed',      icon: LayoutGrid,       label: 'Feed do Perfil' },
   { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },
-  { href: '/instagram', icon: Instagram,        label: 'Instagram'      },
+  { href: '/instagram', icon: Instagram,        label: 'Instagram', comingSoon: true },
   { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'        },
   { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
@@ -73,6 +74,32 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
   )
 }
 
+// ── Coming soon badge + info tooltip ─────────────────────────────────────────
+
+function ComingSoonBadge({ onInfo }: { onInfo: (pos: { x: number; y: number } | null) => void }) {
+  return (
+    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.preventDefault()}>
+      <span
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-[#94a3b8]"
+        style={{ background: '#1e2535', border: '1px solid #2d3748' }}
+      >
+        em breve
+      </span>
+      <div
+        className="cursor-help"
+        onMouseEnter={(e) => {
+          e.preventDefault()
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+          onInfo({ x: rect.right + 8, y: rect.top + rect.height / 2 })
+        }}
+        onMouseLeave={() => onInfo(null)}
+      >
+        <Info className="w-3 h-3 text-[#475569] hover:text-[#94a3b8] transition-colors" />
+      </div>
+    </div>
+  )
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
@@ -83,6 +110,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const location  = useLocation()
   const { signOut, profile, user } = useAuth()
   const [collapsed, setCollapsed]  = useState(false)
+  const [igTooltip, setIgTooltip] = useState<{ x: number; y: number } | null>(null)
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
   const { data: storage }          = useStorageUsage()
@@ -155,18 +183,26 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             )
           }
 
+          const isComingSoon = 'comingSoon' in item && item.comingSoon
+          const collapsedTitle = isComingSoon
+            ? `${item.label} — Em breve (aguardando liberação do Meta)`
+            : item.label
+
           // Item ativo
           if (active) {
             return (
               <Link key={item.href} to={item.href}>
                 <div
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? collapsedTitle : undefined}
                   className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
                   style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
                 >
                   <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
                   {!collapsed && (
-                    <span className="whitespace-nowrap text-white">{item.label}</span>
+                    <>
+                      <span className="whitespace-nowrap text-white flex-1">{item.label}</span>
+                      {isComingSoon && <ComingSoonBadge onInfo={setIgTooltip} />}
+                    </>
                   )}
                 </div>
               </Link>
@@ -177,12 +213,15 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           return (
             <Link key={item.href} to={item.href}>
               <div
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? collapsedTitle : undefined}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group text-[#94a3b8] hover:text-white hover:bg-[#161b2e]"
               >
                 <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569] group-hover:text-white transition-colors" />
                 {!collapsed && (
-                  <span className="whitespace-nowrap">{item.label}</span>
+                  <>
+                    <span className="whitespace-nowrap flex-1">{item.label}</span>
+                    {isComingSoon && <ComingSoonBadge onInfo={setIgTooltip} />}
+                  </>
                 )}
               </div>
             </Link>
@@ -275,6 +314,33 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           ? <ChevronRight className="w-3 h-3" />
           : <ChevronLeft className="w-3 h-3" />}
       </button>
+
+      {/* ── Tooltip Instagram (portal para escapar do overflow-hidden) ── */}
+      {igTooltip && createPortal(
+        <div
+          className="pointer-events-none"
+          style={{
+            position: 'fixed',
+            left: igTooltip.x,
+            top: igTooltip.y,
+            transform: 'translateY(-50%)',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            className="w-52 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed shadow-2xl"
+            style={{
+              background: '#0f172a',
+              border: '1px solid #1e2535',
+              color: '#94a3b8',
+            }}
+          >
+            <p className="font-semibold text-white mb-1">Aguardando liberação do Meta</p>
+            <p>A integração com o Instagram está em análise pelo Meta e será liberada em breve.</p>
+          </div>
+        </div>,
+        document.body,
+      )}
     </motion.aside>
   )
 }
