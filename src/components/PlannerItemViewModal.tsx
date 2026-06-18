@@ -500,10 +500,10 @@ export function PlannerItemViewModal({
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
           {/* ── Coluna Esquerda: Prévia de Mídia ─────────────────────────── */}
-          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative flex-shrink-0 hidden sm:flex overflow-y-auto">
+          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative overflow-hidden flex-shrink-0 hidden sm:flex">
 
-            {/* Área principal da imagem — proporção 4:5 (1080×1350) */}
-            <div className="w-full aspect-[4/5] relative bg-[#e8e8e8] flex-shrink-0 overflow-hidden">
+            {/* Área principal da imagem — preenche espaço flex restante sem cortar */}
+            <div className="flex-1 relative min-h-0 overflow-hidden bg-[#e8e8e8]">
               {allMedia.length > 0 ? (
                 <>
                   {allMedia[imgIdx].file_type.startsWith('image/') ? (
