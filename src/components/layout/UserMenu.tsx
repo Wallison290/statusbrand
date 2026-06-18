@@ -114,7 +114,7 @@ function WhatsAppSection() {
           value={phone}
           onChange={e => setPhone(e.target.value)}
           placeholder="DDD + número (ex: 11999998888)"
-          className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#22c55e] focus:border-transparent"
+          className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#22c55e] focus:border-transparent"
         />
         <button
           onClick={handleSend}
@@ -133,7 +133,7 @@ function WhatsAppSection() {
             onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="Código de 6 dígitos"
             inputMode="numeric"
-            className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] tracking-widest focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+            className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] tracking-widest focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
           />
           <button
             onClick={handleConfirm}
@@ -295,7 +295,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             <input
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
               placeholder="Seu nome"
             />
           </div>
@@ -304,7 +304,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             <input
               value={agencyName}
               onChange={e => setAgency(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+              className="w-full h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
               placeholder="Nome da sua agência"
             />
           </div>

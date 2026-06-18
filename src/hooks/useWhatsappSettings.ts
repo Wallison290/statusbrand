@@ -22,14 +22,27 @@ export function useWhatsappSettings() {
   const { user, profile, refreshProfile } = useAuth()
   const [busy, setBusy] = useState(false)
 
+  async function invokeVerify(body: object) {
+    const { data, error } = await supabase.functions.invoke('whatsapp-verify', { body })
+    if (error) {
+      let msg = error.message
+      try {
+        const ctx = await (error as any).context?.json?.()
+        msg = ctx?.error || ctx?.message || msg
+      } catch {}
+      try {
+        if ((data as any)?.error) msg = (data as any).error
+      } catch {}
+      throw new Error(msg)
+    }
+    if ((data as any)?.error) throw new Error((data as any).error)
+    return data
+  }
+
   async function sendCode(phone: string) {
     setBusy(true)
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-verify', {
-        body: { action: 'send', phone },
-      })
-      if (error) throw new Error((data as any)?.error || error.message)
-      if ((data as any)?.error) throw new Error((data as any).error)
+      await invokeVerify({ action: 'send', phone })
       return true
     } finally {
       setBusy(false)
@@ -39,11 +52,7 @@ export function useWhatsappSettings() {
   async function confirmCode(code: string) {
     setBusy(true)
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-verify', {
-        body: { action: 'confirm', code },
-      })
-      if (error) throw new Error((data as any)?.error || error.message)
-      if ((data as any)?.error) throw new Error((data as any).error)
+      await invokeVerify({ action: 'confirm', code })
       await refreshProfile?.()
       return true
     } finally {
