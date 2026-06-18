@@ -376,7 +376,7 @@ export function AIPage() {
     // Detecção automática de squad na primeira mensagem
     let currentSquad = activeSquad
     if (!currentSquad && messages.length === 0 && text) {
-      // Fase 1: keyword match rápido (ativa squad já na primeira mensagem)
+      // Fase 1: keyword match rápido (instantâneo)
       const detected = detectSquad(text)
       if (detected) {
         currentSquad = detected
@@ -384,20 +384,23 @@ export function AIPage() {
         setSquadToast(detected)
         setTimeout(() => setSquadToast(null), 4000)
       } else {
-        // Fase 2: fallback IA em paralelo (ativa squad a partir da segunda mensagem)
-        supabase.functions.invoke('ai-chat', {
-          body: { classify: true, message: text },
-        }).then(({ data }) => {
+        // Fase 2: classificação por IA sequencial (aguarda antes de enviar)
+        // Garante que o squad esteja ativo já na primeira resposta
+        try {
+          const { data } = await supabase.functions.invoke('ai-chat', {
+            body: { classify: true, message: text },
+          })
           const squadId = (data as { squadId?: string })?.squadId
           if (squadId && squadId !== 'none') {
             const found = AI_SQUADS.find(s => s.id === squadId) ?? null
             if (found) {
+              currentSquad = found
               setActiveSquad(found)
               setSquadToast(found)
               setTimeout(() => setSquadToast(null), 4000)
             }
           }
-        }).catch(() => { /* silencioso */ })
+        } catch { /* silencioso */ }
       }
     }
 
