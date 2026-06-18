@@ -3,6 +3,7 @@ import {
   ImageIcon, Video, Music, FileText, File,
   ExternalLink, Link2, Building2, Pencil, Trash2, Check,
   Instagram, Loader2, AlertCircle, ChevronLeft, ChevronRight, X,
+  Heart, MessageCircle, Send, Bookmark, MoreHorizontal,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -499,25 +500,38 @@ export function PlannerItemViewModal({
 
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
-          {/* ── Coluna Esquerda: Prévia de Mídia ─────────────────────────── */}
-          <div className="w-[42%] min-w-[260px] bg-[#f0f0f0] flex-col relative overflow-hidden flex-shrink-0 hidden sm:flex">
+          {/* ── Coluna Esquerda: Prévia estilo Instagram ─────────────── */}
+          <div className="w-[42%] min-w-[260px] bg-white flex-col flex-shrink-0 hidden sm:flex overflow-y-auto border-r border-gray-100">
 
-            {/* Área principal da imagem — preenche espaço flex restante sem cortar */}
-            <div className="flex-1 relative min-h-0 overflow-hidden bg-[#e8e8e8]">
+            {/* Header estilo Instagram */}
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 flex-shrink-0 sticky top-0 bg-white z-10">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">
+                  {(item.client?.company_name ?? 'P')[0].toUpperCase()}
+                </span>
+              </div>
+              <span className="text-[13px] font-semibold text-gray-900 flex-1 truncate">
+                {item.client?.company_name ?? 'Post'}
+              </span>
+              <MoreHorizontal className="w-5 h-5 text-gray-600 flex-shrink-0" />
+            </div>
+
+            {/* Imagem — tamanho natural, sem nenhum corte */}
+            <div className="relative bg-black flex-shrink-0">
               {allMedia.length > 0 ? (
                 <>
                   {allMedia[imgIdx].file_type.startsWith('image/') ? (
                     <img
                       src={allMedia[imgIdx].file_url}
                       alt=""
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="w-full block"
                       draggable={false}
                     />
                   ) : (
                     <video
                       src={allMedia[imgIdx].file_url}
                       controls
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="w-full block"
                     />
                   )}
 
@@ -541,14 +555,21 @@ export function PlannerItemViewModal({
                     </>
                   )}
 
-                  {/* Contador de slides */}
+                  {/* Dots do carrossel */}
                   {allMedia.length > 1 && (
-                    <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[11px] text-gray-600 bg-white/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full font-medium shadow-sm">
-                      {imgIdx + 1}/{allMedia.length}
-                    </span>
+                    <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {allMedia.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`rounded-full transition-all ${
+                            i === imgIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/55'
+                          }`}
+                        />
+                      ))}
+                    </div>
                   )}
 
-                  {/* Botão abrir em nova aba */}
+                  {/* Abrir em nova aba */}
                   <a
                     href={allMedia[imgIdx].file_url}
                     target="_blank"
@@ -559,24 +580,32 @@ export function PlannerItemViewModal({
                   </a>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-400">
-                  <ImageIcon className="w-10 h-10 opacity-40" />
-                  <p className="text-sm">Sem mídia</p>
+                <div className="aspect-square flex flex-col items-center justify-center gap-2 bg-gray-100">
+                  <ImageIcon className="w-10 h-10 text-gray-300" />
+                  <p className="text-sm text-gray-400">Sem mídia</p>
                 </div>
               )}
             </div>
 
-            {/* Tira de thumbnails */}
+            {/* Barra de ações estilo Instagram */}
+            <div className="flex items-center px-3 py-2.5 flex-shrink-0">
+              <div className="flex items-center gap-3.5 flex-1">
+                <Heart className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+                <MessageCircle className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+                <Send className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+              </div>
+              <Bookmark className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+            </div>
+
+            {/* Tira de thumbnails para carrossel */}
             {allMedia.length > 1 && (
-              <div className="flex gap-1.5 p-2.5 bg-gray-200/80 overflow-x-auto flex-shrink-0 scrollbar-thin">
+              <div className="flex gap-1.5 px-3 pb-2.5 overflow-x-auto flex-shrink-0 border-t border-gray-100 pt-2 scrollbar-thin">
                 {allMedia.map((m, i) => (
                   <button
                     key={m.id}
                     onClick={() => setImgIdx(i)}
                     className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      i === imgIdx
-                        ? 'border-indigo-500 shadow-md'
-                        : 'border-transparent hover:border-gray-300'
+                      i === imgIdx ? 'border-indigo-500 shadow-md' : 'border-transparent hover:border-gray-300'
                     }`}
                   >
                     {m.file_type.startsWith('image/') ? (
@@ -591,9 +620,9 @@ export function PlannerItemViewModal({
               </div>
             )}
 
-            {/* Rodapé com nome do arquivo */}
+            {/* Nome do arquivo */}
             {allMedia.length > 0 && (
-              <div className="px-3 py-1.5 bg-gray-200/50 flex-shrink-0 border-t border-gray-200">
+              <div className="px-3 py-2 border-t border-gray-100 flex-shrink-0">
                 <p className="text-[10px] text-gray-400 truncate">
                   {allMedia[imgIdx].file_name}
                   {allMedia[imgIdx].file_size ? ` · ${formatFileSize(allMedia[imgIdx].file_size!)}` : ''}
