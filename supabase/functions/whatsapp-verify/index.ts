@@ -40,7 +40,7 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; error?
   try {
     const res = await fetch(`${EVOLUTION_BASE_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+      headers: { 'Content-Type': 'application/json', token: EVOLUTION_API_KEY },
       body: JSON.stringify({ number: normalizeNumber(to), text }),
     })
     if (!res.ok) {
