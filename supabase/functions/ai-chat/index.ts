@@ -135,7 +135,50 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { messages, systemPrompt, useWebSearch, generateImage } = await req.json()
+  const { messages, systemPrompt, useWebSearch, generateImage, classify, message: classifyMessage } = await req.json()
+
+  // ── Classificação de squad (sem custo de request) ────────────────────────
+  if (classify) {
+    const CLASSIFY_PROMPT = `Você é um classificador de intenção. Dado uma mensagem do usuário, identifique qual squad especializado deve atender. Responda APENAS com o ID do squad ou "none".
+
+Squads:
+- fabrica-conteudo: calendário editorial, copies, posts, reels, stories, planejamento de conteúdo para redes sociais
+- trafego-pago: Meta Ads, Google Ads, campanhas pagas, criativos de anúncio, tráfego pago, impulsionar
+- diagnostico-perfil: análise ou diagnóstico de perfil do Instagram, crescimento de seguidores, engajamento
+- maquina-clientes: precificação, proposta comercial, contratos, onboarding de clientes, quanto cobrar
+- psicologia-vendas: psicologia de vendas, gatilhos mentais, scripts de conversão, objeções de venda
+- inteligencia-competitiva: análise de concorrentes, benchmark, pesquisa de mercado competitivo
+- identidade-marca: identidade de marca, tom de voz, branding, rebranding, guia de marca
+- presenca-multiplataforma: TikTok, LinkedIn, YouTube, estratégia multiplataforma, carrossel viral
+- mineracao-anuncios: ângulos de anúncio, mineração de criativos, hooks para ads, voz do cliente
+- motor-conteudo-seo: SEO, palavras-chave, tráfego orgânico, artigo de blog, ranqueamento
+- comunidade-retencao: comunidade, email marketing, retenção de clientes, anti-churn, automação WhatsApp
+- design-criativo: relatórios de resultados, dashboards, apresentações para cliente, relatório mensal
+- auditoria-marketing: auditoria de marketing, análise de funil, revisão de copy, conversão
+- none: pergunta genérica, saudação, ou que não se encaixa em nenhum squad acima
+
+Responda com apenas o ID (ex: "fabrica-conteudo") ou "none".`
+
+    try {
+      const res = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: CLASSIFY_PROMPT },
+          { role: 'user', content: classifyMessage ?? '' },
+        ],
+        max_tokens: 20,
+        temperature: 0,
+      })
+      const squadId = res.choices[0]?.message?.content?.trim() ?? 'none'
+      return new Response(JSON.stringify({ squadId }), {
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    } catch {
+      return new Response(JSON.stringify({ squadId: 'none' }), {
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
+  }
 
   // ── Geração de imagem (DALL-E 3) — conta como 5 requests ────────────────
   if (generateImage) {
@@ -263,7 +306,7 @@ Regras:
         model: 'gpt-4o-search-preview',
         messages: allMessages,
         stream: false,
-        max_tokens: 2048,
+        max_tokens: 4096,
       } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming)
       const content = res.choices[0]?.message?.content ?? ''
       return sseResponse(content)

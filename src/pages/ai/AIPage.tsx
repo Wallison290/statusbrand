@@ -7,6 +7,7 @@ import {
   ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
+import { supabase } from '@/integrations/supabase/client'
 import { useClients } from '@/hooks/useClients'
 import { useClientContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
@@ -375,12 +376,28 @@ export function AIPage() {
     // Detecção automática de squad na primeira mensagem
     let currentSquad = activeSquad
     if (!currentSquad && messages.length === 0 && text) {
+      // Fase 1: keyword match rápido (ativa squad já na primeira mensagem)
       const detected = detectSquad(text)
       if (detected) {
         currentSquad = detected
         setActiveSquad(detected)
         setSquadToast(detected)
         setTimeout(() => setSquadToast(null), 4000)
+      } else {
+        // Fase 2: fallback IA em paralelo (ativa squad a partir da segunda mensagem)
+        supabase.functions.invoke('ai-chat', {
+          body: { classify: true, message: text },
+        }).then(({ data }) => {
+          const squadId = (data as { squadId?: string })?.squadId
+          if (squadId && squadId !== 'none') {
+            const found = AI_SQUADS.find(s => s.id === squadId) ?? null
+            if (found) {
+              setActiveSquad(found)
+              setSquadToast(found)
+              setTimeout(() => setSquadToast(null), 4000)
+            }
+          }
+        }).catch(() => { /* silencioso */ })
       }
     }
 
