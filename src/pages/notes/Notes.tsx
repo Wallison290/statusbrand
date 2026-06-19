@@ -506,18 +506,23 @@ function NoteViewModal({
 // ─── NotesColumn ──────────────────────────────────────────────────────────────
 
 function NotesColumn({
-  title, Icon, accent, count, children,
+  title, Icon, accent, accentLight, count, children,
 }: {
-  title: string; Icon: React.ElementType; accent: string; count: number; children: React.ReactNode
+  title: string; Icon: React.ElementType; accent: string; accentLight?: string; count: number; children: React.ReactNode
 }) {
+  const { isDark } = useTheme()
+  const iconColor = isDark ? accent : (accentLight ?? accent)
   return (
-    <div className="flex flex-col w-[80vw] sm:w-[300px] flex-shrink-0 h-full min-h-0 rounded-2xl border border-[#1e293b] bg-[#0d1424]/50">
-      <div className="flex items-center gap-2 px-3.5 py-3 border-b border-[#1e293b] flex-shrink-0">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${accent}22` }}>
-          <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+    <div className="flex flex-col w-[80vw] sm:w-[300px] flex-shrink-0 h-full min-h-0 rounded-2xl border bg-[#0d1424]/50"
+      style={{ borderColor: 'var(--sm-border)', background: 'var(--sm-bg-alt)' }}>
+      <div className="flex items-center gap-2 px-3.5 py-3 border-b flex-shrink-0" style={{ borderColor: 'var(--sm-border)' }}>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${iconColor}22` }}>
+          <Icon className="w-3.5 h-3.5" style={{ color: iconColor }} />
         </div>
-        <span className="text-[13px] font-semibold text-[#E2E8F0] truncate flex-1">{title}</span>
-        <span className="text-[11px] font-bold text-[#94a3b8] bg-[#182233] px-2 py-0.5 rounded-full flex-shrink-0">{count}</span>
+        <span className="text-[13px] font-semibold truncate flex-1" style={{ color: 'var(--sm-text-1)' }}>{title}</span>
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+          style={{ color: 'var(--sm-text-3)', background: 'var(--sm-bg-card2)' }}>{count}</span>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-2.5 space-y-2.5">
         {children}
@@ -677,10 +682,11 @@ export function Notes() {
         ) : (
           <div className="flex gap-4 h-full min-h-0 items-stretch">
             {/* Coluna da Agência */}
-            <NotesColumn title="Notas da Agência" Icon={NotebookPen} accent="#60A5FA" count={agencyNotes.length}>
+            <NotesColumn title="Notas da Agência" Icon={NotebookPen} accent="#60A5FA" accentLight="#1d4ed8" count={agencyNotes.length}>
               <button
                 onClick={() => setSelected('new')}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-[#334155] text-[12px] font-medium text-[#94a3b8] hover:border-[#2563EB]/50 hover:text-[#CBD5E1] transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed hover:border-[#2563EB]/50 transition-colors text-[12px] font-medium"
+                style={{ borderColor: 'var(--sm-border-alt)', color: 'var(--sm-text-2)' }}
               >
                 <Plus className="w-3.5 h-3.5" /> Nova nota
               </button>
@@ -694,7 +700,7 @@ export function Notes() {
 
             {/* Uma coluna por cliente */}
             {clientCols.map(col => (
-              <NotesColumn key={col.id} title={col.name} Icon={Building2} accent="#c084fc" count={col.notes.length}>
+              <NotesColumn key={col.id} title={col.name} Icon={Building2} accent="#c084fc" accentLight="#7c3aed" count={col.notes.length}>
                 <AnimatePresence>
                   {col.notes.map(n => <NoteCard key={n.id} note={n} onOpen={() => openNote(n)} />)}
                 </AnimatePresence>
