@@ -232,6 +232,7 @@ function DayColumn({
     <div
       className={['w-full min-w-0 self-start flex flex-col rounded-2xl border p-3 transition-colors min-h-[440px]',
         isDragOver ? 'border-[#2563EB]/50 bg-[#2563EB]/5' : 'border-[#1e293b] bg-[#0d1424]'].join(' ')}
+      style={!isDragOver ? { background: 'var(--sm-bg-alt)', borderColor: 'var(--sm-border)' } : undefined}
       onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false) }}
       onDrop={e => { e.preventDefault(); setIsDragOver(false); const id = e.dataTransfer.getData('taskId'); if (id) onDrop(id, day) }}
@@ -240,10 +241,10 @@ function DayColumn({
       <div className="flex items-center justify-between gap-1 px-1 pb-3 min-w-0">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-[15px] font-bold text-[#F8FAFC] truncate">{dayName}</p>
+            <p className="text-[15px] font-bold truncate" style={{ color: 'var(--sm-text-1)' }}>{dayName}</p>
             {today && <span className="text-[8px] font-black px-1.5 py-0.5 bg-[#2563EB] text-white rounded-full uppercase tracking-wider leading-none flex-shrink-0">Hoje</span>}
           </div>
-          <p className="text-[12px] text-[#64748b] mt-0.5">{dayNum} {monthAbbr}</p>
+          <p className="text-[12px] mt-0.5" style={{ color: 'var(--sm-text-3)' }}>{dayNum} {monthAbbr}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {tasks.length > 0 && (

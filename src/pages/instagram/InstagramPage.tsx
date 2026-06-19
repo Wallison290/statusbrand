@@ -1,4 +1,4 @@
-// ── Página: Instagram Dashboard (tema dark) ───────────────────────────────────
+// ── Página: Instagram Dashboard ───────────────────────────────────────────────
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
@@ -97,7 +97,7 @@ function AccountListCard({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[14px] font-semibold text-white truncate">@{account.username}</span>
+          <span className="text-[14px] font-semibold truncate" style={{ color: 'var(--sm-text-1)' }}>@{account.username}</span>
           <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
         </div>
         <p className="text-[12px] text-[#9CA3AF]">
@@ -162,7 +162,7 @@ function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPo
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <TypeIcon className="w-4 h-4 text-[#9CA3AF]" />
-          <span className="text-[13px] font-medium text-white">{typeCfg?.label}</span>
+          <span className="text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>{typeCfg?.label}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap justify-end">
           {/* Reprocessamento automático após falha transitória */}
@@ -260,12 +260,14 @@ function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPo
           <div>
             <p className="text-[10px] text-[#6B7280] uppercase tracking-wide mb-1">Data</p>
             <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-[#2563EB]/60" />
+              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#2563EB]/60"
+              style={{ color: 'var(--sm-text-1)' }} />
           </div>
           <div>
             <p className="text-[10px] text-[#6B7280] uppercase tracking-wide mb-1">Horário</p>
             <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
-              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-[#2563EB]/60" />
+              className="text-[12px] bg-[#0B0F14] border border-[#1F2937] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#2563EB]/60"
+              style={{ color: 'var(--sm-text-1)' }} />
           </div>
           <button
             onClick={saveReschedule}
@@ -354,7 +356,7 @@ function AccountDetailView({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[16px] font-bold text-white truncate">@{account.username}</span>
+            <span className="text-[16px] font-bold truncate" style={{ color: 'var(--sm-text-1)' }}>@{account.username}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
           </div>
           <p className="text-[12px] text-[#9CA3AF]">
@@ -416,8 +418,9 @@ function AccountDetailView({
               <button
                 key={t.value}
                 onClick={() => setTab(t.value)}
-                className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-medium rounded-t-xl transition-colors ${
-                  active ? 'text-white' : 'text-[#6B7280] hover:text-[#9CA3AF]'
+                style={active ? { color: 'var(--sm-text-1)' } : undefined}
+              className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-medium rounded-t-xl transition-colors ${
+                  active ? '' : 'text-[#6B7280] hover:text-[#9CA3AF]'
                 }`}
               >
                 {t.label}
@@ -446,7 +449,7 @@ function AccountDetailView({
               <div className="w-10 h-10 rounded-2xl bg-[#1F2937] flex items-center justify-center mx-auto mb-3">
                 <Calendar className="w-5 h-5 text-[#9CA3AF]" />
               </div>
-              <p className="text-[14px] font-semibold text-white">Nenhum post aqui</p>
+              <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Nenhum post aqui</p>
               <p className="text-[12px] text-[#9CA3AF] mt-1">
                 Ainda não há posts nesta categoria para esta conta.
               </p>
@@ -544,7 +547,7 @@ export function InstagramPage() {
         {/* ── Header global ────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[20px] font-bold text-white flex items-center gap-2.5">
+            <h1 className="text-[20px] font-bold flex items-center gap-2.5" style={{ color: 'var(--sm-text-1)' }}>
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center">
                 <Instagram className="w-4 h-4 text-white" />
               </div>
@@ -559,7 +562,8 @@ export function InstagramPage() {
           <button
             onClick={() => { refetchAccounts(); refetchPosts() }}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium text-[#D1D5DB] hover:text-white hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
+            style={{ color: 'var(--sm-text-2)' }}
             title="Atualizar"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -611,7 +615,7 @@ export function InstagramPage() {
                       <Instagram className="w-9 h-9 text-white" />
                     </div>
                   </div>
-                  <p className="text-[16px] font-semibold text-white">Nenhuma conta conectada</p>
+                  <p className="text-[16px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Nenhuma conta conectada</p>
                   <p className="text-[13px] text-[#9CA3AF] mt-1.5 max-w-xs mx-auto">
                     Conecte o Instagram de cada cliente no perfil do cliente.
                   </p>

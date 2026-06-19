@@ -466,8 +466,8 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
         <p className="text-[11px] text-zinc-500">{fmtDate(client.last_payment_date)}</p>
       </div>
 
-      {/* Actions (show on hover) */}
-      <div className="flex items-center gap-1 flex-shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+      {/* Actions */}
+      <div className="flex items-center gap-1 flex-shrink-0">
         {/* Registrar pagamento */}
         {status !== 'cancelado' && (
           <button

@@ -35,6 +35,7 @@ import { checkStorageLimit } from '@/utils/storageGate'
 import { isImageUrl, isImageMedia, isVideoMedia, mimeFromUrl } from '@/utils/media'
 import { useContentAssets } from '@/hooks/useContentAssets'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
+import { useTheme } from '@/contexts/ThemeContext'
 import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
 import type { PlannerStatus, PlannerItem, PlannerAttachment, PlannerLink, ContentType, ApprovalStatus, ContentAsset } from '@/types'
 
@@ -1331,29 +1332,36 @@ function DayItemCard({
 
 // ─── Drag & Drop primitives ───────────────────────────────────────────────────
 
-function getChipStyle(item: PlannerItem): { bg: string; border: string; text: string } {
+function getChipStyle(item: PlannerItem, isDark: boolean): { bg: string; border: string; text: string } {
   const s   = item.status as PlannerStatus
   const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
 
-  // Rascunho — não enviado ao cliente → cinza
-  if (!item.sent_to_client)         return { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.30)', text: '#cbd5e1' }
+  if (isDark) {
+    if (!item.sent_to_client)         return { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.30)', text: '#cbd5e1' }
+    if (s === 'publicado')            return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
+    if (as_ === 'aprovado')           return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
+    if (as_ === 'reprovado')          return { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.30)',  text: '#fca5a5' }
+    if (as_ === 'ajuste_solicitado')  return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.30)', text: '#fcd34d' }
+    if (as_ === 'ajuste_realizado')   return { bg: 'rgba(37,99,235,0.14)',  border: 'rgba(37,99,235,0.35)',  text: '#93c5fd' }
+    return { bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.30)', text: '#fde047' }
+  }
 
-  // Publicado — estado final
-  if (s === 'publicado')            return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
-  // Resposta do cliente tem prioridade
-  if (as_ === 'aprovado')           return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.30)',  text: '#86efac' }
-  if (as_ === 'reprovado')          return { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.30)',  text: '#fca5a5' }
-  if (as_ === 'ajuste_solicitado')  return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.30)', text: '#fcd34d' }
-  if (as_ === 'ajuste_realizado')   return { bg: 'rgba(37,99,235,0.14)',  border: 'rgba(37,99,235,0.35)',  text: '#93c5fd' }
-  // Enviado, aguardando aprovação → amarelo
-  return { bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.30)', text: '#fde047' }
+  // Light mode — texto escuro para contraste sobre fundo claro
+  if (!item.sent_to_client)         return { bg: 'rgba(107,114,128,0.10)', border: 'rgba(107,114,128,0.28)', text: '#374151' }
+  if (s === 'publicado')            return { bg: 'rgba(34,197,94,0.15)',   border: 'rgba(34,197,94,0.35)',   text: '#14532d' }
+  if (as_ === 'aprovado')           return { bg: 'rgba(34,197,94,0.15)',   border: 'rgba(34,197,94,0.35)',   text: '#14532d' }
+  if (as_ === 'reprovado')          return { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.30)',   text: '#7f1d1d' }
+  if (as_ === 'ajuste_solicitado')  return { bg: 'rgba(245,158,11,0.14)',  border: 'rgba(245,158,11,0.32)',  text: '#78350f' }
+  if (as_ === 'ajuste_realizado')   return { bg: 'rgba(37,99,235,0.12)',   border: 'rgba(37,99,235,0.30)',   text: '#1e3a8a' }
+  return { bg: 'rgba(234,179,8,0.14)', border: 'rgba(234,179,8,0.32)', text: '#713f12' }
 }
 
 function DayPreviewChip({
   item, disabled, onItemClick,
 }: { item: PlannerItem; disabled: boolean; onItemClick: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, disabled })
-  const { bg, border, text } = getChipStyle(item)
+  const { isDark } = useTheme()
+  const { bg, border, text } = getChipStyle(item, isDark)
   const typeLabel = contentTypeLabels[item.content_type as ContentType] ?? item.content_type ?? ''
 
   return (

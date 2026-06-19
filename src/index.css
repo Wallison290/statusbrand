@@ -209,6 +209,34 @@
 /* Radix Tabs active label in light mode */
 [data-theme="light"] [role="tab"][data-state="active"] { color: #ffffff !important; }
 
+/* ── Cores adicionais não mapeadas anteriormente ─────────────────────────────── */
+[data-theme="light"] .bg-\[\#0d1424\]   { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-\[\#0d0f14\]   { background-color: var(--sm-bg-card)  !important; }
+[data-theme="light"] .bg-\[\#0B0F14\]   { background-color: var(--sm-bg-page)  !important; }
+[data-theme="light"] .bg-\[\#0f1117\]   { background-color: var(--sm-bg-card)  !important; }
+[data-theme="light"] .bg-\[\#1F2937\]   { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-\[\#141d2e\]   { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-\[\#151d2e\]   { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-\[\#111113\]   { background-color: var(--sm-bg-card2) !important; }
+
+[data-theme="light"] .border-\[\#1F2937\]  { border-color: var(--sm-border) !important; }
+
+[data-theme="light"] .hover\:bg-\[\#141d2e\]:hover  { background-color: var(--sm-bg-alt) !important; }
+[data-theme="light"] .hover\:bg-\[\#151d2e\]:hover  { background-color: var(--sm-bg-alt) !important; }
+[data-theme="light"] .hover\:bg-\[\#1e293b\]:hover  { background-color: var(--sm-bg-alt) !important; }
+
+/* text-white em cards/containers que ficam brancos no tema claro */
+[data-theme="light"] .bg-\[\#111827\] > *,
+[data-theme="light"] .bg-\[\#182233\] > *,
+[data-theme="light"] .bg-\[\#0d1424\] > *,
+[data-theme="light"] .bg-\[\#0B0F14\] > * { color: inherit; }
+
+/* Cores de texto da paleta escura mapeadas para CSS vars no tema claro */
+[data-theme="light"] .text-\[\#9CA3AF\]         { color: var(--sm-text-3) !important; }
+[data-theme="light"] .text-\[\#D1D5DB\]         { color: var(--sm-text-2) !important; }
+[data-theme="light"] .text-\[\#6B7280\]         { color: var(--sm-text-4) !important; }
+[data-theme="light"] .hover\:text-\[\#9CA3AF\]:hover { color: var(--sm-text-3) !important; }
+
 /* ── Scrollbar light mode ────────────────────────────────────────────────────── */
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }

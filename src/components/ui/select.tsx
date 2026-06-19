@@ -12,11 +12,20 @@ const SelectTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & { label?: string }
 >(({ className, children, label, ...props }, ref) => (
   <div className="w-full">
-    {label && <label className="block text-xs font-medium text-gray-400 mb-1.5">{label}</label>}
+    {label && (
+      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--sm-text-3)' }}>
+        {label}
+      </label>
+    )}
     <SelectPrimitive.Trigger
       ref={ref}
+      style={{
+        background: 'var(--sm-bg-input)',
+        borderColor: 'var(--sm-border)',
+        color: 'var(--sm-text-1)',
+      }}
       className={cn(
-        'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white',
+        'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-lg border px-3 py-2 text-sm',
         'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50',
         'disabled:cursor-not-allowed disabled:opacity-50',
         '[&>span]:line-clamp-1 transition-all duration-200',
@@ -60,8 +69,13 @@ const SelectContent = React.forwardRef<
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
+      style={{
+        background: 'var(--sm-bg-card)',
+        borderColor: 'var(--sm-border)',
+        color: 'var(--sm-text-1)',
+      }}
       className={cn(
-        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-white/10 bg-[#0f1117] text-white shadow-2xl',
+        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border shadow-2xl',
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
         className
@@ -83,7 +97,12 @@ const SelectLabel = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
 >(({ className, ...props }, ref) => (
-  <SelectPrimitive.Label ref={ref} className={cn('px-2 py-1.5 text-xs font-semibold text-gray-500', className)} {...props} />
+  <SelectPrimitive.Label
+    ref={ref}
+    className={cn('px-2 py-1.5 text-xs font-semibold', className)}
+    style={{ color: 'var(--sm-text-3)' }}
+    {...props}
+  />
 ))
 SelectLabel.displayName = SelectPrimitive.Label.displayName
 
@@ -94,10 +113,11 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pl-2 pr-8 text-sm text-gray-300 outline-none',
-      'focus:bg-white/10 focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pl-2 pr-8 text-sm outline-none',
+      'focus:bg-[var(--sm-bg-alt)] focus:text-[var(--sm-text-1)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
     )}
+    style={{ color: 'var(--sm-text-2)' }}
     {...props}
   >
     <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
