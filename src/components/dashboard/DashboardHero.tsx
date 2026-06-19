@@ -20,7 +20,7 @@ function Pill({ icon, label, variant, href }: HeroPill) {
     warning: { bg: 'rgba(245,158,11,0.10)',  bgHover: 'rgba(245,158,11,0.18)',  border: 'rgba(245,158,11,0.22)',  color: '#fbbf24' },
   }
   const lightStyles = {
-    default: { bg: 'rgba(37,99,235,0.07)',   bgHover: 'rgba(37,99,235,0.14)',   border: 'rgba(37,99,235,0.18)',   color: '#475569' },
+    default: { bg: 'rgba(0,0,0,0.04)',       bgHover: 'rgba(0,0,0,0.08)',       border: 'rgba(0,0,0,0.10)',       color: '#475569' },
     success: { bg: 'rgba(16,185,129,0.10)',  bgHover: 'rgba(16,185,129,0.18)',  border: 'rgba(16,185,129,0.28)',  color: '#059669' },
     warning: { bg: 'rgba(245,158,11,0.10)',  bgHover: 'rgba(245,158,11,0.18)',  border: 'rgba(245,158,11,0.28)',  color: '#b45309' },
   }
@@ -119,36 +119,36 @@ export function DashboardHero({
   // ── Theme-dependent values ────────────────────────────────────────────────
   const heroBg = isDark
     ? 'linear-gradient(135deg, #050816 0%, #0B1020 45%, #101A2B 100%)'
-    : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #e0f2fe 100%)'
+    : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 45%, #f1f5f9 100%)'
 
-  const heroBorder  = isDark ? '#1a2035'                  : 'rgba(147,197,253,0.55)'
+  const heroBorder  = isDark ? '#1a2035'                  : 'rgba(203,213,225,0.8)'
   const heroShadow  = isDark
     ? '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25)'
-    : '0 8px 24px rgba(37,99,235,0.10), 0 2px 8px rgba(37,99,235,0.05)'
+    : '0 8px 24px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04)'
 
   const topLineGrad = isDark
     ? 'linear-gradient(90deg, transparent 0%, rgba(41,69,122,0.55) 35%, rgba(111,147,201,0.30) 65%, transparent 100%)'
-    : 'linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.25) 35%, rgba(96,165,250,0.18) 65%, transparent 100%)'
+    : 'linear-gradient(90deg, transparent 0%, rgba(203,213,225,0.6) 35%, rgba(226,232,240,0.4) 65%, transparent 100%)'
 
   const glow1 = isDark
     ? 'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(111,147,201,0.12) 0%, transparent 65%)'
-    : 'radial-gradient(ellipse 55% 80% at 8% 55%, rgba(37,99,235,0.08) 0%, transparent 65%)'
+    : 'none'
 
   const glow2 = isDark
     ? 'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(79,142,247,0.06) 0%, transparent 62%)'
-    : 'radial-gradient(ellipse 40% 55% at 95% 90%, rgba(96,165,250,0.07) 0%, transparent 62%)'
+    : 'none'
 
-  const dateColor     = isDark ? '#6f93c9' : '#3b82f6'
+  const dateColor     = isDark ? '#6f93c9' : '#64748b'
   const greetTextCol  = isDark ? '#f1f5f9' : '#1e293b'
   const greetNameCol  = isDark ? '#7aa0d4' : '#2563eb'
   const greetNameShad = isDark ? '0 0 22px rgba(41,69,122,0.45)' : 'none'
-  const msgColor      = isDark ? '#64748b' : '#475569'
-  const dotColor1     = isDark ? 'bg-purple-400/20' : 'bg-blue-400/20'
-  const dotColor2     = isDark ? 'bg-blue-400/15'   : 'bg-blue-300/20'
-  const dotColor3     = isDark ? 'bg-purple-300/15' : 'bg-blue-200/25'
+  const msgColor      = isDark ? '#64748b' : '#64748b'
+  const dotColor1     = isDark ? 'bg-purple-400/20' : 'bg-slate-300/40'
+  const dotColor2     = isDark ? 'bg-blue-400/15'   : 'bg-slate-200/50'
+  const dotColor3     = isDark ? 'bg-purple-300/15' : 'bg-slate-200/40'
 
-  const bellBg        = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(37,99,235,0.06)'
-  const bellBgHover   = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(37,99,235,0.12)'
+  const bellBg        = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+  const bellBgHover   = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)'
   const bellColor     = isDark ? 'rgba(148,163,184,0.7)'  : '#64748b'
 
   const skeletonBase  = isDark ? 'bg-white/[0.07]' : 'bg-blue-200/40'

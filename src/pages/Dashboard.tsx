@@ -66,12 +66,12 @@ const DARK_T: ThemeTokens = {
 }
 
 const LIGHT_T: ThemeTokens = {
-  pageBg:    '#eff6ff',
+  pageBg:    '#f1f5f9',
   cardBg:    '#ffffff',
-  cardBgAlt: '#dbeafe',
-  inputBg:   '#f0f6ff',
-  border:    '#bfdbfe',
-  borderAlt: '#dbeafe',
+  cardBgAlt: '#e8edf3',
+  inputBg:   '#f8fafc',
+  border:    '#e2e8f0',
+  borderAlt: '#e2e8f0',
   text1:     '#1e293b',
   text2:     '#475569',
   text3:     '#64748b',

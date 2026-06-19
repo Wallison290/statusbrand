@@ -17,12 +17,12 @@ function PlannerBarChart({
   data: { label: string; value: number; color: string }[]
 }) {
   const { isDark } = useTheme()
-  const gridColor  = isDark ? '#1e293b' : '#bfdbfe'
+  const gridColor  = isDark ? '#1e293b' : '#e2e8f0'
   const axisProps  = { fill: isDark ? '#CBD5E1' : '#64748b', fontSize: 11 } as const
   const tipStyle = {
     contentStyle: {
       background:   isDark ? '#101A2B' : '#ffffff',
-      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      border:       `1px solid ${isDark ? '#182233' : '#e2e8f0'}`,
       borderRadius: 10,
       color:        isDark ? '#F8FAFC' : '#1e293b',
       fontSize:     12,
@@ -87,7 +87,7 @@ function GeneratedChart({
   const tipStyle  = {
     contentStyle: {
       background:   isDark ? '#101A2B' : '#ffffff',
-      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      border:       `1px solid ${isDark ? '#182233' : '#e2e8f0'}`,
       borderRadius: 10,
       color:        isDark ? '#F8FAFC' : '#1e293b',
       fontSize:     12,
@@ -133,7 +133,7 @@ function AssetsDonut({
   const tipStyle = {
     contentStyle: {
       background:   isDark ? '#101A2B' : '#ffffff',
-      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      border:       `1px solid ${isDark ? '#182233' : '#e2e8f0'}`,
       borderRadius: 10,
       color:        isDark ? '#F8FAFC' : '#1e293b',
       fontSize:     12,
@@ -237,14 +237,14 @@ export function MetricsCarousel({
   const [[activeIdx, dir], setSlide] = useState<[number, number]>([0, 0])
 
   const cardBg     = isDark ? '#182233' : '#ffffff'
-  const border     = isDark ? '#1e293b' : '#bfdbfe'
+  const border     = isDark ? '#1e293b' : '#e2e8f0'
   const shadow     = isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)'
   const text1      = isDark ? '#F8FAFC' : '#1e293b'
   const text3      = isDark ? '#94a3b8' : '#64748b'
   const text2      = isDark ? '#CBD5E1' : '#475569'
-  const navBg      = isDark ? '#101A2B' : '#dbeafe'
-  const dotActive  = isDark ? '#29457a' : '#2563eb'
-  const dotInactive= isDark ? '#1e293b' : '#bfdbfe'
+  const navBg      = isDark ? '#101A2B' : '#f1f5f9'
+  const dotActive  = isDark ? '#29457a' : '#64748b'
+  const dotInactive= isDark ? '#1e293b' : '#e2e8f0'
 
   const slides = useMemo(() => [
     {
