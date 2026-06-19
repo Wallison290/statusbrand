@@ -911,7 +911,7 @@ export function ClientProfile() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex-1 p-4 md:p-6" style={{ background: '#0B1020' }}>
+      <div className="flex-1 p-4 md:p-6" style={{ background: 'var(--sm-bg-page)' }}>
 
         {/* ── Profile header ───────────────────────────────────────────────── */}
         <motion.div

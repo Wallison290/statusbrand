@@ -63,10 +63,10 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
           animate={{ opacity: 1 }}
           className="min-w-0"
         >
-          <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap text-white">
-            Status<span className="text-[#6f93c9]">Media</span>
+          <span className="block text-[15px] font-bold leading-none tracking-tight whitespace-nowrap" style={{ color: 'var(--sm-text-1)' }}>
+            Status<span style={{ color: '#6f93c9' }}>Media</span>
           </span>
-          <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide text-[#64748b]">
+          <span className="block text-[10px] whitespace-nowrap mt-0.5 tracking-wide" style={{ color: 'var(--sm-sidebar-text)' }}>
             Organize. Produza. Escale.
           </span>
         </motion.div>
@@ -81,8 +81,8 @@ function ComingSoonBadge({ onInfo }: { onInfo: (pos: { x: number; y: number } | 
   return (
     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.preventDefault()}>
       <span
-        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-[#94a3b8]"
-        style={{ background: '#1e2535', border: '1px solid #2d3748' }}
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none"
+        style={{ background: 'var(--sm-sidebar-badge)', border: '1px solid var(--sm-sidebar-border)', color: 'var(--sm-sidebar-text)' }}
       >
         em breve
       </span>
@@ -95,7 +95,7 @@ function ComingSoonBadge({ onInfo }: { onInfo: (pos: { x: number; y: number } | 
         }}
         onMouseLeave={() => onInfo(null)}
       >
-        <Info className="w-3 h-3 text-[#475569] hover:text-[#94a3b8] transition-colors" />
+        <Info className="w-3 h-3 transition-colors" style={{ color: 'var(--sm-sidebar-icon)' }} />
       </div>
     </div>
   )
@@ -115,8 +115,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
   const { data: storage }          = useStorageUsage()
-
-  const { isDark, toggleTheme } = useTheme()
+  const { isDark, toggleTheme }    = useTheme()
 
   const planName  = subData?.plan.name ?? 'Free'
   const aiUsed    = usage?.requests ?? 0
@@ -130,7 +129,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const stWarning = stPct >= 80
   const stLabel   = stUsedGB < 1 ? `${(stUsedGB * 1024).toFixed(0)} MB` : `${stUsedGB.toFixed(1)} GB`
 
-  // Fecha sidebar mobile ao mudar de rota
   useEffect(() => {
     onMobileClose?.()
   }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -140,10 +138,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       animate={{ width: collapsed ? 56 : 220 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="relative flex flex-col h-full overflow-hidden flex-shrink-0"
-      style={{ background: '#050816' }}
+      style={{ background: 'var(--sm-sidebar-bg)', borderRight: '1px solid var(--sm-sidebar-border)' }}
     >
       {/* ── Brand header ── */}
-      <div className="flex items-center h-14 px-3.5 border-b border-[#1e2535]">
+      <div className="flex items-center h-14 px-3.5" style={{ borderBottom: '1px solid var(--sm-sidebar-border)' }}>
         <BrandMark collapsed={collapsed} />
       </div>
 
@@ -217,9 +215,18 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             <Link key={item.href} to={item.href}>
               <div
                 title={collapsed ? collapsedTitle : undefined}
-                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group text-[#94a3b8] hover:text-white hover:bg-[#161b2e]"
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
+                style={{ color: 'var(--sm-sidebar-text)' }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'var(--sm-sidebar-hover)'
+                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-text-1)'
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-sidebar-text)'
+                }}
               >
-                <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#475569] group-hover:text-white transition-colors" />
+                <item.icon className="w-[15px] h-[15px] flex-shrink-0 transition-colors" style={{ color: 'var(--sm-sidebar-icon)' }} />
                 {!collapsed && (
                   <>
                     <span className="whitespace-nowrap flex-1">{item.label}</span>
@@ -239,10 +246,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           style={{
             background: isDark
               ? 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(234,179,8,0.08) 100%)'
-              : 'linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(29,78,216,0.08) 100%)',
+              : 'linear-gradient(135deg, rgba(37,99,235,0.10) 0%, rgba(29,78,216,0.07) 100%)',
             border: isDark
               ? '1px solid rgba(245,158,11,0.22)'
-              : '1px solid rgba(37,99,235,0.22)',
+              : '1px solid rgba(37,99,235,0.20)',
             color: isDark ? '#fbbf24' : '#2563eb',
           }}
         >
@@ -261,8 +268,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       <div className="px-2 pb-1 flex-shrink-0">
         <Link to="/assinatura">
           <div
-            className="rounded-xl px-2.5 py-2 transition-colors hover:bg-[#161b2e]"
-            style={{ background: '#111827', border: '1px solid #1e2535' }}
+            className="rounded-xl px-2.5 py-2 transition-colors"
+            style={{ background: 'var(--sm-sidebar-card)', border: '1px solid var(--sm-sidebar-border)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'var(--sm-sidebar-hover)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'var(--sm-sidebar-card)' }}
           >
             {!collapsed ? (
               <div className="space-y-2">
@@ -271,15 +280,15 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Zap className={`w-3 h-3 ${aiWarning ? 'text-amber-400' : 'text-[#6366f1]'}`} />
-                      <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-400' : 'text-white'}`}>
+                      <span className={`text-[11px] font-semibold ${aiWarning ? 'text-amber-400' : ''}`} style={!aiWarning ? { color: 'var(--sm-text-1)' } : {}}>
                         {planName}
                       </span>
                     </div>
-                    <span className={`text-[10px] ${aiWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
+                    <span className={`text-[10px] ${aiWarning ? 'text-amber-400' : ''}`} style={!aiWarning ? { color: 'var(--sm-sidebar-text)' } : {}}>
                       {aiUsed}/{aiLimit} IA
                     </span>
                   </div>
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--sm-sidebar-border)' }}>
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -294,13 +303,13 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <HardDrive className={`w-3 h-3 ${stWarning ? 'text-amber-400' : 'text-[#60a5fa]'}`} />
-                      <span className="text-[10px] text-[#64748b]">Armazenamento</span>
+                      <span className="text-[10px]" style={{ color: 'var(--sm-sidebar-text)' }}>Armazenamento</span>
                     </div>
-                    <span className={`text-[10px] ${stWarning ? 'text-amber-400' : 'text-[#64748b]'}`}>
+                    <span className={`text-[10px] ${stWarning ? 'text-amber-400' : ''}`} style={!stWarning ? { color: 'var(--sm-sidebar-text)' } : {}}>
                       {stLabel}/{stLimitGB} GB
                     </span>
                   </div>
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e2535' }}>
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--sm-sidebar-border)' }}>
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -322,12 +331,21 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       </div>
 
       {/* ── Sair ── */}
-      <div className="px-2 pb-2 pt-1 border-t border-[#1e2535] flex-shrink-0">
+      <div className="px-2 pb-2 pt-1 flex-shrink-0" style={{ borderTop: '1px solid var(--sm-sidebar-border)' }}>
         <button
           onClick={() => signOut()}
-          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] text-[#64748b] hover:bg-[#161b2e] hover:text-white transition-colors duration-150"
+          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-colors duration-150"
+          style={{ color: 'var(--sm-sidebar-text)' }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'var(--sm-sidebar-hover)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-text-1)'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-sidebar-text)'
+          }}
         >
-          <LogOut className="w-[15px] h-[15px] flex-shrink-0 text-[#475569]" />
+          <LogOut className="w-[15px] h-[15px] flex-shrink-0" style={{ color: 'var(--sm-sidebar-icon)' }} />
           {!collapsed && <span>Sair</span>}
         </button>
       </div>
@@ -335,8 +353,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       {/* ── Botão colapsar (oculto no mobile) ── */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full hidden md:flex items-center justify-center text-[#64748b] hover:text-white transition-colors shadow-lg"
-        style={{ background: '#1e2535', border: '1px solid #2d3748' }}
+        className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full hidden md:flex items-center justify-center transition-colors shadow-lg"
+        style={{ background: 'var(--sm-sidebar-card)', border: '1px solid var(--sm-sidebar-border)', color: 'var(--sm-sidebar-text)' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-text-1)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-sidebar-text)' }}
       >
         {collapsed
           ? <ChevronRight className="w-3 h-3" />
@@ -347,23 +367,13 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       {igTooltip && createPortal(
         <div
           className="pointer-events-none"
-          style={{
-            position: 'fixed',
-            left: igTooltip.x,
-            top: igTooltip.y,
-            transform: 'translateY(-50%)',
-            zIndex: 9999,
-          }}
+          style={{ position: 'fixed', left: igTooltip.x, top: igTooltip.y, transform: 'translateY(-50%)', zIndex: 9999 }}
         >
           <div
             className="w-52 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed shadow-2xl"
-            style={{
-              background: '#0f172a',
-              border: '1px solid #1e2535',
-              color: '#94a3b8',
-            }}
+            style={{ background: 'var(--sm-sidebar-bg)', border: '1px solid var(--sm-sidebar-border)', color: 'var(--sm-sidebar-text)' }}
           >
-            <p className="font-semibold text-white mb-1">Aguardando liberação do Meta</p>
+            <p className="font-semibold mb-1" style={{ color: 'var(--sm-text-1)' }}>Aguardando liberação do Meta</p>
             <p>A integração com o Instagram está em análise pelo Meta e será liberada em breve.</p>
           </div>
         </div>,

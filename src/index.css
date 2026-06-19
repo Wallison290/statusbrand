@@ -64,9 +64,8 @@
   .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
 }
 
-/* ── Nova paleta dark — fundo escuro profundo, verde como marca ─────────────── */
+/* ── Nova paleta dark ───────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Layout shells → nova paleta escura */
   .bg-\[\#09090b\]  { background-color: #0B1020 !important; }
   .bg-\[\#0a0a0a\]  { background-color: #0B1020 !important; }
   .bg-\[\#0a0c11\]  { background-color: #0B1020 !important; }
@@ -84,7 +83,6 @@
   body { background-color: #050816; color: #F8FAFC; }
 
   /* ── Botões primários: azul fosco escuro com gradiente ─────────────────────── */
-  /* Remapeia globalmente o azul vivo #2563EB para um gradiente azul fosco */
   .bg-\[\#2563EB\] {
     background-image: linear-gradient(135deg, #29457a 0%, #16284d 100%) !important;
     background-color: #1f3a6b !important;
@@ -96,8 +94,6 @@
   }
 
   /* ── Portal do cliente: força tema CLARO nos componentes compartilhados ──────── */
-  /* O app da agência é dark, mas o portal do cliente é claro. Reverte os tokens
-     dos componentes compartilhados (Card, Tabs, Input, Dialog) dentro do portal. */
   .portal-light .bg-\[\#111827\] { background-color: #ffffff !important; background-image: none !important; }
   .portal-light .bg-\[\#182233\] { background-color: #ffffff !important; }
   .portal-light .bg-\[\#0d1424\] { background-color: #f7f8fa !important; }
@@ -107,7 +103,112 @@
   .portal-light .text-\[\#F8FAFC\] { color: #0f172a !important; }
   .portal-light .text-\[\#E2E8F0\] { color: #0f172a !important; }
   .portal-light .text-\[\#CBD5E1\] { color: #374151 !important; }
-  /* aba ativa: mantém azul fosco com texto branco */
   .portal-light .bg-\[\#29457a\] { color: #ffffff !important; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   StatusMedia Theme System — CSS Custom Properties
+   Toggled by ThemeContext via data-theme attribute on <html>
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+:root,
+[data-theme="dark"] {
+  /* Page & card backgrounds */
+  --sm-bg-page:        #0B1020;
+  --sm-bg-card:        #182233;
+  --sm-bg-alt:         #101A2B;
+  --sm-bg-input:       #182233;
+  --sm-bg-card2:       #111827;
+
+  /* Borders */
+  --sm-border:         #1e293b;
+  --sm-border-alt:     #182233;
+
+  /* Text */
+  --sm-text-1:         #F8FAFC;
+  --sm-text-2:         #CBD5E1;
+  --sm-text-3:         #94a3b8;
+  --sm-text-4:         #64748b;
+
+  /* Sidebar (always has its own darker palette) */
+  --sm-sidebar-bg:     #050816;
+  --sm-sidebar-border: #1e2535;
+  --sm-sidebar-hover:  #161b2e;
+  --sm-sidebar-card:   #111827;
+  --sm-sidebar-badge:  #1e2535;
+  --sm-sidebar-text:   #94a3b8;
+  --sm-sidebar-icon:   #475569;
+}
+
+[data-theme="light"] {
+  /* Page & card backgrounds */
+  --sm-bg-page:        #f1f5f9;
+  --sm-bg-card:        #ffffff;
+  --sm-bg-alt:         #e8edf3;
+  --sm-bg-input:       #f8fafc;
+  --sm-bg-card2:       #f8fafc;
+
+  /* Borders */
+  --sm-border:         #e2e8f0;
+  --sm-border-alt:     #e2e8f0;
+
+  /* Text */
+  --sm-text-1:         #1e293b;
+  --sm-text-2:         #475569;
+  --sm-text-3:         #64748b;
+  --sm-text-4:         #94a3b8;
+
+  /* Sidebar in light mode */
+  --sm-sidebar-bg:     #ffffff;
+  --sm-sidebar-border: #e2e8f0;
+  --sm-sidebar-hover:  #f1f5f9;
+  --sm-sidebar-card:   #f8fafc;
+  --sm-sidebar-badge:  #f1f5f9;
+  --sm-sidebar-text:   #64748b;
+  --sm-sidebar-icon:   #94a3b8;
+}
+
+/* ── Body background sync ────────────────────────────────────────────────────── */
+[data-theme="light"] body {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* ── Light theme overrides for Tailwind arbitrary color classes ──────────────── */
+/* These handle className="bg-[#xxx]" / "text-[#xxx]" patterns without JSX changes */
+
+[data-theme="light"] .bg-\[\#0B1020\]  { background-color: var(--sm-bg-page)  !important; }
+[data-theme="light"] .bg-\[\#0f172a\]  { background-color: var(--sm-bg-page)  !important; }
+[data-theme="light"] .bg-\[\#0f0f0f\]  { background-color: var(--sm-bg-page)  !important; }
+[data-theme="light"] .bg-\[\#101A2B\]  { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-\[\#182233\]  { background-color: var(--sm-bg-card)  !important; }
+[data-theme="light"] .bg-\[\#111827\]  { background-color: var(--sm-bg-card2) !important; }
+[data-theme="light"] .bg-\[\#1e293b\]  { background-color: var(--sm-bg-alt)   !important; }
+
+[data-theme="light"] .text-\[\#F8FAFC\] { color: var(--sm-text-1) !important; }
+[data-theme="light"] .text-\[\#f1f5f9\] { color: var(--sm-text-1) !important; }
+[data-theme="light"] .text-\[\#CBD5E1\] { color: var(--sm-text-2) !important; }
+[data-theme="light"] .text-\[\#E2E8F0\] { color: var(--sm-text-2) !important; }
+[data-theme="light"] .text-\[\#94a3b8\] { color: var(--sm-text-3) !important; }
+[data-theme="light"] .text-\[\#64748b\] { color: var(--sm-text-4) !important; }
+[data-theme="light"] .text-\[\#475569\] { color: var(--sm-text-2) !important; }
+[data-theme="light"] .text-\[\#1e293b\] { color: var(--sm-text-1) !important; }
+
+[data-theme="light"] .border-\[\#1e293b\]  { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-\[\#182233\]  { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-\[\#101A2B\]  { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-\[\#334155\]  { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-\[\#1a2035\]  { border-color: var(--sm-border) !important; }
+
+[data-theme="light"] .hover\:bg-\[\#161b2e\]:hover  { background-color: var(--sm-bg-alt) !important; }
+[data-theme="light"] .hover\:bg-\[\#182233\]:hover  { background-color: var(--sm-bg-alt) !important; }
+[data-theme="light"] .hover\:bg-\[\#101A2B\]:hover  { background-color: var(--sm-bg-alt) !important; }
+
+[data-theme="light"] .divide-\[\#1e293b\] > * + * { border-color: var(--sm-border) !important; }
+
+/* Radix Tabs active label in light mode */
+[data-theme="light"] [role="tab"][data-state="active"] { color: #ffffff !important; }
+
+/* ── Scrollbar light mode ────────────────────────────────────────────────────── */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }

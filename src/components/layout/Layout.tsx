@@ -25,7 +25,7 @@ export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen h-[100dvh] bg-[#0f0f0f] overflow-hidden">
+    <div className="flex h-screen h-[100dvh] overflow-hidden" style={{ background: 'var(--sm-bg-page)' }}>
 
       {/* Mobile backdrop */}
       {mobileOpen && (

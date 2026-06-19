@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 interface ThemeCtx {
   isDark: boolean
@@ -15,6 +15,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return true
     }
   })
+
+  // Sync CSS custom properties with the DOM so all pages respond automatically
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+  }, [isDark])
 
   function toggleTheme() {
     setIsDark(d => {

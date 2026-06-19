@@ -344,23 +344,23 @@ function DayTooltip({ state }: { state: HoverState }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 4 }}
         transition={{ duration: 0.13 }}
-        className="bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[#F8FAFC]"
+        className="bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-xl shadow-xl w-[260px] p-3 text-xs text-[var(--sm-text-1)]"
       >
         {state.items.map((item, i) => (
-          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[#1e293b]' : ''}>
+          <div key={item.id} className={i > 0 ? 'mt-2.5 pt-2.5 border-t border-[var(--sm-border)]' : ''}>
             <div className="flex items-start gap-2 mb-1">
               <div className={`w-1.5 h-1.5 rounded-full mt-[3px] flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-[#F8FAFC] text-[11px] leading-snug">{item.title}</p>
-                <p className="text-[10px] text-[#94a3b8] mt-0.5">
+                <p className="font-medium text-[var(--sm-text-1)] text-[11px] leading-snug">{item.title}</p>
+                <p className="text-[10px] text-[var(--sm-text-3)] mt-0.5">
                   {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
                 </p>
               </div>
             </div>
             {item.client && (
               <div className="flex items-center gap-1 mb-1">
-                <Building2 className="w-3 h-3 text-[#94a3b8] flex-shrink-0" />
-                <span className="text-[10px] text-[#94a3b8] truncate">{item.client.company_name}</span>
+                <Building2 className="w-3 h-3 text-[var(--sm-text-3)] flex-shrink-0" />
+                <span className="text-[10px] text-[var(--sm-text-3)] truncate">{item.client.company_name}</span>
               </div>
             )}
             {/* Approval badge no tooltip */}
@@ -380,10 +380,10 @@ function DayTooltip({ state }: { state: HoverState }) {
               )
             })()}
             {item.notes && (
-              <p className="text-[10px] text-[#94a3b8] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
+              <p className="text-[10px] text-[var(--sm-text-3)] line-clamp-2 mb-1.5 leading-relaxed">{item.notes}</p>
             )}
             {item.client_feedback && (
-              <p className="text-[10px] text-[#64748b] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
+              <p className="text-[10px] text-[var(--sm-text-4)] italic line-clamp-1 mb-1.5">"{item.client_feedback}"</p>
             )}
             {(() => {
               const img = item.attachments?.find(a => isImageAttachment(a))
@@ -406,8 +406,8 @@ function DayTooltip({ state }: { state: HoverState }) {
             <div className="flex items-center gap-3 flex-wrap">
               {item.attachments && item.attachments.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <Paperclip className="w-3 h-3 text-[#94a3b8]" />
-                  <span className="text-[10px] text-[#94a3b8]">
+                  <Paperclip className="w-3 h-3 text-[var(--sm-text-3)]" />
+                  <span className="text-[10px] text-[var(--sm-text-3)]">
                     {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
                 </div>
@@ -572,25 +572,25 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   }
 
   if (igLoading) return (
-    <div className="flex items-center gap-2 py-2 text-xs text-[#94a3b8]">
-      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#64748b]" /> Verificando Instagram...
+    <div className="flex items-center gap-2 py-2 text-xs text-[var(--sm-text-3)]">
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--sm-text-4)]" /> Verificando Instagram...
     </div>
   )
 
   if (!item.client_id) return (
-    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] text-xs text-[#94a3b8]">
+    <div className="p-3 bg-[var(--sm-bg-alt)] rounded-xl border border-[var(--sm-border)] text-xs text-[var(--sm-text-3)]">
       Post sem cliente vinculado — não é possível agendar no Instagram.
     </div>
   )
 
   if (!igAccount) return (
-    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] space-y-1.5">
+    <div className="p-3 bg-[var(--sm-bg-alt)] rounded-xl border border-[var(--sm-border)] space-y-1.5">
       <div className="flex items-center gap-2">
-        <Instagram className="w-3.5 h-3.5 text-[#64748b]" />
-        <p className="text-xs text-[#CBD5E1] font-medium">Instagram não conectado</p>
+        <Instagram className="w-3.5 h-3.5 text-[var(--sm-text-4)]" />
+        <p className="text-xs text-[var(--sm-text-2)] font-medium">Instagram não conectado</p>
       </div>
-      <p className="text-[11px] text-[#94a3b8]">
-        Acesse o perfil do cliente → aba <strong className="text-[#CBD5E1]">Instagram</strong> para conectar a conta.
+      <p className="text-[11px] text-[var(--sm-text-3)]">
+        Acesse o perfil do cliente → aba <strong className="text-[var(--sm-text-2)]">Instagram</strong> para conectar a conta.
       </p>
     </div>
   )
@@ -614,7 +614,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
       <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
       <div>
         <p className="text-xs font-medium text-emerald-300">Post agendado!</p>
-        <p className="text-[11px] text-[#94a3b8] mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
+        <p className="text-[11px] text-[var(--sm-text-3)] mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
       </div>
     </div>
   )
@@ -623,24 +623,24 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   const TypeIcon  = postType === 'REELS' ? Film : postType === 'CAROUSEL_ALBUM' ? LayoutGrid : ImageIcon
 
   return (
-    <div className="p-3 bg-[#101A2B] rounded-xl border border-[#1e293b] space-y-3">
+    <div className="p-3 bg-[var(--sm-bg-alt)] rounded-xl border border-[var(--sm-border)] space-y-3">
       {/* Conta conectada */}
       <div className="flex items-center gap-2">
         {igAccount.profile_picture_url
           ? <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
           : <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}><Instagram className="w-3.5 h-3.5 text-white" /></div>
         }
-        <span className="text-xs text-[#CBD5E1] font-medium">@{igAccount.username}</span>
+        <span className="text-xs text-[var(--sm-text-2)] font-medium">@{igAccount.username}</span>
         <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">Conectado</span>
       </div>
 
       {/* Tipo + prévia das mídias */}
-      <div className="flex items-center gap-2 p-2 bg-[#182233] rounded-lg border border-[#1e293b]">
-        <TypeIcon className="w-3.5 h-3.5 text-[#94a3b8] flex-shrink-0" />
-        <span className="text-xs text-[#CBD5E1] font-medium">{typeLabel}</span>
+      <div className="flex items-center gap-2 p-2 bg-[var(--sm-bg-card)] rounded-lg border border-[var(--sm-border)]">
+        <TypeIcon className="w-3.5 h-3.5 text-[var(--sm-text-3)] flex-shrink-0" />
+        <span className="text-xs text-[var(--sm-text-2)] font-medium">{typeLabel}</span>
         <div className="ml-auto flex gap-1">
           {igMedia.slice(0, 4).map((att, i) => (
-            <div key={att.id} className="w-8 h-8 rounded overflow-hidden border border-[#1e293b] flex-shrink-0">
+            <div key={att.id} className="w-8 h-8 rounded overflow-hidden border border-[var(--sm-border)] flex-shrink-0">
               {isVideoAttachment(att)
                 ? <video src={att.file_url} className="w-full h-full object-cover" muted />
                 : <img src={att.file_url} alt="" className="w-full h-full object-cover" />
@@ -648,21 +648,21 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
             </div>
           ))}
           {igMedia.length > 4 && (
-            <span className="text-[10px] text-[#64748b] self-center pl-0.5">+{igMedia.length - 4}</span>
+            <span className="text-[10px] text-[var(--sm-text-4)] self-center pl-0.5">+{igMedia.length - 4}</span>
           )}
         </div>
       </div>
 
       {/* Legenda */}
       <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} placeholder="Legenda..."
-        className="w-full text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] placeholder-[#64748b] resize-none focus:outline-none focus:border-[#2563EB] transition-colors" />
+        className="w-full text-xs bg-[var(--sm-bg-card)] border border-[var(--sm-border)] rounded-lg px-3 py-2 text-[var(--sm-text-1)] placeholder-[var(--sm-text-4)] resize-none focus:outline-none focus:border-[#2563EB] transition-colors" />
 
       {/* Data/hora */}
       <div className="grid grid-cols-2 gap-2">
         <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)}
-          className="text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
+          className="text-xs bg-[var(--sm-bg-card)] border border-[var(--sm-border)] rounded-lg px-3 py-2 text-[var(--sm-text-1)] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
         <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)}
-          className="text-xs bg-[#182233] border border-[#1e293b] rounded-lg px-3 py-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
+          className="text-xs bg-[var(--sm-bg-card)] border border-[var(--sm-border)] rounded-lg px-3 py-2 text-[var(--sm-text-1)] focus:outline-none focus:border-[#2563EB] transition-colors [color-scheme:dark]" />
       </div>
 
       <Button size="sm" onClick={handleSchedule} disabled={publishing}
@@ -754,7 +754,7 @@ function PlannerItemView({
 
           {/* ══ ESQUERDA: Prévia estilo Instagram ══ */}
           {hasMedia && (
-            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[#101A2B] overflow-hidden lg:h-full">
+            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[var(--sm-bg-alt)] overflow-hidden lg:h-full">
 
               {/* Header estilo Instagram */}
               <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0">
@@ -763,14 +763,14 @@ function PlannerItemView({
                     {(item.client?.company_name ?? 'P')[0].toUpperCase()}
                   </span>
                 </div>
-                <span className="text-[13px] font-semibold text-[#F8FAFC] flex-1 truncate">
+                <span className="text-[13px] font-semibold text-[var(--sm-text-1)] flex-1 truncate">
                   {item.client?.company_name ?? 'Post'}
                 </span>
-                <MoreHorizontal className="w-5 h-5 text-[#64748b] flex-shrink-0" />
+                <MoreHorizontal className="w-5 h-5 text-[var(--sm-text-4)] flex-shrink-0" />
               </div>
 
               {/* Mídia principal — object-contain: exibe imagem inteira sem cortar */}
-              <div className="relative bg-[#0B1020] h-72 lg:h-auto lg:flex-1 lg:min-h-0">
+              <div className="relative bg-[var(--sm-bg-page)] h-72 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img
                     src={currentMedia.file_url}
@@ -834,7 +834,7 @@ function PlannerItemView({
               </div>
 
               {/* Barra de ações estilo Instagram */}
-              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[#101A2B]">
+              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[var(--sm-bg-alt)]">
                 <div className="flex items-center gap-4 flex-1">
                   <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
                   <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
@@ -855,7 +855,7 @@ function PlannerItemView({
                       >
                         {m.kind === 'image'
                           ? <img src={m.file_url} alt="" className="w-full h-full object-cover" />
-                          : <div className="w-full h-full bg-[#101A2B] flex items-center justify-center"><Film className="w-4 h-4 text-[#64748b]" /></div>}
+                          : <div className="w-full h-full bg-[var(--sm-bg-alt)] flex items-center justify-center"><Film className="w-4 h-4 text-[var(--sm-text-4)]" /></div>}
                         <div className="absolute bottom-0 right-0 bg-black/60 text-[8px] px-1 leading-4 rounded-tl font-bold text-white">{i + 1}</div>
                       </button>
                     ))}
@@ -873,19 +873,19 @@ function PlannerItemView({
                 <div className="flex-1 min-w-0">
                   {item.client && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Building2 className="w-3 h-3 text-[#64748b] flex-shrink-0" />
-                      <span className="text-[11px] text-[#94a3b8] font-medium">{item.client.company_name}</span>
+                      <Building2 className="w-3 h-3 text-[var(--sm-text-4)] flex-shrink-0" />
+                      <span className="text-[11px] text-[var(--sm-text-3)] font-medium">{item.client.company_name}</span>
                     </div>
                   )}
-                  <h2 className="text-[15px] font-semibold text-[#F8FAFC] leading-snug break-words">{item.title}</h2>
+                  <h2 className="text-[15px] font-semibold text-[var(--sm-text-1)] leading-snug break-words">{item.title}</h2>
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    <span className="text-[11px] text-[#94a3b8]">
+                    <span className="text-[11px] text-[var(--sm-text-3)]">
                       {format(parseISO(item.scheduled_date), "dd 'de' MMM", { locale: ptBR })}
                       {item.scheduled_time && ` · ${item.scheduled_time.slice(0,5)}`}
                     </span>
-                    <span className="text-[#475569]">·</span>
-                    <span className="text-[11px] text-[#94a3b8]">{contentTypeLabels[item.content_type as ContentType]}</span>
-                    <span className="text-[#475569]">·</span>
+                    <span className="text-[var(--sm-text-2)]">·</span>
+                    <span className="text-[11px] text-[var(--sm-text-3)]">{contentTypeLabels[item.content_type as ContentType]}</span>
+                    <span className="text-[var(--sm-text-2)]">·</span>
                     {/* Status — seletor inline: muda o status do conteúdo direto por aqui */}
                     <div className="relative inline-flex items-center">
                       <select
@@ -904,20 +904,20 @@ function PlannerItemView({
                         className={`appearance-none cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-2 pr-6 py-0.5 text-[11px] font-semibold outline-none transition-colors disabled:opacity-50 ${statusTextColors[item.status as PlannerStatus]}`}
                       >
                         {(Object.keys(statusLabels) as PlannerStatus[]).map(s => (
-                          <option key={s} value={s} className="bg-[#0d0f14] text-[#F8FAFC]">
+                          <option key={s} value={s} className="bg-[#0d0f14] text-[var(--sm-text-1)]">
                             {statusLabels[s]}
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="w-3 h-3 text-[#94a3b8] absolute right-1.5 pointer-events-none" />
+                      <ChevronDown className="w-3 h-3 text-[var(--sm-text-3)] absolute right-1.5 pointer-events-none" />
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button onClick={onEdit} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#94a3b8] hover:text-[#F8FAFC] transition-all">
+                  <button onClick={onEdit} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--sm-text-3)] hover:text-[var(--sm-text-1)] transition-all">
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#94a3b8] hover:text-[#F8FAFC] transition-all">
+                  <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[var(--sm-text-3)] hover:text-[var(--sm-text-1)] transition-all">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -930,13 +930,13 @@ function PlannerItemView({
               {/* Legenda */}
               {item.notes && (
                 <div>
-                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Legenda</p>
+                  <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold mb-2">Legenda</p>
                   <div className="relative">
-                    <p className={`text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
+                    <p className={`text-[13px] text-[var(--sm-text-2)] leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-4' : ''}`}>
                       {item.notes}
                     </p>
                     {item.notes.length > 200 && (
-                      <button onClick={() => setNotesExpanded(v => !v)} className="text-[12px] text-[#94a3b8] hover:text-[#CBD5E1] mt-1.5 font-medium transition-colors">
+                      <button onClick={() => setNotesExpanded(v => !v)} className="text-[12px] text-[var(--sm-text-3)] hover:text-[var(--sm-text-2)] mt-1.5 font-medium transition-colors">
                         {notesExpanded ? 'ver menos' : 'ver mais'}
                       </button>
                     )}
@@ -947,15 +947,15 @@ function PlannerItemView({
               {/* Outros anexos */}
               {otherAttachments.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Anexos</p>
+                  <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold mb-2">Anexos</p>
                   <div className="space-y-1.5">
                     {otherAttachments.map(att => (
                       <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 p-2.5 bg-[#101A2B] border border-[#1e293b] rounded-lg hover:bg-[#182233] transition-colors min-w-0 overflow-hidden">
+                        className="flex items-center gap-2.5 p-2.5 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-lg hover:bg-[var(--sm-bg-card)] transition-colors min-w-0 overflow-hidden">
                         <FileTypeIcon type={att.file_type} size="md" />
-                        <span className="text-xs text-[#CBD5E1] truncate flex-1">{att.file_name}</span>
-                        {att.file_size && <span className="text-[10px] text-[#64748b] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
-                        <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0" />
+                        <span className="text-xs text-[var(--sm-text-2)] truncate flex-1">{att.file_name}</span>
+                        {att.file_size && <span className="text-[10px] text-[var(--sm-text-4)] flex-shrink-0">{formatFileSize(att.file_size)}</span>}
+                        <ExternalLink className="w-3 h-3 text-[var(--sm-text-4)] flex-shrink-0" />
                       </a>
                     ))}
                   </div>
@@ -965,14 +965,14 @@ function PlannerItemView({
               {/* Links */}
               {item.links && item.links.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Links</p>
+                  <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold mb-2">Links</p>
                   <div className="space-y-1.5">
                     {item.links.map(link => (
                       <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2.5 bg-[#101A2B] border border-[#1e293b] rounded-lg hover:bg-[#182233] transition-colors min-w-0 overflow-hidden">
+                        className="flex items-center gap-2 p-2.5 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-lg hover:bg-[var(--sm-bg-card)] transition-colors min-w-0 overflow-hidden">
                         <Link2 className="w-3.5 h-3.5 text-[#60A5FA] flex-shrink-0" />
                         <span className="text-xs text-[#93c5fd] flex-1 min-w-0 truncate">{link.label || link.url}</span>
-                        <ExternalLink className="w-3 h-3 text-[#64748b] flex-shrink-0" />
+                        <ExternalLink className="w-3 h-3 text-[var(--sm-text-4)] flex-shrink-0" />
                       </a>
                     ))}
                   </div>
@@ -982,7 +982,7 @@ function PlannerItemView({
               {/* Resposta do cliente */}
               {item.approval_status && (
                 <div className="space-y-2">
-                  <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold">Resposta do Cliente</p>
+                  <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold">Resposta do Cliente</p>
 
                   {/* Status geral + data */}
                   <div className="flex items-center gap-2 px-0.5 flex-wrap">
@@ -991,7 +991,7 @@ function PlannerItemView({
                       {approvalLabel[effectiveStatus]}
                     </span>
                     {item.reviewed_at && (
-                      <span className="text-[10px] text-[#64748b] ml-auto">
+                      <span className="text-[10px] text-[var(--sm-text-4)] ml-auto">
                         {format(parseISO(item.reviewed_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                       </span>
                     )}
@@ -1021,7 +1021,7 @@ function PlannerItemView({
                     return (
                       <div className={`rounded-xl border p-3 ${bgMap[artStatus]}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wide">
+                          <p className="text-[10px] font-bold text-[var(--sm-text-3)] uppercase tracking-wide">
                             Arte{carouselSlides ? ` · Carrossel (${carouselSlides.length} slides)` : ''}
                           </p>
                           <div className="flex items-center gap-1.5">
@@ -1039,13 +1039,13 @@ function PlannerItemView({
                               <div key={s.slide} className="flex flex-col gap-1 bg-white/5 rounded-lg px-2.5 py-1.5">
                                 <div className="flex items-center gap-1.5">
                                   <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideDot[s.status] ?? 'bg-gray-500'}`} />
-                                  <span className="text-[10px] font-semibold text-[#94a3b8]">Slide {s.slide}</span>
-                                  <span className={`text-[10px] font-semibold ml-auto ${slideText[s.status] ?? 'text-[#94a3b8]'}`}>
+                                  <span className="text-[10px] font-semibold text-[var(--sm-text-3)]">Slide {s.slide}</span>
+                                  <span className={`text-[10px] font-semibold ml-auto ${slideText[s.status] ?? 'text-[var(--sm-text-3)]'}`}>
                                     {slideLabel[s.status] ?? s.status}
                                   </span>
                                 </div>
                                 {s.feedback && (
-                                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed pl-3 break-words">"{s.feedback}"</p>
+                                  <p className="text-[11px] text-[var(--sm-text-2)] leading-relaxed pl-3 break-words">"{s.feedback}"</p>
                                 )}
                               </div>
                             ))}
@@ -1053,8 +1053,8 @@ function PlannerItemView({
                         ) : artFeedbackRaw && artStatus !== 'aprovado' && artStatus !== 'pendente_aprovacao' ? (
                           /* Feedback texto simples (legado) */
                           <div className="mt-2 flex items-start gap-2 bg-white/5 rounded-lg px-2.5 py-2">
-                            <span className="text-[10px] text-[#64748b] flex-shrink-0 mt-0.5">Cliente:</span>
-                            <p className="text-xs text-[#CBD5E1] leading-relaxed break-words select-text flex-1">"{artFeedbackRaw}"</p>
+                            <span className="text-[10px] text-[var(--sm-text-4)] flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-[var(--sm-text-2)] leading-relaxed break-words select-text flex-1">"{artFeedbackRaw}"</p>
                           </div>
                         ) : null}
 
@@ -1102,7 +1102,7 @@ function PlannerItemView({
                     return (
                       <div className={`rounded-xl border p-3 ${bgMap[copyStatus]}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wide">Copy</p>
+                          <p className="text-[10px] font-bold text-[var(--sm-text-3)] uppercase tracking-wide">Copy</p>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[copyStatus]}`} />
                             <span className={`text-[11px] font-semibold ${approvalTextColor[copyStatus]}`}>
@@ -1112,8 +1112,8 @@ function PlannerItemView({
                         </div>
                         {copyFeedback && copyStatus !== 'aprovado' && copyStatus !== 'pendente_aprovacao' && (
                           <div className="mt-2 flex items-start gap-2 bg-white/5 rounded-lg px-2.5 py-2">
-                            <span className="text-[10px] text-[#64748b] flex-shrink-0 mt-0.5">Cliente:</span>
-                            <p className="text-xs text-[#CBD5E1] leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
+                            <span className="text-[10px] text-[var(--sm-text-4)] flex-shrink-0 mt-0.5">Cliente:</span>
+                            <p className="text-xs text-[var(--sm-text-2)] leading-relaxed break-words select-text flex-1">"{copyFeedback}"</p>
                           </div>
                         )}
                         {(copyStatus === 'ajuste_solicitado' || copyStatus === 'reprovado') && (
@@ -1148,7 +1148,7 @@ function PlannerItemView({
 
                   {/* Fallback legado: feedback geral quando não há campos parciais */}
                   {!(item as any).art_approval_status && !(item as any).copy_approval_status && item.client_feedback && (
-                    <p className="text-xs text-[#CBD5E1] leading-relaxed bg-[#101A2B] border border-[#1e293b] rounded-lg px-3 py-2 break-words">
+                    <p className="text-xs text-[var(--sm-text-2)] leading-relaxed bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-lg px-3 py-2 break-words">
                       "{item.client_feedback}"
                     </p>
                   )}
@@ -1169,7 +1169,7 @@ function PlannerItemView({
 
               {/* Agendar no Instagram */}
               <div>
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
+                <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
                   <Instagram className="w-3 h-3" /> Agendar no Instagram
                 </p>
                 <InstagramScheduleSection item={item} userId={userId} />
@@ -1177,7 +1177,7 @@ function PlannerItemView({
 
               {/* Comentários */}
               <div className="pb-2">
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Comentários</p>
+                <p className="text-[10px] text-[var(--sm-text-4)] uppercase tracking-wider font-semibold mb-2">Comentários</p>
                 <PlannerCommentsThread plannerId={item.id} role="agency" />
               </div>
             </div>
@@ -2020,17 +2020,17 @@ export function Planner() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full bg-[#0B1020]">
+    <div className="min-h-full bg-[var(--sm-bg-page)]">
       <div className="p-4 md:p-6">
         {/* ── Toggle de visualização + Novo post ──────────────────────────────── */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 bg-[#101A2B] rounded-xl w-fit">
+        <div className="flex items-center gap-1.5 p-1 bg-[var(--sm-bg-alt)] rounded-xl w-fit">
           <button
             onClick={() => setViewMode('mensal')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               viewMode === 'mensal'
                 ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#94a3b8] hover:text-[#F8FAFC]'
+                : 'text-[var(--sm-text-3)] hover:text-[var(--sm-text-1)]'
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
@@ -2041,7 +2041,7 @@ export function Planner() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               viewMode === 'feed'
                 ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'text-[#94a3b8] hover:text-[#F8FAFC]'
+                : 'text-[var(--sm-text-3)] hover:text-[var(--sm-text-1)]'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -2079,7 +2079,7 @@ export function Planner() {
                   className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
                     selectedClientFilter
                       ? 'bg-[#2563EB] text-white border-[#2563EB]'
-                      : 'bg-[#182233] text-[#CBD5E1] border-[#1e293b] hover:border-[#2f3b52] hover:bg-[#1e293b]'
+                      : 'bg-[var(--sm-bg-card)] text-[var(--sm-text-2)] border-[var(--sm-border)] hover:border-[#2f3b52] hover:bg-[var(--sm-bg-alt)]'
                   }`}
                 >
                   {selectedClient ? (
@@ -2108,28 +2108,28 @@ export function Planner() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.97 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute left-0 top-full mt-1.5 z-30 bg-[#101A2B] border border-[#1e293b] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[200px]"
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[200px]"
                       >
                         {/* Opção Todos */}
                         <button
                           onClick={() => { setSelectedClientFilter(null); setClientDropOpen(false) }}
                           className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                            selectedClientFilter === null ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
+                            selectedClientFilter === null ? 'bg-[var(--sm-bg-card)] text-[var(--sm-text-1)]' : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
                           }`}
                         >
-                          <span className="w-5 h-5 rounded-full bg-[#1e293b] flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-3 h-3 text-[#94a3b8]" />
+                          <span className="w-5 h-5 rounded-full bg-[var(--sm-bg-alt)] flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-3 h-3 text-[var(--sm-text-3)]" />
                           </span>
                           Todos os clientes
                           {selectedClientFilter === null && <Check className="w-3 h-3 ml-auto text-[#60A5FA]" />}
                         </button>
-                        {(clients || []).length > 0 && <div className="h-px bg-[#1e293b] mx-3 my-1" />}
+                        {(clients || []).length > 0 && <div className="h-px bg-[var(--sm-bg-alt)] mx-3 my-1" />}
                         {(clients || []).map(c => (
                           <button
                             key={c.id}
                             onClick={() => { setSelectedClientFilter(c.id); setClientDropOpen(false) }}
                             className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                              selectedClientFilter === c.id ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
+                              selectedClientFilter === c.id ? 'bg-[var(--sm-bg-card)] text-[var(--sm-text-1)]' : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
                             }`}
                           >
                             {c.logo_url ? (
@@ -2171,7 +2171,7 @@ export function Planner() {
                   className={`flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all ${
                     isFiltered
                       ? 'bg-[#2563EB] text-white border-[#2563EB]'
-                      : 'bg-[#182233] text-[#CBD5E1] border-[#1e293b] hover:border-[#2f3b52] hover:bg-[#1e293b]'
+                      : 'bg-[var(--sm-bg-card)] text-[var(--sm-text-2)] border-[var(--sm-border)] hover:border-[#2f3b52] hover:bg-[var(--sm-bg-alt)]'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${current.dot}`} />
@@ -2188,14 +2188,14 @@ export function Planner() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.97 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute left-0 top-full mt-1.5 z-30 bg-[#101A2B] border border-[#1e293b] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[190px]"
+                        className="absolute left-0 top-full mt-1.5 z-30 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-2xl shadow-xl overflow-hidden py-1.5 min-w-[190px]"
                       >
                         {STATUS_OPTIONS.map(({ key, label, dot }) => (
                           <button
                             key={key}
                             onClick={() => { setSelectedApprovalFilter(key); setStatusDropOpen(false) }}
                             className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium transition-colors text-left ${
-                              selectedApprovalFilter === key ? 'bg-[#182233] text-[#F8FAFC]' : 'text-[#CBD5E1] hover:bg-[#182233]'
+                              selectedApprovalFilter === key ? 'bg-[var(--sm-bg-card)] text-[var(--sm-text-1)]' : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
                             }`}
                           >
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
@@ -2227,7 +2227,7 @@ export function Planner() {
               {/* ── Cabeçalho de perfil ── */}
               <div className="flex items-center gap-5 mb-5">
                 {/* Avatar */}
-                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[#1e293b]">
+                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-[var(--sm-border)]">
                   {selectedClient?.logo_url ? (
                     <img src={selectedClient.logo_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -2242,31 +2242,31 @@ export function Planner() {
                 {/* Info do perfil */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <h2 className="text-sm font-semibold text-[#F8FAFC] truncate">
+                    <h2 className="text-sm font-semibold text-[var(--sm-text-1)] truncate">
                       {selectedClient ? selectedClient.company_name : 'Todos os clientes'}
                     </h2>
                     {!selectedClient && (
-                      <span className="text-[11px] text-[#94a3b8] bg-[#101A2B] px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] text-[var(--sm-text-3)] bg-[var(--sm-bg-alt)] px-2 py-0.5 rounded-full">
                         Selecione um cliente
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-5">
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#F8FAFC]">{feedItems.length}</p>
-                      <p className="text-[10px] text-[#94a3b8]">planejados</p>
+                      <p className="text-sm font-bold text-[var(--sm-text-1)]">{feedItems.length}</p>
+                      <p className="text-[10px] text-[var(--sm-text-3)]">planejados</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#F8FAFC]">
+                      <p className="text-sm font-bold text-[var(--sm-text-1)]">
                         {feedItems.filter(i => i.status === 'publicado').length}
                       </p>
-                      <p className="text-[10px] text-[#94a3b8]">publicados</p>
+                      <p className="text-[10px] text-[var(--sm-text-3)]">publicados</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#F8FAFC]">
+                      <p className="text-sm font-bold text-[var(--sm-text-1)]">
                         {feedItems.filter(i => i.approval_status === 'aprovado').length}
                       </p>
-                      <p className="text-[10px] text-[#94a3b8]">aprovados</p>
+                      <p className="text-[10px] text-[var(--sm-text-3)]">aprovados</p>
                     </div>
                   </div>
                 </div>
@@ -2275,11 +2275,11 @@ export function Planner() {
               {/* ── Grade estilo Instagram (3 colunas) ── */}
               {feedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#101A2B] flex items-center justify-center mb-3">
-                    <LayoutGrid className="w-7 h-7 text-[#475569]" />
+                  <div className="w-16 h-16 rounded-full bg-[var(--sm-bg-alt)] flex items-center justify-center mb-3">
+                    <LayoutGrid className="w-7 h-7 text-[var(--sm-text-2)]" />
                   </div>
-                  <p className="text-sm font-medium text-[#94a3b8]">Nenhum conteúdo planejado</p>
-                  <p className="text-xs text-[#64748b] mt-1">
+                  <p className="text-sm font-medium text-[var(--sm-text-3)]">Nenhum conteúdo planejado</p>
+                  <p className="text-xs text-[var(--sm-text-4)] mt-1">
                     {selectedClientFilter ? 'Crie posts no calendário para visualizar o feed' : 'Selecione um cliente para ver o feed'}
                   </p>
                 </div>
@@ -2357,11 +2357,11 @@ export function Planner() {
                           // Sem mídia — placeholder informativo
                           <div className={`w-full h-full bg-gradient-to-br ${bg} flex flex-col items-center justify-center p-2 group-hover:opacity-90 transition-opacity`}>
                             <div className={`w-6 h-6 rounded-full mb-1.5 flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-                            <p className="text-[10px] font-semibold text-[#F8FAFC] text-center leading-tight line-clamp-2">{item.title}</p>
-                            <p className="text-[9px] text-[#CBD5E1] mt-1">
+                            <p className="text-[10px] font-semibold text-[var(--sm-text-1)] text-center leading-tight line-clamp-2">{item.title}</p>
+                            <p className="text-[9px] text-[var(--sm-text-2)] mt-1">
                               {format(parseISO(item.scheduled_date), 'dd/MM', { locale: ptBR })}
                             </p>
-                            <p className="text-[9px] text-[#94a3b8]">{contentTypeLabels[item.content_type as ContentType]}</p>
+                            <p className="text-[9px] text-[var(--sm-text-3)]">{contentTypeLabels[item.content_type as ContentType]}</p>
                           </div>
                         )}
 
@@ -2399,7 +2399,7 @@ export function Planner() {
               {/* Legenda de status */}
               <div className="flex gap-3 mt-4 flex-wrap max-w-2xl">
                 {(Object.entries(approvalDot) as [ApprovalStatus, string][]).map(([status, dot]) => (
-                  <div key={status} className="flex items-center gap-1.5 text-[11px] text-[#94a3b8]">
+                  <div key={status} className="flex items-center gap-1.5 text-[11px] text-[var(--sm-text-3)]">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
                     {approvalLabel[status]}
                   </div>
@@ -2411,7 +2411,7 @@ export function Planner() {
 
         {/* Navigation */}
         {viewMode === 'mensal' && <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#F8FAFC] capitalize">
+          <h2 className="text-lg font-semibold text-[var(--sm-text-1)] capitalize">
             {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
           <div className="flex gap-2">
@@ -2431,12 +2431,12 @@ export function Planner() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-        <div className="rounded-lg border border-[#1e293b] bg-[#182233]">
+        <div className="rounded-lg border border-[var(--sm-border)] bg-[var(--sm-bg-card)]">
           <div className="p-2 sm:p-4">
             <div className="w-full max-w-full min-w-0">
             <div className="grid grid-cols-7 mb-1 sm:mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-[11px] sm:text-xs font-semibold text-[#CBD5E1] py-1.5 sm:py-2 truncate">{d}</div>
+                <div key={d} className="text-center text-[11px] sm:text-xs font-semibold text-[var(--sm-text-2)] py-1.5 sm:py-2 truncate">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1 auto-rows-fr h-[calc(100dvh-16rem)] sm:h-auto">
@@ -2460,7 +2460,7 @@ export function Planner() {
                   >
                     <div className={`
                       text-[12px] sm:text-xs font-semibold mb-1 w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center rounded-full
-                      ${isCurrentDay ? 'bg-[#2563EB] text-white' : isCurrentMonth ? 'text-[#F8FAFC]' : 'text-[#475569]'}
+                      ${isCurrentDay ? 'bg-[#2563EB] text-white' : isCurrentMonth ? 'text-[var(--sm-text-1)]' : 'text-[var(--sm-text-2)]'}
                     `}>
                       {format(day, 'd')}
                     </div>
@@ -2474,7 +2474,7 @@ export function Planner() {
                         />
                       ))}
                       {dayItems.length > (isMobile ? 2 : 3) && (
-                        <p className="text-[9px] text-[#64748b] font-medium pl-0.5">+{dayItems.length - (isMobile ? 2 : 3)} mais</p>
+                        <p className="text-[9px] text-[var(--sm-text-4)] font-medium pl-0.5">+{dayItems.length - (isMobile ? 2 : 3)} mais</p>
                       )}
                     </div>
                   </DroppableDay>
@@ -2488,7 +2488,7 @@ export function Planner() {
         {/* Overlay visual durante o drag */}
         <DragOverlay dropAnimation={null}>
           {draggingItem ? (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#182233] border border-[#1e293b] shadow-lg text-[10px] text-[#F8FAFC] max-w-[160px]">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--sm-bg-card)] border border-[var(--sm-border)] shadow-lg text-[10px] text-[var(--sm-text-1)] max-w-[160px]">
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[draggingItem.status as PlannerStatus]}`} />
               <span className="truncate">{draggingItem.title}</span>
             </div>
@@ -2500,7 +2500,7 @@ export function Planner() {
         {viewMode === 'mensal' && (
           <div className="flex gap-3 mt-4 flex-wrap">
             {(Object.entries(statusColors) as [PlannerStatus, string][]).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-1.5 text-xs text-[#94a3b8]">
+              <div key={status} className="flex items-center gap-1.5 text-xs text-[var(--sm-text-3)]">
                 <div className={`w-2 h-2 rounded-full ${color}`} />
                 {statusLabels[status]}
               </div>
