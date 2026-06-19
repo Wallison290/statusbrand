@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -15,6 +15,14 @@ const scrollTo = (id: string) => () => {
 }
 
 const BRL = (n: number) => `R$ ${n}`
+
+// Dispara evento do Meta Pixel sem quebrar se o pixel estiver bloqueado
+const trackPixel = (event: string, params?: Record<string, unknown>) => {
+  try {
+    const fbq = (window as any).fbq
+    if (typeof fbq === 'function') fbq('track', event, params)
+  } catch {}
+}
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar() {
@@ -83,7 +91,8 @@ function Hero() {
 
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-          <button onClick={scrollTo('planos')}
+          <button
+            onClick={() => { scrollTo('planos')(); trackPixel('Lead', { content_name: 'hero_ver_planos' }) }}
             className="w-full sm:w-auto px-6 py-3.5 rounded-xl text-[14px] font-semibold text-white flex items-center justify-center gap-2 hover:opacity-95 transition-opacity shadow-lg shadow-[#29457a]/30"
             style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}>
             Ver planos <ArrowRight className="w-4 h-4" />
@@ -383,8 +392,27 @@ function Comparison() {
 // ─── Planos ───────────────────────────────────────────────────────────────────
 function Pricing() {
   const order: ('starter' | 'pro' | 'agency')[] = ['starter', 'pro', 'agency']
+  const sectionRef = useRef<HTMLElement>(null)
+
+  // Dispara ViewContent uma única vez ao visualizar a seção de planos
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          trackPixel('ViewContent', { content_name: 'pricing_section', content_type: 'product' })
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.25 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <section id="planos" className="py-20 px-4 sm:px-6">
+    <section ref={sectionRef} id="planos" className="py-20 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Planos</h2>
@@ -408,7 +436,15 @@ function Pricing() {
                   <span className="text-[34px] font-bold text-white">{BRL(p.price)}</span>
                   <span className="text-[13px] text-[#64748b]">/mês</span>
                 </div>
-                <Link to="/login"
+                <Link
+                  to="/login"
+                  onClick={() => trackPixel('InitiateCheckout', {
+                    content_name: p.name,
+                    content_ids: [id],
+                    value: p.price,
+                    currency: 'BRL',
+                    num_items: 1,
+                  })}
                   className={`w-full py-3 rounded-xl text-[13px] font-semibold text-center transition-colors ${featured ? 'text-white hover:opacity-95' : 'text-[#CBD5E1] border border-[#1e293b] bg-[#182233] hover:border-[#334155]'}`}
                   style={featured ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : {}}>
                   Começar teste de 3 dias
@@ -481,7 +517,8 @@ function FinalCTA() {
         <p className="text-[15px] text-[#94a3b8] mt-4 max-w-xl mx-auto">
           Cadastre um cliente, gere ideias com IA, organize o calendário e aprove conteúdos sem trocar de ferramenta toda hora.
         </p>
-        <button onClick={scrollTo('planos')}
+        <button
+          onClick={() => { scrollTo('planos')(); trackPixel('Lead', { content_name: 'final_cta_conhecer_planos' }) }}
           className="mt-8 px-7 py-3.5 rounded-xl text-[14px] font-semibold text-white inline-flex items-center gap-2 hover:opacity-95 transition-opacity shadow-lg shadow-[#29457a]/30"
           style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}>
           Conhecer planos <ArrowRight className="w-4 h-4" />
