@@ -7,30 +7,7 @@ import {
 } from 'recharts'
 import { contentTypeLabels } from '@/utils/formatters'
 import type { ContentType } from '@/types'
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-
-const BAR_COLOR   = '#2563EB'
-const GRID_COLOR  = '#1e293b'
-const AXIS_PROPS  = { fill: '#CBD5E1', fontSize: 11 } as const
-
-const DONUT_PALETTE = [
-  '#2563EB', '#1D4ED8', '#60A5FA', '#8B5CF6',
-  '#F5A623', '#22C55E', '#6B7280', '#64748b',
-]
-
-const TIP_STYLE = {
-  contentStyle: {
-    background:   '#101A2B',
-    border:       '1px solid #182233',
-    borderRadius: 10,
-    color:        '#F8FAFC',
-    fontSize:     12,
-    boxShadow:    '0 4px 16px rgba(0,0,0,0.3)',
-    padding:      '8px 12px',
-  },
-  cursor: { fill: 'rgba(37,99,235,0.05)' },
-}
+import { useTheme } from '@/contexts/ThemeContext'
 
 // ─── PlannerBarChart ──────────────────────────────────────────────────────────
 
@@ -39,12 +16,28 @@ function PlannerBarChart({
 }: {
   data: { label: string; value: number; color: string }[]
 }) {
+  const { isDark } = useTheme()
+  const gridColor  = isDark ? '#1e293b' : '#bfdbfe'
+  const axisProps  = { fill: isDark ? '#CBD5E1' : '#64748b', fontSize: 11 } as const
+  const tipStyle = {
+    contentStyle: {
+      background:   isDark ? '#101A2B' : '#ffffff',
+      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      borderRadius: 10,
+      color:        isDark ? '#F8FAFC' : '#1e293b',
+      fontSize:     12,
+      boxShadow:    isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(37,99,235,0.1)',
+      padding:      '8px 12px',
+    },
+    cursor: { fill: 'rgba(37,99,235,0.05)' },
+  }
+
   const hasData = data.some(d => d.value > 0)
 
   if (!hasData) {
     return (
       <div className="flex items-center justify-center h-[210px]">
-        <p className="text-[12px] text-[#94a3b8] text-center leading-relaxed">
+        <p className="text-[12px] text-center leading-relaxed" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
           Nenhum item no planejamento ainda.<br />
           <span className="text-[11px]">Crie posts em Planejamento.</span>
         </p>
@@ -65,14 +58,14 @@ function PlannerBarChart({
               <stop offset="100%" stopColor="#16284d" />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} horizontal={false} />
-          <XAxis type="number" tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} />
-          <YAxis type="category" dataKey="name" tick={AXIS_PROPS} axisLine={false} tickLine={false} width={120} />
-          <Tooltip {...TIP_STYLE} />
+          <CartesianGrid strokeDasharray="1 5" stroke={gridColor} horizontal={false} />
+          <XAxis type="number" tick={axisProps} axisLine={false} tickLine={false} allowDecimals={false} />
+          <YAxis type="category" dataKey="name" tick={axisProps} axisLine={false} tickLine={false} width={120} />
+          <Tooltip {...tipStyle} />
           <Bar dataKey="value" fill="url(#plannerBarGradient)" radius={[0, 6, 6, 0]} name="Itens" />
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-center text-[11px] text-[#94a3b8] mt-1.5">
+      <p className="text-center text-[11px] mt-1.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
         {total} item{total !== 1 ? 's' : ''} no planejamento
       </p>
     </div>
@@ -88,25 +81,46 @@ function GeneratedChart({
   data:    { day: string; conteudos: number }[]
   summary: string
 }) {
+  const { isDark } = useTheme()
+  const gridColor = isDark ? '#1e293b' : '#bfdbfe'
+  const axisProps = { fill: isDark ? '#CBD5E1' : '#64748b', fontSize: 11 } as const
+  const tipStyle  = {
+    contentStyle: {
+      background:   isDark ? '#101A2B' : '#ffffff',
+      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      borderRadius: 10,
+      color:        isDark ? '#F8FAFC' : '#1e293b',
+      fontSize:     12,
+      boxShadow:    isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(37,99,235,0.1)',
+      padding:      '8px 12px',
+    },
+    cursor: { fill: 'rgba(37,99,235,0.05)' },
+  }
+
   return (
     <div>
       <ResponsiveContainer width="100%" height={195}>
         <BarChart data={data} barSize={20} barCategoryGap="42%">
-          <CartesianGrid strokeDasharray="1 5" stroke={GRID_COLOR} vertical={false} />
-          <XAxis dataKey="day"       tick={AXIS_PROPS} axisLine={false} tickLine={false} />
-          <YAxis tick={AXIS_PROPS} axisLine={false} tickLine={false} allowDecimals={false} width={22} />
-          <Tooltip {...TIP_STYLE} />
-          <Bar dataKey="conteudos" fill={BAR_COLOR} radius={[5, 5, 0, 0]} name="Gerados" />
+          <CartesianGrid strokeDasharray="1 5" stroke={gridColor} vertical={false} />
+          <XAxis dataKey="day"       tick={axisProps} axisLine={false} tickLine={false} />
+          <YAxis tick={axisProps} axisLine={false} tickLine={false} allowDecimals={false} width={22} />
+          <Tooltip {...tipStyle} />
+          <Bar dataKey="conteudos" fill="#2563EB" radius={[5, 5, 0, 0]} name="Gerados" />
         </BarChart>
       </ResponsiveContainer>
       {summary && (
-        <p className="text-center text-[11px] text-[#94a3b8] mt-1.5">{summary}</p>
+        <p className="text-center text-[11px] mt-1.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>{summary}</p>
       )}
     </div>
   )
 }
 
 // ─── AssetsDonut ──────────────────────────────────────────────────────────────
+
+const DONUT_PALETTE = [
+  '#2563EB', '#1D4ED8', '#60A5FA', '#8B5CF6',
+  '#F5A623', '#22C55E', '#6B7280', '#64748b',
+]
 
 function AssetsDonut({
   data,
@@ -115,6 +129,20 @@ function AssetsDonut({
   data:    { type: string; count: number }[]
   summary: string
 }) {
+  const { isDark } = useTheme()
+  const tipStyle = {
+    contentStyle: {
+      background:   isDark ? '#101A2B' : '#ffffff',
+      border:       `1px solid ${isDark ? '#182233' : '#bfdbfe'}`,
+      borderRadius: 10,
+      color:        isDark ? '#F8FAFC' : '#1e293b',
+      fontSize:     12,
+      boxShadow:    isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(37,99,235,0.1)',
+      padding:      '8px 12px',
+    },
+    cursor: { fill: 'rgba(37,99,235,0.05)' },
+  }
+
   const chartData = data.map(d => ({
     name:  contentTypeLabels[d.type as ContentType] ?? d.type,
     value: d.count,
@@ -123,7 +151,7 @@ function AssetsDonut({
   if (!chartData.some(d => d.value > 0)) {
     return (
       <div className="flex items-center justify-center h-[210px]">
-        <p className="text-[12px] text-[#94a3b8] text-center leading-relaxed">
+        <p className="text-[12px] text-center leading-relaxed" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
           Nenhum conteúdo no arsenal ainda.<br />
           <span className="text-[11px]">Adicione conteúdos pela Biblioteca.</span>
         </p>
@@ -153,14 +181,14 @@ function AssetsDonut({
             iconType="circle"
             iconSize={6}
             formatter={value => (
-              <span style={{ fontSize: 11, color: '#64748b' }}>{value}</span>
+              <span style={{ fontSize: 11, color: isDark ? '#64748b' : '#475569' }}>{value}</span>
             )}
           />
-          <Tooltip {...TIP_STYLE} />
+          <Tooltip {...tipStyle} />
         </PieChart>
       </ResponsiveContainer>
       {summary && (
-        <p className="text-center text-[11px] text-[#94a3b8] mt-1.5">{summary}</p>
+        <p className="text-center text-[11px] mt-1.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>{summary}</p>
       )}
     </div>
   )
@@ -205,7 +233,18 @@ export function MetricsCarousel({
   totalAssets,
   totalPlanner,
 }: MetricsCarouselProps) {
+  const { isDark } = useTheme()
   const [[activeIdx, dir], setSlide] = useState<[number, number]>([0, 0])
+
+  const cardBg     = isDark ? '#182233' : '#ffffff'
+  const border     = isDark ? '#1e293b' : '#bfdbfe'
+  const shadow     = isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)'
+  const text1      = isDark ? '#F8FAFC' : '#1e293b'
+  const text3      = isDark ? '#94a3b8' : '#64748b'
+  const text2      = isDark ? '#CBD5E1' : '#475569'
+  const navBg      = isDark ? '#101A2B' : '#dbeafe'
+  const dotActive  = isDark ? '#29457a' : '#2563eb'
+  const dotInactive= isDark ? '#1e293b' : '#bfdbfe'
 
   const slides = useMemo(() => [
     {
@@ -223,17 +262,19 @@ export function MetricsCarousel({
   return (
     <div
       className="h-full rounded-2xl overflow-hidden"
-      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
+      style={{ background: cardBg, border: `1px solid ${border}`, boxShadow: shadow }}
     >
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-5 pb-3" style={{ borderBottom: '1px solid #1e293b' }}>
+      {/* ── Header ── */}
+      <div className="px-6 pt-5 pb-3" style={{ borderBottom: `1px solid ${border}` }}>
         <div className="flex items-center gap-3">
 
           {slides.length > 1 && (
             <button
               onClick={() => nav(-1)}
-              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
-              style={{ border: '1px solid #1e293b', background: '#101A2B' }}
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+              style={{ border: `1px solid ${border}`, background: navBg, color: text2 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = text1 }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = text2 }}
               aria-label="Anterior"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -247,11 +288,11 @@ export function MetricsCarousel({
                 variants={headerVariants}
                 initial="enter" animate="center" exit="exit"
               >
-                <p className="text-[13px] font-semibold text-[#F8FAFC] leading-snug">
+                <p className="text-[13px] font-semibold leading-snug" style={{ color: text1 }}>
                   {slide.title}
                 </p>
                 {slide.subtitle && (
-                  <p className="text-[10.5px] text-[#94a3b8] mt-0.5">{slide.subtitle}</p>
+                  <p className="text-[10.5px] mt-0.5" style={{ color: text3 }}>{slide.subtitle}</p>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -260,8 +301,10 @@ export function MetricsCarousel({
           {slides.length > 1 && (
             <button
               onClick={() => nav(1)}
-              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-all"
-              style={{ border: '1px solid #1e293b', background: '#101A2B' }}
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+              style={{ border: `1px solid ${border}`, background: navBg, color: text2 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = text1 }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = text2 }}
               aria-label="Próximo"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -276,12 +319,8 @@ export function MetricsCarousel({
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`rounded-full transition-all duration-200 ${
-                  i === activeIdx
-                    ? 'w-4 h-1.5'
-                    : 'w-1.5 h-1.5 hover:opacity-80'
-                }`}
-                style={{ background: i === activeIdx ? '#29457a' : '#1e293b' }}
+                className={`rounded-full transition-all duration-200 ${i === activeIdx ? 'w-4 h-1.5' : 'w-1.5 h-1.5 hover:opacity-80'}`}
+                style={{ background: i === activeIdx ? dotActive : dotInactive }}
                 aria-label={`Ir para slide ${i + 1}`}
               />
             ))}
@@ -289,7 +328,7 @@ export function MetricsCarousel({
         )}
       </div>
 
-      {/* ── Chart area ──────────────────────────────────────────────────────── */}
+      {/* ── Chart area ── */}
       <div className="px-4 pt-4 pb-5 overflow-hidden">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
