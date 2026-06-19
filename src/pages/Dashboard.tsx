@@ -20,6 +20,7 @@ import {
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MetricsCarousel } from '@/components/dashboard/MetricsCarousel'
+import { useTheme } from '@/contexts/ThemeContext'
 
 // ─── Approval helpers ────────────────────────────────────────────────────────
 //
@@ -36,6 +37,47 @@ function isAwaitingClientApproval(item: { approval_status: string | null }): boo
   return as === 'pendente_aprovacao' || as === 'ajuste_realizado'
 }
 
+// ─── Theme tokens ─────────────────────────────────────────────────────────────
+
+type ThemeTokens = {
+  pageBg:    string
+  cardBg:    string
+  cardBgAlt: string
+  inputBg:   string
+  border:    string
+  borderAlt: string
+  text1:     string
+  text2:     string
+  text3:     string
+  text4:     string
+}
+
+const DARK_T: ThemeTokens = {
+  pageBg:    '#0B1020',
+  cardBg:    '#182233',
+  cardBgAlt: '#101A2B',
+  inputBg:   '#182233',
+  border:    '#1e293b',
+  borderAlt: '#182233',
+  text1:     '#F8FAFC',
+  text2:     '#CBD5E1',
+  text3:     '#94a3b8',
+  text4:     '#64748b',
+}
+
+const LIGHT_T: ThemeTokens = {
+  pageBg:    '#eff6ff',
+  cardBg:    '#ffffff',
+  cardBgAlt: '#dbeafe',
+  inputBg:   '#f0f6ff',
+  border:    '#bfdbfe',
+  borderAlt: '#dbeafe',
+  text1:     '#1e293b',
+  text2:     '#475569',
+  text3:     '#64748b',
+  text4:     '#94a3b8',
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PeriodMode = 'dia' | 'semana' | 'mes' | 'ano' | 'custom'
@@ -47,13 +89,13 @@ interface Stats {
   active_clients:             number
   pending_tasks:              number
   overdue_tasks:              number
-  period_pending_approval:    number   // approval_status = pendente_aprovacao | ajuste_realizado
-  period_approved:            number   // approval_status = aprovado
-  period_scheduled:           number   // status = aprovado (aprovado pelo cliente = agendado para publicar)
-  period_published:           number   // status = publicado
-  period_adjustments:         number   // approval_status = ajuste_solicitado
-  ig_scheduled:               number   // scheduled_posts: status scheduled/publishing (fila global)
-  ig_published:               number   // scheduled_posts: status published no período
+  period_pending_approval:    number
+  period_approved:            number
+  period_scheduled:           number
+  period_published:           number
+  period_adjustments:         number
+  ig_scheduled:               number
+  ig_published:               number
 }
 
 interface PlannerDay {
@@ -111,7 +153,6 @@ function buildBarData(
       conteudos: contents.filter(c => c.created_at.startsWith(format(m, 'yyyy-MM'))).length,
     }))
   }
-  // dia / semana / mes / custom — daily buckets (capped at 60 days)
   const days = eachDayOfInterval({
     start: range.start,
     end: range.end,
@@ -139,12 +180,14 @@ interface FilterBarProps {
 }
 
 function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBarProps) {
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
+
   const [open, setOpen]         = useState(false)
   const [tempS, setTempS]       = useState(format(customRange.start, 'yyyy-MM-dd'))
   const [tempE, setTempE]       = useState(format(customRange.end,   'yyyy-MM-dd'))
   const popoverRef              = useRef<HTMLDivElement>(null)
 
-  // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setOpen(false)
@@ -168,17 +211,20 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
   ]
 
   return (
-    <div className="border-b px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap" style={{ background: '#0B1020', borderColor: '#182233' }}>
+    <div className="border-b px-6 md:px-8 py-3 flex items-center justify-between gap-4 flex-wrap" style={{ background: t.pageBg, borderColor: t.borderAlt }}>
       {/* Period pills */}
-      <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: '#101A2B' }}>
+      <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: t.cardBgAlt }}>
         {pills.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onMode(key)}
-            className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-              mode === key ? 'text-white shadow-sm' : 'text-[#CBD5E1] hover:text-white'
-            }`}
-            style={mode === key ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : undefined}
+            className={`px-4 py-1.5 rounded-lg text-[12px] font-medium transition-all ${mode === key ? 'shadow-sm' : ''}`}
+            style={{
+              color: mode === key ? 'white' : t.text2,
+              ...(mode === key ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : {}),
+            }}
+            onMouseEnter={e => { if (mode !== key) (e.currentTarget as HTMLElement).style.color = t.text1 }}
+            onMouseLeave={e => { if (mode !== key) (e.currentTarget as HTMLElement).style.color = t.text2 }}
           >
             {label}
           </button>
@@ -193,44 +239,52 @@ function FilterBar({ mode, range, customRange, onMode, onCustomRange }: FilterBa
             setTempE(format(customRange.end,   'yyyy-MM-dd'))
             setOpen(v => !v)
           }}
-          className="flex items-center gap-2 text-[12px] rounded-xl px-3 py-1.5 transition-colors text-[#CBD5E1] hover:text-white"
-          style={{ background: '#101A2B', border: `1px solid ${mode === 'custom' ? '#2563EB' : '#182233'}` }}
+          className="flex items-center gap-2 text-[12px] rounded-xl px-3 py-1.5 transition-colors"
+          style={{
+            background: t.cardBgAlt,
+            border: `1px solid ${mode === 'custom' ? '#2563EB' : t.borderAlt}`,
+            color: t.text2,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = t.text1 }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = t.text2 }}
         >
           <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="capitalize whitespace-nowrap">{rangeLabel(mode, range)}</span>
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl shadow-xl p-4 w-[260px]" style={{ background: '#101A2B', border: '1px solid #182233' }}>
-            <p className="text-[12px] font-semibold text-[#F8FAFC] mb-3">Período personalizado</p>
+          <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl shadow-xl p-4 w-[260px]" style={{ background: t.cardBg, border: `1px solid ${t.borderAlt}` }}>
+            <p className="text-[12px] font-semibold mb-3" style={{ color: t.text1 }}>Período personalizado</p>
             <div className="space-y-2.5">
               <div>
-                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data inicial</label>
+                <label className="text-[11px] block mb-1" style={{ color: t.text2 }}>Data inicial</label>
                 <input
                   type="date"
                   value={tempS}
                   onChange={e => setTempS(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
-                  style={{ background: '#182233', border: '1px solid #1e293b' }}
+                  className="w-full h-8 px-3 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
+                  style={{ background: t.inputBg, border: `1px solid ${t.border}`, color: t.text1 }}
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#CBD5E1] block mb-1">Data final</label>
+                <label className="text-[11px] block mb-1" style={{ color: t.text2 }}>Data final</label>
                 <input
                   type="date"
                   value={tempE}
                   min={tempS}
                   onChange={e => setTempE(e.target.value)}
-                  className="w-full h-8 px-3 rounded-lg text-[12px] text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
-                  style={{ background: '#182233', border: '1px solid #1e293b' }}
+                  className="w-full h-8 px-3 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/40"
+                  style={{ background: t.inputBg, border: `1px solid ${t.border}`, color: t.text1 }}
                 />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setOpen(false)}
-                className="flex-1 h-8 rounded-lg text-[12px] text-[#CBD5E1] hover:text-white transition-colors"
-                style={{ border: '1px solid #182233' }}
+                className="flex-1 h-8 rounded-lg text-[12px] transition-colors"
+                style={{ border: `1px solid ${t.borderAlt}`, color: t.text2 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = t.text1 }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = t.text2 }}
               >
                 Cancelar
               </button>
@@ -279,6 +333,9 @@ function KpiCard({
   featured?:     boolean
   warning?:      boolean
 }) {
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
+
   const iconBgStyle = iconBgMap[iconBg] ?? 'rgba(203,213,225,0.10)'
   const showWarning = warning && value > 0
 
@@ -307,7 +364,11 @@ function KpiCard({
   ) : (
     <div
       className="h-full rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200 hover:opacity-90"
-      style={{ background: '#182233', border: `1px solid ${showWarning ? 'rgba(239,68,68,0.3)' : '#1e293b'}`, boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
+      style={{
+        background: t.cardBg,
+        border: `1px solid ${showWarning ? 'rgba(239,68,68,0.3)' : t.border}`,
+        boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)',
+      }}
     >
       <div className="flex items-start justify-between">
         <div
@@ -323,9 +384,9 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className="text-[26px] font-semibold text-[#F8FAFC] tabular-nums leading-none">{displayValue ?? value}</p>
-        <p className="text-[12px] text-[#CBD5E1] mt-1.5 leading-tight">{label}</p>
-        {subtitle && <p className="text-[10px] text-[#64748b] mt-0.5">{subtitle}</p>}
+        <p className="text-[26px] font-semibold tabular-nums leading-none" style={{ color: t.text1 }}>{displayValue ?? value}</p>
+        <p className="text-[12px] mt-1.5 leading-tight" style={{ color: t.text2 }}>{label}</p>
+        {subtitle && <p className="text-[10px] mt-0.5" style={{ color: t.text4 }}>{subtitle}</p>}
       </div>
     </div>
   )
@@ -353,6 +414,9 @@ function CalendarWidget({
   items: PlannerDay[]
   onDayClick: () => void
 }) {
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
+
   const today  = startOfToday()
   const [offset, setOffset] = useState(0)
   const center = addDays(today, offset)
@@ -364,24 +428,32 @@ function CalendarWidget({
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
+      style={{
+        background: t.cardBg,
+        border: `1px solid ${t.border}`,
+        boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)',
+      }}
     >
       {/* Month + nav */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setOffset(o => o - 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
-          style={{ background: '#101A2B' }}
+          className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+          style={{ background: t.cardBgAlt, color: t.text2 }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = t.text1 }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = t.text2 }}
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-[13px] font-semibold text-[#F8FAFC] capitalize">
+        <h3 className="text-[13px] font-semibold capitalize" style={{ color: t.text1 }}>
           {format(center, 'MMMM yyyy', { locale: ptBR })}
         </h3>
         <button
           onClick={() => setOffset(o => o + 5)}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#CBD5E1] hover:text-white transition-colors"
-          style={{ background: '#101A2B' }}
+          className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+          style={{ background: t.cardBgAlt, color: t.text2 }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = t.text1 }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = t.text2 }}
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -390,7 +462,7 @@ function CalendarWidget({
       {/* Day labels */}
       <div className="grid grid-cols-5 mb-1.5">
         {days.map(day => (
-          <div key={day.toISOString()} className="text-center text-[9.5px] font-semibold text-[#94a3b8] py-1 uppercase tracking-wide capitalize">
+          <div key={day.toISOString()} className="text-center text-[9.5px] font-semibold py-1 uppercase tracking-wide capitalize" style={{ color: t.text3 }}>
             {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
           </div>
         ))}
@@ -408,10 +480,10 @@ function CalendarWidget({
               onClick={onDayClick}
               className="flex flex-col items-center py-2.5 rounded-xl cursor-pointer transition-all duration-150 select-none"
               style={isCurrent ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : { background: 'transparent' }}
-              onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = '#101A2B' }}
+              onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = t.cardBgAlt }}
               onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
-              <span className={`text-[14px] font-semibold leading-none ${isCurrent ? 'text-white' : 'text-[#CBD5E1]'}`}>
+              <span className="text-[14px] font-semibold leading-none" style={{ color: isCurrent ? 'white' : t.text2 }}>
                 {format(day, 'd')}
               </span>
               {dayItems.length > 0 && (
@@ -428,22 +500,22 @@ function CalendarWidget({
 
       {/* Today's list */}
       {todayItems.length === 0 ? (
-        <p className="text-[11px] text-[#94a3b8] text-center py-1">Nenhum post hoje</p>
+        <p className="text-[11px] text-center py-1" style={{ color: t.text3 }}>Nenhum post hoje</p>
       ) : (
         <div className="space-y-1">
-          <p className="text-[9.5px] font-semibold text-[#94a3b8] uppercase tracking-widest mb-2.5">Hoje</p>
+          <p className="text-[9.5px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: t.text3 }}>Hoje</p>
           {todayItems.slice(0, 3).map(item => (
-            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl" style={{ background: '#101A2B' }}>
+            <div key={item.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl" style={{ background: t.cardBgAlt }}>
               <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDotColor[item.status] ?? 'bg-[#94a3b8]'}`} />
-              <p className="text-[11.5px] text-[#F8FAFC] truncate flex-1 font-medium">{item.title}</p>
-              <span className="text-[9.5px] text-[#94a3b8] flex-shrink-0">
+              <p className="text-[11.5px] truncate flex-1 font-medium" style={{ color: t.text1 }}>{item.title}</p>
+              <span className="text-[9.5px] flex-shrink-0" style={{ color: t.text3 }}>
                 {contentTypeLabels[item.content_type as any] ?? item.content_type}
               </span>
             </div>
           ))}
           {todayItems.length > 3 && (
             <Link to="/planner">
-              <p className="text-[10.5px] text-[#94a3b8] hover:text-[#475569] text-center transition-colors mt-1">
+              <p className="text-[10.5px] text-center transition-colors mt-1" style={{ color: t.text3 }}>
                 +{todayItems.length - 3} mais →
               </p>
             </Link>
@@ -452,11 +524,11 @@ function CalendarWidget({
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mt-4 pt-3.5 border-t border-[#1e293b]">
+      <div className="flex flex-wrap gap-3 mt-4 pt-3.5" style={{ borderTop: `1px solid ${t.border}` }}>
         {Object.entries(statusDotColor).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1">
             <div className={`w-1 h-1 rounded-full ${color}`} />
-            <span className="text-[9.5px] text-[#94a3b8] capitalize">
+            <span className="text-[9.5px] capitalize" style={{ color: t.text3 }}>
               {status === 'producao' ? 'Prod.' : status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
           </div>
@@ -469,14 +541,17 @@ function CalendarWidget({
 // ─── Financial Summary Widget ─────────────────────────────────────────────────
 
 function FinancialSummary({ data }: { data: FinStats }) {
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
+
   const items = [
     {
-      icon:        <DollarSign className="w-4 h-4" style={{ color: '#CBD5E1' }} />,
+      icon:        <DollarSign className="w-4 h-4" style={{ color: t.text2 }} />,
       iconBgStyle: 'rgba(203,213,225,0.15)',
       label:       'MRR',
       sub:         'receita mensal recorrente',
       value:       fmtBRL(data.mrr),
-      valueColor:  '#F8FAFC',
+      valueColor:  t.text1,
       show:        true,
     },
     {
@@ -489,23 +564,23 @@ function FinancialSummary({ data }: { data: FinStats }) {
       show:        true,
     },
     {
-      icon:        <Clock className="w-4 h-4" style={{ color: data.pending > 0 ? '#F5A623' : '#64748b' }} />,
+      icon:        <Clock className="w-4 h-4" style={{ color: data.pending > 0 ? '#F5A623' : t.text4 }} />,
       iconBgStyle: data.pending > 0 ? 'rgba(245,166,35,0.15)' : 'rgba(203,213,225,0.10)',
       label:       'Pendente',
       sub:         'a receber no ciclo',
       value:       fmtBRL(data.pending),
-      valueColor:  data.pending > 0 ? '#F5A623' : '#94a3b8',
+      valueColor:  data.pending > 0 ? '#F5A623' : t.text3,
       show:        true,
     },
     {
-      icon:        <AlertTriangle className="w-4 h-4" style={{ color: data.overdueCount > 0 ? '#f87171' : '#64748b' }} />,
+      icon:        <AlertTriangle className="w-4 h-4" style={{ color: data.overdueCount > 0 ? '#f87171' : t.text4 }} />,
       iconBgStyle: data.overdueCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(203,213,225,0.10)',
       label:       'Inadimplência',
       sub:         data.overdueCount > 0
                      ? `${data.overdueCount} cliente${data.overdueCount !== 1 ? 's' : ''} em atraso`
                      : 'nenhum em atraso',
       value:       fmtBRL(data.overdueAmt),
-      valueColor:  data.overdueCount > 0 ? '#f87171' : '#94a3b8',
+      valueColor:  data.overdueCount > 0 ? '#f87171' : t.text3,
       show:        true,
     },
     {
@@ -514,7 +589,7 @@ function FinancialSummary({ data }: { data: FinStats }) {
       label:       'Ticket médio',
       sub:         'por cliente ativo',
       value:       fmtBRL(data.avgTicket),
-      valueColor:  '#F8FAFC',
+      valueColor:  t.text1,
       show:        true,
     },
   ]
@@ -522,18 +597,22 @@ function FinancialSummary({ data }: { data: FinStats }) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
+      style={{
+        background: t.cardBg,
+        border: `1px solid ${t.border}`,
+        boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)',
+      }}
     >
       {/* Header */}
-      <div className="px-6 py-4 flex items-center" style={{ borderBottom: '1px solid #1e293b' }}>
-        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo financeiro</h3>
-        <Link to="/financial" className="ml-auto text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors">
+      <div className="px-6 py-4 flex items-center" style={{ borderBottom: `1px solid ${t.border}` }}>
+        <h3 className="text-[13px] font-semibold" style={{ color: t.text1 }}>Resumo financeiro</h3>
+        <Link to="/financial" className="ml-auto text-[11px] transition-colors" style={{ color: t.text3 }}>
           Ver detalhes →
         </Link>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: '#1e293b' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x" style={{ borderColor: t.border }}>
         {items.map((item, i) => (
           <div key={i} className="px-6 py-5 flex flex-col gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: item.iconBgStyle }}>
@@ -543,10 +622,10 @@ function FinancialSummary({ data }: { data: FinStats }) {
               <p className="text-[20px] font-bold leading-tight tabular-nums" style={{ color: item.valueColor }}>
                 {item.value}
               </p>
-              <p className="text-[10.5px] font-semibold text-[#94a3b8] mt-1 uppercase tracking-wide">
+              <p className="text-[10.5px] font-semibold mt-1 uppercase tracking-wide" style={{ color: t.text3 }}>
                 {item.label}
               </p>
-              <p className="text-[10px] text-[#cbd5e1] mt-0.5">{item.sub}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: t.text2 }}>{item.sub}</p>
             </div>
           </div>
         ))}
@@ -565,22 +644,27 @@ function AlertsWidget({
   pendingTasks:    number
   periodApproved:  number
 }) {
-  const allGood = pendingApproval === 0 && overdueTasks === 0
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
 
   const rows = [
     { icon: CheckCircle2, label: 'Aprovados no período',  value: periodApproved,  bgStyle: 'rgba(34,197,94,0.15)',                                            iconColor: '#22C55E', href: '/planner' },
-    { icon: Clock,        label: 'Aguardando aprovação',  value: pendingApproval, bgStyle: pendingApproval > 0 ? 'rgba(245,166,35,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingApproval > 0 ? '#F5A623' : '#64748b', href: '/planner' },
-    { icon: CheckSquare,  label: 'Tarefas em aberto',     value: pendingTasks,    bgStyle: pendingTasks    > 0 ? 'rgba(79,142,247,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingTasks    > 0 ? '#4F8EF7' : '#64748b', href: '/tasks'   },
-    { icon: AlertTriangle,label: 'Tarefas atrasadas',     value: overdueTasks,    bgStyle: overdueTasks    > 0 ? 'rgba(239,68,68,0.15)'   : 'rgba(203,213,225,0.10)', iconColor: overdueTasks    > 0 ? '#f87171' : '#64748b', href: '/tasks'   },
+    { icon: Clock,        label: 'Aguardando aprovação',  value: pendingApproval, bgStyle: pendingApproval > 0 ? 'rgba(245,166,35,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingApproval > 0 ? '#F5A623' : t.text4, href: '/planner' },
+    { icon: CheckSquare,  label: 'Tarefas em aberto',     value: pendingTasks,    bgStyle: pendingTasks    > 0 ? 'rgba(79,142,247,0.15)'  : 'rgba(203,213,225,0.10)', iconColor: pendingTasks    > 0 ? '#4F8EF7' : t.text4, href: '/tasks'   },
+    { icon: AlertTriangle,label: 'Tarefas atrasadas',     value: overdueTasks,    bgStyle: overdueTasks    > 0 ? 'rgba(239,68,68,0.15)'   : 'rgba(203,213,225,0.10)', iconColor: overdueTasks    > 0 ? '#f87171' : t.text4, href: '/tasks'   },
   ]
 
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ background: '#182233', border: '1px solid #1e293b', boxShadow: '0 1px 8px rgba(0,0,0,0.2)' }}
+      style={{
+        background: t.cardBg,
+        border: `1px solid ${t.border}`,
+        boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.2)' : '0 1px 8px rgba(37,99,235,0.08)',
+      }}
     >
       <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-[13px] font-semibold text-[#F8FAFC]">Resumo operacional</h3>
+        <h3 className="text-[13px] font-semibold" style={{ color: t.text1 }}>Resumo operacional</h3>
       </div>
       <div className="space-y-0.5">
         {rows.map((row, i) => (
@@ -589,7 +673,7 @@ function AlertsWidget({
               <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: row.bgStyle }}>
                 <row.icon className="w-3.5 h-3.5" style={{ color: row.iconColor }} />
               </div>
-              <p className="text-[11.5px] text-[#CBD5E1] flex-1 leading-snug">{row.label}</p>
+              <p className="text-[11.5px] flex-1 leading-snug" style={{ color: t.text2 }}>{row.label}</p>
               <span className="text-[14px] font-semibold tabular-nums" style={{ color: row.iconColor }}>{row.value}</span>
             </div>
           </Link>
@@ -604,6 +688,8 @@ function AlertsWidget({
 export function Dashboard() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
+  const { isDark } = useTheme()
+  const t = isDark ? DARK_T : LIGHT_T
 
   // ── Period state (single source of truth) ─────────────────────────────────
   const defaultCustom: DateRange = {
@@ -663,37 +749,24 @@ export function Dashboard() {
       plannerCalRes,
       igPostsRes,
     ] = await Promise.all([
-      // Clientes — sempre global (inclui todos os campos para calcFinancialStatus)
       supabase.from('clients').select('id, status, valor_mensal, financial_status, last_payment_date, dia_vencimento, manual_status_override').eq('user_id', user!.id),
-
-      // Tarefas — todas não concluídas (filtro de período no cliente)
       supabase.from('tasks').select('id, status, due_date').eq('user_id', user!.id).neq('status', 'concluido'),
-
-      // Conteúdos do período (para gráfico de barras no MetricsCarousel)
       supabase.from('contents')
         .select('created_at')
         .eq('user_id', user!.id)
         .gte('created_at', startIso)
         .lte('created_at', endIso),
-
-      // Arsenal — sempre global
       supabase.from('content_assets').select('content_type').eq('user_id', user!.id),
-
-      // Planner — itens do período
       supabase.from('planner')
         .select('status, approval_status')
         .eq('user_id', user!.id)
         .gte('scheduled_date', startDate)
         .lte('scheduled_date', endDate),
-
-      // Calendário — janela ao redor de hoje (independe do período selecionado)
       supabase.from('planner')
         .select('id, title, content_type, status, scheduled_date')
         .eq('user_id', user!.id)
         .gte('scheduled_date', calStart)
         .lte('scheduled_date', calEnd),
-
-      // Posts do Instagram (agendados/publicados) — filtro de status/período no cliente
       supabase.from('scheduled_posts')
         .select('status, scheduled_at')
         .eq('user_id', user!.id),
@@ -702,40 +775,23 @@ export function Dashboard() {
     const clients  = clientsRes.data  || []
     const taskList = tasksRes.data    || []
 
-    // Tarefas do período: inclui tarefas sem prazo (due_date null = sempre pendente)
-    const periodTasks = taskList.filter(t => {
-      if (!t.due_date) return true
-      const d = new Date(t.due_date)
+    const periodTasks = taskList.filter(task => {
+      if (!task.due_date) return true
+      const d = new Date(task.due_date)
       return d >= start && d <= end
     })
-    // Atrasadas: métrica global (independe do período)
     const overdue = taskList.filter(t => t.due_date && new Date(t.due_date) < now).length
 
-    // ── Derivar contadores do planner ────────────────────────────────────────
     const pList = plannerRes.data || []
 
-    // Posts Agendados = status 'aprovado' (cliente aprovou → pronto para publicar)
-    // Nota: não existe status 'agendado' no sistema — 'aprovado' é o equivalente
-    const period_scheduled = pList.filter((p: any) => p.status === 'aprovado').length
-
-    // Posts Publicados = status 'publicado' (já foi ao ar)
-    const period_published = pList.filter((p: any) => p.status === 'publicado').length
-
-    // Aguardando aprovação do cliente = enviado para o cliente, sem resposta ainda
-    // (pendente_aprovacao = aguardando 1ª resposta | ajuste_realizado = ajuste feito, aguardando nova aprovação)
+    const period_scheduled        = pList.filter((p: any) => p.status === 'aprovado').length
+    const period_published        = pList.filter((p: any) => p.status === 'publicado').length
     const period_pending_approval = pList.filter(isAwaitingClientApproval).length
+    const period_approved         = pList.filter((p: any) => p.approval_status === 'aprovado').length
+    const period_adjustments      = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado').length
 
-    // Aprovados no período
-    const period_approved = pList.filter((p: any) => p.approval_status === 'aprovado').length
-
-    // Ajustes solicitados = cliente pediu correções (apenas ajuste_solicitado)
-    const period_adjustments = pList.filter((p: any) => p.approval_status === 'ajuste_solicitado').length
-
-    // ── Instagram (scheduled_posts) ──────────────────────────────────────────
-    const igPosts = igPostsRes.data || []
-    // Agendados = fila atual (independe do período): aguardando publicar
+    const igPosts    = igPostsRes.data || []
     const ig_scheduled = igPosts.filter((p: any) => p.status === 'scheduled' || p.status === 'publishing').length
-    // Publicados = já foram ao ar dentro do período selecionado
     const ig_published = igPosts.filter((p: any) =>
       p.status === 'published' && p.scheduled_at >= startIso && p.scheduled_at <= endIso
     ).length
@@ -757,17 +813,13 @@ export function Dashboard() {
 
     setPlannerCalItems((plannerCalRes.data || []) as PlannerDay[])
 
-    // ── Métricas financeiras — mesma lógica da página Financeiro ─────────────
     const now2      = new Date()
     const thisYear  = now2.getFullYear()
     const thisMonth = now2.getMonth() + 1
-    // Clientes com dados financeiros (com valor_mensal ou dia_vencimento)
-    const finClients = clients.filter((c: any) => c.valor_mensal != null || c.dia_vencimento != null)
+    const finClients    = clients.filter((c: any) => c.valor_mensal != null || c.dia_vencimento != null)
     const withCalcStatus = finClients.map((c: any) => ({ client: c, status: calcFinancialStatus(c) }))
-    // MRR: todos exceto cancelados
-    const mrrClients = withCalcStatus.filter((x: any) => x.status !== 'cancelado')
-    const mrr        = mrrClients.reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
-    // Recebido: pagou no mês atual (last_payment_date no mês corrente)
+    const mrrClients    = withCalcStatus.filter((x: any) => x.status !== 'cancelado')
+    const mrr           = mrrClients.reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
     const received = withCalcStatus
       .filter((x: any) => {
         if (!x.client.last_payment_date) return false
@@ -775,29 +827,22 @@ export function Dashboard() {
         return y === thisYear && m === thisMonth
       })
       .reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
-    // Pendente: vence em breve
     const pending      = withCalcStatus.filter((x: any) => x.status === 'vence_em_breve').reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
-    // Inadimplência: atrasados
     const overdueAmt   = withCalcStatus.filter((x: any) => x.status === 'atrasado').reduce((s: number, x: any) => s + (Number(x.client.valor_mensal) || 0), 0)
     const overdueCount = withCalcStatus.filter((x: any) => x.status === 'atrasado').length
-    // Ticket médio por contrato ativo (não cancelado)
-    const avgTicket = mrrClients.length > 0 ? mrr / mrrClients.length : 0
+    const avgTicket    = mrrClients.length > 0 ? mrr / mrrClients.length : 0
     setFinStats({ mrr, received, pending, overdueAmt, overdueCount, avgTicket })
 
-    // Gráfico de barras de conteúdos
     setWeeklyData(buildBarData(periodMode, { start, end }, contentsRes.data || []))
 
-    // Donut do arsenal
     const typeMap: Record<string, number> = {}
     ;(assetsRes.data || []).forEach((a: any) => { typeMap[a.content_type] = (typeMap[a.content_type] || 0) + 1 })
     setAssetTypes(Object.entries(typeMap).map(([type, count]) => ({ type, count })))
 
-    // Status breakdown do planner
     const statusMap: Record<string, number> = {}
     pList.forEach((p: any) => { statusMap[p.status] = (statusMap[p.status] || 0) + 1 })
     setPlannerStatuses(Object.entries(statusMap).map(([status, count]) => ({ status, count })))
 
-    // Gráfico de planejamento — "Aguardando aprovação" usa isAwaitingClientApproval()
     setPlannerChartData([
       { label: 'Ideia',         value: pList.filter((p: any) => p.status === 'ideia').length,   color: '#a3a3a3' },
       { label: 'Revisão',       value: pList.filter((p: any) => p.status === 'revisao').length, color: '#f59e0b' },
@@ -813,7 +858,7 @@ export function Dashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full" style={{ background: '#0B1020' }}>
+    <div className="min-h-full" style={{ background: t.pageBg }}>
 
       {/* ── Hero Banner inteligente ── */}
       <DashboardHero
@@ -886,7 +931,7 @@ export function Dashboard() {
               plannerStatuses={plannerStatuses}
               plannerChartData={plannerChartData}
               contentsThisWeek={weeklyData.reduce((s, d) => s + d.conteudos, 0)}
-              totalAssets={assetTypes.reduce((s, t) => s + t.count, 0)}
+              totalAssets={assetTypes.reduce((s, a) => s + a.count, 0)}
               totalPlanner={plannerStatuses.reduce((s, p) => s + p.count, 0)}
             />
           </div>
