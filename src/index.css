@@ -237,6 +237,25 @@
 [data-theme="light"] .text-\[\#6B7280\]         { color: var(--sm-text-4) !important; }
 [data-theme="light"] .hover\:text-\[\#9CA3AF\]:hover { color: var(--sm-text-3) !important; }
 
+/* Padrões white/opacity usados no Planner (calendário, modal, lista) */
+[data-theme="light"] .border-white\/\[0\.06\]          { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-white\/\[0\.08\]          { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-white\/10                 { border-color: var(--sm-border) !important; }
+[data-theme="light"] .border-white\/8                  { border-color: var(--sm-border) !important; }
+[data-theme="light"] .hover\:border-white\/\[0\.12\]:hover { border-color: var(--sm-border-alt) !important; }
+[data-theme="light"] .hover\:border-white\/\[0\.15\]:hover { border-color: var(--sm-border-alt) !important; }
+
+[data-theme="light"] .bg-white\/\[0\.02\]  { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-white\/\[0\.03\]  { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-white\/\[0\.04\]  { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-white\/\[0\.05\]  { background-color: var(--sm-bg-input) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\]  { background-color: var(--sm-bg-card2) !important; }
+[data-theme="light"] .bg-white\/3          { background-color: var(--sm-bg-alt)   !important; }
+[data-theme="light"] .bg-white\/5          { background-color: var(--sm-bg-input) !important; }
+
+[data-theme="light"] .hover\:bg-white\/\[0\.10\]:hover { background-color: var(--sm-bg-alt) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover        { background-color: var(--sm-bg-alt) !important; }
+
 /* ── Scrollbar light mode ────────────────────────────────────────────────────── */
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }

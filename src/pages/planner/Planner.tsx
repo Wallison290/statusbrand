@@ -2631,7 +2631,8 @@ export function Planner() {
                   type="date"
                   value={form.scheduled_date}
                   onChange={e => set('scheduled_date', e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 [color-scheme:dark]"
+                  className="w-full h-9 px-3 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  style={{ background: 'var(--sm-bg-input)', borderWidth: 1, borderStyle: 'solid', borderColor: 'var(--sm-border)', color: 'var(--sm-text-1)' }}
                 />
               </div>
               <div>
@@ -2640,7 +2641,8 @@ export function Planner() {
                   type="time"
                   value={form.scheduled_time}
                   onChange={e => set('scheduled_time', e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 [color-scheme:dark]"
+                  className="w-full h-9 px-3 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  style={{ background: 'var(--sm-bg-input)', borderWidth: 1, borderStyle: 'solid', borderColor: 'var(--sm-border)', color: 'var(--sm-text-1)' }}
                 />
               </div>
             </div>
