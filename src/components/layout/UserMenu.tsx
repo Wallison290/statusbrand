@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, CreditCard, LogOut, Key, ChevronRight,
   Camera, Check, X, Loader2, Building2, Zap, Crown,
-  HelpCircle, MessageCircle, ShieldCheck,
+  HelpCircle, MessageCircle, ShieldCheck, Sun, Moon,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useToast } from '@/components/ui/toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { useWhatsappSettings, WHATSAPP_CATEGORIES } from '@/hooks/useWhatsappSettings'
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -354,6 +355,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
   const { profile, user, signOut } = useAuth()
   const { data: subData }     = useSubscription()
   const { toast }             = useToast()
+  const { isDark, toggleTheme } = useTheme()
   const [open, setOpen]       = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const menuRef               = useRef<HTMLDivElement>(null)
@@ -531,6 +533,29 @@ export function UserMenu({ dark = true }: UserMenuProps) {
                     description="Falar no WhatsApp"
                     onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
                   />
+
+                  {/* Toggle de tema */}
+                  <button
+                    onClick={toggleTheme}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-[#f8fafc] group"
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-amber-100' : 'bg-blue-100'}`}>
+                      {isDark
+                        ? <Sun className="w-3.5 h-3.5 text-amber-500" />
+                        : <Moon className="w-3.5 h-3.5 text-blue-600" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] font-medium text-[#0f172a]">
+                        {isDark ? 'Tema Claro' : 'Tema Escuro'}
+                      </p>
+                      <p className="text-[11px] text-[#94a3b8]">Aparência da interface</p>
+                    </div>
+                    {/* Pill toggle */}
+                    <div className={`w-9 h-5 rounded-full flex-shrink-0 relative transition-colors ${isDark ? 'bg-[#1e293b]' : 'bg-[#2563EB]'}`}>
+                      <span className={`absolute top-[3px] w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all ${isDark ? 'left-[3px]' : 'left-[19px]'}`} />
+                    </div>
+                  </button>
 
                   <div className="my-1.5 border-t border-[#f1f5f9]" />
 
