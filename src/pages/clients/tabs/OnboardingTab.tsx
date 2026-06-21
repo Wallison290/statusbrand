@@ -579,16 +579,19 @@ function BriefingSection({ clientId }: { clientId: string }) {
                         key={field.key as string}
                         type="button"
                         onClick={() => setField(field.key, !val)}
-                        className="flex items-center gap-2.5 w-full text-left hover:bg-[#cbd5e1]/[0.05] rounded px-1 py-1 transition-colors"
+                        className="flex items-center gap-2.5 w-full text-left rounded px-1 py-1 transition-colors"
+                        style={{ '--tw-bg-opacity': 1 } as React.CSSProperties}
                       >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                          val
-                            ? 'bg-blue-600 border-blue-600'
-                            : 'border-white/[0.20]'
-                        }`}>
+                        <div
+                          className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors"
+                          style={val
+                            ? { background: '#2563eb', borderColor: '#2563eb', border: '1px solid #2563eb' }
+                            : { border: '1.5px solid var(--sm-border-alt)' }
+                          }
+                        >
                           {val && <Check className="w-2.5 h-2.5 text-white" />}
                         </div>
-                        <span className={`text-[13px] ${val ? 'text-[#F8FAFC]' : 'text-[#64748b]'}`}>
+                        <span className="text-[13px]" style={{ color: val ? 'var(--sm-text-1)' : 'var(--sm-text-2)' }}>
                           {field.label}
                         </span>
                       </button>
