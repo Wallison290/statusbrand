@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTheme } from '@/contexts/ThemeContext'
 
 // ─── Gradientes disponíveis ───────────────────────────────────────────────────
 
@@ -57,14 +58,14 @@ function getBannerStyle(id: string | null | undefined): React.CSSProperties {
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_CFG: Record<string, { label: string; dot: string; badge: string }> = {
-  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' },
-  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-500/10 text-amber-300 border-amber-500/25'       },
-  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-500/10 text-red-300 border-red-500/25'             },
-  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-500/10 text-blue-300 border-blue-500/25'          },
-  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-500/10 text-violet-300 border-violet-500/25'    },
-  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-500/10 text-teal-300 border-teal-500/25'          },
-  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-500/10 text-orange-300 border-orange-500/25'   },
+const STATUS_CFG: Record<string, { label: string; dot: string; badge: string; badgeLight: string }> = {
+  ativo:      { label: 'Ativo',       dot: 'bg-emerald-400', badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25', badgeLight: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  pausado:    { label: 'Pausado',     dot: 'bg-amber-400',   badge: 'bg-amber-500/10 text-amber-300 border-amber-500/25',       badgeLight: 'bg-amber-50 text-amber-700 border-amber-200'       },
+  encerrado:  { label: 'Encerrado',   dot: 'bg-red-400',     badge: 'bg-red-500/10 text-red-300 border-red-500/25',             badgeLight: 'bg-red-50 text-red-700 border-red-200'             },
+  lead:       { label: 'Lead',        dot: 'bg-blue-400',    badge: 'bg-blue-500/10 text-blue-300 border-blue-500/25',          badgeLight: 'bg-blue-50 text-blue-700 border-blue-200'          },
+  proposta:   { label: 'Proposta',    dot: 'bg-violet-400',  badge: 'bg-violet-500/10 text-violet-300 border-violet-500/25',    badgeLight: 'bg-violet-50 text-violet-700 border-violet-200'    },
+  fechado:    { label: 'Fechado',     dot: 'bg-teal-400',    badge: 'bg-teal-500/10 text-teal-300 border-teal-500/25',          badgeLight: 'bg-teal-50 text-teal-700 border-teal-200'          },
+  onboarding: { label: 'Onboarding', dot: 'bg-orange-400',  badge: 'bg-orange-500/10 text-orange-300 border-orange-500/25',   badgeLight: 'bg-orange-50 text-orange-700 border-orange-200'   },
 }
 
 const SORT_OPTIONS = [
@@ -92,6 +93,7 @@ export function ClientList() {
   const navigate     = useNavigate()
   const queryClient  = useQueryClient()
   const { user }     = useAuth()
+  const { isDark }   = useTheme()
 
   const [search, setSearch]         = useState('')
   const [filter, setFilter]         = useState<'all' | 'ativo' | 'pausado' | 'encerrado'>('all')
@@ -241,39 +243,42 @@ export function ClientList() {
     <div className="min-h-full flex flex-col">
 
       {/* ── Conteúdo ─────────────────────────────────────────────────────────── */}
-      <div className="flex-1" style={{ background: '#0B1020' }}>
+      <div className="flex-1" style={{ background: 'var(--sm-bg-page)' }}>
         <div className="px-4 sm:px-6 pt-6 pb-12 space-y-5">
 
           {/* ── Toolbar ───────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px] max-w-md">
 
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--sm-text-3)' }} />
               <input
                 type="text"
                 placeholder="Buscar por nome, @handle, segmento ou email..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#1e293b] bg-[#182233] text-[13px] text-[#F8FAFC] placeholder:text-[#64748b] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition-all shadow-sm"
+                style={{ background: 'var(--sm-bg-input)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-1)' }}
               />
             </div>
 
             <div className="relative">
               <button
                 onClick={() => setShowSort(o => !o)}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#1e293b] bg-[#182233] text-[13px] text-[#F8FAFC] hover:border-[#2563EB] transition-colors shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] hover:border-[#2563EB] transition-colors shadow-sm"
+                style={{ background: 'var(--sm-bg-input)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-1)' }}
               >
-                {sortLabel} <ChevronDown className="w-3.5 h-3.5 text-[#64748b]" />
+                {sortLabel} <ChevronDown className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3)' }} />
               </button>
               {showSort && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowSort(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-[#101A2B] border border-[#1e293b] rounded-xl shadow-lg overflow-hidden py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl shadow-lg overflow-hidden py-1" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
                     {SORT_OPTIONS.map(o => (
                       <button
                         key={o.value}
                         onClick={() => { setSort(o.value); setShowSort(false) }}
-                        className={`w-full text-left px-4 py-2 text-[13px] hover:bg-[#182233] transition-colors ${sort === o.value ? 'font-semibold text-[#60a5fa]' : 'text-[#CBD5E1]'}`}
+                        className="w-full text-left px-4 py-2 text-[13px] transition-colors"
+                        style={{ color: sort === o.value ? '#2563EB' : 'var(--sm-text-2)', fontWeight: sort === o.value ? 600 : 400 }}
                       >
                         {o.label}
                       </button>
@@ -302,12 +307,11 @@ export function ClientList() {
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all border ${
-                  filter === f.value
-                    ? 'bg-[#2563EB] border-[#2563EB] shadow-sm'
-                    : 'bg-[#182233] text-[#94a3b8] border-[#1e293b] hover:border-[#2563EB] hover:text-[#F8FAFC]'
-                }`}
-                style={filter === f.value ? { color: '#ffffff' } : {}}
+                className="px-4 py-1.5 rounded-lg text-[13px] font-medium transition-all border"
+                style={filter === f.value
+                  ? { background: '#2563EB', borderColor: '#2563EB', color: '#ffffff' }
+                  : { background: 'var(--sm-bg-input)', borderColor: 'var(--sm-border)', color: 'var(--sm-text-3)' }
+                }
               >
                 {f.label}
               </button>
@@ -318,15 +322,15 @@ export function ClientList() {
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-[#182233] rounded-2xl overflow-hidden border border-[#1e293b] shadow-sm animate-pulse">
-                  <div className="h-28 bg-gradient-to-r from-[#1e293b] to-[#101A2B]" />
+                <div key={i} className="rounded-2xl overflow-hidden shadow-sm animate-pulse" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+                  <div className="h-28" style={{ background: 'var(--sm-bg-alt)' }} />
                   <div className="p-5 pt-10 space-y-3">
-                    <div className="h-4 bg-[#1e293b] rounded-lg w-3/4" />
-                    <div className="h-3 bg-[#1e293b] rounded-lg w-1/2" />
-                    <div className="h-3 bg-[#1e293b] rounded-full w-1/3" />
-                    <div className="border-t border-[#1e293b] pt-3 mt-4 grid grid-cols-2 gap-2">
+                    <div className="h-4 rounded-lg w-3/4" style={{ background: 'var(--sm-bg-alt)' }} />
+                    <div className="h-3 rounded-lg w-1/2" style={{ background: 'var(--sm-bg-alt)' }} />
+                    <div className="h-3 rounded-full w-1/3" style={{ background: 'var(--sm-bg-alt)' }} />
+                    <div className="pt-3 mt-4 grid grid-cols-2 gap-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
                       {[...Array(4)].map((_, j) => (
-                        <div key={j} className="h-12 bg-[#101A2B] rounded-xl" />
+                        <div key={j} className="h-12 rounded-xl" style={{ background: 'var(--sm-bg-alt)' }} />
                       ))}
                     </div>
                   </div>
@@ -338,14 +342,14 @@ export function ClientList() {
           {/* ── Empty state ───────────────────────────────────────────────────── */}
           {!isLoading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#182233] border border-[#1e293b] flex items-center justify-center shadow-sm">
-                <Users className="w-8 h-8 text-[#475569]" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+                <Users className="w-8 h-8" style={{ color: 'var(--sm-text-3)' }} />
               </div>
               <div className="text-center">
-                <p className="text-[15px] font-semibold text-[#F8FAFC]">
+                <p className="text-[15px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>
                   {search ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
                 </p>
-                <p className="text-[13px] text-[#64748b] mt-1">
+                <p className="text-[13px] mt-1" style={{ color: 'var(--sm-text-3)' }}>
                   {search ? 'Tente outra busca' : 'Cadastre seu primeiro cliente agora'}
                 </p>
               </div>
@@ -384,7 +388,8 @@ export function ClientList() {
                       transition={{ delay: i * 0.04, duration: 0.2 }}
                       whileHover={{ y: -4, transition: { duration: 0.18 } }}
                       onClick={() => navigate(`/clients/${client.id}`)}
-                      className="bg-[#182233] rounded-2xl border border-[#1e293b] shadow-sm hover:shadow-xl hover:border-[#2f3b52] transition-all cursor-pointer overflow-hidden group relative"
+                      className="rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden group relative"
+                      style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
                     >
 
                       {/* ── Banner gradiente / imagem ─────────────────────────── */}
@@ -422,11 +427,12 @@ export function ClientList() {
                               onClick={e => { e.stopPropagation(); setPickerOpen(null) }}
                             />
                             <div
-                              className="absolute top-11 left-3 z-40 bg-[#101A2B] rounded-2xl shadow-2xl border border-[#1e293b] p-3.5 w-[220px]"
+                              className="absolute top-11 left-3 z-40 rounded-2xl shadow-2xl p-3.5 w-[220px]"
+                              style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
                               onClick={e => e.stopPropagation()}
                             >
                               {/* Abas */}
-                              <div className="flex gap-1 mb-3 bg-[#182233] rounded-lg p-0.5">
+                              <div className="flex gap-1 mb-3 rounded-lg p-0.5" style={{ background: 'var(--sm-bg-alt)' }}>
                                 {(['cores', 'imagem'] as const).map(tab => (
                                   <button
                                     key={tab}
@@ -434,8 +440,9 @@ export function ClientList() {
                                     className={`flex-1 py-1 rounded-md text-[11px] font-semibold transition-colors capitalize ${
                                       pickerTab === tab
                                         ? 'bg-[#2563EB] text-white shadow-sm'
-                                        : 'text-[#94a3b8] hover:text-[#CBD5E1]'
+                                        : ''
                                     }`}
+                                    style={pickerTab !== tab ? { color: 'var(--sm-text-3)' } : {}}
                                   >
                                     {tab === 'cores' ? '🎨 Cores' : '🖼️ Imagem'}
                                   </button>
@@ -475,7 +482,8 @@ export function ClientList() {
                                   />
                                   <button
                                     onClick={e => { e.stopPropagation(); imageInputRef.current?.click() }}
-                                    className="w-full h-20 rounded-xl border-2 border-dashed border-[#1e293b] hover:border-[#2563EB] hover:bg-[#2563EB]/10 flex flex-col items-center justify-center gap-1.5 transition-colors group"
+                                    className="w-full h-20 rounded-xl border-2 border-dashed hover:border-[#2563EB] hover:bg-[#2563EB]/10 flex flex-col items-center justify-center gap-1.5 transition-colors group"
+                                    style={{ borderColor: 'var(--sm-border)' }}
                                   >
                                     <Upload className="w-5 h-5 text-[#94a3b8] group-hover:text-[#60A5FA] transition-colors" />
                                     <span className="text-[11px] text-[#94a3b8] group-hover:text-[#60A5FA] transition-colors font-medium">
@@ -527,11 +535,11 @@ export function ClientList() {
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
-                            <h3 className="text-[14px] font-semibold text-[#F8FAFC] leading-snug truncate">
+                            <h3 className="text-[14px] font-semibold leading-snug truncate" style={{ color: 'var(--sm-text-1)' }}>
                               {client.company_name}
                             </h3>
                           </div>
-                          <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border flex-shrink-0 ${cfg.badge}`}>
+                          <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border flex-shrink-0 ${isDark ? cfg.badge : cfg.badgeLight}`}>
                             {cfg.label}
                           </span>
                         </div>
@@ -539,8 +547,8 @@ export function ClientList() {
                         {/* Handle */}
                         {client.instagram && (
                           <div className="flex items-center gap-1.5 ml-4 mb-2.5">
-                            <Instagram className="w-3 h-3 text-pink-400 flex-shrink-0" />
-                            <span className="text-[12px] text-[#94a3b8] truncate">
+                            <Instagram className="w-3 h-3 text-pink-500 flex-shrink-0" />
+                            <span className="text-[12px] truncate" style={{ color: 'var(--sm-text-3)' }}>
                               @{client.instagram.replace('@', '')}
                             </span>
                           </div>
@@ -548,73 +556,51 @@ export function ClientList() {
 
                         {/* Nicho */}
                         <div className="ml-4 mb-4">
-                          <span className="inline-flex items-center text-[11px] font-medium text-[#CBD5E1] bg-[#101A2B] border border-[#1e293b] px-2.5 py-1 rounded-full max-w-full truncate">
+                          <span className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full max-w-full truncate" style={{ color: 'var(--sm-text-2)', background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>
                             {client.niche}
                           </span>
                         </div>
 
-                        <div className="border-t border-[#1e293b] mb-3" />
+                        <div className="mb-3" style={{ borderTop: '1px solid var(--sm-border)' }} />
 
                         {/* ── Métricas premium 2×2 ── */}
-                        <div className="grid grid-cols-2 gap-2">
-
-                          {/* Pendentes — azul */}
-                          <div
-                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: 'rgba(37,99,235,0.10)', borderColor: 'rgba(37,99,235,0.22)' }}
-                          >
-                            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#60a5fa' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#93c5fd' }}>
-                              Pendentes
-                            </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#dbeafe' }}>
-                              {clientStats.pendentes}
-                            </span>
-                          </div>
-
-                          {/* Aprovados — verde */}
-                          <div
-                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: 'rgba(34,197,94,0.10)', borderColor: 'rgba(34,197,94,0.22)' }}
-                          >
-                            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#22c55e' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#86efac' }}>
-                              Aprovados
-                            </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#dcfce7' }}>
-                              {clientStats.aprovados}
-                            </span>
-                          </div>
-
-                          {/* Ajustes solicitados — violeta */}
-                          <div
-                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: 'rgba(139,92,246,0.10)', borderColor: 'rgba(139,92,246,0.22)' }}
-                          >
-                            <FileEdit className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#a78bfa' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#c4b5fd' }}>
-                              Ajustes
-                            </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#ede9fe' }}>
-                              {clientStats.ajuste_solicitado}
-                            </span>
-                          </div>
-
-                          {/* Reprovados — vermelho */}
-                          <div
-                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-                            style={{ background: 'rgba(239,68,68,0.10)', borderColor: 'rgba(239,68,68,0.22)' }}
-                          >
-                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
-                            <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: '#fca5a5' }}>
-                              Reprovados
-                            </span>
-                            <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: '#fee2e2' }}>
-                              {clientStats.reprovado}
-                            </span>
-                          </div>
-
-                        </div>
+                        {(() => {
+                          const mc = isDark ? {
+                            pending:  { bg: 'rgba(37,99,235,0.10)',  border: 'rgba(37,99,235,0.22)',  icon: '#60a5fa', label: '#93c5fd', count: '#dbeafe' },
+                            approved: { bg: 'rgba(34,197,94,0.10)',  border: 'rgba(34,197,94,0.22)',  icon: '#22c55e', label: '#86efac', count: '#dcfce7' },
+                            adjust:   { bg: 'rgba(139,92,246,0.10)', border: 'rgba(139,92,246,0.22)', icon: '#a78bfa', label: '#c4b5fd', count: '#ede9fe' },
+                            rejected: { bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.22)',  icon: '#f87171', label: '#fca5a5', count: '#fee2e2' },
+                          } : {
+                            pending:  { bg: 'rgba(37,99,235,0.08)',  border: 'rgba(37,99,235,0.30)',  icon: '#2563eb', label: '#1d4ed8', count: '#1e3a8a' },
+                            approved: { bg: 'rgba(22,163,74,0.08)',  border: 'rgba(22,163,74,0.30)',  icon: '#16a34a', label: '#15803d', count: '#14532d' },
+                            adjust:   { bg: 'rgba(124,58,237,0.08)', border: 'rgba(124,58,237,0.30)', icon: '#7c3aed', label: '#6d28d9', count: '#4c1d95' },
+                            rejected: { bg: 'rgba(220,38,38,0.08)',  border: 'rgba(220,38,38,0.30)',  icon: '#dc2626', label: '#b91c1c', count: '#7f1d1d' },
+                          }
+                          return (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ background: mc.pending.bg, borderColor: mc.pending.border }}>
+                                <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: mc.pending.icon }} />
+                                <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: mc.pending.label }}>Pendentes</span>
+                                <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: mc.pending.count }}>{clientStats.pendentes}</span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ background: mc.approved.bg, borderColor: mc.approved.border }}>
+                                <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: mc.approved.icon }} />
+                                <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: mc.approved.label }}>Aprovados</span>
+                                <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: mc.approved.count }}>{clientStats.aprovados}</span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ background: mc.adjust.bg, borderColor: mc.adjust.border }}>
+                                <FileEdit className="w-3.5 h-3.5 flex-shrink-0" style={{ color: mc.adjust.icon }} />
+                                <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: mc.adjust.label }}>Ajustes</span>
+                                <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: mc.adjust.count }}>{clientStats.ajuste_solicitado}</span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ background: mc.rejected.bg, borderColor: mc.rejected.border }}>
+                                <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: mc.rejected.icon }} />
+                                <span className="text-[11px] font-medium leading-tight flex-1 truncate" style={{ color: mc.rejected.label }}>Reprovados</span>
+                                <span className="text-[15px] font-semibold flex-shrink-0" style={{ color: mc.rejected.count }}>{clientStats.reprovado}</span>
+                              </div>
+                            </div>
+                          )
+                        })()}
                       </div>
                     </motion.div>
                   )

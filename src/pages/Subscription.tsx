@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, Zap, Crown, Building2, Loader2, AlertTriangle, ExternalLink, RefreshCw, HardDrive } from 'lucide-react'
@@ -32,6 +32,15 @@ async function openPortal(fallbackPriceId?: string): Promise<string | null> {
   if (data?.needsCheckout && fallbackPriceId) return startCheckout(fallbackPriceId)
   if (data?.needsCheckout) { alert('Realize uma nova assinatura para gerenciar seu plano.'); return null }
   return data?.url ?? null
+}
+
+// ── Meta Pixel ────────────────────────────────────────────────────────────────
+
+function trackPixel(event: string, params?: Record<string, unknown>) {
+  try {
+    const fbq = (window as any).fbq
+    if (typeof fbq === 'function') fbq('track', event, params)
+  } catch {}
 }
 
 // ── Ícone / cor por plano ─────────────────────────────────────────────────────
@@ -224,6 +233,20 @@ export function Subscription() {
   const canceled      = searchParams.get('canceled') === '1'
   const currentPlanId = (subData?.subscription.plan ?? 'starter') as PlanId
   const hasStripe     = !!subData?.subscription.stripe_subscription_id
+
+  const purchaseFired = useRef(false)
+  useEffect(() => {
+    if (!success || !subData || purchaseFired.current) return
+    purchaseFired.current = true
+    const plan = PLANS[currentPlanId]
+    trackPixel('Purchase', {
+      value: plan.price,
+      currency: 'BRL',
+      content_name: plan.name,
+      content_ids: [currentPlanId],
+      num_items: 1,
+    })
+  }, [success, subData, currentPlanId])
 
   const handleUpgrade = async (priceId: string) => {
     setLoadingPlan(priceId)
