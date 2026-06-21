@@ -55,6 +55,35 @@ export const statusColors: Record<string, string> = {
   urgente: 'text-red-400 bg-red-400/10 border-red-400/20',
 }
 
+// Variante de alto contraste para tema claro
+export const statusColorsLight: Record<string, string> = {
+  active:       'text-green-700 bg-green-100 border-green-300',
+  inactive:     'text-gray-600 bg-gray-100 border-gray-300',
+  paused:       'text-yellow-700 bg-yellow-100 border-yellow-300',
+  lead:         'text-slate-700 bg-slate-100 border-slate-300',
+  proposta:     'text-blue-700 bg-blue-100 border-blue-300',
+  fechado:      'text-purple-700 bg-purple-100 border-purple-300',
+  onboarding:   'text-amber-700 bg-amber-100 border-amber-300',
+  ativo:        'text-green-700 bg-green-100 border-green-300',
+  pausado:      'text-orange-700 bg-orange-100 border-orange-300',
+  encerrado:    'text-red-700 bg-red-100 border-red-300',
+  ideia:        'text-purple-700 bg-purple-100 border-purple-300',
+  producao:     'text-blue-700 bg-blue-100 border-blue-300',
+  revisao:      'text-yellow-700 bg-yellow-100 border-yellow-300',
+  aprovado:     'text-green-700 bg-green-100 border-green-300',
+  publicado:    'text-emerald-700 bg-emerald-100 border-emerald-300',
+  gerado:       'text-blue-700 bg-blue-100 border-blue-300',
+  editado:      'text-purple-700 bg-purple-100 border-purple-300',
+  arquivado:    'text-gray-600 bg-gray-100 border-gray-300',
+  a_fazer:      'text-gray-600 bg-gray-100 border-gray-300',
+  em_andamento: 'text-blue-700 bg-blue-100 border-blue-300',
+  concluido:    'text-green-700 bg-green-100 border-green-300',
+  baixa:        'text-gray-600 bg-gray-100 border-gray-300',
+  media:        'text-yellow-700 bg-yellow-100 border-yellow-300',
+  alta:         'text-orange-700 bg-orange-100 border-orange-300',
+  urgente:      'text-red-700 bg-red-100 border-red-300',
+}
+
 export const statusLabels: Record<string, string> = {
   active: 'Ativo',
   inactive: 'Inativo',

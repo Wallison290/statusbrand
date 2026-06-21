@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import {
   Check, Upload, Trash2, FileText, ImageIcon, Video, File,
   User, ChevronDown, ChevronUp, ExternalLink,
@@ -22,13 +23,13 @@ import type { Client, ClientStatus, BriefingData } from '@/types'
 // ─── Config de status ─────────────────────────────────────────────────────────
 
 // 'fechado' é gatilho de transição — não aparece como pill navegável
-const CLIENT_STATUSES: { value: ClientStatus; label: string; color: string; bg: string }[] = [
-  { value: 'lead',        label: 'Lead',        color: 'text-slate-300',   bg: 'bg-slate-500/10 border-slate-500/30' },
-  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
-  { value: 'onboarding',  label: 'Onboarding',  color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
-  { value: 'ativo',       label: 'Ativo',       color: 'text-green-300',   bg: 'bg-green-500/10 border-green-500/30' },
-  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-300',  bg: 'bg-orange-500/10 border-orange-500/30' },
-  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-300',     bg: 'bg-red-500/10 border-red-500/30' },
+const CLIENT_STATUSES: { value: ClientStatus; label: string; color: string; bg: string; colorLight: string; bgLight: string }[] = [
+  { value: 'lead',        label: 'Lead',        color: 'text-slate-300',   bg: 'bg-slate-500/10 border-slate-500/30',   colorLight: 'text-slate-700',   bgLight: 'bg-slate-100 border-slate-400' },
+  { value: 'proposta',    label: 'Proposta',    color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30',     colorLight: 'text-blue-700',    bgLight: 'bg-blue-100 border-blue-400' },
+  { value: 'onboarding',  label: 'Onboarding',  color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30',   colorLight: 'text-amber-700',   bgLight: 'bg-amber-100 border-amber-400' },
+  { value: 'ativo',       label: 'Ativo',       color: 'text-green-300',   bg: 'bg-green-500/10 border-green-500/30',   colorLight: 'text-green-700',   bgLight: 'bg-green-100 border-green-400' },
+  { value: 'pausado',     label: 'Pausado',     color: 'text-orange-300',  bg: 'bg-orange-500/10 border-orange-500/30', colorLight: 'text-orange-700',  bgLight: 'bg-orange-100 border-orange-400' },
+  { value: 'encerrado',   label: 'Encerrado',   color: 'text-red-300',     bg: 'bg-red-500/10 border-red-500/30',       colorLight: 'text-red-700',     bgLight: 'bg-red-100 border-red-400' },
 ]
 
 function getStatusConfig(status: string) {
@@ -56,6 +57,7 @@ function formatSize(bytes: number | null): string {
 function StatusSection({ client }: { client: Client }) {
   const updateStatus = useUpdateClientStatus()
   const { toast } = useToast()
+  const { isDark } = useTheme()
   const current = getStatusConfig(client.status)
 
   const handleChange = async (status: ClientStatus) => {
@@ -89,28 +91,32 @@ function StatusSection({ client }: { client: Client }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-[#94a3b8] uppercase tracking-wide">Status do cliente</p>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-normal ${current.color} ${current.bg}`}>
+        <p className="text-[11px] uppercase tracking-wide font-semibold" style={{ color: 'var(--sm-text-3)' }}>Status do cliente</p>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded border text-[11px] font-semibold ${isDark ? `${current.color} ${current.bg}` : `${current.colorLight} ${current.bgLight}`}`}>
           {current.label}
         </span>
       </div>
 
       {/* Pills de navegação (exceto 'fechado') */}
       <div className="flex flex-wrap gap-1.5">
-        {CLIENT_STATUSES.map(s => (
-          <button
-            key={s.value}
-            onClick={() => handleChange(s.value)}
-            disabled={updateStatus.isPending}
-            className={`px-3 py-1.5 rounded-md border text-[12px] transition-colors ${
-              client.status === s.value
-                ? `${s.color} ${s.bg} font-medium`
-                : 'text-[#64748b] bg-[#182233] border-[#1e293b] hover:bg-[#1e293b] hover:text-[#F8FAFC]'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
+        {CLIENT_STATUSES.map(s => {
+          const isActive = client.status === s.value
+          return (
+            <button
+              key={s.value}
+              onClick={() => handleChange(s.value)}
+              disabled={updateStatus.isPending}
+              className={`px-3 py-1.5 rounded-md border text-[12px] font-medium transition-colors ${
+                isActive
+                  ? isDark ? `${s.color} ${s.bg}` : `${s.colorLight} ${s.bgLight}`
+                  : ''
+              }`}
+              style={!isActive ? { color: 'var(--sm-text-3)', background: 'var(--sm-bg-input)', borderColor: 'var(--sm-border)' } : {}}
+            >
+              {s.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Ação: Iniciar onboarding (apenas quando não está em onboarding/ativo) */}

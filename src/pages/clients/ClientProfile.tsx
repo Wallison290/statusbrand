@@ -917,7 +917,8 @@ export function ClientProfile() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-4 mb-5 p-5 rounded-xl border border-[#1e293b] bg-[#111827] shadow-sm"
+          className="flex items-start gap-4 mb-5 p-5 rounded-xl shadow-sm"
+          style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
         >
           {client.logo_url ? (
             <img
@@ -992,7 +993,7 @@ export function ClientProfile() {
 
         {/* ── Tabs ─────────────────────────────────────────────────────────── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="rounded-2xl border border-[#1e293b] bg-[#0d1424]/60 p-2.5 sm:p-3">
+          <div className="rounded-2xl p-2.5 sm:p-3" style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>
             <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
               {([
                 { value: 'overview',   label: 'Visão Geral',           Icon: Home,          color: '#60A5FA' },
@@ -1013,20 +1014,22 @@ export function ClientProfile() {
                   <button
                     key={t.value}
                     onClick={() => setActiveTab(t.value)}
-                    className={cn(
-                      'relative flex flex-col items-center justify-start gap-1.5 pt-3 pb-2 px-1 rounded-2xl border transition-all',
-                      active
-                        ? 'border-[#2563EB]/50 bg-[#2563EB]/10 shadow-lg shadow-[#2563EB]/10'
-                        : 'border-[#1e293b] bg-[#111827] hover:border-[#334155] hover:bg-[#182233]',
-                    )}
+                    className="relative flex flex-col items-center justify-start gap-1.5 pt-3 pb-2 px-1 rounded-2xl border transition-all"
+                    style={active
+                      ? { borderColor: 'rgba(37,99,235,0.5)', background: 'rgba(37,99,235,0.10)', boxShadow: '0 4px 12px rgba(37,99,235,0.10)' }
+                      : { borderColor: 'var(--sm-border)', background: 'var(--sm-bg-card)' }
+                    }
                   >
-                    <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center transition-colors', active ? 'bg-[#2563EB]/15' : 'bg-[#182233]')}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors"
+                      style={{ background: active ? 'rgba(37,99,235,0.12)' : 'var(--sm-bg-alt)' }}>
                       <t.Icon className="w-5 h-5" style={{ color: t.color }} strokeWidth={1.8} />
                     </div>
-                    <span className={cn('text-[11px] font-medium text-center leading-tight', active ? 'text-[#E2E8F0]' : 'text-[#94a3b8]')}>{t.label}</span>
+                    <span className="text-[11px] font-medium text-center leading-tight"
+                      style={{ color: active ? 'var(--sm-text-1)' : 'var(--sm-text-3)' }}>{t.label}</span>
                     {t.count != null
-                      ? <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#182233] border border-[#1e293b] text-[10px] font-bold text-[#cbd5e1] flex items-center justify-center">{t.count}</span>
-                      : <span className={cn('h-1 w-5 rounded-full', active ? 'bg-[#2563EB]' : 'bg-transparent')} />}
+                      ? <span className="min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center"
+                          style={{ background: 'var(--sm-bg-input)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-2)' }}>{t.count}</span>
+                      : <span className="h-1 w-5 rounded-full" style={{ background: active ? '#2563EB' : 'transparent' }} />}
                   </button>
                 )
               })}
