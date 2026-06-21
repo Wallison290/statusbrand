@@ -906,7 +906,7 @@ function MemberDetailModal({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[14px] font-bold text-[#F8FAFC] truncate">{member.name}</p>
-            <p className="text-[11px] text-[#94a3b8]">{member.role || 'Sem cargo'}</p>
+            <p className="text-[11px]" style={{ color: 'var(--sm-text-3)' }}>{member.role || 'Sem cargo'}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -1482,7 +1482,7 @@ function MemberCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-[#F8FAFC] truncate">{member.name}</p>
-            <span className="inline-block mt-0.5 text-[10px] text-[#cbd5e1] bg-[#1e293b] px-2 py-0.5 rounded-full truncate max-w-full">{member.role || 'Sem cargo'}</span>
+            <span className="inline-block mt-0.5 text-[10px] font-medium px-2 py-0.5 rounded-full truncate max-w-full" style={{ color: 'var(--sm-text-2)', background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>{member.role || 'Sem cargo'}</span>
           </div>
           <span
             className="text-[11px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
@@ -1844,7 +1844,7 @@ function Board({ tasks, members, clients, filteredMemberId }: {
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-semibold text-[#F8FAFC] truncate">{member.name}</p>
                     {member.role && (
-                      <p className="text-[10px] text-[#94a3b8] truncate">{member.role}</p>
+                      <p className="text-[10px] truncate" style={{ color: 'var(--sm-text-3)' }}>{member.role}</p>
                     )}
                   </div>
                   <span className="text-[10px] text-[#94a3b8] flex-shrink-0">
