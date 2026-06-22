@@ -212,7 +212,10 @@ export function ClientForm() {
               <Input label="Responsável *" value={form.responsible_name} onChange={e => set('responsible_name', e.target.value)} required placeholder="Ex: João Silva" />
               <Input label="Nicho *" value={form.niche} onChange={e => set('niche', e.target.value)} required placeholder="Ex: Academia / Fitness" />
               <Input label="Instagram" value={form.instagram || ''} onChange={e => set('instagram', e.target.value)} placeholder="@perfil" />
-              <Input label="WhatsApp" value={form.whatsapp || ''} onChange={e => set('whatsapp', e.target.value)} placeholder="(11) 99999-9999" />
+              <div>
+                <Input label="WhatsApp" value={form.whatsapp || ''} onChange={e => set('whatsapp', e.target.value)} placeholder="5511999999999" />
+                <p className="mt-1 text-[11px] text-[#64748b]">Formato: 55 + DDD + número · Ex: <span className="font-mono">5511999999999</span></p>
+              </div>
               <div>
                 <Input label="Email" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="contato@empresa.com" />
                 {form.email && !isEdit && (
