@@ -371,10 +371,13 @@ function DayTooltip({ state }: { state: HoverState }) {
                 <span className="text-[10px] text-[var(--sm-text-3)] truncate">{item.client.company_name}</span>
               </div>
             )}
-            {/* Approval badge no tooltip */}
+            {/* Approval badge no tooltip — omitido para rascunhos */}
             {(() => {
               const artP  = (item as any).art_approval_status  as ApprovalStatus | null
               const copyP = (item as any).copy_approval_status as ApprovalStatus | null
+              const hasApprovalContext = item.sent_to_client || item.approval_status || artP || copyP
+                || item.status === 'aprovado' || item.status === 'publicado'
+              if (!hasApprovalContext) return null
               const as_: ApprovalStatus = (() => {
                 if (artP || copyP) return computeOverallApproval(artP, copyP)
                 if (item.approval_status) return item.approval_status as ApprovalStatus
@@ -382,11 +385,11 @@ function DayTooltip({ state }: { state: HoverState }) {
                 return 'pendente_aprovacao'
               })()
               const badgeCls =
-                as_ === 'aprovado'          ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300' :
-                as_ === 'ajuste_solicitado' ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300' :
-                as_ === 'ajuste_realizado'  ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300' :
-                as_ === 'reprovado'         ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300' :
-                                              'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'
+                as_ === 'aprovado'          ? 'bg-green-100 text-green-700' :
+                as_ === 'ajuste_solicitado' ? 'bg-orange-100 text-orange-700' :
+                as_ === 'ajuste_realizado'  ? 'bg-blue-100 text-blue-700' :
+                as_ === 'reprovado'         ? 'bg-red-100 text-red-700' :
+                                              'bg-amber-100 text-amber-700'
               return (
                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md mb-1.5 ${badgeCls}`}>
                   <div className={`w-1 h-1 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
@@ -1278,11 +1281,14 @@ function DayItemCard({
           {(() => {
             const artPartial  = (item as any).art_approval_status  as ApprovalStatus | null
             const copyPartial = (item as any).copy_approval_status as ApprovalStatus | null
+            // Só exibe o badge de aprovação se o item foi enviado ao cliente ou já
+            // tem um status de aprovação real — rascunhos não precisam disso.
+            const hasApprovalContext = item.sent_to_client || item.approval_status || artPartial || copyPartial
+              || item.status === 'aprovado' || item.status === 'publicado'
+            if (!hasApprovalContext) return null
             const as_: ApprovalStatus = (() => {
-              // Partial approvals take precedence — same logic as PlannerItemView
               if (artPartial || copyPartial) return computeOverallApproval(artPartial, copyPartial)
               if (item.approval_status) return item.approval_status as ApprovalStatus
-              // Infer from content status when approval_status wasn't synced yet
               if (item.status === 'aprovado' || item.status === 'publicado') return 'aprovado'
               return 'pendente_aprovacao'
             })()
