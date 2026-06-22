@@ -51,16 +51,16 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; error?
   if (!number) return { ok: false, error: 'Número de telefone inválido.' }
 
   try {
-    const res = await fetch(`${UAZAPI_URL}/message/sendText/${UAZAPI_INSTANCE}`, {
+    const res = await fetch(`${UAZAPI_URL}/send/text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': UAZAPI_TOKEN,
+        'token': UAZAPI_TOKEN,
       },
-      body: JSON.stringify({ number, text }),
+      body: JSON.stringify({ instanceName: UAZAPI_INSTANCE, number, text }),
     })
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}: ${JSON.stringify(data)}` }
+    if (!res.ok) return { ok: false, error: data.error ?? `HTTP ${res.status}: ${JSON.stringify(data)}` }
     return { ok: true }
   } catch (err) {
     return { ok: false, error: String(err) }
