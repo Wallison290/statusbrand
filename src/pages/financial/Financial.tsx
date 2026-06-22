@@ -14,6 +14,7 @@ import { useClients, useUpdateClient } from '@/hooks/useClients'
 import { useCreatePayment, useClientPayments } from '@/hooks/usePayments'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { supabase } from '@/integrations/supabase/client'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
 import type { Client, FinancialStatus } from '@/types'
 
@@ -406,10 +407,26 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
   onOpenPayment: (c: Client) => void
   onOpenHistory: (c: Client) => void
 }) {
+  const { toast } = useToast()
+  const [sending, setSending] = useState(false)
   const status = calcFinancialStatus(client)
   const aux = getFinancialAuxText(client, status)
-  const waLink = buildWhatsAppLink(client)
-  const showCobrar = (status === 'atrasado' || status === 'vence_em_breve') && !!waLink
+  const showCobrar = (status === 'atrasado' || status === 'vence_em_breve') && !!client.whatsapp
+
+  const handleCobrar = async () => {
+    setSending(true)
+    try {
+      const { error } = await supabase.functions.invoke('charge-client-whatsapp', {
+        body: { client_id: client.id },
+      })
+      if (error) throw error
+      toast('Mensagem de cobrança enviada no WhatsApp! ✅', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao enviar mensagem.', 'error')
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <motion.div
@@ -481,15 +498,17 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
 
         {/* Cobrar via WhatsApp */}
         {showCobrar && (
-          <a
-            href={waLink!}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Cobrar via WhatsApp"
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200 transition-all"
+          <button
+            onClick={handleCobrar}
+            disabled={sending}
+            title="Enviar cobrança via WhatsApp"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <MessageCircle className="w-3 h-3" /> Cobrar
-          </a>
+            {sending
+              ? <Loader2 className="w-3 h-3 animate-spin" />
+              : <MessageCircle className="w-3 h-3" />}
+            {sending ? 'Enviando...' : 'Cobrar'}
+          </button>
         )}
 
         {/* Histórico */}
