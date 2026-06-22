@@ -405,7 +405,7 @@ export function AIPage() {
     }
 
     await sendMessage(
-      text, messages, webSearch,
+      text, messages, webSearch && imgs.length === 0,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
       clientCtx?.contextString ?? null,
       activeClientId,
