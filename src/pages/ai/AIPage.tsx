@@ -836,7 +836,11 @@ export function AIPage() {
                   <button
                     onClick={handleSend}
                     disabled={!canSend}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f0f0f] text-white hover:bg-[#333] disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                    className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${
+                      canSend
+                        ? 'bg-[#0f172a] text-white hover:bg-[#334155] cursor-pointer'
+                        : 'bg-[#cbd5e1] text-[#94a3b8] cursor-not-allowed'
+                    }`}
                   >
                     <Send className="w-4 h-4" />
                   </button>
