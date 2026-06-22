@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell, CheckCircle2, XCircle, MessageSquare,
@@ -14,7 +15,7 @@ import {
 } from '@/hooks/useNotifications'
 import type { Notification, NotificationType } from '@/hooks/useNotifications'
 
-// ─── Tipo → visual (tema dark) ────────────────────────────────────────────────
+// ─── Tipo → visual ────────────────────────────────────────────────────────────
 
 const typeConfig: Record<NotificationType, { Icon: React.ElementType; color: string; bg: string }> = {
   NEW_CONTENT:        { Icon: FileText,      color: 'text-[#a78bfa]', bg: 'bg-[#8b5cf6]/15' },
@@ -30,6 +31,23 @@ const typeConfig: Record<NotificationType, { Icon: React.ElementType; color: str
   POST_FAILED:        { Icon: AlertTriangle, color: 'text-[#f87171]', bg: 'bg-[#ef4444]/15' },
   NOTE_REQUEST:       { Icon: Lightbulb,     color: 'text-[#60a5fa]', bg: 'bg-[#2563eb]/15' },
   NEW_REPORT:         { Icon: BarChart3,     color: 'text-[#4ade80]', bg: 'bg-[#22c55e]/15' },
+}
+
+// Variante de alto contraste para tema claro (cores sólidas)
+const typeConfigLight: Record<NotificationType, { color: string; bg: string }> = {
+  NEW_CONTENT:        { color: 'text-purple-600', bg: 'bg-purple-100' },
+  APPROVAL_REQUEST:   { color: 'text-amber-600',  bg: 'bg-amber-100'  },
+  APPROVED:           { color: 'text-green-600',  bg: 'bg-green-100'  },
+  REJECTED:           { color: 'text-red-600',    bg: 'bg-red-100'    },
+  COMMENT:            { color: 'text-blue-600',   bg: 'bg-blue-100'   },
+  ADJUSTMENT_DONE:    { color: 'text-blue-600',   bg: 'bg-blue-100'   },
+  TASK_STATUS_UPDATE: { color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  TASK_DONE:          { color: 'text-green-600',  bg: 'bg-green-100'  },
+  FORM_SUBMITTED:     { color: 'text-purple-600', bg: 'bg-purple-100' },
+  POST_PUBLISHED:     { color: 'text-pink-600',   bg: 'bg-pink-100'   },
+  POST_FAILED:        { color: 'text-red-600',    bg: 'bg-red-100'    },
+  NOTE_REQUEST:       { color: 'text-blue-600',   bg: 'bg-blue-100'   },
+  NEW_REPORT:         { color: 'text-green-600',  bg: 'bg-green-100'  },
 }
 
 // ─── Categorias (abas) ────────────────────────────────────────────────────────
@@ -76,6 +94,7 @@ export function NotificationsModal({ open, onClose, onView }: NotificationsModal
   const { data: notifications = [], isLoading } = useNotifications()
   const markRead    = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
+  const { isDark }  = useTheme()
 
   const [activeTab, setActiveTab]   = useState<string>('todas')
   const [onlyUnread, setOnlyUnread] = useState(false)
@@ -234,8 +253,11 @@ export function NotificationsModal({ open, onClose, onView }: NotificationsModal
               )}
 
               {!isLoading && filtered.map(n => {
-                const cfg = typeConfig[n.type] ?? typeConfig.COMMENT
+                const cfg      = typeConfig[n.type] ?? typeConfig.COMMENT
+                const cfgLight = typeConfigLight[n.type] ?? typeConfigLight.COMMENT
                 const { Icon } = cfg
+                const iconBg    = isDark ? cfg.bg    : cfgLight.bg
+                const iconColor = isDark ? cfg.color : cfgLight.color
                 return (
                   <div
                     key={n.id}
@@ -243,8 +265,8 @@ export function NotificationsModal({ open, onClose, onView }: NotificationsModal
                       n.is_read ? '' : 'bg-[#29457a]/10'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${cfg.bg}`}>
-                      <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
+                    <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${iconBg}`}>
+                      <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
