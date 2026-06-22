@@ -4,14 +4,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, Sun, Moon,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
-import { useTheme } from '@/contexts/ThemeContext'
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard'      },
@@ -115,7 +114,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const { data: subData }          = useSubscription()
   const { data: usage }            = useAIUsage(user?.id)
   const { data: storage }          = useStorageUsage()
-  const { isDark, toggleTheme }    = useTheme()
 
   const planName  = subData?.plan.name ?? 'Free'
   const aiUsed    = usage?.requests ?? 0
@@ -238,30 +236,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           )
         })}
 
-        {/* ── Botão tema claro/escuro ── */}
-        <button
-          onClick={toggleTheme}
-          title={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
-          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 mt-0.5"
-          style={{
-            background: isDark
-              ? 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(234,179,8,0.08) 100%)'
-              : 'linear-gradient(135deg, rgba(37,99,235,0.10) 0%, rgba(29,78,216,0.07) 100%)',
-            border: isDark
-              ? '1px solid rgba(245,158,11,0.22)'
-              : '1px solid rgba(37,99,235,0.20)',
-            color: isDark ? '#fbbf24' : '#2563eb',
-          }}
-        >
-          {isDark
-            ? <Sun className="w-[15px] h-[15px] flex-shrink-0" />
-            : <Moon className="w-[15px] h-[15px] flex-shrink-0" />}
-          {!collapsed && (
-            <span className="whitespace-nowrap font-medium">
-              {isDark ? 'Tema Claro' : 'Tema Escuro'}
-            </span>
-          )}
-        </button>
       </nav>
 
       {/* ── Plano + uso de IA + Armazenamento ── */}
