@@ -640,44 +640,95 @@ Formatos recomendados por objetivo e público.
 
 ---
 
-### PASSO 1 — MONTE O FUNIL DE CONVERSÃO (obrigatório, sempre o primeiro bloco)
+### PASSO 0 — IDENTIFIQUE O TIPO DE CAMPANHA (antes de tudo)
 
-Com os dados disponíveis, construa o funil visual assim:
+Leia os dados e classifique o objetivo em um dos tipos abaixo. Isso determina qual funil e quais benchmarks usar:
 
-\`\`\`
-Impressões:        [valor]
-       ↓
-Cliques totais:    [valor]  → CTR [%]
-       ↓
-Resultado principal: [valor] → [%] dos cliques chegaram
-       ↓
-Conversão final:   [valor]  → [%] do resultado principal converteu
-\`\`\`
-
-Se houver dados de seguidores ganhos, visitas ao perfil, leads ou vendas — inclua cada etapa. Calcule TODAS as taxas de conversão entre etapas. Se uma etapa não tiver dados, pule-a.
+- **Reconhecimento / Tráfego para perfil**: objetivo = visitas ao perfil, novos seguidores, alcance
+- **Geração de leads**: objetivo = formulário instantâneo, mensagens no WhatsApp, cadastros
+- **Vendas / Conversões**: objetivo = compras no site, adições ao carrinho, ROAS
+- **Tráfego para site**: objetivo = cliques no link, sessões no site
 
 ---
 
-### PASSO 2 — CALCULE AS MÉTRICAS DERIVADAS (obrigatório)
+### PASSO 1 — MONTE O FUNIL DE CONVERSÃO (obrigatório, sempre o primeiro bloco)
 
-Além dos números que aparecem nos prints, calcule o que NÃO está explícito. Exemplos:
-- **Custo por seguidor** = gasto total ÷ novos seguidores
-- **Custo por lead** = gasto total ÷ leads gerados
-- **Taxa visita → seguidor** = seguidores ÷ visitas ao perfil × 100
-- **Custo por engajamento** = gasto total ÷ total de interações
-- **Frequência real** = impressões ÷ alcance (se não estiver no print)
+Monte o funil correspondente ao tipo detectado:
 
-Monte uma tabela comparando com os benchmarks abaixo:
+**Para Reconhecimento / Tráfego para perfil:**
+\`\`\`
+Impressões:          [valor]
+       ↓
+Cliques:             [valor]  → CTR [%]
+       ↓
+Visitas ao perfil:   [valor]  → [%] dos cliques chegaram
+       ↓
+Novos seguidores:    [valor]  → [%] das visitas converteram
+\`\`\`
 
-| Métrica | Valor Real | Benchmark (Bom) | Avaliação |
-|---------|-----------|-----------------|-----------|
-| CPM | R$X | < R$7 (excelente) / R$7-15 (bom) | 🟢/🟡/🔴 |
-| CPC | R$X | < R$0,30 (excelente) / R$0,30-0,80 (bom) | 🟢/🟡/🔴 |
-| CTR link | X% | > 1,5% (bom) / > 3% (excelente) | 🟢/🟡/🔴 |
-| Custo/resultado | R$X | depende do objetivo | 🟢/🟡/🔴 |
-| Frequência | X | 1-2 (ideal) / > 3 (fadiga) | 🟢/🟡/🔴 |
+**Para Geração de leads:**
+\`\`\`
+Impressões:          [valor]
+       ↓
+Cliques:             [valor]  → CTR [%]
+       ↓
+Inícios de formulário / Landing page: [valor] → [%] dos cliques
+       ↓
+Leads gerados:       [valor]  → [%] converteram (taxa de conversão)
+\`\`\`
 
-*Benchmarks Meta Ads Brasil 2025. Para "Visitas ao Perfil IG": custo por visita bom = R$0,10-0,30.*
+**Para Vendas / Conversões:**
+\`\`\`
+Impressões:          [valor]
+       ↓
+Cliques:             [valor]  → CTR [%]
+       ↓
+Adições ao carrinho: [valor]  → [%] dos cliques (se disponível)
+       ↓
+Checkouts iniciados: [valor]  → [%] do carrinho (se disponível)
+       ↓
+Compras realizadas:  [valor]  → taxa de conversão [%]
+       ↓
+Receita gerada:      R$[valor] → ROAS [x] (receita ÷ gasto)
+\`\`\`
+
+Calcule TODAS as taxas entre etapas com os dados disponíveis. Pule as etapas sem dados.
+
+---
+
+### PASSO 2 — CALCULE AS MÉTRICAS DERIVADAS E COMPARE COM BENCHMARKS
+
+Calcule o que NÃO está explícito nos prints, depois monte a tabela de benchmarks do tipo correto:
+
+**Métricas derivadas universais:**
+- Frequência = impressões ÷ alcance (se não mostrado)
+- Custo por resultado = gasto total ÷ resultado principal
+
+**Métricas derivadas por tipo:**
+- *Reconhecimento*: custo por seguidor = gasto ÷ novos seguidores | taxa visita→seguidor = seguidores ÷ visitas × 100
+- *Leads*: custo por lead = gasto ÷ leads | taxa de conversão da LP = leads ÷ cliques × 100
+- *Vendas*: ROAS = receita ÷ gasto | custo por compra = gasto ÷ compras | ticket médio = receita ÷ compras
+
+**Benchmarks Meta Ads Brasil 2025:**
+
+*Métricas universais:*
+| Métrica | Abaixo da Média | Bom | Excelente |
+|---------|----------------|-----|-----------|
+| CPM | > R$20 | R$7–15 | < R$7 |
+| CPC | > R$1,50 | R$0,30–0,80 | < R$0,30 |
+| CTR link | < 0,8% | 1,5–3% | > 3% |
+| Frequência | > 3,5 | 1,5–2,5 | 1–1,5 |
+
+*Por objetivo:*
+| Objetivo | Métrica-chave | Ruim | Bom | Excelente |
+|----------|--------------|------|-----|-----------|
+| Visitas ao perfil | Custo/visita | > R$0,50 | R$0,10–0,30 | < R$0,10 |
+| Seguidores | Custo/seguidor | > R$1,50 | R$0,30–1,00 | < R$0,30 |
+| Leads (formulário) | Custo/lead | > R$25 | R$8–20 | < R$8 |
+| Leads (WhatsApp) | Custo/conversa | > R$15 | R$3–10 | < R$3 |
+| Vendas e-commerce | ROAS | < 1,5x | 2–4x | > 4x |
+| Vendas e-commerce | Custo/compra | > 30% do ticket | 10–20% do ticket | < 10% do ticket |
+| Tráfego para site | Custo/clique | > R$1,20 | R$0,30–0,80 | < R$0,30 |
 
 ---
 
