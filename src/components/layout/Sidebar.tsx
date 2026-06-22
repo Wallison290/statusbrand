@@ -23,7 +23,7 @@ const navItems = [
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
   { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
-  { href: '/ai',        icon: Sparkles,         label: 'IA Copilot', highlight: true },
+  { href: '/ai',        icon: Sparkles,         label: 'StatusIA', highlight: true },
 ]
 
 // ── Initials avatar ───────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             (item.href !== '/' && location.pathname.startsWith(item.href))
           const isAI = 'highlight' in item && item.highlight
 
-          // IA Copilot — não ativo
+          // StatusIA — não ativo
           if (isAI && !active) {
             return (
               <Link key={item.href} to={item.href}>
@@ -168,12 +168,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
                     <>
                       <span className="whitespace-nowrap text-[#60A5FA] font-medium flex-1">
                         {item.label}
-                      </span>
-                      <span
-                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none text-white"
-                        style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
-                      >
-                        novo
                       </span>
                     </>
                   )}
