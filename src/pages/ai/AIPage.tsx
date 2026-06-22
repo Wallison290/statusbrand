@@ -407,9 +407,10 @@ export function AIPage() {
     }
 
     const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
+    const historyHasImages = messages.some(m => m.content.includes('[[IMG:'))
 
     await sendMessage(
-      text, messages, shouldUseWebSearch(text) && imgs.length === 0,
+      text, messages, shouldUseWebSearch(text) && imgs.length === 0 && !historyHasImages,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
       fullContext,
       activeClientId,
