@@ -1154,6 +1154,11 @@ const SQUAD_RULES: Array<{ id: string; keywords: string[] }> = [
       'anuncio pago', 'anúncio pago', 'roi de ads', 'funil de ads',
       'estrutura de campanhas', 'orçamento de ads', 'impulsionamento',
       'gerenciar anúncio', 'gerenciar anuncio', 'subir campanha', 'criar campanha',
+      'analisar campanha', 'analisar anúncio', 'analisar anuncio', 'resultado de campanha',
+      'resultado de ads', 'campanha de ads', 'analisar ads', 'análise de campanha',
+      'analise de campanha', 'visitas ao perfil', 'objetivo de campanha',
+      'cpc', 'cpm', 'ctr', 'roas', 'custo por clique', 'custo por resultado',
+      'conjunto de anúncios', 'conjunto de anuncios', 'gerenciador de anúncios',
     ],
   },
   {
