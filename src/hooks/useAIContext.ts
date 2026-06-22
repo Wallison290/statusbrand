@@ -3,6 +3,15 @@ import { supabase } from '@/integrations/supabase/client'
 import type { Client, PlannerItem, BrandDNA } from '@/types'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
+export interface AIUserMemory {
+  id: string
+  user_id: string
+  key: string
+  value: string
+  created_at: string
+  updated_at: string
+}
+
 export interface AIClientMemory {
   id: string
   client_id: string
@@ -11,6 +20,60 @@ export interface AIClientMemory {
   value: string
   created_at: string
   updated_at: string
+}
+
+// ── Hooks: memória persistente da agência/usuário ─────────────────────────────
+export function useAIUserMemory() {
+  return useQuery({
+    queryKey: ['ai_user_memory'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('ai_user_memory')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+      if (error) throw error
+      return data as AIUserMemory[]
+    },
+  })
+}
+
+export function useUpsertAIUserMemory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Não autenticado')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('ai_user_memory')
+        .upsert(
+          { user_id: user.id, key, value, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,key' }
+        )
+        .select()
+        .single()
+      if (error) throw error
+      return data as AIUserMemory
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ai_user_memory'] }),
+  })
+}
+
+export function buildUserMemoryContext(memories: AIUserMemory[]): string | null {
+  if (memories.length === 0) return null
+  const lines = [
+    '━━━ MEMÓRIAS DA AGÊNCIA ━━━',
+    '',
+    'Fatos aprendidos sobre esta agência e sua forma de trabalhar:',
+  ]
+  memories.forEach(m => lines.push(`  • ${m.key.replace(/_/g, ' ')}: ${m.value}`))
+  lines.push('')
+  lines.push('Use esses dados para personalizar suas respostas quando relevante.')
+  return lines.join('\n')
 }
 
 // ── Hook: memória persistente por cliente ──────────────────────────────────────

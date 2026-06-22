@@ -136,6 +136,25 @@ Exemplos de memórias VÁLIDAS (específicas e acionáveis):
 NÃO extraia informações genéricas ou já presentes no cadastro do cliente.
 Seja específico e conciso. Máximo 5 memórias por resposta.`
 
+const USER_MEMORY_EXTRACTION_PROMPT = `Você é um extrator de memórias sobre a agência de social media que usa este sistema.
+
+Analise o par de mensagens abaixo e extraia APENAS fatos relevantes sobre a agência, seus hábitos, preferências de trabalho ou informações do negócio que devam ser lembrados em conversas futuras.
+
+Retorne JSON: { "memories": [{ "key": string, "value": string }] }
+Retorne array vazio se não houver nada relevante.
+
+Exemplos de memórias VÁLIDAS sobre a agência:
+- { "key": "nome_agencia", "value": "StatusMedia — agência de social media" }
+- { "key": "especialidade", "value": "especialistas em saúde e bem-estar" }
+- { "key": "ferramentas", "value": "usam Canva, CapCut e Meta Business Suite" }
+- { "key": "equipe", "value": "time de 5 pessoas" }
+- { "key": "estilo_relatorio", "value": "preferem relatórios semanais resumidos" }
+- { "key": "dia_reuniao", "value": "reuniões de alinhamento às segundas-feiras" }
+
+NÃO extraia informações específicas de clientes individuais (isso é capturado separadamente).
+NÃO extraia informações genéricas sobre social media em geral.
+Máximo 3 memórias por resposta.`
+
 async function extractMemoriesBackground(
   userMessage: string,
   assistantResponse: string,
@@ -179,6 +198,42 @@ async function extractMemoriesBackground(
   }
 }
 
+async function extractUserMemoriesBackground(
+  userMessage: string,
+  assistantResponse: string,
+  userId: string,
+  onMemoriesSaved: (keys: string[]) => void,
+): Promise<void> {
+  try {
+    const { content } = await callProxy<{ content: string }>('memory-extract', {
+      systemPrompt: USER_MEMORY_EXTRACTION_PROMPT,
+      userMessage,
+      assistantResponse,
+    })
+
+    const parsed = JSON.parse(content ?? '{}') as { memories?: { key: string; value: string }[] }
+    const memories = parsed.memories ?? []
+    if (memories.length === 0) return
+
+    const savedKeys: string[] = []
+    for (const mem of memories) {
+      if (!mem.key || !mem.value) continue
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('ai_user_memory')
+        .upsert(
+          { user_id: userId, key: mem.key, value: mem.value, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,key' }
+        )
+      if (!error) savedKeys.push(mem.key)
+    }
+
+    if (savedKeys.length > 0) onMemoriesSaved(savedKeys)
+  } catch {
+    // extração em background — falha silenciosa
+  }
+}
+
 // ── Hook principal de chat ─────────────────────────────────────────────────────
 export function useAIChat(sessionId: string | null) {
   const qc = useQueryClient()
@@ -186,9 +241,11 @@ export function useAIChat(sessionId: string | null) {
   const [isStreaming, setIsStreaming]             = useState(false)
   const [isLoading, setIsLoading]                 = useState(false)
   const [memoriesSaved, setMemoriesSaved]         = useState<string[]>([])
+  const [userMemoriesSaved, setUserMemoriesSaved] = useState<string[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  const clearMemoriesSaved = useCallback(() => setMemoriesSaved([]), [])
+  const clearMemoriesSaved     = useCallback(() => setMemoriesSaved([]), [])
+  const clearUserMemoriesSaved = useCallback(() => setUserMemoriesSaved([]), [])
 
   // ── Detecção de intent de geração de imagem ────────────────────────────────
   // verbo de criação + (artigo/qualquer coisa curta) + substantivo visual
@@ -352,14 +409,20 @@ ${squadPrompt}`
       qc.invalidateQueries({ queryKey: ['ai_sessions'] })
     }
 
-    // Extração de memória em background (só se houver cliente e resposta válida)
-    if (clientId && aiResponse && !aiResponse.startsWith('❌')) {
+    // Extração de memória em background (cliente + agência)
+    if (aiResponse && !aiResponse.startsWith('❌')) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        extractMemoriesBackground(content || 'análise de imagem', aiResponse, clientId, user.id, (keys) => {
-          setMemoriesSaved(keys)
-          qc.invalidateQueries({ queryKey: ['ai_client_memory', clientId] })
-          qc.invalidateQueries({ queryKey: ['ai_client_context', clientId] })
+        if (clientId) {
+          extractMemoriesBackground(content || 'análise de imagem', aiResponse, clientId, user.id, (keys) => {
+            setMemoriesSaved(keys)
+            qc.invalidateQueries({ queryKey: ['ai_client_memory', clientId] })
+            qc.invalidateQueries({ queryKey: ['ai_client_context', clientId] })
+          })
+        }
+        extractUserMemoriesBackground(content || 'análise de imagem', aiResponse, user.id, (keys) => {
+          setUserMemoriesSaved(keys)
+          qc.invalidateQueries({ queryKey: ['ai_user_memory'] })
         })
       }
     }
@@ -374,5 +437,5 @@ ${squadPrompt}`
     setStreamingContent('')
   }, [])
 
-  return { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved }
+  return { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved, userMemoriesSaved, clearUserMemoriesSaved }
 }

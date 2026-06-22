@@ -9,8 +9,9 @@ import {
 import { cn } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { useClients } from '@/hooks/useClients'
-import { useClientContext } from '@/hooks/useAIContext'
+import { useClientContext, useAIUserMemory, buildUserMemoryContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
+import { AIUserMemoryPanel } from '@/components/ai/AIUserMemoryPanel'
 import { AI_SQUADS, detectSquad, type AISquad } from '@/data/aiSquads'
 import { DiagnosticoModal } from './DiagnosticoModal'
 import {
@@ -302,8 +303,10 @@ export function AIPage() {
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
-  const [memoryPanelOpen, setMemoryPanelOpen]   = useState(false)
-  const [memoryToast, setMemoryToast]           = useState<string[]>([])
+  const [memoryPanelOpen, setMemoryPanelOpen]         = useState(false)
+  const [userMemoryPanelOpen, setUserMemoryPanelOpen] = useState(false)
+  const [memoryToast, setMemoryToast]                 = useState<string[]>([])
+  const [userMemoryToast, setUserMemoryToast]         = useState<string[]>([])
   const [activeSquad, setActiveSquad]           = useState<AISquad | null>(null)
   const [squadToast, setSquadToast]             = useState<AISquad | null>(null)
 
@@ -322,11 +325,14 @@ export function AIPage() {
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
   const { data: clients  = [] }                             = useClients()
   const { data: clientCtx }                                 = useClientContext(activeClientId)
+  const { data: userMemories = [] }                         = useAIUserMemory()
   const deleteSession  = useDeleteSession()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
-  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved } =
+  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved, userMemoriesSaved, clearUserMemoriesSaved } =
     useAIChat(effectiveSessionId)
+
+  const userMemoryContext = buildUserMemoryContext(userMemories)
 
   // Voice input
   const { isRecording, toggle: toggleRecording, supported: voiceSupported } = useVoiceInput(
@@ -342,7 +348,7 @@ export function AIPage() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  // Toast de memória
+  // Toast de memória de cliente
   useEffect(() => {
     if (!memoriesSaved.length) return
     setMemoryToast(memoriesSaved)
@@ -350,6 +356,15 @@ export function AIPage() {
     const t = setTimeout(() => setMemoryToast([]), 4000)
     return () => clearTimeout(t)
   }, [memoriesSaved, clearMemoriesSaved])
+
+  // Toast de memória da agência
+  useEffect(() => {
+    if (!userMemoriesSaved.length) return
+    setUserMemoryToast(userMemoriesSaved)
+    clearUserMemoriesSaved()
+    const t = setTimeout(() => setUserMemoryToast([]), 4000)
+    return () => clearTimeout(t)
+  }, [userMemoriesSaved, clearUserMemoriesSaved])
 
   // Scroll para o final
   useEffect(() => {
@@ -404,16 +419,18 @@ export function AIPage() {
       }
     }
 
+    const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
+
     await sendMessage(
       text, messages, webSearch && imgs.length === 0,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
-      clientCtx?.contextString ?? null,
+      fullContext,
       activeClientId,
       currentSquad?.systemPrompt ?? null,
       imgs.length > 0 ? imgs : undefined,
       imageMode,
     )
-  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId])
+  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -438,10 +455,12 @@ export function AIPage() {
     const diagSquad = AI_SQUADS.find(s => s.id === 'diagnostico-perfil') ?? null
     setActiveSquad(diagSquad)
 
+    const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
+
     await sendMessage(
       prompt, messages, false,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
-      clientCtx?.contextString ?? null,
+      fullContext,
       activeClientId,
       diagSquad?.systemPrompt ?? null,
       images.length > 0 ? images : undefined,
@@ -619,10 +638,30 @@ export function AIPage() {
               )}
             </div>
 
-            {/* Memórias */}
+            {/* Memórias da agência — sempre visível */}
+            <button
+              onClick={() => { setUserMemoryPanelOpen(o => !o); setMemoryPanelOpen(false) }}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
+                userMemoryPanelOpen
+                  ? 'bg-[#0369a1] border-[#0284c7] text-white'
+                  : 'bg-[#f0f9ff] border-[#bae6fd] text-[#0369a1] hover:bg-[#e0f2fe]',
+              )}
+              title="Memórias da agência — fatos que a IA aprendeu sobre seu negócio"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Agência</span>
+              {userMemories.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#0ea5e9] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                  {userMemories.length}
+                </span>
+              )}
+            </button>
+
+            {/* Memórias do cliente */}
             {activeClientId && clientCtx && (
               <button
-                onClick={() => setMemoryPanelOpen(o => !o)}
+                onClick={() => { setMemoryPanelOpen(o => !o); setUserMemoryPanelOpen(false) }}
                 className={cn(
                   'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
                   memoryPanelOpen
@@ -856,7 +895,12 @@ export function AIPage() {
         </div>
       </div>
 
-      {/* ── Painel de memórias ── */}
+      {/* ── Painel de memórias da agência ── */}
+      {userMemoryPanelOpen && (
+        <AIUserMemoryPanel onClose={() => setUserMemoryPanelOpen(false)} />
+      )}
+
+      {/* ── Painel de memórias do cliente ── */}
       {memoryPanelOpen && activeClientId && clientCtx && (
         <AIMemoryPanel client={clientCtx.client} onClose={() => setMemoryPanelOpen(false)} />
       )}
@@ -892,7 +936,7 @@ export function AIPage() {
         </div>
       )}
 
-      {/* ── Toast memória salva ── */}
+      {/* ── Toast memória de cliente salva ── */}
       {memoryToast.length > 0 && (
         <div className="fixed bottom-6 right-6 z-50">
           <div className="flex items-start gap-3 bg-[#1e1b4b] rounded-2xl px-4 py-3 shadow-xl max-w-xs">
@@ -908,6 +952,28 @@ export function AIPage() {
               </p>
             </div>
             <button onClick={() => setMemoryToast([])} className="text-white/40 hover:text-white/80 flex-shrink-0 mt-0.5">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast memória da agência salva ── */}
+      {userMemoryToast.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50 mt-16">
+          <div className="flex items-start gap-3 bg-[#0c4a6e] rounded-2xl px-4 py-3 shadow-xl max-w-xs">
+            <div className="w-7 h-7 rounded-xl bg-[#0369a1] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Building2 className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold text-white mb-1">Aprendi sobre sua agência!</p>
+              <p className="text-[11px] text-white/70">
+                {userMemoryToast.length === 1
+                  ? `"${userMemoryToast[0].replace(/_/g, ' ')}"`
+                  : `${userMemoryToast.length} novos fatos sobre seu negócio`}
+              </p>
+            </div>
+            <button onClick={() => setUserMemoryToast([])} className="text-white/40 hover:text-white/80 flex-shrink-0 mt-0.5">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
