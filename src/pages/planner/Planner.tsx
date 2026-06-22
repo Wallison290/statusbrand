@@ -1370,8 +1370,15 @@ function DayItemCard({
 // ─── Drag & Drop primitives ───────────────────────────────────────────────────
 
 function getChipStyle(item: PlannerItem, isDark: boolean): { bg: string; border: string; text: string } {
-  const s   = item.status as PlannerStatus
-  const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+  const s     = item.status as PlannerStatus
+  const artP  = (item as any).art_approval_status  as ApprovalStatus | null
+  const copyP = (item as any).copy_approval_status as ApprovalStatus | null
+  const as_: ApprovalStatus = (() => {
+    if (artP || copyP) return computeOverallApproval(artP, copyP)
+    if (item.approval_status) return item.approval_status as ApprovalStatus
+    if (s === 'aprovado' || s === 'publicado') return 'aprovado'
+    return 'pendente_aprovacao'
+  })()
 
   if (isDark) {
     if (!item.sent_to_client)         return { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.30)', text: '#cbd5e1' }
