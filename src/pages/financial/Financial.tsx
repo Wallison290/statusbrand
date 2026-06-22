@@ -416,10 +416,11 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
   const handleCobrar = async () => {
     setSending(true)
     try {
-      const { error } = await supabase.functions.invoke('charge-client-whatsapp', {
+      const { data, error } = await supabase.functions.invoke('charge-client-whatsapp', {
         body: { client_id: client.id },
       })
       if (error) throw error
+      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao enviar mensagem.')
       toast('Mensagem de cobrança enviada no WhatsApp! ✅', 'success')
     } catch (err: any) {
       toast(err.message ?? 'Erro ao enviar mensagem.', 'error')
