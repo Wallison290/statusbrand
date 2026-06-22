@@ -293,12 +293,18 @@ const SUGGESTIONS = [
   { icon: Wand2,      text: 'Gere uma imagem de um logotipo moderno para uma agência digital', web: false },
 ]
 
+// Evita busca web desnecessária em saudações e mensagens curtas
+const GREETING_RE = /^(oi|olá|ola|ei|hey|hello|hi|bom dia|boa tarde|boa noite|tudo bem|como vai|ok|certo|entendi|obrigad[ao]|valeu|brigad[ao]|sim|não|nao|continua|continue|pode|vai|show|perfeito|exato|excelente|ótimo|otimo|bacana|legal)\b/i
+function shouldUseWebSearch(text: string): boolean {
+  if (!text || text.trim().length < 25) return false
+  return !GREETING_RE.test(text.trim())
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export function AIPage() {
   const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen]           = useState(true)
   const [input, setInput]                       = useState('')
-  const webSearch = true
   const [imageMode, setImageMode]               = useState(false)
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
@@ -369,9 +375,9 @@ export function AIPage() {
     const imgs = [...attachedImages]
     setAttachedImages([])
 
-    // Detecção automática de squad na primeira mensagem
+    // Detecção automática de squad (qualquer mensagem enquanto não há squad ativo)
     let currentSquad = activeSquad
-    if (!currentSquad && messages.length === 0 && text) {
+    if (!currentSquad && text) {
       // Fase 1: keyword match rápido (instantâneo)
       const detected = detectSquad(text)
       if (detected) {
@@ -403,7 +409,7 @@ export function AIPage() {
     const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
 
     await sendMessage(
-      text, messages, webSearch && imgs.length === 0,
+      text, messages, shouldUseWebSearch(text) && imgs.length === 0,
       (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
       fullContext,
       activeClientId,
