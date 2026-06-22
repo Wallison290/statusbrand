@@ -76,6 +76,15 @@ export function useUpdatePlannerItem() {
         }
       }
 
+      // Quando a agência move o card para "aprovado" manualmente (aprovação externa
+      // por WhatsApp, presencial etc.), sincroniza approval_status se ainda estiver
+      // como pendente — evita exibir "Aguardando aprovação" para conteúdo já aprovado.
+      if (updates.status === 'aprovado') {
+        if (!patch.approval_status || patch.approval_status === 'pendente_aprovacao') {
+          patch.approval_status = 'aprovado'
+        }
+      }
+
       const { data, error } = await supabase
         .from('planner')
         .update(patch)

@@ -1269,7 +1269,16 @@ function DayItemCard({
             <p className="text-xs line-clamp-2 ml-3.5 mb-1" style={{ color: 'var(--sm-text-3)' }}>{item.notes}</p>
           )}
           {(() => {
-            const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
+            const artPartial  = (item as any).art_approval_status  as ApprovalStatus | null
+            const copyPartial = (item as any).copy_approval_status as ApprovalStatus | null
+            const as_: ApprovalStatus = (() => {
+              // Partial approvals take precedence — same logic as PlannerItemView
+              if (artPartial || copyPartial) return computeOverallApproval(artPartial, copyPartial)
+              if (item.approval_status) return item.approval_status as ApprovalStatus
+              // Infer from content status when approval_status wasn't synced yet
+              if (item.status === 'aprovado' || item.status === 'publicado') return 'aprovado'
+              return 'pendente_aprovacao'
+            })()
             return (
               <div className="flex items-center gap-1.5 ml-3.5 mb-1">
                 <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
