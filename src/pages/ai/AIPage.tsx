@@ -305,8 +305,6 @@ export function AIPage() {
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
   const [memoryPanelOpen, setMemoryPanelOpen]         = useState(false)
   const [userMemoryPanelOpen, setUserMemoryPanelOpen] = useState(false)
-  const [memoryToast, setMemoryToast]                 = useState<string[]>([])
-  const [userMemoryToast, setUserMemoryToast]         = useState<string[]>([])
   const [activeSquad, setActiveSquad]           = useState<AISquad | null>(null)
   const [squadToast, setSquadToast]             = useState<AISquad | null>(null)
 
@@ -329,7 +327,7 @@ export function AIPage() {
   const deleteSession  = useDeleteSession()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
-  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration, memoriesSaved, clearMemoriesSaved, userMemoriesSaved, clearUserMemoriesSaved } =
+  const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration } =
     useAIChat(effectiveSessionId)
 
   const userMemoryContext = buildUserMemoryContext(userMemories)
@@ -348,23 +346,6 @@ export function AIPage() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  // Toast de memória de cliente
-  useEffect(() => {
-    if (!memoriesSaved.length) return
-    setMemoryToast(memoriesSaved)
-    clearMemoriesSaved()
-    const t = setTimeout(() => setMemoryToast([]), 4000)
-    return () => clearTimeout(t)
-  }, [memoriesSaved, clearMemoriesSaved])
-
-  // Toast de memória da agência
-  useEffect(() => {
-    if (!userMemoriesSaved.length) return
-    setUserMemoryToast(userMemoriesSaved)
-    clearUserMemoriesSaved()
-    const t = setTimeout(() => setUserMemoryToast([]), 4000)
-    return () => clearTimeout(t)
-  }, [userMemoriesSaved, clearUserMemoriesSaved])
 
   // Scroll para o final
   useEffect(() => {
@@ -936,49 +917,6 @@ export function AIPage() {
         </div>
       )}
 
-      {/* ── Toast memória de cliente salva ── */}
-      {memoryToast.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <div className="flex items-start gap-3 bg-[#1e1b4b] rounded-2xl px-4 py-3 shadow-xl max-w-xs">
-            <div className="w-7 h-7 rounded-xl bg-[#6d28d9] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Brain className="w-3.5 h-3.5 text-white" />
-            </div>
-            <div>
-              <p className="text-[12px] font-semibold text-white mb-1">Memória salva!</p>
-              <p className="text-[11px] text-white/70">
-                {memoryToast.length === 1
-                  ? `Aprendi: "${memoryToast[0].replace(/_/g, ' ')}"`
-                  : `${memoryToast.length} novos aprendizados sobre este cliente`}
-              </p>
-            </div>
-            <button onClick={() => setMemoryToast([])} className="text-white/40 hover:text-white/80 flex-shrink-0 mt-0.5">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Toast memória da agência salva ── */}
-      {userMemoryToast.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-50 mt-16">
-          <div className="flex items-start gap-3 bg-[#0c4a6e] rounded-2xl px-4 py-3 shadow-xl max-w-xs">
-            <div className="w-7 h-7 rounded-xl bg-[#0369a1] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Building2 className="w-3.5 h-3.5 text-white" />
-            </div>
-            <div>
-              <p className="text-[12px] font-semibold text-white mb-1">Aprendi sobre sua agência!</p>
-              <p className="text-[11px] text-white/70">
-                {userMemoryToast.length === 1
-                  ? `"${userMemoryToast[0].replace(/_/g, ' ')}"`
-                  : `${userMemoryToast.length} novos fatos sobre seu negócio`}
-              </p>
-            </div>
-            <button onClick={() => setUserMemoryToast([])} className="text-white/40 hover:text-white/80 flex-shrink-0 mt-0.5">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
