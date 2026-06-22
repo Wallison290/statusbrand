@@ -114,14 +114,14 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE)
     const { data: client, error: clientErr } = await supabase
       .from('clients')
-      .select('company_name, contact_name, whatsapp, dia_vencimento, valor_mensal')
+      .select('company_name, responsible_name, whatsapp, dia_vencimento, valor_mensal')
       .eq('id', client_id)
       .single()
 
     if (clientErr || !client) throw new Error('Cliente não encontrado.')
     if (!client.whatsapp) throw new Error('Cliente sem WhatsApp cadastrado.')
 
-    const message = buildChargeMessage(client)
+    const message = buildChargeMessage({ ...client, contact_name: client.responsible_name })
     const result = await sendText(client.whatsapp, message)
     if (!result.ok) throw new Error(result.error)
 
