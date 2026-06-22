@@ -81,6 +81,13 @@ const approvalTextColor: Record<ApprovalStatus, string> = {
   ajuste_realizado: 'text-blue-400',
   reprovado: 'text-red-400',
 }
+const approvalTextColorLight: Record<ApprovalStatus, string> = {
+  pendente_aprovacao: 'text-yellow-700',
+  aprovado:           'text-green-700',
+  ajuste_solicitado:  'text-orange-700',
+  ajuste_realizado:   'text-blue-700',
+  reprovado:          'text-red-700',
+}
 const approvalLabel: Record<ApprovalStatus, string> = {
   pendente_aprovacao: 'Aguardando aprovação',
   aprovado: 'Aprovado pelo cliente',
@@ -1208,12 +1215,20 @@ function DayItemCard({
   const imageThumbnail = item.attachments?.find(a => isImageAttachment(a))
   const videoThumbnail = item.attachments?.find(a => isVideoAttachment(a))
 
+  const { isDark } = useTheme()
+
   return (
-    <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden w-full max-w-full min-w-0">
+    <div
+      className="rounded-xl overflow-hidden w-full max-w-full min-w-0"
+      style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
+    >
       {/* Área clicável para visualização */}
       <div
         onClick={onView}
-        className="flex items-start gap-3 p-3 cursor-pointer hover:bg-white/5 transition-colors group/view min-w-0 w-full max-w-full"
+        className="flex items-start gap-3 p-3 cursor-pointer transition-colors group/view min-w-0 w-full max-w-full"
+        style={{ ['--tw-hover-bg' as string]: 'var(--sm-bg-input)' }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--sm-bg-input)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         {imageThumbnail && (
           <img src={imageThumbnail.file_url} alt="" className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
@@ -1233,32 +1248,32 @@ function DayItemCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColors[item.status as PlannerStatus]}`} />
-            <p className="font-medium text-white text-sm break-words">{item.title}</p>
+            <p className="font-medium text-sm break-words" style={{ color: 'var(--sm-text-1)' }}>{item.title}</p>
           </div>
           <div className="flex items-center gap-2 ml-3.5 mb-1">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs" style={{ color: 'var(--sm-text-3)' }}>
               {contentTypeLabels[item.content_type as ContentType]} · {statusLabels[item.status as PlannerStatus]}
             </p>
             {item.sent_to_client
-              ? <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">✓ Enviado ao cliente</span>
-              : <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/20">Rascunho</span>
+              ? <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${isDark ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-green-100 text-green-700 border-green-300'}`}>✓ Enviado ao cliente</span>
+              : <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${isDark ? 'bg-gray-500/20 text-gray-400 border-gray-500/20' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>Rascunho</span>
             }
           </div>
           {item.client && (
             <div className="flex items-center gap-1 ml-3.5 mb-1">
-              <Building2 className="w-3 h-3 text-gray-500 flex-shrink-0" />
-              <span className="text-xs text-gray-400 truncate">{item.client.company_name}</span>
+              <Building2 className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--sm-text-3)' }} />
+              <span className="text-xs truncate" style={{ color: 'var(--sm-text-3)' }}>{item.client.company_name}</span>
             </div>
           )}
           {item.notes && (
-            <p className="text-xs text-gray-500 line-clamp-2 ml-3.5 mb-1">{item.notes}</p>
+            <p className="text-xs line-clamp-2 ml-3.5 mb-1" style={{ color: 'var(--sm-text-3)' }}>{item.notes}</p>
           )}
           {(() => {
             const as_ = (item.approval_status || 'pendente_aprovacao') as ApprovalStatus
             return (
               <div className="flex items-center gap-1.5 ml-3.5 mb-1">
                 <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${approvalDot[as_]}`} />
-                <span className={`text-[10px] font-medium ${approvalTextColor[as_]}`}>
+                <span className={`text-[10px] font-medium ${isDark ? approvalTextColor[as_] : approvalTextColorLight[as_]}`}>
                   {approvalLabel[as_]}
                 </span>
               </div>
@@ -1267,16 +1282,16 @@ function DayItemCard({
           <div className="flex items-center gap-3 ml-3.5 mt-1">
             {item.attachments && item.attachments.length > 0 && (
               <div className="flex items-center gap-1">
-                <Paperclip className="w-3 h-3 text-gray-500" />
-                <span className="text-[11px] text-gray-500">
+                <Paperclip className="w-3 h-3" style={{ color: 'var(--sm-text-3)' }} />
+                <span className="text-[11px]" style={{ color: 'var(--sm-text-3)' }}>
                   {item.attachments.length} {item.attachments.length === 1 ? 'anexo' : 'anexos'}
                 </span>
               </div>
             )}
             {item.links && item.links.length > 0 && (
               <div className="flex items-center gap-1">
-                <Link2 className="w-3 h-3 text-blue-400" />
-                <span className="text-[11px] text-blue-400">
+                <Link2 className={`w-3 h-3 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                <span className={`text-[11px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                   {item.links.length} {item.links.length === 1 ? 'link' : 'links'}
                 </span>
               </div>
@@ -1284,29 +1299,29 @@ function DayItemCard({
           </div>
         </div>
         {/* Seta indicando que é clicável */}
-        <ChevronRightIcon className="w-4 h-4 text-gray-600 group-hover/view:text-gray-300 transition-colors flex-shrink-0 mt-0.5" />
+        <ChevronRightIcon className="w-4 h-4 group-hover/view:opacity-100 opacity-50 transition-opacity flex-shrink-0 mt-0.5" style={{ color: 'var(--sm-text-2)' }} />
       </div>
 
       {/* Ações separadas da área de visualização */}
       {confirming ? (
-        <div className="flex flex-wrap items-center gap-2 px-3 pb-3 pt-2 border-t border-white/8">
-          <span className="text-xs text-gray-400 flex-1">Confirmar exclusão?</span>
+        <div className="flex flex-wrap items-center gap-2 px-3 pb-3 pt-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
+          <span className="text-xs flex-1" style={{ color: 'var(--sm-text-3)' }}>Confirmar exclusão?</span>
           <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>Cancelar</Button>
           <Button
             size="sm"
             variant="ghost"
-            className="text-red-400 hover:text-red-300"
+            className="text-red-500 hover:text-red-400"
             onClick={() => { setConfirming(false); onDelete() }}
           >
             Excluir
           </Button>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center justify-end gap-2 px-3 pb-3 pt-2 border-t border-white/8">
+        <div className="flex flex-wrap items-center justify-end gap-2 px-3 pb-3 pt-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
           <Button
             size="sm"
             variant="ghost"
-            className="text-gray-500 hover:text-red-400"
+            className="hover:text-red-500"
             onClick={() => setConfirming(true)}
           >
             <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
@@ -2527,15 +2542,15 @@ export function Planner() {
         <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-xl max-h-[85vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-gray-400" />
-              <DialogTitle>
+              <CalendarDays className="w-4 h-4" style={{ color: 'var(--sm-text-3)' }} />
+              <DialogTitle style={{ color: 'var(--sm-text-1)' }}>
                 {selectedDayDate && format(selectedDayDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </DialogTitle>
             </div>
             {selectedDayDate && (() => {
               const count = getItemsForDay(selectedDayDate).length
               return (
-                <p className="text-xs text-gray-500 mt-0.5 ml-6">
+                <p className="text-xs mt-0.5 ml-6" style={{ color: 'var(--sm-text-3)' }}>
                   {count} {count === 1 ? 'post planejado' : 'posts planejados'} · clique em um para ver detalhes
                 </p>
               )
