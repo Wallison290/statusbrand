@@ -92,11 +92,23 @@ function WhatsAppModal({
 
   const { toast } = useToast()
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
 
-  const handleSend = () => {
-    openWhatsApp(member.whatsapp!, message)
-    setSent(true)
-    toast('Mensagem copiada! Cole no WhatsApp e envie.', 'success')
+  const handleSend = async () => {
+    setSending(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+        body: { number: member.whatsapp, text: message },
+      })
+      if (error) throw error
+      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao enviar mensagem.')
+      setSent(true)
+      toast('Mensagem enviada no WhatsApp! ✅', 'success')
+    } catch (err: any) {
+      toast(err.message ?? 'Erro ao enviar mensagem.', 'error')
+    } finally {
+      setSending(false)
+    }
   }
 
   const WaIconLarge = () => (
@@ -143,12 +155,12 @@ function WhatsAppModal({
             <div className="flex items-start gap-2 bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-3 py-2.5">
               <Check className="w-3.5 h-3.5 text-[#16a34a] flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-[#15803d] leading-relaxed">
-                <strong>Mensagem copiada!</strong> No WhatsApp, clique na caixa de texto e cole (pressione e segure → Colar).
+                <strong>Mensagem enviada!</strong> O colaborador já recebeu no WhatsApp.
               </p>
             </div>
           ) : (
             <p className="text-[10px] text-[#94a3b8]">
-              A mensagem será copiada automaticamente. No WhatsApp, cole e envie — os emojis ficam perfeitos.
+              A mensagem será enviada diretamente no WhatsApp do colaborador.
             </p>
           )}
         </div>
@@ -163,10 +175,13 @@ function WhatsAppModal({
           </button>
           <button
             onClick={handleSend}
-            className="flex-1 h-9 rounded-xl bg-[#25D366] text-white text-[12px] font-semibold hover:bg-[#1ebe5d] transition-colors flex items-center justify-center gap-1.5"
+            disabled={sending}
+            className="flex-1 h-9 rounded-xl bg-[#25D366] text-white text-[12px] font-semibold hover:bg-[#1ebe5d] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <Send className="w-3.5 h-3.5" />
-            {sent ? 'Abrir novamente' : 'Copiar e abrir WhatsApp'}
+            {sending
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Send className="w-3.5 h-3.5" />}
+            {sending ? 'Enviando...' : sent ? 'Enviar novamente' : 'Enviar via WhatsApp'}
           </button>
         </div>
       </div>
