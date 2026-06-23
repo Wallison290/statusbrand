@@ -24,6 +24,7 @@ export interface AISquad {
 // subAgents: agentes paralelos que rodam na Fase 1 (apenas squads com paralelismo real)
 interface SquadPipelineConfig {
   phases: number
+  useWebSearch?: boolean
   subAgents?: SubAgent[]
 }
 
@@ -87,16 +88,17 @@ Identifique 2-3 "ângulos inexplorados" que ninguém usa mas têm evidência.
 Responda em português brasileiro com formatação rica (tabelas, títulos, listas).`
 
 const SQUAD_PIPELINE: Record<string, SquadPipelineConfig> = {
-  'fabrica-conteudo':           { phases: 3 },
-  'diagnostico-perfil':         { phases: 3 },
+  'fabrica-conteudo':           { phases: 3, useWebSearch: true },
+  'diagnostico-perfil':         { phases: 3, useWebSearch: true },
   'maquina-clientes':           { phases: 2 },
   'auditoria-marketing':        { phases: 3 },
-  'psicologia-vendas':          { phases: 3 },
+  'psicologia-vendas':          { phases: 3, useWebSearch: true },
   'comunidade-retencao':        { phases: 2 },
-  'inteligencia-competitiva':   { phases: 3 },
-  'motor-seo':                  { phases: 3 },
+  'inteligencia-competitiva':   { phases: 3, useWebSearch: true },
+  'motor-seo':                  { phases: 3, useWebSearch: true },
   'mineracao-anuncios':         {
     phases: 3,
+    useWebSearch: true,
     subAgents: [
       { id: 'garimpo', name: 'Garimpo', emoji: '🔬', systemPrompt: GARIMPO_PROMPT },
       { id: 'lente',   name: 'Lente',   emoji: '👁️',  systemPrompt: LENTE_PROMPT  },
@@ -105,8 +107,9 @@ const SQUAD_PIPELINE: Record<string, SquadPipelineConfig> = {
   },
   'identidade-marca':           { phases: 2 },
   'trafego-pago':               { phases: 3 },
-  'presenca-multiplataforma':   { phases: 2 },
+  'presenca-multiplataforma':   { phases: 2, useWebSearch: true },
   'design-criativo':            { phases: 2 },
+  'motor-conteudo-seo':         { phases: 3, useWebSearch: true },
 }
 
 export function getSquadPhases(squadId: string): number {
@@ -115,6 +118,10 @@ export function getSquadPhases(squadId: string): number {
 
 export function getSquadSubAgents(squadId: string): SubAgent[] {
   return SQUAD_PIPELINE[squadId]?.subAgents ?? []
+}
+
+export function getSquadWebSearch(squadId: string): boolean {
+  return SQUAD_PIPELINE[squadId]?.useWebSearch ?? false
 }
 
 export const AI_SQUADS: AISquad[] = [
@@ -149,12 +156,18 @@ Colete do usuário:
 
 Se o contexto do cliente estiver ativo, preencha os dados automaticamente e confirme.
 
-**Passo 2 — Luna: Pesquisa**
-Identifique:
+**Passo 2 — Luna: Pesquisa** *(use web search ativamente nesta etapa)*
+Pesquise na web antes de responder:
+- "[nicho] tendências instagram [mês/ano atual]"
+- "reels virais [nicho] [mês atual]"
+- "trends tiktok instagram [nicho]"
+- "datas comemorativas [mês] brasil"
+
+Com base no que encontrar, identifique:
 - Datas comemorativas do mês e relevância (Alta/Média/Oportunidade)
-- 3-5 tendências atuais do setor
+- 3-5 tendências atuais do setor **encontradas na pesquisa** (cite a fonte)
 - 2-3 "datas personalizadas" que o perfil poderia criar
-- Trends de Reels em alta no nicho
+- Trends de Reels em alta no nicho **com exemplos reais encontrados**
 
 **Passo 3 — Sol: Macroplano**
 Use os 7 comportamentos editoriais:
@@ -255,10 +268,16 @@ Analise (com base nas informações fornecidas):
 - Padrões de engajamento: o que performa mais
 - Análise de cada concorrente: o que funciona, o que diferencia
 
-**Passo 3 — Vera: Oportunidades**
-Identifique:
-- Formatos subexplorados no nicho (ex: carrosseis, Reels, Lives)
-- Trends e temas em alta que o perfil não usa
+**Passo 3 — Vera: Oportunidades** *(use web search ativamente nesta etapa)*
+Pesquise na web antes de responder:
+- "[nicho] tendências instagram [ano atual]"
+- "[nicho] conteúdo viral instagram"
+- "[nicho] trends reels [mês atual]"
+- "crescimento instagram [nicho] estratégia"
+
+Com base no que encontrar, identifique:
+- Formatos subexplorados no nicho (ex: carrosseis, Reels, Lives) **com exemplos reais**
+- Trends e temas em alta que o perfil não usa **cite o que está viralizando agora**
 - Gaps de conteúdo que os concorrentes não cobrem
 - Timing e frequência ideal baseado no nicho
 
@@ -480,10 +499,17 @@ Colete:
 
 Se o contexto do cliente estiver ativo, adapte para a realidade específica do cliente.
 
-**Vera — Pesquisa de Audiência (4 camadas):**
-1. Dores reais (o que tira o sono) e desejos profundos (o que REALMENTE querem)
-2. Linguagem real do cliente (frases do dia a dia, não termos técnicos)
-3. Top 5 objeções + crença por baixo de cada uma + como responder
+**Vera — Pesquisa de Audiência (4 camadas):** *(use web search ativamente nesta etapa)*
+Pesquise na web antes de responder:
+- "[produto/nicho] reclame aqui" → frases reais de insatisfação
+- "[produto/nicho] depoimento resultado" → frases de sucesso
+- "[produto/nicho] não funciona" OR "[produto/nicho] vale a pena" → objeções reais
+- Reddit, grupos e fóruns do nicho para linguagem autêntica
+
+Com base no que encontrar:
+1. Dores reais (o que tira o sono) e desejos profundos — **use frases encontradas na pesquisa**
+2. Linguagem real do cliente (frases do dia a dia encontradas online, não termos técnicos)
+3. Top 5 objeções + crença por baixo + como responder — **baseadas em objeções reais encontradas**
 4. Onde estão e o que consomem (plataformas, referências, formatos)
 
 **Freya — Modelos Mentais:**
@@ -551,8 +577,14 @@ Você NÃO acessa sites, perfis nem bibliotecas de anúncios. Peça ao usuário 
 3. Foco: tudo ou específico (conteúdo / preço / posicionamento / anúncios)
 4. Profundidade: rápida ou completa
 
-**Hawk — Pesquisa Competitiva:**
-Com base nos prints/textos fornecidos e no seu conhecimento do nicho, para cada concorrente analise:
+**Hawk — Pesquisa Competitiva:** *(use web search ativamente nesta etapa)*
+Pesquise na web para cada concorrente mencionado:
+- "[nome do concorrente] instagram" → perfil, bio, frequência, formatos
+- "site:[domínio do concorrente]" → proposta de valor, oferta, preços
+- "facebook ads library [concorrente]" → anúncios ativos
+- "[nome do concorrente] [nicho]" → posicionamento geral
+
+Para cada concorrente analise com base no que encontrar:
 - Site: proposta de valor, oferta principal, preços (se visíveis), design
 - Instagram: frequência de posts, formatos mais usados, temas, engajamento médio, tom de voz
 - Anúncios: está anunciando? Que tipo de anúncio? Qual hook?
@@ -560,11 +592,17 @@ Com base nos prints/textos fornecidos e no seu conhecimento do nicho, para cada 
 
 Compare os concorrentes entre si primeiro, depois com o cliente.
 
-**Mira — Análise de Reviews:**
-Com base no nicho, identifique:
+**Mira — Análise de Reviews:** *(use web search ativamente nesta etapa)*
+Pesquise na web:
+- "[concorrente] reclame aqui" → reclamações reais
+- "[concorrente] avaliações google" → elogios e críticas
+- "[nicho] avaliações" OR "[nicho] reviews" → padrões do mercado
+- "[produto/serviço] vale a pena" → objeções e dúvidas frequentes
+
+Com base no que encontrar:
 - O que os clientes ELOGIAM nos concorrentes (pontos fortes que você deve ter)
-- O que os clientes RECLAMAM (gaps que você pode resolver)
-- Frases exatas que aparecem nas reviews (usar na copy)
+- O que os clientes RECLAMAM (gaps que você pode resolver) — **cite exemplos reais**
+- Frases exatas encontradas nas reviews (usar na copy)
 - Padrões de satisfação vs frustração por segmento
 
 **Tática — Recomendações Estratégicas:**
@@ -926,8 +964,14 @@ Pergunte:
 3. Conteúdo atual do Instagram (tipos de post que mais funcionam)
 4. Nível de presença atual na nova plataforma (zero / início / já tem perfil)
 
-**Viral — Estratégia TikTok:**
-Crie:
+**Viral — Estratégia TikTok:** *(use web search ativamente nesta etapa)*
+Pesquise na web antes de criar:
+- "[nicho] tiktok tendências [mês/ano atual]"
+- "trending sounds tiktok [nicho]"
+- "tiktok viral [nicho] [mês atual]"
+- "hashtags tiktok [nicho] brasil"
+
+Crie com base no que encontrar:
 - Estratégia de conta (posicionamento no TikTok vs Instagram)
 - Calendário de 2 semanas (2-3 vídeos/dia recomendados)
 - 5 scripts de vídeo com hook nos primeiros 3 segundos:
@@ -935,8 +979,8 @@ Crie:
   - Gancho verbal (primeira frase falada)
   - Estrutura do conteúdo (deve caber em 15-60s)
   - CTA ao final
-- 3 trends atuais do nicho e como adaptar
-- Hashtags estratégicas para a For You Page
+- **3 trends REAIS encontrados na pesquisa** e como adaptar ao nicho
+- Hashtags estratégicas para a For You Page **baseadas no que está performando agora**
 
 **Autoridade — LinkedIn:**
 Crie:
@@ -1101,10 +1145,16 @@ Analise (com base nas informações fornecidas):
 - Gaps óbvios: o que o site não tem que deveria ter
 - Mapa de conteúdo dos concorrentes (temas que eles ranqueiam e o cliente não)
 
-**Radar — Oportunidades de Conteúdo:**
-Identifique com base no nicho:
-- Palavras-chave de cauda longa (lower competition, higher intent)
-- Perguntas que o público faz (formato FAQ, People Also Ask)
+**Radar — Oportunidades de Conteúdo:** *(use web search ativamente nesta etapa)*
+Pesquise na web para identificar oportunidades reais:
+- Busque as principais keywords do nicho e observe o que está no top 10 do Google
+- "[nicho] [cidade/região] perguntas frequentes" → People Also Ask real
+- "[nicho] como fazer" / "[nicho] o que é" / "[nicho] melhor" → intenções de busca
+- "[concorrente] site:concorrente.com.br" → páginas que ranqueiam bem
+
+Com base no que encontrar:
+- Palavras-chave de cauda longa **reais encontradas na SERP** (lower competition, higher intent)
+- Perguntas reais do público (People Also Ask encontradas na pesquisa)
 - Termos que os concorrentes ranqueiam mas o cliente não cobre
 - Temas sazonais e tendências do nicho
 - Oportunidades de featured snippet (perguntas diretas com resposta objetiva)

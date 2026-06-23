@@ -13,7 +13,7 @@ import { useClients } from '@/hooks/useClients'
 import { useClientContext, useAIUserMemory, buildUserMemoryContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AIUserMemoryPanel } from '@/components/ai/AIUserMemoryPanel'
-import { AI_SQUADS, detectSquad, getSquadPhases, getSquadSubAgents, type AISquad } from '@/data/aiSquads'
+import { AI_SQUADS, detectSquad, getSquadPhases, getSquadSubAgents, getSquadWebSearch, type AISquad } from '@/data/aiSquads'
 import { streamChat } from '@/lib/aiProxy'
 import { DiagnosticoModal } from './DiagnosticoModal'
 import {
@@ -637,8 +637,13 @@ ${subAgentContext}`
       }
     } else {
       // Fluxo normal (sem sub-agentes paralelos)
+      // Squad com useWebSearch: sempre ativa (exceto saudações/imagens)
+      // Sem squad ativo: mantém heurística genérica
+      const squadWantsSearch = currentSquad ? getSquadWebSearch(currentSquad.id) : false
+      const useSearch = imgs.length === 0 && !historyHasImages && !imageMode
+        && (squadWantsSearch ? shouldUseWebSearch(text) : shouldUseWebSearch(text) && !currentSquad)
       await sendMessage(
-        text, messages, shouldUseWebSearch(text) && imgs.length === 0 && !historyHasImages,
+        text, messages, useSearch,
         onSessionCreated,
         fullContext,
         activeClientId,
