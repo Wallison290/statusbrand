@@ -302,31 +302,56 @@ function shouldUseWebSearch(text: string): boolean {
 }
 
 // ─── Injeção de fase no squad prompt (Gap 1) ─────────────────────────────────
+// IMPORTANTE: o marcador vai DEPOIS do squad prompt (recência = maior peso no LLM)
 function buildPhaseMarker(phase: number, totalPhases: number): string {
   if (totalPhases <= 1) return ''
 
-  if (phase === 0) return `🚦 PIPELINE — FASE 0/${totalPhases - 1}: INTAKE OBRIGATÓRIO
-Você acabou de ser ativado. Esta é a PRIMEIRA interação deste pipeline.
-REGRA ABSOLUTA: Execute APENAS a coleta de briefing.
-1. Apresente seu time em no máximo 2 linhas
-2. Faça TODAS as perguntas do briefing de uma vez (lista numerada)
-3. NÃO comece a trabalhar, NÃO entregue análises, NÃO crie nada ainda
-4. Termine com uma frase curta convidando o usuário a responder
-Aguarde a resposta antes de qualquer execução.
+  const sep = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
 
+  if (phase === 0) return `
+${sep}
+⛔ INSTRUÇÃO DE PIPELINE — FASE 0 DE ${totalPhases - 1}: INTAKE
+${sep}
+Esta é a PRIMEIRA mensagem neste pipeline. Você tem ${totalPhases} fases no total.
+
+EXECUTE APENAS ISTO:
+• Apresente o time em 1-2 linhas
+• Liste as perguntas de briefing do Passo 1 do seu pipeline (lista numerada)
+• PARE. Não analise. Não execute. Não entregue nada.
+
+Se o usuário já trouxe dados/métricas na mensagem: confirme o recebimento ("Recebi os dados!"), resuma em 1 linha o que foi fornecido, pergunte se há mais informações e se pode prosseguir com a análise.
+
+A execução real começa na próxima mensagem. AGUARDE.
+${sep}
 `
 
-  if (phase >= totalPhases - 1) return `🚦 PIPELINE — FASE FINAL: ENTREGA E REVISÃO
-Esta é a fase de conclusão do pipeline.
-Consolide tudo, entregue o output completo e profissional.
-Ao final, pergunte se há ajustes antes de encerrar.
+  if (phase >= totalPhases - 1) return `
+${sep}
+✅ INSTRUÇÃO DE PIPELINE — FASE FINAL: ENTREGA COMPLETA
+${sep}
+O usuário aprovou a análise. Entregue AGORA o output completo:
+• Recomendações priorizadas (quick wins primeiro)
+• Plano de ação com passos concretos
+• Consolidação final de tudo que foi discutido
 
+Termine com uma pergunta sobre ajustes finais.
+${sep}
 `
 
-  return `🚦 PIPELINE — FASE ${phase}/${totalPhases - 1}: EXECUÇÃO
-O briefing foi coletado. Execute agora as etapas de trabalho do seu pipeline.
-Ao concluir esta fase, PARE e pergunte se o usuário quer ajustes antes de continuar.
+  return `
+${sep}
+⚡ INSTRUÇÃO DE PIPELINE — FASE ${phase} DE ${totalPhases - 1}: DIAGNÓSTICO/ANÁLISE
+${sep}
+O briefing foi coletado. Execute SOMENTE o diagnóstico e análise desta fase.
 
+NÃO INCLUA AINDA: recomendações, planos de ação, "próximos passos", sugestões de melhoria.
+Apenas diagnostique: o que está funcionando, o que não está, por quê.
+
+Ao final, escreva EXATAMENTE esta linha e PARE:
+"⏸ **Diagnóstico concluído.** Posso prosseguir com as recomendações e plano de ação?"
+
+AGUARDE confirmação do usuário antes de continuar.
+${sep}
 `
 }
 
@@ -484,11 +509,11 @@ export function AIPage() {
     const currentPhase = (savedPhase !== null && savedPhase.squadId === currentSquad?.id) ? savedPhase.phase : 0
     const totalPhases  = currentSquad ? getSquadPhases(currentSquad.id) : 0
 
-    // Injeta marcador de fase no início do squadPrompt
+    // Injeta marcador de fase NO FINAL do squadPrompt (recência = maior peso no LLM)
     let phasedSquadPrompt = currentSquad?.systemPrompt ?? null
     if (phasedSquadPrompt && currentSquad) {
       const phaseMarker = buildPhaseMarker(currentPhase, totalPhases)
-      phasedSquadPrompt = phaseMarker + phasedSquadPrompt
+      phasedSquadPrompt = phasedSquadPrompt + phaseMarker
     }
 
     // Callback captura ID da sessão criada (para salvar fase depois)
