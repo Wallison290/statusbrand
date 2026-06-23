@@ -4,7 +4,7 @@ import {
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
   Mic, MicOff, Paperclip, Download,
-  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2,
+  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2, Calendar,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
@@ -301,6 +301,49 @@ function shouldUseWebSearch(text: string): boolean {
   return !GREETING_RE.test(text.trim())
 }
 
+// ─── Exportar calendário de conteúdo para o Planejador ───────────────────────
+
+const CALENDAR_EXTRACTION_PROMPT = `Você é um extrator de dados de planejamento de conteúdo.
+
+Analise a conversa abaixo e extraia TODOS os posts e Reels mencionados.
+
+Retorne APENAS um JSON válido (sem markdown, sem explicação, sem \`\`\`json):
+[
+  {
+    "title": "título curto do post",
+    "notes": "GANCHO: ...\n\nCOPY: ...\n\nCTA: ...\n\nHASHTAGS: ...",
+    "content_type": "post",
+    "week": 1,
+    "position": 1
+  }
+]
+
+Regras:
+- content_type: use exatamente "post" para posts normais ou "reels" para Reels
+- week: número da semana (1, 2, 3 ou 4)
+- position: posição dentro da semana — posts usam 1, 2 ou 3; reels usam 1 ou 2
+- notes: inclua gancho, copy completa, CTA e hashtags conforme aparecem na conversa
+- Inclua TODOS os posts e Reels, de todas as semanas
+- Responda SOMENTE com o array JSON`
+
+function getFirstMondayOfMonth(year: number, month: number): Date {
+  const d = new Date(year, month, 1)
+  const day = d.getDay() // 0=Dom, 1=Seg, ...
+  const offset = day === 0 ? 1 : day === 1 ? 0 : 8 - day
+  d.setDate(d.getDate() + offset)
+  return d
+}
+
+function calcPostDate(week: number, position: number, contentType: string, base: Date): string {
+  const d = new Date(base)
+  d.setDate(d.getDate() + (week - 1) * 7)
+  // Posts: Seg(+0), Qua(+2), Sex(+4) — Reels: Ter(+1), Qui(+3)
+  const offsets = contentType === 'reels' ? [1, 3] : [0, 2, 4]
+  const dayOffset = offsets[Math.max(0, position - 1) % offsets.length]
+  d.setDate(d.getDate() + dayOffset)
+  return d.toISOString().split('T')[0]
+}
+
 // ─── Injeção de fase no squad prompt (Gap 1) ─────────────────────────────────
 // IMPORTANTE: o marcador vai DEPOIS do squad prompt (recência = maior peso no LLM)
 function buildPhaseMarker(phase: number, totalPhases: number): string {
@@ -376,6 +419,10 @@ export function AIPage() {
   const sessionPhaseRef = useRef<{ squadId: string; phase: number } | null>(null)
   // Captura o ID da sessão criada durante sendMessage (para salvar fase depois)
   const justCreatedSessionRef = useRef<string | null>(null)
+
+  // ── Exportar para calendário ──────────────────────────────────────────────────
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportCount, setExportCount] = useState<number | null>(null)
 
   // ── Sub-agentes paralelos (Gap 2) ────────────────────────────────────────────
   const [activeSubAgents, setActiveSubAgents] = useState<
@@ -631,6 +678,74 @@ ${subAgentContext}`
     setAttachedImages(prev => [...prev, ...encoded].slice(0, 4)) // máx 4 imagens
     e.target.value = ''
   }
+
+  const handleExportToCalendar = useCallback(async () => {
+    if (!activeClientId || isExporting || messages.length < 4) return
+    setIsExporting(true)
+    setExportCount(null)
+    try {
+      // Monta o texto da conversa para extração
+      const conversationText = messages
+        .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content.slice(0, 3000)}`)
+        .join('\n\n---\n\n')
+
+      // Chama a IA para extrair os posts em JSON estruturado
+      const raw = await streamChat(
+        [{ role: 'user', content: conversationText }],
+        CALENDAR_EXTRACTION_PROMPT,
+        false,
+        () => {},
+      )
+
+      // Limpa possíveis blocos markdown que o modelo possa ter adicionado
+      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      const extracted = JSON.parse(cleaned) as {
+        title: string
+        notes: string
+        content_type: string
+        week: number
+        position: number
+      }[]
+
+      if (!Array.isArray(extracted) || extracted.length === 0) {
+        throw new Error('Nenhum post encontrado')
+      }
+
+      // Calcula a base: primeira segunda-feira do próximo mês
+      const today = new Date()
+      const baseMonth = today.getMonth() === 11 ? 0 : today.getMonth() + 1
+      const baseYear  = today.getMonth() === 11 ? today.getFullYear() + 1 : today.getFullYear()
+      const baseDate  = getFirstMondayOfMonth(baseYear, baseMonth)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Não autenticado')
+
+      // Monta os itens para inserção em massa
+      const items = extracted.map(p => ({
+        user_id:        user.id,
+        client_id:      activeClientId,
+        title:          p.title,
+        notes:          p.notes,
+        content_type:   p.content_type === 'reels' ? 'reels' : 'post',
+        scheduled_date: calcPostDate(p.week || 1, p.position || 1, p.content_type, baseDate),
+        status:         'ideia',
+      }))
+
+      // Insere todos de uma vez
+      const { data: created, error } = await (supabase as any)
+        .from('planner')
+        .insert(items)
+        .select()
+
+      if (error) throw error
+      setExportCount((created as unknown[]).length)
+    } catch (err) {
+      console.error('[export-calendar]', err)
+      setExportCount(0)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [activeClientId, isExporting, messages])
 
   const handleDiagnosticoStart = async (prompt: string, images: string[]) => {
     setDiagnosticoOpen(false)
@@ -955,6 +1070,32 @@ ${subAgentContext}`
         {/* ── Barra de input estilo ChatGPT ── */}
         <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white">
           <div className="max-w-3xl mx-auto">
+
+            {/* Exportar para calendário — aparece quando Fábrica de Conteúdo gerou plano com cliente ativo */}
+            {activeSquad?.id === 'fabrica-conteudo' && activeClientId && messages.length >= 6 && (
+              <button
+                onClick={handleExportToCalendar}
+                disabled={isExporting}
+                className={cn(
+                  'w-full mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-[12px] font-medium border transition-all',
+                  exportCount !== null && exportCount > 0
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    : exportCount === 0
+                    ? 'bg-red-50 border-red-200 text-red-600'
+                    : 'bg-[#f0fdf4] border-[#86efac] text-[#166534] hover:bg-emerald-50',
+                )}
+              >
+                {isExporting ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Extraindo posts e criando rascunhos...</>
+                ) : exportCount !== null && exportCount > 0 ? (
+                  <><span className="text-base">✓</span> {exportCount} rascunhos criados no Planejador</>
+                ) : exportCount === 0 ? (
+                  <>⚠️ Não foi possível extrair os posts — tente novamente</>
+                ) : (
+                  <><Calendar className="w-3.5 h-3.5" /> Exportar calendário para o Planejador como rascunhos</>
+                )}
+              </button>
+            )}
 
             {/* Preview de imagens anexadas */}
             {attachedImages.length > 0 && (
