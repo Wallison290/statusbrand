@@ -306,26 +306,27 @@ function shouldUseWebSearch(text: string): boolean {
 
 const CALENDAR_EXTRACTION_PROMPT = `Você é um extrator de dados de planejamento de conteúdo.
 
-Analise a conversa abaixo e extraia TODOS os posts e Reels mencionados.
+Analise o texto abaixo e extraia TODOS os posts e Reels mencionados.
 
-Retorne APENAS um JSON válido (sem markdown, sem explicação, sem \`\`\`json):
+Retorne APENAS um array JSON válido, sem markdown, sem explicação:
 [
   {
-    "title": "título curto do post",
-    "notes": "GANCHO: ...\n\nCOPY: ...\n\nCTA: ...\n\nHASHTAGS: ...",
+    "title": "título curto do post (máx 60 chars)",
+    "notes": "gancho em 1 linha + CTA (máx 120 chars no total)",
     "content_type": "post",
     "week": 1,
     "position": 1
   }
 ]
 
-Regras:
-- content_type: use exatamente "post" para posts normais ou "reels" para Reels
-- week: número da semana (1, 2, 3 ou 4)
-- position: posição dentro da semana — posts usam 1, 2 ou 3; reels usam 1 ou 2
-- notes: inclua gancho, copy completa, CTA e hashtags conforme aparecem na conversa
-- Inclua TODOS os posts e Reels, de todas as semanas
-- Responda SOMENTE com o array JSON`
+Regras OBRIGATÓRIAS:
+- content_type: exatamente "post" ou "reels"
+- week: 1, 2, 3 ou 4
+- position: 1, 2 ou 3 (posts) / 1 ou 2 (reels)
+- title: máx 60 caracteres — resumo do tema
+- notes: máx 120 caracteres — apenas o gancho principal e o CTA
+- Inclua TODOS os posts e Reels de TODAS as semanas
+- Responda SOMENTE com o array JSON, nada mais`
 
 function getFirstMondayOfMonth(year: number, month: number): Date {
   const d = new Date(year, month, 1)
