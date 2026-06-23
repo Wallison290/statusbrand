@@ -369,7 +369,7 @@ export function UserMenu({ dark = true }: UserMenuProps) {
       const rect = buttonRef.current.getBoundingClientRect()
       setDropdownPos({
         top:   rect.bottom + 8,
-        right: window.innerWidth - rect.right,
+        right: Math.max(8, window.innerWidth - rect.right),
       })
     }
     setOpen(v => !v)
