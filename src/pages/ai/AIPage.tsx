@@ -821,41 +821,6 @@ ${subAgentContext}`
               )}
             </div>
 
-            {/* Memórias da agência — sempre visível */}
-            <button
-              onClick={() => { setUserMemoryPanelOpen(o => !o); setMemoryPanelOpen(false) }}
-              className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
-                userMemoryPanelOpen
-                  ? 'bg-[#0369a1] border-[#0284c7] text-white'
-                  : 'bg-[#f0f9ff] border-[#bae6fd] text-[#0369a1] hover:bg-[#e0f2fe]',
-              )}
-              title="Memórias da agência — fatos que a IA aprendeu sobre seu negócio"
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Agência</span>
-              {userMemories.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#0ea5e9] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
-                  {userMemories.length}
-                </span>
-              )}
-            </button>
-
-            {/* Memórias do cliente */}
-            {activeClientId && clientCtx && (
-              <button
-                onClick={() => { setMemoryPanelOpen(o => !o); setUserMemoryPanelOpen(false) }}
-                className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
-                  memoryPanelOpen
-                    ? 'bg-[#6d28d9] border-[#5b21b6] text-white'
-                    : 'bg-[#faf5ff] border-[#ddd6fe] text-[#7c3aed] hover:bg-[#ede9fe]',
-                )}
-              >
-                <Brain className="w-3.5 h-3.5" /> Memórias
-              </button>
-            )}
-
             {/* Squad ativo + indicador de fase */}
             {activeSquad && (
               <div className="flex items-center gap-1.5">
