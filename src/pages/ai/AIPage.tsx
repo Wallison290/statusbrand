@@ -722,13 +722,15 @@ ${subAgentContext}`
 
       // Monta os itens para inserção em massa
       const items = extracted.map(p => ({
-        user_id:        user.id,
-        client_id:      activeClientId,
-        title:          p.title,
-        notes:          p.notes,
-        content_type:   p.content_type === 'reels' ? 'reels' : 'post',
-        scheduled_date: calcPostDate(p.week || 1, p.position || 1, p.content_type, baseDate),
-        status:         'ideia',
+        user_id:         user.id,
+        client_id:       activeClientId,
+        title:           p.title,
+        notes:           p.notes,
+        content_type:    p.content_type === 'reels' ? 'reels' : 'post',
+        scheduled_date:  calcPostDate(p.week || 1, p.position || 1, p.content_type, baseDate),
+        status:          'ideia',
+        approval_status: null,
+        sent_to_client:  false,
       }))
 
       // Insere todos de uma vez
