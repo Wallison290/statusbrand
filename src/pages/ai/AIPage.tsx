@@ -426,6 +426,7 @@ export function AIPage() {
   const [isExporting, setIsExporting]       = useState(false)
   const [exportCount, setExportCount]       = useState<number | null>(null)
   const [exportedMonth, setExportedMonth]   = useState<string | null>(null)
+  const [exportError, setExportError]       = useState<string | null>(null)
 
   // ── Sub-agentes paralelos (Gap 2) ────────────────────────────────────────────
   const [activeSubAgents, setActiveSubAgents] = useState<
@@ -480,6 +481,7 @@ export function AIPage() {
       setActiveSubAgents([])
       setExportCount(null)
       setExportedMonth(null)
+      setExportError(null)
       return
     }
     try {
@@ -693,23 +695,32 @@ ${subAgentContext}`
     if (!activeClientId || isExporting || messages.length < 4) return
     setIsExporting(true)
     setExportCount(null)
+    setExportError(null)
     try {
-      // Monta o texto da conversa para extração
-      const conversationText = messages
-        .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content.slice(0, 3000)}`)
+      // Usa só mensagens do assistente para reduzir tamanho (são elas que têm o conteúdo)
+      const assistantText = messages
+        .filter(m => m.role === 'assistant')
+        .map(m => m.content.slice(0, 4000))
         .join('\n\n---\n\n')
 
       // Chama a IA para extrair os posts em JSON estruturado
       const raw = await streamChat(
-        [{ role: 'user', content: conversationText }],
+        [{ role: 'user', content: assistantText }],
         CALENDAR_EXTRACTION_PROMPT,
         false,
         () => {},
       )
 
-      // Limpa possíveis blocos markdown que o modelo possa ter adicionado
-      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-      const extracted = JSON.parse(cleaned) as {
+      if (!raw || raw.trim().length === 0) {
+        throw new Error('Resposta vazia da IA — tente novamente')
+      }
+
+      // Remove blocos markdown e localiza o array JSON mesmo se houver texto ao redor
+      const stripped = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '')
+      const match = stripped.match(/\[[\s\S]*\]/)
+      if (!match) throw new Error(`JSON não encontrado na resposta. Resposta recebida: ${raw.slice(0, 200)}`)
+
+      const extracted = JSON.parse(match[0]) as {
         title: string
         notes: string
         content_type: string
@@ -718,7 +729,7 @@ ${subAgentContext}`
       }[]
 
       if (!Array.isArray(extracted) || extracted.length === 0) {
-        throw new Error('Nenhum post encontrado')
+        throw new Error('Array vazio — nenhum post identificado na conversa')
       }
 
       // Calcula a base: primeira segunda-feira do próximo mês
@@ -755,7 +766,9 @@ ${subAgentContext}`
       setExportCount((created as unknown[]).length)
       setExportedMonth(exportMonthStr)
     } catch (err) {
-      console.error('[export-calendar]', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[export-calendar]', msg)
+      setExportError(msg)
       setExportCount(0)
     } finally {
       setIsExporting(false)
@@ -1160,10 +1173,12 @@ ${subAgentContext}`
                         onClick={handleExportToCalendar}
                         disabled={isExporting}
                         className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
-                        title="Tentar novamente"
+                        title={exportError ?? 'Erro desconhecido — clique para tentar novamente'}
                       >
                         <span>⚠️</span>
-                        <span>Tentar novamente</span>
+                        <span className="max-w-[180px] truncate">
+                          {exportError ? exportError.slice(0, 40) : 'Tentar novamente'}
+                        </span>
                       </button>
                     ) : (
                       <button
