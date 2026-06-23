@@ -481,7 +481,7 @@ export function AIPage() {
 
     // ── Gap 1: Determina fase atual do pipeline ─────────────────────────────
     const savedPhase = sessionPhaseRef.current
-    const currentPhase = (savedPhase?.squadId === currentSquad?.id) ? savedPhase.phase : 0
+    const currentPhase = (savedPhase !== null && savedPhase.squadId === currentSquad?.id) ? savedPhase.phase : 0
     const totalPhases  = currentSquad ? getSquadPhases(currentSquad.id) : 0
 
     // Injeta marcador de fase no início do squadPrompt
