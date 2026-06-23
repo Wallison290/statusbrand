@@ -821,48 +821,26 @@ ${subAgentContext}`
               )}
             </div>
 
-            {/* Squad ativo + indicador de fase */}
+            {/* Squad ativo */}
             {activeSquad && (
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
-                  style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
+                style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
+              >
+                <span>{activeSquad.emoji}</span>
+                <span className="max-w-[90px] truncate">{activeSquad.name}</span>
+                <button
+                  onClick={() => {
+                    setActiveSquad(null)
+                    sessionPhaseRef.current = null
+                    setCurrentPhaseDisplay(0)
+                    setActiveSubAgents([])
+                  }}
+                  className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                  title="Remover squad"
                 >
-                  <span>{activeSquad.emoji}</span>
-                  <span className="max-w-[90px] truncate">{activeSquad.name}</span>
-                  <button
-                    onClick={() => {
-                      setActiveSquad(null)
-                      sessionPhaseRef.current = null
-                      setCurrentPhaseDisplay(0)
-                      setActiveSubAgents([])
-                    }}
-                    className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
-                    title="Remover squad"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-                {/* Indicador de fase (Gap 1 UI) */}
-                {getSquadPhases(activeSquad.id) > 1 && (
-                  <div className="hidden sm:flex items-center gap-1" title={`Fase ${currentPhaseDisplay + 1} de ${getSquadPhases(activeSquad.id)}`}>
-                    {Array.from({ length: getSquadPhases(activeSquad.id) }).map((_, i) => (
-                      <span
-                        key={i}
-                        className="block rounded-full transition-all"
-                        style={{
-                          width: i === currentPhaseDisplay ? '16px' : '6px',
-                          height: '6px',
-                          backgroundColor: i <= currentPhaseDisplay ? activeSquad.color.dot : activeSquad.color.border,
-                          opacity: i <= currentPhaseDisplay ? 1 : 0.4,
-                        }}
-                      />
-                    ))}
-                    <span className="text-[9px] font-medium ml-0.5" style={{ color: activeSquad.color.text, opacity: 0.7 }}>
-                      {currentPhaseDisplay === 0 ? 'Intake' : currentPhaseDisplay >= getSquadPhases(activeSquad.id) - 1 ? 'Final' : `Fase ${currentPhaseDisplay + 1}`}
-                    </span>
-                  </div>
-                )}
+                  <X className="w-3 h-3" />
+                </button>
               </div>
             )}
 
