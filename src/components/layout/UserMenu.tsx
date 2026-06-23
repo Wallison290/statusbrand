@@ -139,7 +139,7 @@ function WhatsAppSection() {
           <button
             onClick={handleConfirm}
             disabled={wa.busy || code.length !== 6}
-            className="h-9 px-3 rounded-lg bg-[#0f172a] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="h-9 px-3 rounded-lg bg-[#22c55e] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
           >
             Confirmar
           </button>
