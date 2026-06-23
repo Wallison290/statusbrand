@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   Send, Plus, Trash2, Globe, Loader2, Bot,
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
   Mic, MicOff, Paperclip, Download,
-  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2, Calendar,
+  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2, Calendar, ArrowRight,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { useClients } from '@/hooks/useClients'
@@ -400,6 +401,7 @@ ${sep}
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export function AIPage() {
+  const navigate = useNavigate()
   const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen]           = useState(true)
   const [input, setInput]                       = useState('')
@@ -421,8 +423,9 @@ export function AIPage() {
   const justCreatedSessionRef = useRef<string | null>(null)
 
   // ── Exportar para calendário ──────────────────────────────────────────────────
-  const [isExporting, setIsExporting] = useState(false)
-  const [exportCount, setExportCount] = useState<number | null>(null)
+  const [isExporting, setIsExporting]       = useState(false)
+  const [exportCount, setExportCount]       = useState<number | null>(null)
+  const [exportedMonth, setExportedMonth]   = useState<string | null>(null)
 
   // ── Sub-agentes paralelos (Gap 2) ────────────────────────────────────────────
   const [activeSubAgents, setActiveSubAgents] = useState<
@@ -475,6 +478,8 @@ export function AIPage() {
       sessionPhaseRef.current = null
       setCurrentPhaseDisplay(0)
       setActiveSubAgents([])
+      setExportCount(null)
+      setExportedMonth(null)
       return
     }
     try {
@@ -716,6 +721,8 @@ ${subAgentContext}`
       const baseMonth = today.getMonth() === 11 ? 0 : today.getMonth() + 1
       const baseYear  = today.getMonth() === 11 ? today.getFullYear() + 1 : today.getFullYear()
       const baseDate  = getFirstMondayOfMonth(baseYear, baseMonth)
+      // Salva o mês para navegação pós-export (formato YYYY-MM, 1-indexed)
+      const exportMonthStr = `${baseYear}-${String(baseMonth + 1).padStart(2, '0')}`
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
@@ -741,6 +748,7 @@ ${subAgentContext}`
 
       if (error) throw error
       setExportCount((created as unknown[]).length)
+      setExportedMonth(exportMonthStr)
     } catch (err) {
       console.error('[export-calendar]', err)
       setExportCount(0)
@@ -776,6 +784,17 @@ ${subAgentContext}`
   const isEmpty    = !activeSessionId && !pendingSessionId
   const hasContent = input.trim().length > 0 || attachedImages.length > 0
   const canSend    = hasContent && !isStreaming && !isLoading && !isSubAgentRunning
+
+  // Detecta se a conversa tem plano de conteúdo exportável
+  const hasCalendarContent = useMemo(() => {
+    if (activeSquad?.id !== 'fabrica-conteudo' || !activeClientId) return false
+    const assistantMsgs = messages.filter(m => m.role === 'assistant')
+    if (assistantMsgs.length < 2) return false
+    const text = assistantMsgs.map(m => m.content).join(' ')
+    const hasWeeks = /semana\s+[1-4]/i.test(text)
+    const postCount = (text.match(/\b(post|reels?|stories)\b/gi) ?? []).length
+    return hasWeeks || postCount >= 4
+  }, [messages, activeSquad, activeClientId])
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -1073,31 +1092,6 @@ ${subAgentContext}`
         <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white">
           <div className="max-w-3xl mx-auto">
 
-            {/* Exportar para calendário — aparece quando Fábrica de Conteúdo gerou plano com cliente ativo */}
-            {activeSquad?.id === 'fabrica-conteudo' && activeClientId && messages.length >= 6 && (
-              <button
-                onClick={handleExportToCalendar}
-                disabled={isExporting}
-                className={cn(
-                  'w-full mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-[12px] font-medium border transition-all',
-                  exportCount !== null && exportCount > 0
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                    : exportCount === 0
-                    ? 'bg-red-50 border-red-200 text-red-600'
-                    : 'bg-[#f0fdf4] border-[#86efac] text-[#166534] hover:bg-emerald-50',
-                )}
-              >
-                {isExporting ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Extraindo posts e criando rascunhos...</>
-                ) : exportCount !== null && exportCount > 0 ? (
-                  <><span className="text-base">✓</span> {exportCount} rascunhos criados no Planejador</>
-                ) : exportCount === 0 ? (
-                  <>⚠️ Não foi possível extrair os posts — tente novamente</>
-                ) : (
-                  <><Calendar className="w-3.5 h-3.5" /> Exportar calendário para o Planejador como rascunhos</>
-                )}
-              </button>
-            )}
 
             {/* Preview de imagens anexadas */}
             {attachedImages.length > 0 && (
@@ -1144,6 +1138,42 @@ ${subAgentContext}`
               {/* Toolbar */}
               <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
                 <div className="flex items-center gap-1">
+                  {/* Exportar para o Planejador — aparece quando há conteúdo detectado */}
+                  {hasCalendarContent && (
+                    exportCount !== null && exportCount > 0 ? (
+                      <button
+                        onClick={() => navigate(`/planner?month=${exportedMonth}`)}
+                        className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
+                        title="Ver no Planejador"
+                      >
+                        <span className="text-emerald-600">✓</span>
+                        <span>Adicionado</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    ) : exportCount === 0 ? (
+                      <button
+                        onClick={handleExportToCalendar}
+                        disabled={isExporting}
+                        className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
+                        title="Tentar novamente"
+                      >
+                        <span>⚠️</span>
+                        <span>Tentar novamente</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleExportToCalendar}
+                        disabled={isExporting}
+                        className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-medium text-[#166534] bg-[#f0fdf4] border border-[#86efac] hover:bg-emerald-50 transition-all disabled:opacity-50"
+                        title="Exportar calendário para o Planejador como rascunhos"
+                      >
+                        {isExporting
+                          ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Exportando...</span></>
+                          : <><Calendar className="w-3.5 h-3.5" /><span className="hidden sm:inline">Planejador</span></>
+                        }
+                      </button>
+                    )
+                  )}
                   {/* Anexar imagem */}
                   <button
                     onClick={() => fileInputRef.current?.click()}

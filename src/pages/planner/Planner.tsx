@@ -1632,6 +1632,15 @@ export function Planner() {
       setSearchParams({}, { replace: true })
     }
   }, [searchParams, items])
+
+  // Navegar para mês específico via ?month=YYYY-MM (vindo da exportação da IA)
+  useEffect(() => {
+    const monthParam = searchParams.get('month')
+    if (!monthParam) return
+    const [y, m] = monthParam.split('-').map(Number)
+    if (y && m >= 1 && m <= 12) setCurrentMonth(new Date(y, m - 1, 1))
+    setSearchParams({}, { replace: true })
+  }, [searchParams])
   const createItem = useCreatePlannerItem()
   const updateItem = useUpdatePlannerItem()
   const deleteItem = useDeletePlannerItem()
