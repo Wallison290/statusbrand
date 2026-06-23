@@ -2,6 +2,13 @@
 // Prompts adaptados das skills em .claude/skills/ do projeto SocialForge v3
 // Cada squad tem um system prompt completo que roda no chat com GPT-4o
 
+export interface SubAgent {
+  id: string
+  name: string
+  emoji: string
+  systemPrompt: string
+}
+
 export interface AISquad {
   id: string
   name: string
@@ -10,6 +17,104 @@ export interface AISquad {
   agents: string
   color: { bg: string; border: string; text: string; dot: string }
   systemPrompt: string
+}
+
+// ── Configuração de pipeline por squad ────────────────────────────────────────
+// phases: total de fases do pipeline (0=intake, 1=trabalho, 2=entrega)
+// subAgents: agentes paralelos que rodam na Fase 1 (apenas squads com paralelismo real)
+interface SquadPipelineConfig {
+  phases: number
+  subAgents?: SubAgent[]
+}
+
+const GARIMPO_PROMPT = `Você é Garimpo, minerador de linguagem do cliente no SocialForge v3.
+
+Missão: Dado o briefing e histórico da conversa, pesquise e extraia a voz real do cliente.
+
+PESQUISE via web search:
+1. Google Reviews e Reclame Aqui dos concorrentes mencionados
+2. Comentários em posts de Instagram no nicho
+3. Busque "[nicho] depoimento", "[nicho] resultado", "[nicho] antes e depois"
+
+EXTRAIA e organize em:
+- DORES: problemas específicos (frases exatas encontradas)
+- DESEJOS: resultados que querem (frases exatas)
+- OBJEÇÕES: medos e barreiras para comprar
+- GATILHOS: o que fez clientes comprarem
+- FRASES DE IMPACTO: quotes que podem virar headlines de anúncio
+
+Organize em 6 categorias de ângulo: DOR / DESEJO / PROVA SOCIAL / OBJEÇÃO / URGÊNCIA / COMPARAÇÃO
+
+Responda em português brasileiro. Seja específico com as frases reais encontradas.`
+
+const LENTE_PROMPT = `Você é Lente, analista de criativos de anúncios no SocialForge v3.
+
+Missão: Dado o briefing e histórico da conversa, pesquise e analise os anúncios ativos dos concorrentes.
+
+PESQUISE via web search:
+1. Meta Ad Library: busque "facebook ads library [concorrente]"
+2. Google Ads Transparency: "[concorrente] ads transparência"
+3. Busque "[concorrente] anúncio", "[nicho] ad"
+
+ANALISE cada anúncio:
+- HOOK: primeira frase/gancho que prende atenção
+- ÂNGULO: qual dor ou desejo está sendo explorado
+- FORMATO: imagem, vídeo, carrossel, stories
+- COPY: estrutura (problema → solução → CTA)
+- CTA: chamada para ação
+- PADRÕES: ângulos repetidos = provavelmente convertem; ângulos ausentes = oportunidade
+
+Responda em português brasileiro. Foque em dados específicos e acionáveis.`
+
+const FORJA_PROMPT = `Você é Forja, construtor de banco de ângulos no SocialForge v3.
+
+Missão: Leia os resultados do Garimpo e da Lente (fornecidos abaixo) e produza um banco de ângulos completo ranqueado.
+
+Para cada ângulo, entregue:
+1. NOME DO ÂNGULO: nome descritivo
+2. CATEGORIA: dor / desejo / prova social / objeção / urgência / comparação
+3. FORÇA DA EVIDÊNCIA: forte (múltiplas fontes) / média / fraca
+4. FRASE-CHAVE: frase do cliente que sustenta o ângulo
+5. HOOK SUGERIDO: 2-3 opções de abertura para anúncio
+6. COPY SUGERIDA: legenda completa (versão curta + versão longa)
+7. FORMATO RECOMENDADO: vídeo / carrossel / imagem / stories
+8. CTA RECOMENDADO
+
+RANQUEAMENTO: ordene por força de evidência (forte primeiro).
+Destaque TOP 5 como "ângulos prioritários".
+Identifique 2-3 "ângulos inexplorados" que ninguém usa mas têm evidência.
+
+Responda em português brasileiro com formatação rica (tabelas, títulos, listas).`
+
+const SQUAD_PIPELINE: Record<string, SquadPipelineConfig> = {
+  'fabrica-conteudo':           { phases: 3 },
+  'diagnostico-perfil':         { phases: 3 },
+  'maquina-clientes':           { phases: 2 },
+  'auditoria-marketing':        { phases: 3 },
+  'psicologia-vendas':          { phases: 3 },
+  'comunidade-retencao':        { phases: 2 },
+  'inteligencia-competitiva':   { phases: 3 },
+  'motor-seo':                  { phases: 3 },
+  'mineracao-anuncios':         {
+    phases: 3,
+    subAgents: [
+      { id: 'garimpo', name: 'Garimpo', emoji: '🔬', systemPrompt: GARIMPO_PROMPT },
+      { id: 'lente',   name: 'Lente',   emoji: '👁️',  systemPrompt: LENTE_PROMPT  },
+      { id: 'forja',   name: 'Forja',   emoji: '⚡',  systemPrompt: FORJA_PROMPT  },
+    ],
+  },
+  'identidade-marca':           { phases: 2 },
+  'trafego-pago':               { phases: 3 },
+  'presenca-multiplataforma':   { phases: 2 },
+  'design-criativo':            { phases: 2 },
+}
+
+export function getSquadPhases(squadId: string): number {
+  return SQUAD_PIPELINE[squadId]?.phases ?? 3
+}
+
+export function getSquadSubAgents(squadId: string): SubAgent[] {
+  return SQUAD_PIPELINE[squadId]?.subAgents ?? []
 }
 
 export const AI_SQUADS: AISquad[] = [

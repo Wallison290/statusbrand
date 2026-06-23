@@ -12,7 +12,8 @@ import { useClients } from '@/hooks/useClients'
 import { useClientContext, useAIUserMemory, buildUserMemoryContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AIUserMemoryPanel } from '@/components/ai/AIUserMemoryPanel'
-import { AI_SQUADS, detectSquad, type AISquad } from '@/data/aiSquads'
+import { AI_SQUADS, detectSquad, getSquadPhases, getSquadSubAgents, type AISquad } from '@/data/aiSquads'
+import { streamChat } from '@/lib/aiProxy'
 import { DiagnosticoModal } from './DiagnosticoModal'
 import {
   useAISessions,
@@ -300,6 +301,35 @@ function shouldUseWebSearch(text: string): boolean {
   return !GREETING_RE.test(text.trim())
 }
 
+// ─── Injeção de fase no squad prompt (Gap 1) ─────────────────────────────────
+function buildPhaseMarker(phase: number, totalPhases: number): string {
+  if (totalPhases <= 1) return ''
+
+  if (phase === 0) return `🚦 PIPELINE — FASE 0/${totalPhases - 1}: INTAKE OBRIGATÓRIO
+Você acabou de ser ativado. Esta é a PRIMEIRA interação deste pipeline.
+REGRA ABSOLUTA: Execute APENAS a coleta de briefing.
+1. Apresente seu time em no máximo 2 linhas
+2. Faça TODAS as perguntas do briefing de uma vez (lista numerada)
+3. NÃO comece a trabalhar, NÃO entregue análises, NÃO crie nada ainda
+4. Termine com uma frase curta convidando o usuário a responder
+Aguarde a resposta antes de qualquer execução.
+
+`
+
+  if (phase >= totalPhases - 1) return `🚦 PIPELINE — FASE FINAL: ENTREGA E REVISÃO
+Esta é a fase de conclusão do pipeline.
+Consolide tudo, entregue o output completo e profissional.
+Ao final, pergunte se há ajustes antes de encerrar.
+
+`
+
+  return `🚦 PIPELINE — FASE ${phase}/${totalPhases - 1}: EXECUÇÃO
+O briefing foi coletado. Execute agora as etapas de trabalho do seu pipeline.
+Ao concluir esta fase, PARE e pergunte se o usuário quer ajustes antes de continuar.
+
+`
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export function AIPage() {
   const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
@@ -313,6 +343,20 @@ export function AIPage() {
   const [userMemoryPanelOpen, setUserMemoryPanelOpen] = useState(false)
   const [activeSquad, setActiveSquad]           = useState<AISquad | null>(null)
   const [squadToast, setSquadToast]             = useState<AISquad | null>(null)
+
+  // ── Pipeline de fases (Gap 1 + 3) ───────────────────────────────────────────
+  // currentPhaseDisplay: fase atual para UI (0=intake, 1=trabalho, 2+=entrega)
+  const [currentPhaseDisplay, setCurrentPhaseDisplay] = useState(0)
+  // Armazena fase por sessão em memória (ref = sem re-render durante streaming)
+  const sessionPhaseRef = useRef<{ squadId: string; phase: number } | null>(null)
+  // Captura o ID da sessão criada durante sendMessage (para salvar fase depois)
+  const justCreatedSessionRef = useRef<string | null>(null)
+
+  // ── Sub-agentes paralelos (Gap 2) ────────────────────────────────────────────
+  const [activeSubAgents, setActiveSubAgents] = useState<
+    { id: string; name: string; emoji: string; status: 'running' | 'done' }[]
+  >([])
+  const [isSubAgentRunning, setIsSubAgentRunning] = useState(false)
 
   // Imagens anexadas
   const [attachedImages, setAttachedImages]     = useState<string[]>([])
@@ -353,6 +397,32 @@ export function AIPage() {
   }, [])
 
 
+  // Gap 3: Restaura fase do pipeline ao trocar de sessão (localStorage)
+  useEffect(() => {
+    if (!activeSessionId) {
+      sessionPhaseRef.current = null
+      setCurrentPhaseDisplay(0)
+      setActiveSubAgents([])
+      return
+    }
+    try {
+      const saved = localStorage.getItem(`sf_phase_${activeSessionId}`)
+      if (saved) {
+        const data = JSON.parse(saved) as { squadId: string; phase: number }
+        sessionPhaseRef.current = data
+        setCurrentPhaseDisplay(data.phase)
+        const squad = AI_SQUADS.find(s => s.id === data.squadId) ?? null
+        if (squad) setActiveSquad(squad)
+      } else {
+        sessionPhaseRef.current = null
+        setCurrentPhaseDisplay(0)
+      }
+    } catch {
+      sessionPhaseRef.current = null
+      setCurrentPhaseDisplay(0)
+    }
+  }, [activeSessionId])
+
   // Scroll para o final
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -369,7 +439,7 @@ export function AIPage() {
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleSend = useCallback(async () => {
-    if ((!input.trim() && attachedImages.length === 0) || isStreaming || isLoading) return
+    if ((!input.trim() && attachedImages.length === 0) || isStreaming || isLoading || isSubAgentRunning) return
     const text = input.trim()
     setInput('')
     const imgs = [...attachedImages]
@@ -409,16 +479,112 @@ export function AIPage() {
     const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
     const historyHasImages = messages.some(m => m.content.includes('[[IMG:'))
 
-    await sendMessage(
-      text, messages, shouldUseWebSearch(text) && imgs.length === 0 && !historyHasImages,
-      (session) => { setActiveSessionId(session.id); setPendingSessionId(null) },
-      fullContext,
-      activeClientId,
-      currentSquad?.systemPrompt ?? null,
-      imgs.length > 0 ? imgs : undefined,
-      imageMode,
-    )
-  }, [input, attachedImages, isStreaming, isLoading, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext])
+    // ── Gap 1: Determina fase atual do pipeline ─────────────────────────────
+    const savedPhase = sessionPhaseRef.current
+    const currentPhase = (savedPhase?.squadId === currentSquad?.id) ? savedPhase.phase : 0
+    const totalPhases  = currentSquad ? getSquadPhases(currentSquad.id) : 0
+
+    // Injeta marcador de fase no início do squadPrompt
+    let phasedSquadPrompt = currentSquad?.systemPrompt ?? null
+    if (phasedSquadPrompt && currentSquad) {
+      const phaseMarker = buildPhaseMarker(currentPhase, totalPhases)
+      phasedSquadPrompt = phaseMarker + phasedSquadPrompt
+    }
+
+    // Callback captura ID da sessão criada (para salvar fase depois)
+    justCreatedSessionRef.current = null
+    const onSessionCreated = (session: AISession) => {
+      setActiveSessionId(session.id)
+      setPendingSessionId(null)
+      justCreatedSessionRef.current = session.id
+    }
+
+    // ── Gap 2: Sub-agentes paralelos (apenas Mineração, fase 1) ────────────
+    const subAgents = currentSquad ? getSquadSubAgents(currentSquad.id) : []
+    const useParallelAgents = subAgents.length > 0 && currentPhase === 1
+
+    if (useParallelAgents && currentSquad) {
+      // Sub-agentes que rodam em paralelo (todos exceto o consolidador final)
+      const parallelAgents = subAgents.filter(a => a.id !== subAgents[subAgents.length - 1].id)
+      const consolidator   = subAgents[subAgents.length - 1]
+
+      setIsSubAgentRunning(true)
+      setActiveSubAgents(parallelAgents.map(a => ({ ...a, status: 'running' as const })))
+
+      // Histórico completo incluindo a mensagem atual (briefing do usuário)
+      const briefingHistory = [
+        ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        { role: 'user' as const, content: text },
+      ]
+
+      try {
+        // Executa sub-agentes em paralelo (sem stream para a UI)
+        const parallelResults = await Promise.all(
+          parallelAgents.map(agent =>
+            streamChat(briefingHistory, agent.systemPrompt, true, () => {}).then(result => {
+              setActiveSubAgents(prev =>
+                prev.map(a => a.id === agent.id ? { ...a, status: 'done' as const } : a)
+              )
+              return { id: agent.id, name: agent.name, emoji: agent.emoji, result }
+            })
+          )
+        )
+
+        // Injeta resultados dos sub-agentes no prompt do consolidador
+        const subAgentContext = parallelResults
+          .map(r => `## Resultados de ${r.emoji} ${r.name}:\n${r.result}`)
+          .join('\n\n')
+
+        phasedSquadPrompt = `${consolidator.systemPrompt}
+
+${subAgentContext}`
+
+        setActiveSubAgents(prev => [...prev, { id: consolidator.id, name: consolidator.name, emoji: consolidator.emoji, status: 'running' as const }])
+
+        await sendMessage(
+          text, messages, false,
+          onSessionCreated,
+          fullContext,
+          activeClientId,
+          phasedSquadPrompt,
+          imgs.length > 0 ? imgs : undefined,
+          imageMode,
+        )
+
+        setActiveSubAgents(prev => prev.map(a => a.id === consolidator.id ? { ...a, status: 'done' as const } : a))
+        setTimeout(() => setActiveSubAgents([]), 2500)
+      } catch {
+        setActiveSubAgents([])
+      } finally {
+        setIsSubAgentRunning(false)
+      }
+    } else {
+      // Fluxo normal (sem sub-agentes paralelos)
+      await sendMessage(
+        text, messages, shouldUseWebSearch(text) && imgs.length === 0 && !historyHasImages,
+        onSessionCreated,
+        fullContext,
+        activeClientId,
+        phasedSquadPrompt,
+        imgs.length > 0 ? imgs : undefined,
+        imageMode,
+      )
+    }
+
+    // ── Avança fase após resposta da IA ────────────────────────────────────
+    if (currentSquad) {
+      const nextPhase = Math.min(currentPhase + 1, totalPhases - 1)
+      const phaseData = { squadId: currentSquad.id, phase: nextPhase }
+      sessionPhaseRef.current = phaseData
+      setCurrentPhaseDisplay(nextPhase)
+
+      // Gap 3: Persiste no localStorage (usa ID real — seja pré-existente ou recém-criado)
+      const sid = justCreatedSessionRef.current ?? activeSessionId
+      if (sid) {
+        try { localStorage.setItem(`sf_phase_${sid}`, JSON.stringify(phaseData)) } catch { /* storage cheio */ }
+      }
+    }
+  }, [input, attachedImages, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -427,6 +593,10 @@ export function AIPage() {
   const handleNewChat = () => {
     setActiveSessionId(null); setPendingSessionId(null)
     setInput(''); setImageMode(false); setActiveSquad(null); setAttachedImages([])
+    sessionPhaseRef.current = null
+    setCurrentPhaseDisplay(0)
+    setActiveSubAgents([])
+    setIsSubAgentRunning(false)
   }
 
   const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -463,7 +633,7 @@ export function AIPage() {
 
   const isEmpty    = !activeSessionId && !pendingSessionId
   const hasContent = input.trim().length > 0 || attachedImages.length > 0
-  const canSend    = hasContent && !isStreaming && !isLoading
+  const canSend    = hasContent && !isStreaming && !isLoading && !isSubAgentRunning
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -661,21 +831,48 @@ export function AIPage() {
               </button>
             )}
 
-            {/* Squad ativo (detectado automaticamente) */}
+            {/* Squad ativo + indicador de fase */}
             {activeSquad && (
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
-                style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
-              >
-                <span>{activeSquad.emoji}</span>
-                <span className="max-w-[90px] truncate">{activeSquad.name}</span>
-                <button
-                  onClick={() => setActiveSquad(null)}
-                  className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
-                  title="Remover squad"
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
+                  style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
                 >
-                  <X className="w-3 h-3" />
-                </button>
+                  <span>{activeSquad.emoji}</span>
+                  <span className="max-w-[90px] truncate">{activeSquad.name}</span>
+                  <button
+                    onClick={() => {
+                      setActiveSquad(null)
+                      sessionPhaseRef.current = null
+                      setCurrentPhaseDisplay(0)
+                      setActiveSubAgents([])
+                    }}
+                    className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                    title="Remover squad"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                {/* Indicador de fase (Gap 1 UI) */}
+                {getSquadPhases(activeSquad.id) > 1 && (
+                  <div className="hidden sm:flex items-center gap-1" title={`Fase ${currentPhaseDisplay + 1} de ${getSquadPhases(activeSquad.id)}`}>
+                    {Array.from({ length: getSquadPhases(activeSquad.id) }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="block rounded-full transition-all"
+                        style={{
+                          width: i === currentPhaseDisplay ? '16px' : '6px',
+                          height: '6px',
+                          backgroundColor: i <= currentPhaseDisplay ? activeSquad.color.dot : activeSquad.color.border,
+                          opacity: i <= currentPhaseDisplay ? 1 : 0.4,
+                        }}
+                      />
+                    ))}
+                    <span className="text-[9px] font-medium ml-0.5" style={{ color: activeSquad.color.text, opacity: 0.7 }}>
+                      {currentPhaseDisplay === 0 ? 'Intake' : currentPhaseDisplay >= getSquadPhases(activeSquad.id) - 1 ? 'Final' : `Fase ${currentPhaseDisplay + 1}`}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -739,6 +936,44 @@ export function AIPage() {
                       message={msg}
                     />
                   ))}
+
+                  {/* Gap 2: Sub-agentes rodando em paralelo */}
+                  {activeSubAgents.length > 0 && (
+                    <div className="flex gap-3 mb-4">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center shadow-sm mt-0.5">
+                        <Sparkles className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 pt-1.5">
+                        <div className="flex flex-wrap gap-2">
+                          {activeSubAgents.map(agent => (
+                            <div
+                              key={agent.id}
+                              className={cn(
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
+                                agent.status === 'running'
+                                  ? 'bg-[#f5f3ff] border-[#c4b5fd] text-[#6d28d9]'
+                                  : 'bg-[#f0fdf4] border-[#86efac] text-[#166534]',
+                              )}
+                            >
+                              <span>{agent.emoji}</span>
+                              <span>{agent.name}</span>
+                              {agent.status === 'running' ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <span className="text-[10px]">✓</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-[#999] mt-1.5">
+                          {activeSubAgents.every(a => a.status === 'done')
+                            ? 'Sub-agentes concluídos — consolidando...'
+                            : `${activeSubAgents.filter(a => a.status === 'running').length} sub-agente(s) trabalhando em paralelo...`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {(isLoading || isStreaming) && (
                     <MessageBubble isStreaming streamContent={streamingContent} />
                   )}
