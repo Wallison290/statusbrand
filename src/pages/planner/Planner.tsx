@@ -123,6 +123,20 @@ function parseCarouselFeedback(feedback: string | null | undefined): CarouselSli
   } catch { return null }
 }
 
+// Notifica a agência (e via fan-out o cliente) que conteúdo foi enviado para aprovação
+async function notifyApprovalRequest(userId: string, clientId: string, plannerId: string, title: string) {
+  try {
+    await (supabase as any).from('notifications').insert({
+      user_id:   userId,
+      client_id: clientId,
+      type:      'APPROVAL_REQUEST',
+      title:     'Conteúdo enviado para aprovação',
+      message:   `"${title}" foi enviado ao cliente para aprovação.`,
+      link:      plannerId,
+    })
+  } catch {/* silencioso */}
+}
+
 // Notifica o usuário portal do cliente que o ajuste foi realizado
 async function notifyClientAdjustmentDone(clientId: string | null, plannerId: string) {
   if (!clientId) return
@@ -1960,6 +1974,9 @@ export function Planner() {
             allLinks.map(url => ({ planner_id: editingItem.id, user_id: user.id, url, label: null }))
           )
         }
+        if (sendToClient && form.client_id && editingItem && user) {
+          await notifyApprovalRequest(user.id, form.client_id, editingItem.id, form.title)
+        }
         toast(sendToClient ? 'Post enviado ao cliente!' : 'Post salvo!', 'success')
       } else {
         const created = await createItem.mutateAsync({
@@ -2034,6 +2051,9 @@ export function Planner() {
           await supabase.from('planner_links').insert(
             allLinks.map(url => ({ planner_id: created.id, user_id: user.id, url, label: null }))
           )
+        }
+        if (sendToClient && form.client_id && user) {
+          await notifyApprovalRequest(user.id, form.client_id, created.id, form.title)
         }
         toast(sendToClient ? 'Post enviado ao cliente!' : 'Post salvo internamente!', 'success')
       }
@@ -2616,6 +2636,9 @@ export function Planner() {
                         sent_to_client: true,
                         approval_status: item.status !== 'publicado' && item.client_id ? 'pendente_aprovacao' : (item.approval_status ?? null),
                       } as any)
+                      if (item.client_id && user) {
+                        await notifyApprovalRequest(user.id, item.client_id, item.id, item.title)
+                      }
                       await qc.refetchQueries({ queryKey: ['planner'] })
                       toast('Post enviado ao cliente!', 'success')
                     } catch (err: any) {
