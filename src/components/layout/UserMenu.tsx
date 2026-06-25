@@ -178,6 +178,28 @@ function WhatsAppSection() {
           >
             {wa.optIn ? 'Pausar todas as notificações' : 'Reativar notificações'}
           </button>
+
+          {/* Notificar clientes */}
+          <div className="border-t border-[#f1f5f9] mt-3 pt-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => wa.saveNotifyClient(!wa.notifyClient).catch((e: any) => toast(e.message, 'error'))}
+                disabled={wa.busy}
+                className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${
+                  wa.notifyClient ? 'bg-[#22c55e]' : 'bg-[#cbd5e1]'
+                }`}
+              >
+                <span className={`absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white transition-all ${
+                  wa.notifyClient ? 'left-[14px]' : 'left-[2px]'
+                }`} />
+              </button>
+              <div className="min-w-0">
+                <p className="text-[12px] font-medium text-[#334155] leading-tight">Notificar clientes</p>
+                <p className="text-[10px] text-[#94a3b8] leading-tight">Envia aprovação, publicação e ajuste para o WhatsApp do cliente</p>
+              </div>
+            </label>
+          </div>
         </div>
       )}
     </div>

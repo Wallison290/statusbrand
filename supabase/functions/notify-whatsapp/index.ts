@@ -106,9 +106,48 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: s
   }
 }
 
-// ─── Processa uma notificação ─────────────────────────────────────────────────
+// ─── Tipos de notificação que vão para o cliente ─────────────────────────────
+
+const CLIENT_NOTIFY_TYPES = new Set(['APPROVAL_REQUEST', 'POST_PUBLISHED', 'ADJUSTMENT_DONE'])
+
+// ─── Mensagem para o cliente (formato amigável, sem contexto interno) ─────────
+
+function buildClientMessage(n: NotificationRow, agencyName: string): string {
+  const link = buildLink(n)
+  const footer = link ? `\n\n👉 ${link}` : ''
+  switch (n.type) {
+    case 'APPROVAL_REQUEST':
+      return `🔔 *Conteúdo aguardando aprovação!*\nOlá! A *${agencyName}* enviou conteúdo para a sua aprovação.${footer}`
+    case 'POST_PUBLISHED':
+      return `📸 *Post publicado!*\nSeu conteúdo foi publicado com sucesso no Instagram. ✅${footer}`
+    case 'ADJUSTMENT_DONE':
+      return `✅ *Ajuste finalizado!*\nO ajuste solicitado foi concluído e o conteúdo está pronto.${footer}`
+    default:
+      return `${n.title}\n${n.message ?? ''}${footer}`
+  }
+}
+
+// ─── Fan-out para o WhatsApp do cliente ──────────────────────────────────────
 
 type Supa = ReturnType<typeof createClient>
+
+async function sendClientNotification(supabase: Supa, n: NotificationRow, agencyProfile: any): Promise<void> {
+  if (!n.client_id) return
+  const { data: client } = await supabase
+    .from('clients')
+    .select('whatsapp, name')
+    .eq('id', n.client_id)
+    .maybeSingle()
+
+  const whatsapp = (client as any)?.whatsapp
+  if (!whatsapp) return
+
+  const agencyName = agencyProfile.agency_name || agencyProfile.full_name || 'Sua agência'
+  const msg = buildClientMessage(n, agencyName)
+  await sendText(whatsapp, msg)
+}
+
+// ─── Processa uma notificação ─────────────────────────────────────────────────
 
 async function processNotification(supabase: Supa, n: NotificationRow): Promise<string> {
   // Reserva a entrega (idempotência): se já existe, ninguém mais envia.
@@ -122,6 +161,8 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
   if (existing && (existing as any).status !== 'failed' && (existing as any).status !== 'pending') {
     return (existing as any).status // 'sent' ou 'skipped' — nada a fazer
   }
+
+  const isFirstTime = !existing
 
   // Cria/garante a linha de entrega como 'pending'.
   if (!existing) {
@@ -144,26 +185,35 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
     return status
   }
 
-  // Busca o perfil do destinatário e aplica os gates.
+  // Busca o perfil da agência (usado para envio da agência e fan-out do cliente).
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, whatsapp, whatsapp_opt_in, whatsapp_verified, whatsapp_prefs')
+    .select('role, whatsapp, whatsapp_opt_in, whatsapp_verified, whatsapp_prefs, full_name, agency_name, notify_client_whatsapp')
     .eq('id', n.user_id)
     .maybeSingle()
 
   const p = profile as any
-  if (!p)                       return finish('skipped', { error: 'perfil não encontrado' })
-  if (p.role !== 'agency')      return finish('skipped', { error: 'destinatário não é agência' })
-  if (!p.whatsapp)              return finish('skipped', { error: 'sem número de WhatsApp' })
-  if (!p.whatsapp_opt_in)       return finish('skipped', { error: 'opt-in desligado' })
-  if (!p.whatsapp_verified)     return finish('skipped', { error: 'número não verificado' })
+
+  // ── Fan-out para o cliente (dispara uma única vez, independente do opt-in da agência) ──
+  if (isFirstTime && CLIENT_NOTIFY_TYPES.has(n.type) && n.client_id && p?.notify_client_whatsapp) {
+    sendClientNotification(supabase, n, p).catch(err =>
+      console.error('client whatsapp fan-out error:', err)
+    )
+  }
+
+  // ── Notificação da agência ────────────────────────────────────────────────────
+  if (!p)                        return finish('skipped', { error: 'perfil não encontrado' })
+  if (p.role !== 'agency')       return finish('skipped', { error: 'destinatário não é agência' })
+  if (!p.whatsapp)               return finish('skipped', { error: 'sem número de WhatsApp' })
+  if (!p.whatsapp_opt_in)        return finish('skipped', { error: 'opt-in desligado' })
+  if (!p.whatsapp_verified)      return finish('skipped', { error: 'número não verificado' })
 
   const category = CATEGORY_OF[n.type]
-  if (!category)                return finish('skipped', { error: `tipo sem categoria: ${n.type}` })
+  if (!category)                 return finish('skipped', { error: `tipo sem categoria: ${n.type}` })
   const prefs = p.whatsapp_prefs ?? {}
   if (prefs[category] === false) return finish('skipped', { error: `categoria '${category}' desligada` })
 
-  // Envia.
+  // Envia para a agência.
   const text = buildMessage(n)
   const sent = await sendText(p.whatsapp, text)
 
