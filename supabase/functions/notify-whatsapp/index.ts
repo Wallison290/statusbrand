@@ -108,7 +108,7 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: s
 
 // ─── Tipos de notificação que vão para o cliente ─────────────────────────────
 
-const CLIENT_NOTIFY_TYPES = new Set(['APPROVAL_REQUEST', 'POST_PUBLISHED', 'ADJUSTMENT_DONE'])
+const CLIENT_NOTIFY_TYPES = new Set(['APPROVAL_REQUEST', 'POST_PUBLISHED', 'ADJUSTMENT_DONE', 'NEW_CONTENT'])
 
 // ─── Mensagem para o cliente (formato amigável, sem contexto interno) ─────────
 
@@ -122,6 +122,8 @@ function buildClientMessage(n: NotificationRow, agencyName: string): string {
       return `📸 *Post publicado!*\nSeu conteúdo foi publicado com sucesso no Instagram. ✅${footer}`
     case 'ADJUSTMENT_DONE':
       return `✅ *Ajuste finalizado!*\nO ajuste solicitado foi concluído e o conteúdo está pronto.${footer}`
+    case 'NEW_CONTENT':
+      return `🆕 *Novo conteúdo no seu planejamento!*\nA *${agencyName}* adicionou novo conteúdo para você.${footer}`
     default:
       return `${n.title}\n${n.message ?? ''}${footer}`
   }
@@ -195,10 +197,32 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
   const p = profile as any
 
   // ── Fan-out para o cliente (dispara uma única vez, independente do opt-in da agência) ──
-  if (isFirstTime && CLIENT_NOTIFY_TYPES.has(n.type) && n.client_id && p?.notify_client_whatsapp) {
-    sendClientNotification(supabase, n, p).catch(err =>
-      console.error('client whatsapp fan-out error:', err)
-    )
+  // Notificações para usuário portal (role='client') precisam buscar a agência pelo client_id.
+  if (isFirstTime && CLIENT_NOTIFY_TYPES.has(n.type) && n.client_id) {
+    let agencyForFanOut: any = p?.role === 'agency' ? p : null
+
+    if (!agencyForFanOut) {
+      const { data: clientRow } = await supabase
+        .from('clients')
+        .select('user_id')
+        .eq('id', n.client_id)
+        .maybeSingle()
+
+      if ((clientRow as any)?.user_id) {
+        const { data: agProfile } = await supabase
+          .from('profiles')
+          .select('notify_client_whatsapp, agency_name, full_name')
+          .eq('id', (clientRow as any).user_id)
+          .maybeSingle()
+        agencyForFanOut = agProfile
+      }
+    }
+
+    if (agencyForFanOut?.notify_client_whatsapp) {
+      sendClientNotification(supabase, n, agencyForFanOut).catch(err =>
+        console.error('client whatsapp fan-out error:', err)
+      )
+    }
   }
 
   // ── Notificação da agência ────────────────────────────────────────────────────
