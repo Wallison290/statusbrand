@@ -139,27 +139,27 @@ function WhatsAppModal({
 
         {/* Corpo — mensagem editável */}
         <div className="p-5 space-y-3">
-          <label className="text-[11px] font-semibold text-[#475569] flex items-center gap-1.5">
+          <label className="text-[11px] font-semibold text-[#94a3b8] flex items-center gap-1.5">
             Mensagem
-            <span className="text-[10px] font-normal text-[#94a3b8]">(editável antes de enviar)</span>
+            <span className="text-[10px] font-normal text-[#64748b]">(editável antes de enviar)</span>
           </label>
           <textarea
             value={message}
             onChange={e => { setMessage(e.target.value); setSent(false) }}
             rows={10}
-            className="w-full px-3 py-2.5 rounded-xl border border-[#1e293b] text-[12px] text-[#CBD5E1] leading-relaxed bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#25D366] resize-none"
+            className="w-full px-3 py-2.5 rounded-xl border border-[#1e293b] text-[12px] text-[#e2e8f0] leading-relaxed bg-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#25D366] resize-none"
           />
 
           {/* Instrução */}
           {sent ? (
-            <div className="flex items-start gap-2 bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-3 py-2.5">
-              <Check className="w-3.5 h-3.5 text-[#16a34a] flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-[#15803d] leading-relaxed">
+            <div className="flex items-start gap-2 bg-[#052e16] border border-[#166534] rounded-lg px-3 py-2.5">
+              <Check className="w-3.5 h-3.5 text-[#4ade80] flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[#86efac] leading-relaxed">
                 <strong>Mensagem enviada!</strong> O colaborador já recebeu no WhatsApp.
               </p>
             </div>
           ) : (
-            <p className="text-[10px] text-[#94a3b8]">
+            <p className="text-[10px] text-[#64748b]">
               A mensagem será enviada diretamente no WhatsApp do colaborador.
             </p>
           )}
@@ -169,7 +169,7 @@ function WhatsAppModal({
         <div className="px-5 pb-5 flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 h-9 rounded-xl border border-[#1e293b] text-[12px] text-[#64748b] font-medium hover:bg-[#f8fafc] transition-colors"
+            className="flex-1 h-9 rounded-xl border border-[#1e293b] text-[12px] text-[#94a3b8] font-medium hover:bg-[#1e293b] transition-colors"
           >
             Fechar
           </button>
