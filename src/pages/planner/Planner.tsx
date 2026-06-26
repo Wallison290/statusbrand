@@ -2266,7 +2266,7 @@ export function Planner() {
           })()}
 
           {/* Notificador WhatsApp manual */}
-          <div className="relative ml-auto">
+          <div className="relative">
             <button
               onClick={() => { setWaDropOpen(o => !o); setClientDropOpen(false); setStatusDropOpen(false) }}
               className="flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all bg-[var(--sm-bg-card)] text-[#25D366] border-[var(--sm-border)] hover:border-[#25D366]/30 hover:bg-[var(--sm-bg-alt)]"
