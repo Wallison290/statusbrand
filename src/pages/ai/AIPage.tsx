@@ -526,8 +526,9 @@ export function AIPage() {
     setAttachedImages([])
 
     // Detecção automática de squad (qualquer mensagem enquanto não há squad ativo)
+    // Em modo imagem não ativa squad — a geração é independente de squad
     let currentSquad = activeSquad
-    if (!currentSquad && text) {
+    if (!currentSquad && text && !imageMode) {
       // Fase 1: keyword match rápido (instantâneo)
       const detected = detectSquad(text)
       if (detected) {
