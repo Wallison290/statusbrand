@@ -199,40 +199,57 @@ Responda com apenas o ID (ex: "fabrica-conteudo") ou "none".`
     const cleanPrompt = userPrompt.replace(/\[\[IMG:[\s\S]*?\]\]/g, '').trim() || 'imagem'
 
     // ── Monta um prompt de imagem otimizado a partir da conversa ────────────
-    // Sem isso, cada geração usa só a última mensagem e os follow-ups
-    // ("sem essas cores", "tira o fundo branco") perdem o contexto.
+    // Usa gpt-4o com visão real quando há imagens de referência — assim o modelo
+    // vê as cores, logo e estilo da marca e os aplica corretamente na geração.
     let builtPrompt = cleanPrompt
     try {
-      const stripMarkers = (t: string) => t
-        .replace(/\[\[IMG:[\s\S]*?\]\]/g, '[imagem de referência enviada pelo usuário]')
-        .replace(/\[\[GENERATED_IMAGE:[\s\S]*?\]\]/g, '[imagem que você gerou antes]')
-      const history = (messages as { role: string; content: string }[])
-        .slice(-8)
-        .map(m => ({
-          role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
-          content: stripMarkers(m.content),
-        }))
-      const PROMPT_SYS = `Você é um engenheiro de prompts para um modelo de geração de imagens.
-Com base na conversa, escreva UM ÚNICO prompt detalhado e visual descrevendo exatamente a imagem a gerar AGORA.
-Regras:
-- Considere o histórico: se o usuário pediu ajustes numa imagem anterior ("sem essas cores", "tira o fundo branco", "deixa mais escuro"), aplique-os ao novo prompt.
-- Especifique estilo, paleta de cores (use os códigos hex quando o usuário informar), composição/layout, fundo e, se houver logo de referência, como incorporá-la fielmente.
-- Liste qualquer texto que deva aparecer na imagem EXATAMENTE como deve ser escrito, entre aspas.
-- Escreva o prompt em inglês (gera melhor), mas mantenha textos que aparecem na imagem no idioma original.
-- Responda SOMENTE com o prompt final, sem comentários.`
-      // Contexto da marca/cliente e do squad ativo (se houver) — para que cores,
-      // tom e estilo entrem automaticamente na imagem.
+      const PROMPT_SYS = `You are an expert prompt engineer for a state-of-the-art image generation model.
+Based on the conversation (and any reference images provided), write ONE single detailed visual prompt describing EXACTLY the image to generate NOW.
+Rules:
+- If the user sent reference images, carefully analyze their colors, logo, typography, style and brand identity — replicate them in the new image.
+- If the user requested adjustments to a previous image ("without that color", "remove the white background", "make it darker"), apply those changes in the new prompt.
+- Specify: visual style (photorealistic, illustrated, 3D render, etc.), exact color palette (hex codes when given), composition/layout, background, lighting, and how to incorporate any logo faithfully.
+- For promotional/marketing content: describe it as a professional high-quality marketing poster with clear visual hierarchy, bold typography, and brand-consistent colors.
+- List any text that MUST appear in the image EXACTLY as written, in quotes.
+- Write the prompt in English (generates better results), but keep any text that appears IN the image in the original language.
+- Reply with ONLY the final prompt, no comments or explanations.`
+
+      // Constrói histórico passando imagens reais para o modelo de visão
+      const historyForBuilder: OpenAI.Chat.ChatCompletionMessageParam[] =
+        (messages as { role: string; content: string }[])
+          .slice(-8)
+          .map(m => {
+            if (m.role === 'user' && hasImages(m.content)) {
+              // Passa as imagens reais para o modelo de visão ver a marca/referência
+              return {
+                role: 'user' as const,
+                content: buildContentParts(m.content) as OpenAI.Chat.ChatCompletionContentPart[],
+              }
+            }
+            return {
+              role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+              content: m.content
+                .replace(/\[\[IMG:[\s\S]*?\]\]/g, '[reference image sent by user]')
+                .replace(/\[\[GENERATED_IMAGE:[\s\S]*?\]\]/g, '[image you generated before]'),
+            }
+          })
+
+      // Contexto da marca/cliente — cores, tom e estilo entram automaticamente
       const brandCtx = (systemPrompt ?? '').toString().slice(0, 4000)
+
+      // Usa gpt-4o (visão) quando há imagens de referência; gpt-4o-mini para texto puro
+      const builderModel = refImages.length > 0 ? 'gpt-4o' : 'gpt-4o-mini'
+
       const pr = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: builderModel,
         messages: [
           { role: 'system', content: PROMPT_SYS },
           ...(brandCtx
-            ? [{ role: 'system' as const, content: `Contexto da marca/cliente e do time ativo (aplique cores, tom e estilo quando fizer sentido):\n${brandCtx}` }]
+            ? [{ role: 'system' as const, content: `Brand/client context (apply colors, tone and style when relevant):\n${brandCtx}` }]
             : []),
-          ...history,
+          ...historyForBuilder,
         ] as OpenAI.Chat.ChatCompletionMessageParam[],
-        max_tokens: 600,
+        max_tokens: 800,
       })
       const out = pr.choices[0]?.message?.content?.trim()
       if (out) builtPrompt = out
@@ -263,10 +280,12 @@ Regras:
             prompt: builtPrompt,
             n: 1,
             size: '1024x1024',
+            quality: 'high',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any)
         } else {
-          imgRes = await openai.images.generate({ model, prompt: builtPrompt, n: 1, size: '1024x1024' })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          imgRes = await (openai.images.generate as any)({ model, prompt: builtPrompt, n: 1, size: '1024x1024', quality: 'high' })
         }
         const d = imgRes.data?.[0]
         imgUrl = d?.b64_json ? `data:image/png;base64,${d.b64_json}` : (d?.url ?? '')
