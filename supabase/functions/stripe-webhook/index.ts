@@ -12,9 +12,9 @@ const SUPABASE_SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
 
 const PRICE_TO_PLAN: Record<string, string> = {
-  'price_1Te09b0khDYycmTv1muADpGv': 'starter',
-  'price_1Te3yB0khDYycmTvPxQfIaPL': 'pro',
-  'price_1Te09n0khDYycmTvrseP5spd': 'agency',
+  'price_1Tjj4F0khDYycmTvwkNmnfFk': 'starter',
+  'price_1Tjj4w0khDYycmTvDDOmCvi7': 'pro',
+  'price_1Tjj5c0khDYycmTvDDntAKuf': 'agency',
 }
 
 const AI_LIMITS: Record<string, number> = { starter: 150, pro: 600, agency: 2000 }
