@@ -2798,11 +2798,11 @@ export function Planner() {
                 <Select value={form.status} onValueChange={v => set('status', v as PlannerStatus)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ideia">Ideia</SelectItem>
-                    <SelectItem value="producao">Produção</SelectItem>
-                    <SelectItem value="revisao">Revisão</SelectItem>
-                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                    <SelectItem value="publicado">Publicado</SelectItem>
+                    <SelectItem value="ideia" textValue="Ideia">Ideia</SelectItem>
+                    <SelectItem value="producao" textValue="Produção">Produção</SelectItem>
+                    <SelectItem value="revisao" textValue="Revisão">Revisão</SelectItem>
+                    <SelectItem value="aprovado" textValue="Aprovado">Aprovado</SelectItem>
+                    <SelectItem value="publicado" textValue="Publicado">Publicado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -2813,8 +2813,8 @@ export function Planner() {
               <Select value={form.client_id || '__none__'} onValueChange={v => set('client_id', v === '__none__' ? null : v)}>
                 <SelectTrigger><SelectValue placeholder="Sem cliente" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Sem cliente</SelectItem>
-                  {(clients || []).map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
+                  <SelectItem value="__none__" textValue="Sem cliente">Sem cliente</SelectItem>
+                  {(clients || []).map(c => <SelectItem key={c.id} value={c.id} textValue={c.company_name}>{c.company_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
