@@ -2285,7 +2285,7 @@ export function Planner() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.97 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-1.5 z-30 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-2xl shadow-xl p-4 min-w-[280px]"
+                    className="absolute left-0 top-full mt-1.5 z-30 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-2xl shadow-xl p-4 w-[280px]"
                   >
                     <p className="text-[11px] text-[var(--sm-text-3)] mb-3 font-medium uppercase tracking-wider">WhatsApp — Notificar cliente</p>
 
