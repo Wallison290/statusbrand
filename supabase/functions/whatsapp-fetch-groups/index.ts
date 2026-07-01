@@ -33,8 +33,10 @@ async function uazPost(path: string, body: unknown) {
 }
 
 function extractGroup(data: any): { jid: string; name: string } | null {
-  const jid  = data?.JID ?? data?.id ?? data?.remoteJid ?? data?.jid ?? data?.groupJid ?? data?.GroupJID ?? ''
-  const name = data?.Name ?? data?.Subject ?? data?.name ?? data?.subject ?? data?.groupName ?? data?.GroupName ?? ''
+  // Alguns endpoints envolvem o grupo em { group: { ... } }
+  const d = data?.group ?? data
+  const jid  = d?.JID ?? d?.id ?? d?.remoteJid ?? d?.jid ?? d?.groupJid ?? d?.GroupJID ?? ''
+  const name = d?.Name ?? d?.Subject ?? d?.name ?? d?.subject ?? d?.groupName ?? d?.GroupName ?? ''
   if (typeof jid === 'string' && jid.endsWith('@g.us')) return { jid, name: name || jid }
   return null
 }
