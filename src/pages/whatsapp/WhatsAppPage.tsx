@@ -399,11 +399,11 @@ export function WhatsAppPage() {
             <div className="flex items-center gap-3 px-4 pt-4 pb-3">
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: isConnected ? '#22C55E20' : '#F59E0B20' }}
+                style={{ background: isConnected ? '#16A34A20' : '#F59E0B30' }}
               >
                 {isConnected
-                  ? <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
-                  : <Phone className="w-5 h-5 text-[#F59E0B]" />
+                  ? <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                  : <Phone className="w-5 h-5 text-[#B45309]" />
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -411,9 +411,9 @@ export function WhatsAppPage() {
                   <>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{whatsapp}</span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#22C55E20] text-[#22C55E]">Verificado</span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#16A34A20] text-[#16A34A]">Verificado</span>
                     </div>
-                    <p className="text-[12px] text-[#22C55E] mt-0.5">Número conectado e ativo</p>
+                    <p className="text-[12px] text-[#16A34A] mt-0.5">Número conectado e ativo</p>
                   </>
                 ) : (
                   <>
@@ -514,7 +514,7 @@ export function WhatsAppPage() {
             </div>
             {(!isConnected || !optIn) && (
               <div className="px-4 pb-4">
-                <p className="text-[11px] text-center py-2 rounded-xl" style={{ background: '#F59E0B15', color: '#FBBF24', border: '1px solid #F59E0B20' }}>
+                <p className="text-[11px] text-center py-2 rounded-xl" style={{ background: '#F59E0B20', color: '#B45309', border: '1px solid #F59E0B50' }}>
                   {!isConnected ? 'Configure o número para ativar as notificações' : 'Ative o toggle acima para receber notificações'}
                 </p>
               </div>
@@ -569,7 +569,7 @@ export function WhatsAppPage() {
                   >
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-bold"
-                      style={{ background: client.whatsapp ? '#22C55E20' : 'var(--sm-border)', color: client.whatsapp ? '#22C55E' : 'var(--sm-text-2)' }}
+                      style={{ background: client.whatsapp ? '#16A34A20' : 'var(--sm-border)', color: client.whatsapp ? '#16A34A' : 'var(--sm-text-2)' }}
                     >
                       {client.company_name[0].toUpperCase()}
                     </div>
@@ -578,18 +578,18 @@ export function WhatsAppPage() {
                         {client.company_name}
                       </p>
                       {client.whatsapp ? (
-                        <p className="text-[11px] mt-0.5 text-[#22C55E]">{client.whatsapp}</p>
+                        <p className="text-[11px] mt-0.5 text-[#16A34A]">{client.whatsapp}</p>
                       ) : (
                         <p className="text-[11px] mt-0.5" style={{ color: 'var(--sm-text-2)' }}>Sem WhatsApp cadastrado</p>
                       )}
                     </div>
                     {client.whatsapp ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] flex-shrink-0" />
                     ) : (
                       <Link
                         to={`/clients/${client.id}/edit`}
                         className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg flex-shrink-0 transition-colors"
-                        style={{ background: '#F59E0B15', color: '#FBBF24', border: '1px solid #F59E0B30' }}
+                        style={{ background: '#F59E0B20', color: '#B45309', border: '1px solid #F59E0B60' }}
                       >
                         <AlertCircle className="w-3 h-3" />
                         Adicionar
