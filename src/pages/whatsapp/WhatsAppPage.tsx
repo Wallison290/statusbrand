@@ -1,9 +1,11 @@
 // ── Página: WhatsApp ───────────────────────────────────────────────────────────
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  MessageCircle, Users, CheckCircle2, XCircle, Loader2,
+  MessageCircle, Users, CheckCircle2, Loader2,
   Plus, Trash2, ChevronDown, ChevronUp, Search, X, Phone,
+  AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { useWhatsappSettings, WHATSAPP_CATEGORIES } from '@/hooks/useWhatsappSettings'
@@ -16,6 +18,7 @@ import {
   type WhatsappGroup,
   type EvolutionGroup,
 } from '@/hooks/useWhatsappGroups'
+import { useClients } from '@/hooks/useClients'
 import type { WhatsappPrefs } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -363,6 +366,7 @@ export function WhatsAppPage() {
   } = useWhatsappSettings()
 
   const { data: groups = [], isLoading: loadingGroups } = useWhatsappGroups()
+  const { data: clients = [] } = useClients()
   const [showAddModal, setShowAddModal] = useState(false)
   const [localPrefs, setLocalPrefs]     = useState<WhatsappPrefs | null>(null)
   const [phone, setPhone]               = useState(whatsapp)
@@ -419,7 +423,7 @@ export function WhatsAppPage() {
         {/* ── Bloco 1: Conexão ───────────────────────────────────────────────── */}
         <Section
           title="Conexão"
-          description="Número do WhatsApp que receberá as notificações do sistema."
+          description="Seu número pessoal para receber as notificações. O número que envia as mensagens é o número da integração configurado no sistema."
         >
           <div
             className="rounded-2xl overflow-hidden"
@@ -576,6 +580,60 @@ export function WhatsAppPage() {
               <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifyClient ? 'translate-x-4' : 'translate-x-0.5'}`} />
             </div>
           </label>
+
+          {/* Lista de clientes */}
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold px-1" style={{ color: 'var(--sm-text-2)' }}>
+              CLIENTES ({clients.filter(c => c.whatsapp).length} de {clients.length} com WhatsApp)
+            </p>
+            {clients.length === 0 ? (
+              <div
+                className="text-center py-5 rounded-2xl text-[13px]"
+                style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-2)' }}
+              >
+                Nenhum cliente cadastrado.
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {clients.map(client => (
+                  <div
+                    key={client.id}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                    style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-bold"
+                      style={{ background: client.whatsapp ? '#22C55E20' : 'var(--sm-border)', color: client.whatsapp ? '#22C55E' : 'var(--sm-text-2)' }}
+                    >
+                      {client.company_name[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium truncate" style={{ color: 'var(--sm-text-1)' }}>
+                        {client.company_name}
+                      </p>
+                      {client.whatsapp ? (
+                        <p className="text-[11px] mt-0.5 text-[#22C55E]">{client.whatsapp}</p>
+                      ) : (
+                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--sm-text-2)' }}>Sem WhatsApp cadastrado</p>
+                      )}
+                    </div>
+                    {client.whatsapp ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
+                    ) : (
+                      <Link
+                        to={`/clients/${client.id}/edit`}
+                        className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg flex-shrink-0 transition-colors"
+                        style={{ background: '#F59E0B15', color: '#FBBF24', border: '1px solid #F59E0B30' }}
+                      >
+                        <AlertCircle className="w-3 h-3" />
+                        Adicionar
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Section>
 
         {/* ── Bloco 4: Grupos ────────────────────────────────────────────────── */}
