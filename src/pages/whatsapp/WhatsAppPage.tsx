@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import {
   MessageCircle, Users, CheckCircle2, Loader2,
   Plus, Trash2, ChevronDown, ChevronUp, X, Phone,
-  AlertCircle, Search,
+  AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { useWhatsappSettings, WHATSAPP_CATEGORIES } from '@/hooks/useWhatsappSettings'
@@ -15,7 +15,6 @@ import {
   useUpdateWhatsappGroup,
   useDeleteWhatsappGroup,
   useResolveGroupInvite,
-  useFetchGroupsList,
   type WhatsappGroup,
   type EvolutionGroup,
 } from '@/hooks/useWhatsappGroups'
@@ -69,14 +68,11 @@ function CategoryToggles({
 function AddGroupModal({ onClose }: { onClose: () => void }) {
   const { toast }      = useToast()
   const resolveInvite  = useResolveGroupInvite()
-  const fetchList      = useFetchGroupsList()
   const addGroup       = useAddWhatsappGroup()
 
-  type Mode = 'link' | 'list' | 'config'
+  type Mode = 'link' | 'config'
   const [mode, setMode]         = useState<Mode>('link')
   const [link, setLink]         = useState('')
-  const [search, setSearch]     = useState('')
-  const [groups, setGroups]     = useState<EvolutionGroup[]>([])
   const [selected, setSelected] = useState<EvolutionGroup | null>(null)
   const [cats, setCats]         = useState<WhatsappPrefs>(DEFAULT_CATS)
 
@@ -87,30 +83,7 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
       setMode('config')
     } catch (err: any) {
       const msg: string = err?.message ?? ''
-      // Bot já está no grupo, endpoint não disponível ou outro erro de join
-      // → cai automaticamente na lista para o usuário escolher
-      const fallbackToList =
-        msg.includes('404') ||
-        msg.includes('Not Found') ||
-        msg.includes('error joining') ||
-        msg.includes('already') ||
-        msg.includes('500')
-      if (fallbackToList) {
-        toast('Número já está no grupo. Escolha da lista abaixo.', 'success')
-        handleLoadList()
-      } else {
-        toast(msg || 'Link inválido ou grupo não encontrado', 'error')
-      }
-    }
-  }
-
-  async function handleLoadList() {
-    try {
-      const list = await fetchList.mutateAsync(undefined)
-      setGroups(list)
-      setMode('list')
-    } catch (err: any) {
-      toast(err?.message ?? 'Não foi possível carregar os grupos', 'error')
+      toast(msg || 'Link inválido ou grupo não encontrado. Verifique o link e tente novamente.', 'error')
     }
   }
 
@@ -125,12 +98,8 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const filtered = groups.filter(g => g.name.toLowerCase().includes(search.toLowerCase()))
-  const busy = resolveInvite.isPending || fetchList.isPending
-
-  const title = mode === 'config' ? 'Configurar notificações'
-    : mode === 'list' ? 'Escolher grupo'
-    : 'Adicionar grupo'
+  const busy = resolveInvite.isPending
+  const title = mode === 'config' ? 'Configurar notificações' : 'Adicionar grupo'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -176,59 +145,6 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
                   style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-1)' }}
                 />
               </div>
-              <button
-                onClick={handleLoadList}
-                disabled={busy}
-                className="text-[12px] underline"
-                style={{ color: 'var(--sm-text-2)' }}
-              >
-                Ou escolher da lista de grupos disponíveis
-              </button>
-            </>
-          )}
-
-          {/* ── Modo lista ── */}
-          {mode === 'list' && (
-            <>
-              <p className="text-[12px]" style={{ color: 'var(--sm-text-2)' }}>
-                Grupos que o número da integração participa. Selecione o desejado.
-              </p>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>
-                <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sm-text-2)' }} />
-                <input
-                  type="text"
-                  placeholder="Buscar grupo..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-[13px] outline-none"
-                  style={{ color: 'var(--sm-text-1)' }}
-                />
-              </div>
-              {filtered.length === 0 ? (
-                <p className="text-center text-[13px] py-4" style={{ color: 'var(--sm-text-2)' }}>Nenhum grupo encontrado.</p>
-              ) : (
-                <div className="space-y-1.5 max-h-56 overflow-y-auto">
-                  {filtered.map(g => (
-                    <button
-                      key={g.jid}
-                      onClick={() => setSelected(g)}
-                      className="w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center gap-2.5"
-                      style={{
-                        background: selected?.jid === g.jid ? '#22C55E20' : 'var(--sm-bg-alt)',
-                        border: `1px solid ${selected?.jid === g.jid ? '#22C55E60' : 'var(--sm-border)'}`,
-                        color: 'var(--sm-text-1)',
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: selected?.jid === g.jid ? '#22C55E30' : 'var(--sm-border)' }}>
-                        <Users className="w-4 h-4" style={{ color: selected?.jid === g.jid ? '#22C55E' : 'var(--sm-text-2)' }} />
-                      </div>
-                      <span className="text-[13px] font-medium truncate flex-1">{g.name}</span>
-                      {selected?.jid === g.jid && <CheckCircle2 className="w-4 h-4 text-[#22C55E] flex-shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
             </>
           )}
 
@@ -254,7 +170,7 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
         <div className="px-5 py-4 flex items-center justify-end gap-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
           {mode === 'config' && (
             <button
-              onClick={() => setMode(groups.length > 0 ? 'list' : 'link')}
+              onClick={() => setMode('link')}
               className="px-4 py-2 rounded-xl text-[13px] font-medium transition-colors"
               style={{ background: 'var(--sm-bg-alt)', color: 'var(--sm-text-2)', border: '1px solid var(--sm-border)' }}
             >
@@ -278,17 +194,6 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
             >
               {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {busy ? 'Verificando...' : 'Continuar'}
-            </button>
-          )}
-
-          {mode === 'list' && (
-            <button
-              onClick={() => selected && setMode('config')}
-              disabled={!selected}
-              className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-40"
-              style={{ background: '#25D366' }}
-            >
-              Continuar
             </button>
           )}
 

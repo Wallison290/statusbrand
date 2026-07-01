@@ -1,7 +1,8 @@
 // ── whatsapp-fetch-groups (UazAPI) ────────────────────────────────────────────
-// POST body { list: true }         → lista grupos via POST /group/list
-// POST body { invite_code: "..." } → entra no grupo via POST /group/join
-//                                    (retorna JID + nome; bot precisa entrar de qq forma)
+// POST body { invite_code: "..." }
+//   1. Tenta POST /group/join  → bot entra e retorna info do grupo
+//   2. Se join falha (já membro) → tenta POST /group/inviteInfo → obtém info sem entrar
+//   Nunca lista todos os grupos (privacidade multi-tenant)
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -19,7 +20,7 @@ function json(body: unknown) {
   })
 }
 
-async function uazFetch(path: string, body: unknown) {
+async function uazPost(path: string, body: unknown) {
   const res  = await fetch(`${BASE_URL}${path}`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json', token: TOKEN },
@@ -31,6 +32,13 @@ async function uazFetch(path: string, body: unknown) {
   return { ok: res.ok, status: res.status, data, text }
 }
 
+function extractGroup(data: any): { jid: string; name: string } | null {
+  const jid  = data?.JID ?? data?.id ?? data?.remoteJid ?? data?.jid ?? data?.groupJid ?? data?.GroupJID ?? ''
+  const name = data?.Name ?? data?.Subject ?? data?.name ?? data?.subject ?? data?.groupName ?? data?.GroupName ?? ''
+  if (typeof jid === 'string' && jid.endsWith('@g.us')) return { jid, name: name || jid }
+  return null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
@@ -39,64 +47,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json().catch(() => ({}))
-
-    // ── Modo lista ─────────────────────────────────────────────────────────
-    if ((body as any).list) {
-      const r = await uazFetch('/group/list', { limit: 1000, offset: 0, noParticipants: false })
-      console.log('group/list status:', r.status, '| body:', r.text.slice(0, 800))
-      if (!r.ok) {
-        return json({ ok: false, error: `group/list ${r.status}: ${r.text.slice(0, 300)}` })
-      }
-      // Tenta todas as formas possíveis de array na resposta
-      let raw: any[] = []
-      if (Array.isArray(r.data)) {
-        raw = r.data
-      } else if (Array.isArray(r.data?.groups)) {
-        raw = r.data.groups
-      } else if (Array.isArray(r.data?.data)) {
-        raw = r.data.data
-      } else if (Array.isArray(r.data?.result)) {
-        raw = r.data.result
-      } else if (Array.isArray(r.data?.list)) {
-        raw = r.data.list
-      } else if (Array.isArray(r.data?.chats)) {
-        raw = r.data.chats
-      }
-      // Debug: mostra estrutura do primeiro item para diagnóstico
-      const firstKeys = raw[0] ? Object.keys(raw[0]).join(',') : 'ARRAY_VAZIO'
-      const firstJid  = raw[0] ? (raw[0].JID ?? raw[0].id ?? raw[0].remoteJid ?? raw[0].jid ?? 'SEM_JID') : 'N/A'
-      const firstName = raw[0] ? (raw[0].Subject ?? raw[0].subject ?? raw[0].name ?? 'SEM_NOME') : 'N/A'
-
-      const groups = raw
-        .map((g: any) => {
-          const jid  = g.JID ?? g.id ?? g.remoteJid ?? g.jid ?? g.groupId ?? g.GroupJID ?? g.group_id ?? ''
-          const name = g.Name ?? g.Subject ?? g.subject ?? g.name ?? g.groupName ?? g.GroupName ?? g.title ?? g.pushName ?? ''
-          return { jid, name }
-        })
-        .filter((g: any) => g.jid && !g.jid.endsWith('@s.whatsapp.net') && !g.jid.endsWith('@lid') && g.name)
-        .sort((a: any, b: any) => a.name.localeCompare(b.name))
-
-      return json({ ok: true, groups, _d: { raw: raw.length, keys: firstKeys, jid: firstJid, name: firstName } })
-    }
-
-    // ── Modo convite: entra no grupo e retorna JID + nome ──────────────────
+    const body   = await req.json().catch(() => ({}))
     const invite = ((body as any).invite_code ?? '').trim()
     if (!invite) return json({ ok: false, error: 'invite_code é obrigatório' })
 
-    const r = await uazFetch('/group/join', { invitecode: invite })
-    if (!r.ok) {
-      return json({ ok: false, error: `group/join ${r.status}: ${r.text.slice(0, 300)}` })
+    // ── 1. Tenta entrar no grupo ───────────────────────────────────────────
+    const joinRes = await uazPost('/group/join', { invitecode: invite })
+    console.log('join status:', joinRes.status, joinRes.text.slice(0, 200))
+    if (joinRes.ok) {
+      const group = extractGroup(joinRes.data)
+      if (group) return json({ ok: true, group })
     }
 
-    const jid  = r.data?.id ?? r.data?.remoteJid ?? r.data?.jid ?? r.data?.groupJid ?? ''
-    const name = r.data?.subject ?? r.data?.name ?? r.data?.groupName ?? ''
-
-    if (!jid.endsWith('@g.us')) {
-      return json({ ok: false, error: `Grupo não encontrado. Resposta: ${r.text.slice(0, 300)}` })
+    // ── 2. Número já é membro → obtém info do grupo pelo link sem entrar ──
+    const infoRes = await uazPost('/group/inviteInfo', { invitecode: invite })
+    console.log('inviteInfo status:', infoRes.status, infoRes.text.slice(0, 200))
+    if (infoRes.ok) {
+      const group = extractGroup(infoRes.data)
+      if (group) return json({ ok: true, group })
     }
 
-    return json({ ok: true, group: { jid, name } })
+    // ── 3. Ambos falharam ─────────────────────────────────────────────────
+    const detail = joinRes.ok
+      ? `join ok mas sem JID. Resposta: ${joinRes.text.slice(0, 200)}`
+      : `join ${joinRes.status}: ${joinRes.text.slice(0, 200)} | inviteInfo ${infoRes.status}: ${infoRes.text.slice(0, 100)}`
+    return json({ ok: false, error: detail })
+
   } catch (err) {
     return json({ ok: false, error: String(err) })
   }
