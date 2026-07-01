@@ -58,25 +58,29 @@ Deno.serve(async (req) => {
       ? invite.split('chat.whatsapp.com/')[1].split('?')[0].split('/')[0]
       : invite.split('?')[0]
 
-    // ── 1. Tenta entrar no grupo (passa URL completa sem query params) ─────
+    // ── 1. Tenta entrar no grupo (URL limpa, sem query params) ───────────
     const cleanUrl = `https://chat.whatsapp.com/${inviteCode}`
-    const joinRes = await uazPost('/group/join', { invitecode: cleanUrl })
+    const joinRes  = await uazPost('/group/join', { invitecode: cleanUrl })
     console.log('join status:', joinRes.status, joinRes.text.slice(0, 200))
-    if (joinRes.ok) {
-      const group = extractGroup(joinRes.data)
-      if (group) return json({ ok: true, group })
-    }
+    const fromJoin = extractGroup(joinRes.data)
 
-    // ── 2. Número já é membro → obtém info pelo código limpo ─────────────
-    const infoRes = await uazPost('/group/inviteInfo', { invitecode: inviteCode })
+    // ── 2. Obtém info do grupo pelo código (retorna nome mesmo se já membro)
+    const infoRes  = await uazPost('/group/inviteInfo', { invitecode: inviteCode })
     console.log('inviteInfo status:', infoRes.status, infoRes.text.slice(0, 200))
-    if (infoRes.ok) {
-      const group = extractGroup(infoRes.data)
-      if (group) return json({ ok: true, group })
+    const fromInfo = extractGroup(infoRes.data)
+
+    // ── 3. Combina: usa o JID de qualquer fonte; prefere nome do inviteInfo
+    const jid  = fromJoin?.jid  ?? fromInfo?.jid  ?? ''
+    const name = fromInfo?.name ?? fromJoin?.name ?? ''
+    // Se nome ainda é o próprio JID (fallback vazio), prefere fromInfo.name
+    const finalName = (name && name !== jid) ? name : (fromInfo?.name ?? fromJoin?.name ?? jid)
+
+    if (jid.endsWith('@g.us')) {
+      return json({ ok: true, group: { jid, name: finalName || jid } })
     }
 
-    // ── 3. Ambos falharam ─────────────────────────────────────────────────
-    const detail = `join ${joinRes.status}: ${joinRes.text.slice(0, 150)} | inviteInfo ${infoRes.status}: ${infoRes.text.slice(0, 150)}`
+    // ── 4. Nenhuma fonte retornou um JID válido ────────────────────────────
+    const detail = `join ${joinRes.status}: ${joinRes.text.slice(0, 120)} | inviteInfo ${infoRes.status}: ${infoRes.text.slice(0, 120)}`
     return json({ ok: false, error: detail })
 
   } catch (err) {

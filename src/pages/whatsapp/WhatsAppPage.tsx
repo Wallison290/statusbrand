@@ -23,6 +23,15 @@ import type { WhatsappPrefs } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/** Se group_name for o JID em si (entrada antiga sem nome), formata como "Grupo #XXXXX" */
+function groupDisplayName(name: string): string {
+  if (name.endsWith('@g.us')) {
+    const numeric = name.replace('@g.us', '')
+    return `Grupo #${numeric.slice(-5)}`
+  }
+  return name
+}
+
 const DEFAULT_CATS: WhatsappPrefs = {
   aprovacoes: true, tarefas: true, instagram: true, solicitacoes: true,
 }
@@ -233,9 +242,10 @@ function GroupCard({ group }: { group: WhatsappGroup }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Remover grupo "${group.group_name}"?`)) return
+    const displayName = groupDisplayName(group.group_name)
+    if (!confirm(`Remover grupo "${displayName}"?`)) return
     await deleteGroup.mutateAsync(group.id)
-    toast(`Grupo "${group.group_name}" removido`, 'success')
+    toast(`Grupo "${displayName}" removido`, 'success')
   }
 
   const activeCount = Object.values(cats).filter(Boolean).length
@@ -253,7 +263,7 @@ function GroupCard({ group }: { group: WhatsappGroup }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--sm-text-1)' }}>
-            {group.group_name}
+            {groupDisplayName(group.group_name)}
           </p>
           <p className="text-[11px]" style={{ color: 'var(--sm-text-2)' }}>
             {activeCount === 4 ? 'Todas as categorias ativas' : `${activeCount} categoria${activeCount !== 1 ? 's' : ''} ativa${activeCount !== 1 ? 's' : ''}`}
