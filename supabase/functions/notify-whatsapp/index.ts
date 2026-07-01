@@ -212,7 +212,7 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
   // Busca o perfil da agência (usado para envio da agência e fan-out do cliente).
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, whatsapp, whatsapp_opt_in, whatsapp_verified, whatsapp_prefs, full_name, agency_name, notify_client_whatsapp')
+    .select('role, whatsapp, whatsapp_opt_in, whatsapp_verified, whatsapp_prefs, full_name, agency_name')
     .eq('id', n.user_id)
     .maybeSingle()
 

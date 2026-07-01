@@ -327,8 +327,8 @@ function Section({ title, description, children }: {
 export function WhatsAppPage() {
   const { toast } = useToast()
   const {
-    whatsapp, optIn, verified, prefs, notifyClient, busy,
-    setOptIn, savePrefs, saveNotifyClient, sendCode, confirmCode,
+    whatsapp, optIn, verified, prefs, busy,
+    setOptIn, savePrefs, sendCode, confirmCode,
   } = useWhatsappSettings()
 
   const { data: groups = [], isLoading: loadingGroups } = useWhatsappGroups()
@@ -527,26 +527,6 @@ export function WhatsAppPage() {
           title="Notificações para clientes"
           description="Quando um conteúdo for enviado para aprovação ou ajuste concluído, o cliente recebe uma mensagem no WhatsApp dele."
         >
-          <label
-            className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl cursor-pointer transition-colors"
-            style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
-          >
-            <div>
-              <p className="text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>
-                Enviar mensagem para o cliente
-              </p>
-              <p className="text-[11px] mt-0.5" style={{ color: 'var(--sm-text-2)' }}>
-                O número do WhatsApp deve estar cadastrado no perfil de cada cliente
-              </p>
-            </div>
-            <div
-              onClick={() => saveNotifyClient(!notifyClient)}
-              className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${notifyClient ? 'bg-[#22C55E]' : 'bg-[#374151]'}`}
-            >
-              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifyClient ? 'translate-x-4' : 'translate-x-0.5'}`} />
-            </div>
-          </label>
-
           {/* Lista de clientes */}
           <div className="space-y-2">
             <p className="text-[11px] font-semibold px-1" style={{ color: 'var(--sm-text-2)' }}>

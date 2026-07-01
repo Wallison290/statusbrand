@@ -92,29 +92,12 @@ export function useWhatsappSettings() {
     }
   }
 
-  /** Liga/desliga o envio de notificações para o WhatsApp do cliente. */
-  async function saveNotifyClient(value: boolean) {
-    if (!user) return
-    setBusy(true)
-    try {
-      const { error } = await (supabase as any)
-        .from('profiles')
-        .update({ notify_client_whatsapp: value, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-      if (error) throw error
-      await refreshProfile?.()
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return {
     busy,
     whatsapp:     profile?.whatsapp ?? '',
     optIn:        profile?.whatsapp_opt_in ?? false,
     verified:     profile?.whatsapp_verified ?? false,
     prefs:        (profile?.whatsapp_prefs ?? DEFAULT_PREFS) as WhatsappPrefs,
-    notifyClient: (profile as any)?.notify_client_whatsapp ?? false,
-    sendCode, confirmCode, setOptIn, savePrefs, saveNotifyClient,
+    sendCode, confirmCode, setOptIn, savePrefs,
   }
 }
