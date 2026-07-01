@@ -79,9 +79,13 @@ export function useAddWhatsappGroup() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: { group_jid: string; group_name: string; categories: WhatsappPrefs }) => {
+      // Upsert: se o grupo já existe para este user, atualiza nome/categorias
       const { error } = await (supabase as any)
         .from('whatsapp_groups')
-        .insert({ ...payload, user_id: user!.id })
+        .upsert(
+          { ...payload, user_id: user!.id, is_active: true, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,group_jid' },
+        )
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['whatsapp_groups'] }),
