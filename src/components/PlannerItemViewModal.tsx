@@ -324,7 +324,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
       {/* Conta conectada */}
       <div className="flex items-center gap-2">
         {igAccount.profile_picture_url ? (
-          <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" />
+          <img src={igAccount.profile_picture_url} alt="" className="w-6 h-6 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
         ) : (
           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}>

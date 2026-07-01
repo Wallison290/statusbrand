@@ -224,3 +224,27 @@ export function useDisconnectInstagram() {
     },
   })
 }
+
+/** Atualiza profile_picture_url e followers_count de uma conta via Instagram API */
+export function useRefreshInstagramProfile() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (accountId: string) => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Não autenticado')
+
+      const res = await supabase.functions.invoke('instagram-refresh-profile', {
+        body:    { account_id: accountId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (res.error) throw res.error
+      return res.data as { profile_picture_url: string | null; followers_count: number }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['instagram_accounts_all'] })
+      qc.invalidateQueries({ queryKey: ['instagram_account'] })
+      qc.invalidateQueries({ queryKey: ['instagram_account_client'] })
+    },
+  })
+}

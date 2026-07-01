@@ -19,6 +19,7 @@ import {
   useCancelScheduledPost,
   useRetryScheduledPost,
   useRescheduleScheduledPost,
+  useRefreshInstagramProfile,
   type ScheduledPost,
   type InstagramAccount,
 } from '@/hooks/useInstagram'
@@ -63,10 +64,12 @@ function AccountListCard({
   account,
   posts,
   onClick,
+  onRefreshPic,
 }: {
   account: InstagramAccount
   posts: ScheduledPost[]
   onClick: () => void
+  onRefreshPic: (id: string) => void
 }) {
   const accountPosts   = posts.filter(p => p.ig_account_id === account.id)
   const scheduledCount = accountPosts.filter(p => ['scheduled','publishing'].includes(p.status)).length
@@ -87,6 +90,7 @@ function AccountListCard({
           src={account.profile_picture_url}
           alt={account.username}
           className="w-12 h-12 rounded-full object-cover border-2 border-[#E1306C]/30 flex-shrink-0"
+          onError={(e) => { e.currentTarget.style.display = 'none'; onRefreshPic(account.id) }}
         />
       ) : (
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center flex-shrink-0">
@@ -299,6 +303,7 @@ function AccountDetailView({
   onRetry,
   onReschedule,
   onDisconnect,
+  onRefreshPic,
 }: {
   account: InstagramAccount
   posts: ScheduledPost[]
@@ -307,6 +312,7 @@ function AccountDetailView({
   onRetry: (id: string) => void
   onReschedule: (id: string, scheduledAt: string) => void
   onDisconnect: (id: string) => void
+  onRefreshPic: (id: string) => void
 }) {
   const [tab, setTab] = useState<TabType>('all')
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
@@ -347,6 +353,7 @@ function AccountDetailView({
             src={account.profile_picture_url}
             alt={account.username}
             className="w-10 h-10 rounded-full object-cover border-2 border-[#E1306C]/30 flex-shrink-0"
+            onError={(e) => { e.currentTarget.style.display = 'none'; onRefreshPic(account.id) }}
           />
         ) : (
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center flex-shrink-0">
@@ -479,6 +486,7 @@ export function InstagramPage() {
 
   const { data: rawAccounts = [], isLoading: loadingAccounts, refetch: refetchAccounts, isRefetching: refetchingAccounts } = useAllInstagramAccounts()
   const { data: posts       = [], isLoading: loadingPosts,    refetch: refetchPosts,    isRefetching: refetchingPosts    } = useScheduledPosts()
+  const refreshProfile = useRefreshInstagramProfile()
 
   // Deduplicar por ig_user_id: preferindo conta vinculada a cliente
   const accounts = Object.values(
@@ -560,7 +568,7 @@ export function InstagramPage() {
             </p>
           </div>
           <button
-            onClick={() => { refetchAccounts(); refetchPosts() }}
+            onClick={() => { refetchAccounts(); refetchPosts(); accounts.forEach(a => refreshProfile.mutate(a.id)) }}
             disabled={isRefreshing}
             className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
             style={{ color: 'var(--sm-text-2)' }}
@@ -586,6 +594,7 @@ export function InstagramPage() {
                 await (supabase as any).from('instagram_accounts').delete().eq('id', id)
                 setSelectedAccount(null)
               }}
+              onRefreshPic={(id) => refreshProfile.mutate(id)}
             />
           ) : (
             <motion.div
@@ -635,6 +644,7 @@ export function InstagramPage() {
                       account={acc}
                       posts={posts}
                       onClick={() => setSelectedAccount(acc)}
+                      onRefreshPic={(id) => refreshProfile.mutate(id)}
                     />
                   ))}
                 </div>

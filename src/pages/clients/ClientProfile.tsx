@@ -614,6 +614,7 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
             src={igAccount.profile_picture_url}
             alt={igAccount.username}
             className="w-14 h-14 rounded-full border-2 border-[#1e293b] object-cover flex-shrink-0"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
           <div
