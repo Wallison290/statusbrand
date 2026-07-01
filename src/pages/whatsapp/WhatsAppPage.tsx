@@ -359,14 +359,35 @@ export function WhatsAppPage() {
   const { toast } = useToast()
   const {
     whatsapp, optIn, verified, prefs, notifyClient, busy,
-    setOptIn, savePrefs, saveNotifyClient,
+    setOptIn, savePrefs, saveNotifyClient, sendCode, confirmCode,
   } = useWhatsappSettings()
 
   const { data: groups = [], isLoading: loadingGroups } = useWhatsappGroups()
   const [showAddModal, setShowAddModal] = useState(false)
-  const [localPrefs, setLocalPrefs] = useState<WhatsappPrefs | null>(null)
+  const [localPrefs, setLocalPrefs]     = useState<WhatsappPrefs | null>(null)
+  const [phone, setPhone]               = useState(whatsapp)
+  const [code, setCode]                 = useState('')
+  const [stage, setStage]               = useState<'idle' | 'code'>('idle')
 
   const currentPrefs = localPrefs ?? prefs
+  const isConnected  = !!whatsapp && verified
+
+  async function handleSend() {
+    try {
+      await sendCode(phone)
+      setStage('code')
+      toast('Código enviado pelo WhatsApp!', 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+  }
+
+  async function handleConfirm() {
+    try {
+      await confirmCode(code)
+      setStage('idle')
+      setCode('')
+      toast('WhatsApp verificado! Você já recebe as notificações.', 'success')
+    } catch (err: any) { toast(err.message, 'error') }
+  }
 
   async function handlePrefToggle(k: keyof WhatsappPrefs, v: boolean) {
     const next = { ...currentPrefs, [k]: v }
@@ -376,8 +397,6 @@ export function WhatsAppPage() {
       toast('Erro ao salvar preferência', 'error')
     })
   }
-
-  const isConnected = !!whatsapp && verified
 
   return (
     <div className="min-h-full p-6" style={{ background: 'var(--sm-bg)' }}>
@@ -400,56 +419,110 @@ export function WhatsAppPage() {
         {/* ── Bloco 1: Conexão ───────────────────────────────────────────────── */}
         <Section
           title="Conexão"
-          description="Número do WhatsApp que envia as mensagens automaticamente."
+          description="Número do WhatsApp que receberá as notificações do sistema."
         >
           <div
-            className="flex items-center gap-4 p-4 rounded-2xl"
+            className="rounded-2xl overflow-hidden"
             style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
           >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: isConnected ? '#22C55E20' : '#EF444420' }}
-            >
-              {isConnected
-                ? <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
-                : <XCircle className="w-5 h-5 text-[#EF4444]" />
-              }
-            </div>
-            <div className="flex-1 min-w-0">
-              {isConnected ? (
-                <>
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[#22C55E]" />
-                    <span className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>
-                      {whatsapp}
-                    </span>
+            {/* Status atual */}
+            <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: isConnected ? '#22C55E20' : '#F59E0B20' }}
+              >
+                {isConnected
+                  ? <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
+                  : <Phone className="w-5 h-5 text-[#F59E0B]" />
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                {isConnected ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{whatsapp}</span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#22C55E20] text-[#22C55E]">Verificado</span>
+                    </div>
+                    <p className="text-[12px] text-[#22C55E] mt-0.5">Número conectado e ativo</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Nenhum número verificado</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--sm-text-2)' }}>
+                      Insira seu número abaixo para começar a receber notificações
+                    </p>
+                  </>
+                )}
+              </div>
+              {isConnected && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[12px]" style={{ color: 'var(--sm-text-2)' }}>
+                    {optIn ? 'Ativo' : 'Pausado'}
+                  </span>
+                  <div
+                    onClick={() => setOptIn(!optIn)}
+                    className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${optIn ? 'bg-[#22C55E]' : 'bg-[#374151]'}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${optIn ? 'translate-x-4' : 'translate-x-0.5'}`} />
                   </div>
-                  <p className="text-[12px] text-[#22C55E] mt-0.5">Número verificado e conectado</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>
-                    Nenhum número configurado
-                  </p>
-                  <p className="text-[12px]" style={{ color: 'var(--sm-text-2)' }}>
-                    Configure o WhatsApp em <span className="font-medium">Perfil → WhatsApp</span> para ativar as notificações
-                  </p>
-                </>
+                </div>
               )}
             </div>
-            {isConnected && (
-              <label className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
-                <span className="text-[12px]" style={{ color: 'var(--sm-text-2)' }}>
-                  {optIn ? 'Ativo' : 'Pausado'}
-                </span>
-                <div
-                  onClick={() => setOptIn(!optIn)}
-                  className={`relative w-9 h-5 rounded-full transition-colors ${optIn ? 'bg-[#22C55E]' : 'bg-[#374151]'}`}
+
+            {/* Formulário de verificação */}
+            <div className="px-4 pb-4 space-y-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
+              <p className="text-[11px] pt-3 font-medium" style={{ color: 'var(--sm-text-2)' }}>
+                {isConnected ? 'ALTERAR NÚMERO' : 'VERIFICAR NÚMERO'}
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="DDD + número (ex: 11999998888)"
+                  className="flex-1 h-9 px-3 rounded-xl text-[13px] outline-none transition-colors"
+                  style={{
+                    background: 'var(--sm-bg)',
+                    border: '1px solid var(--sm-border)',
+                    color: 'var(--sm-text-1)',
+                  }}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={busy || phone.replace(/\D/g, '').length < 10}
+                  className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-50 whitespace-nowrap"
+                  style={{ background: '#25D366' }}
                 >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${optIn ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : isConnected ? 'Reverificar' : 'Verificar'}
+                </button>
+              </div>
+
+              {stage === 'code' && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={code}
+                    onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Código de 6 dígitos recebido no WhatsApp"
+                    className="flex-1 h-9 px-3 rounded-xl text-[13px] tracking-widest outline-none"
+                    style={{
+                      background: 'var(--sm-bg)',
+                      border: '1px solid #25D36660',
+                      color: 'var(--sm-text-1)',
+                    }}
+                  />
+                  <button
+                    onClick={handleConfirm}
+                    disabled={busy || code.length !== 6}
+                    className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-50"
+                    style={{ background: '#25D366' }}
+                  >
+                    Confirmar
+                  </button>
                 </div>
-              </label>
-            )}
+              )}
+            </div>
           </div>
         </Section>
 

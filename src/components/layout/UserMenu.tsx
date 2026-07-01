@@ -5,15 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, CreditCard, LogOut, Key, ChevronRight,
   Camera, Check, X, Loader2, Building2, Zap, Crown,
-  HelpCircle, MessageCircle, ShieldCheck, Sun, Moon,
+  HelpCircle, Sun, Moon,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useToast } from '@/components/ui/toast'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useWhatsappSettings, WHATSAPP_CATEGORIES } from '@/hooks/useWhatsappSettings'
-
 // ── Avatar ────────────────────────────────────────────────────────────────────
 
 function Avatar({
@@ -57,153 +55,6 @@ const PLAN_CONFIG = {
   starter: { label: 'Starter', icon: Zap,      color: 'bg-blue-100 text-blue-700' },
   pro:     { label: 'Pro',     icon: Crown,     color: 'bg-violet-100 text-violet-700' },
   agency:  { label: 'Agency',  icon: Building2, color: 'bg-amber-100 text-amber-700' },
-}
-
-// ── Seção: Notificações no WhatsApp ───────────────────────────────────────────
-
-function WhatsAppSection() {
-  const { toast } = useToast()
-  const wa = useWhatsappSettings()
-  const [phone, setPhone]   = useState(wa.whatsapp)
-  const [code, setCode]     = useState('')
-  const [stage, setStage]   = useState<'idle' | 'code'>('idle')
-
-  // Sincroniza quando o profile carrega.
-  useEffect(() => { setPhone(wa.whatsapp) }, [wa.whatsapp])
-
-  const handleSend = async () => {
-    try {
-      await wa.sendCode(phone)
-      setStage('code')
-      toast('Código enviado pelo WhatsApp!', 'success')
-    } catch (err: any) { toast(err.message, 'error') }
-  }
-
-  const handleConfirm = async () => {
-    try {
-      await wa.confirmCode(code)
-      setStage('idle')
-      setCode('')
-      toast('WhatsApp verificado! Você já recebe as notificações.', 'success')
-    } catch (err: any) { toast(err.message, 'error') }
-  }
-
-  const togglePref = async (key: string) => {
-    try {
-      await wa.savePrefs({ ...wa.prefs, [key]: !wa.prefs[key as keyof typeof wa.prefs] })
-    } catch (err: any) { toast(err.message, 'error') }
-  }
-
-  return (
-    <div className="border-t border-[#f1f5f9] pt-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <MessageCircle className="w-4 h-4 text-[#22c55e]" />
-        <h3 className="text-[13px] font-bold text-[#0f172a]">Notificações no WhatsApp</h3>
-        {wa.verified && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16a34a] bg-[#dcfce7] px-1.5 py-0.5 rounded-full">
-            <ShieldCheck className="w-2.5 h-2.5" /> Verificado
-          </span>
-        )}
-      </div>
-      <p className="text-[11px] text-[#94a3b8] -mt-1">
-        Receba aprovações, tarefas, posts e solicitações direto no seu Zap.
-      </p>
-
-      {/* Número + verificação */}
-      <div className="flex gap-2">
-        <input
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          placeholder="DDD + número (ex: 11999998888)"
-          className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#22c55e] focus:border-transparent"
-        />
-        <button
-          onClick={handleSend}
-          disabled={wa.busy || phone.replace(/\D/g, '').length < 10}
-          className="h-9 px-3 rounded-lg bg-[#22c55e] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
-        >
-          {wa.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : wa.verified ? 'Reverificar' : 'Verificar'}
-        </button>
-      </div>
-
-      {/* Campo de código (após enviar) */}
-      {stage === 'code' && (
-        <div className="flex gap-2">
-          <input
-            value={code}
-            onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder="Código de 6 dígitos"
-            inputMode="numeric"
-            className="flex-1 h-9 px-3 rounded-lg border border-[#e2e8f0] text-[13px] text-[#0f172a] tracking-widest focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-          />
-          <button
-            onClick={handleConfirm}
-            disabled={wa.busy || code.length !== 6}
-            className="h-9 px-3 rounded-lg bg-[#22c55e] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
-          >
-            Confirmar
-          </button>
-        </div>
-      )}
-
-      {/* Preferências por categoria (só fazem sentido se verificado) */}
-      {wa.verified && (
-        <div className="space-y-1.5 pt-1">
-          {WHATSAPP_CATEGORIES.map(cat => (
-            <label key={cat.key} className="flex items-center gap-2.5 cursor-pointer group">
-              <button
-                type="button"
-                onClick={() => togglePref(cat.key)}
-                disabled={wa.busy || !wa.optIn}
-                className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${
-                  wa.prefs[cat.key] && wa.optIn ? 'bg-[#22c55e]' : 'bg-[#cbd5e1]'
-                }`}
-              >
-                <span className={`absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white transition-all ${
-                  wa.prefs[cat.key] && wa.optIn ? 'left-[14px]' : 'left-[2px]'
-                }`} />
-              </button>
-              <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[#334155] leading-tight">{cat.label}</p>
-                <p className="text-[10px] text-[#94a3b8] leading-tight">{cat.hint}</p>
-              </div>
-            </label>
-          ))}
-
-          {/* Pausar tudo */}
-          <button
-            onClick={() => wa.setOptIn(!wa.optIn).catch((e: any) => toast(e.message, 'error'))}
-            disabled={wa.busy}
-            className="text-[11px] font-medium text-[#64748b] hover:text-[#0f172a] transition-colors pt-1"
-          >
-            {wa.optIn ? 'Pausar todas as notificações' : 'Reativar notificações'}
-          </button>
-
-          {/* Notificar clientes */}
-          <div className="border-t border-[#f1f5f9] mt-3 pt-3">
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <button
-                type="button"
-                onClick={() => wa.saveNotifyClient(!wa.notifyClient).catch((e: any) => toast(e.message, 'error'))}
-                disabled={wa.busy}
-                className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${
-                  wa.notifyClient ? 'bg-[#22c55e]' : 'bg-[#cbd5e1]'
-                }`}
-              >
-                <span className={`absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white transition-all ${
-                  wa.notifyClient ? 'left-[14px]' : 'left-[2px]'
-                }`} />
-              </button>
-              <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[#334155] leading-tight">Notificar clientes</p>
-                <p className="text-[10px] text-[#94a3b8] leading-tight">Envia aprovação, publicação e ajuste para o WhatsApp do cliente</p>
-              </div>
-            </label>
-          </div>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // ── Modal de Perfil ───────────────────────────────────────────────────────────
@@ -340,9 +191,6 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             />
           </div>
         </div>
-
-        {/* Notificações no WhatsApp */}
-        <WhatsAppSection />
 
         {/* Botões */}
         <div className="flex gap-2 pt-1">
