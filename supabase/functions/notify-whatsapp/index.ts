@@ -90,10 +90,12 @@ function buildMessage(n: NotificationRow): string {
   return `${head}${body}${tail}`
 }
 
-// ─── Evolution API ────────────────────────────────────────────────────────────
+// ─── UazAPI ──────────────────────────────────────────────────────────────────
+// Endpoint: POST /send/text
+// Auth:     header "token" com o token da instância
+// Body:     { number, text }
 
-// Normaliza o número para o formato esperado pelo Evolution (só dígitos, com DDI).
-// Assume Brasil (55) quando vier sem DDI.
+// Normaliza número: só dígitos, com DDI 55 (Brasil).
 function normalizeNumber(raw: string): string {
   let n = (raw || '').replace(/\D/g, '')
   if (!n) return n
@@ -102,14 +104,14 @@ function normalizeNumber(raw: string): string {
 }
 
 async function sendToJid(jid: string, text: string): Promise<{ ok: boolean; id?: string; error?: string }> {
-  if (!EVOLUTION_BASE_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
-    return { ok: false, error: 'Evolution não configurado (faltam secrets)' }
+  if (!EVOLUTION_BASE_URL || !EVOLUTION_API_KEY) {
+    return { ok: false, error: 'UazAPI não configurada (faltam secrets)' }
   }
   try {
-    const res = await fetch(`${EVOLUTION_BASE_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
+    const res = await fetch(`${EVOLUTION_BASE_URL}/send/text`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
-      body: JSON.stringify({ number: jid, text, linkPreview: false }),
+      headers: { 'Content-Type': 'application/json', token: EVOLUTION_API_KEY },
+      body: JSON.stringify({ number: jid, text }),
     })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}: ${JSON.stringify(data)}` }

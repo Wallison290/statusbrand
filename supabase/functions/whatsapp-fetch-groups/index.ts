@@ -1,7 +1,7 @@
-// ── whatsapp-fetch-groups ─────────────────────────────────────────────────────
-// Dois modos:
-//   POST body { invite_code }  → tenta resolver link de convite via API
-//   POST body { list: true }   → retorna todos os grupos do bot (fallback)
+// ── whatsapp-fetch-groups (UazAPI) ────────────────────────────────────────────
+// POST body { list: true }         → lista grupos via POST /group/list
+// POST body { invite_code: "..." } → entra no grupo via POST /group/join
+//                                    (retorna JID + nome; bot precisa entrar de qq forma)
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -9,9 +9,8 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const EVOLUTION_BASE_URL = (Deno.env.get('EVOLUTION_BASE_URL') ?? '').replace(/\/$/, '')
-const EVOLUTION_API_KEY  = Deno.env.get('EVOLUTION_API_KEY') ?? ''
-const EVOLUTION_INSTANCE = Deno.env.get('EVOLUTION_INSTANCE') ?? ''
+const BASE_URL = (Deno.env.get('EVOLUTION_BASE_URL') ?? '').replace(/\/$/, '')
+const TOKEN    = Deno.env.get('EVOLUTION_API_KEY') ?? ''
 
 function json(body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -20,67 +19,56 @@ function json(body: unknown) {
   })
 }
 
-function extractInviteCode(raw: string): string {
-  raw = raw.trim()
-  const m = raw.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/)
-  return m ? m[1] : raw
-}
-
-async function evFetch(path: string, opts: RequestInit = {}) {
-  const res = await fetch(`${EVOLUTION_BASE_URL}${path}`, {
-    ...opts,
-    headers: { apikey: EVOLUTION_API_KEY, 'Content-Type': 'application/json', ...(opts.headers ?? {}) },
+async function uazFetch(path: string, body: unknown) {
+  const res  = await fetch(`${BASE_URL}${path}`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', token: TOKEN },
+    body:    JSON.stringify(body),
   })
   const text = await res.text()
   let data: any = {}
-  try { data = JSON.parse(text) } catch { /* empty */ }
+  try { data = JSON.parse(text) } catch { /* não é JSON */ }
   return { ok: res.ok, status: res.status, data, text }
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
-  if (!EVOLUTION_BASE_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
-    return json({ ok: false, error: 'Evolution API não configurada' })
+  if (!BASE_URL || !TOKEN) {
+    return json({ ok: false, error: 'UazAPI não configurada (faltam secrets)' })
   }
 
   try {
     const body = await req.json().catch(() => ({}))
 
-    // ── Modo lista: retorna todos os grupos do bot ──────────────────────────
+    // ── Modo lista ─────────────────────────────────────────────────────────
     if ((body as any).list) {
-      const r = await evFetch(`/group/fetchAllGroups/${EVOLUTION_INSTANCE}?getParticipants=false`)
+      const r = await uazFetch('/group/list', { limit: 1000, offset: 0, noParticipants: true })
       if (!r.ok) {
-        return json({ ok: false, error: `fetchAllGroups ${r.status}: ${r.text.slice(0, 300)}` })
+        return json({ ok: false, error: `group/list ${r.status}: ${r.text.slice(0, 300)}` })
       }
-      const groups = (Array.isArray(r.data) ? r.data : [])
-        .map((g: any) => ({ jid: g.id ?? g.remoteJid ?? '', name: g.subject ?? g.name ?? '' }))
+      // Resposta pode ser array direto ou { groups: [...] }
+      const raw = Array.isArray(r.data) ? r.data : (r.data?.groups ?? r.data?.data ?? [])
+      const groups = raw
+        .map((g: any) => ({
+          jid:  g.id ?? g.remoteJid ?? g.jid ?? '',
+          name: g.subject ?? g.name ?? g.groupName ?? '',
+        }))
         .filter((g: any) => g.jid.endsWith('@g.us'))
         .sort((a: any, b: any) => a.name.localeCompare(b.name))
       return json({ ok: true, groups })
     }
 
-    // ── Modo invite: resolve link de convite ────────────────────────────────
-    const raw = (body as any).invite_code ?? ''
-    if (!raw) return json({ ok: false, error: 'invite_code é obrigatório' })
-    const code = extractInviteCode(raw)
+    // ── Modo convite: entra no grupo e retorna JID + nome ──────────────────
+    const invite = ((body as any).invite_code ?? '').trim()
+    if (!invite) return json({ ok: false, error: 'invite_code é obrigatório' })
 
-    // Tenta POST (Evolution v2)
-    let r = await evFetch(`/group/inviteInfo/${EVOLUTION_INSTANCE}`, {
-      method: 'POST',
-      body: JSON.stringify({ inviteCode: code }),
-    })
-
-    // Se 404/405 tenta GET (Evolution v1)
-    if (!r.ok && (r.status === 404 || r.status === 405)) {
-      r = await evFetch(`/group/inviteInfo/${EVOLUTION_INSTANCE}?inviteCode=${code}`)
-    }
-
+    const r = await uazFetch('/group/join', { invitecode: invite })
     if (!r.ok) {
-      return json({ ok: false, error: `inviteInfo ${r.status}: ${r.text.slice(0, 300)}` })
+      return json({ ok: false, error: `group/join ${r.status}: ${r.text.slice(0, 300)}` })
     }
 
-    const jid  = r.data?.id ?? r.data?.remoteJid ?? r.data?.groupJid ?? ''
+    const jid  = r.data?.id ?? r.data?.remoteJid ?? r.data?.jid ?? r.data?.groupJid ?? ''
     const name = r.data?.subject ?? r.data?.name ?? r.data?.groupName ?? ''
 
     if (!jid.endsWith('@g.us')) {
