@@ -29,6 +29,7 @@ import { usePlanner, useCreatePlannerItem, useUpdatePlannerItem, useDeletePlanne
 import { useClients } from '@/hooks/useClients'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { useWhatsappGroups } from '@/hooks/useWhatsappGroups'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { checkStorageLimit } from '@/utils/storageGate'
@@ -1572,6 +1573,8 @@ export function Planner() {
   const [waClientId,  setWaClientId]  = useState<string | null>(null)
   const [waType,      setWaType]      = useState<'NEW_CONTENT' | 'APPROVAL_REQUEST' | 'ADJUSTMENT_DONE'>('NEW_CONTENT')
   const [waSending,   setWaSending]   = useState(false)
+  const [waGroupJids, setWaGroupJids] = useState<string[]>([])
+  const { data: waGroups = [] } = useWhatsappGroups()
 
   // Hover tooltip
   const [hover, setHover] = useState<HoverState | null>(null)
@@ -1621,19 +1624,29 @@ export function Planner() {
   const deleteItem = useDeletePlannerItem()
   const { toast } = useToast()
 
+  const openWaDrop = () => {
+    // Pré-seleciona todos os grupos ativos ao abrir
+    setWaGroupJids(waGroups.map(g => g.group_jid))
+    setWaDropOpen(true)
+  }
+
+  const toggleWaGroup = (jid: string) => {
+    setWaGroupJids(prev => prev.includes(jid) ? prev.filter(j => j !== jid) : [...prev, jid])
+  }
+
   const sendWhatsApp = async () => {
     if (!waClientId) return
     setWaSending(true)
     try {
-      const { error } = await supabase.functions.invoke('notify-whatsapp', {
-        body: { mode: 'manual_client', client_id: waClientId, type: waType },
+      const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
+        body: { mode: 'manual_client', client_id: waClientId, type: waType, group_jids: waGroupJids },
       })
-      if (error) throw error
+      if (error || data?.error) throw new Error(data?.error ?? error?.message)
       toast('Mensagem enviada via WhatsApp!', 'success')
       setWaDropOpen(false)
       setWaClientId(null)
-    } catch {
-      toast('Erro ao enviar. Verifique o WhatsApp do cliente.', 'error')
+    } catch (err: any) {
+      toast(err?.message || 'Erro ao enviar. Verifique o WhatsApp do cliente.', 'error')
     } finally {
       setWaSending(false)
     }
@@ -2268,7 +2281,7 @@ export function Planner() {
           {/* Notificador WhatsApp manual */}
           <div className="relative">
             <button
-              onClick={() => { setWaDropOpen(o => !o); setClientDropOpen(false); setStatusDropOpen(false) }}
+              onClick={() => { if (waDropOpen) setWaDropOpen(false); else { openWaDrop(); setClientDropOpen(false); setStatusDropOpen(false) } }}
               className="flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all bg-[var(--sm-bg-card)] text-[#25D366] border-[var(--sm-border)] hover:border-[#25D366]/30 hover:bg-[var(--sm-bg-alt)]"
             >
               <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
@@ -2337,6 +2350,29 @@ export function Planner() {
                         </button>
                       ))}
                     </div>
+
+                    {waGroups.length > 0 && (
+                      <>
+                        <p className="text-[11px] text-[var(--sm-text-3)] mb-1.5 mt-1">Grupos</p>
+                        <div className="flex flex-col gap-0.5 mb-4">
+                          {waGroups.map(g => (
+                            <button
+                              key={g.group_jid}
+                              onClick={() => toggleWaGroup(g.group_jid)}
+                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-left transition-colors ${
+                                waGroupJids.includes(g.group_jid)
+                                  ? 'bg-[#25D366]/10 text-[#25D366]'
+                                  : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
+                              }`}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="flex-1 truncate">{g.group_name}</span>
+                              {waGroupJids.includes(g.group_jid) && <Check className="w-3 h-3 flex-shrink-0 text-[#25D366]" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
 
                     <button
                       onClick={sendWhatsApp}

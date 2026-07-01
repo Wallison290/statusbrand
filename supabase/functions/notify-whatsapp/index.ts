@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
           status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
         })
       }
-      const { client_id, type } = body as { client_id: string; type: string }
+      const { client_id, type, group_jids } = body as { client_id: string; type: string; group_jids?: string[] }
       if (!client_id || !type || !CLIENT_NOTIFY_TYPES_MANUAL.has(type)) {
         return new Response(JSON.stringify({ ok: false, error: 'Parâmetros inválidos' }), {
           status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -309,6 +309,20 @@ Deno.serve(async (req) => {
         created_at: new Date().toISOString(),
       }
       const result = await sendClientNotification(supabase, fakeNotif, agencyProfile)
+
+      // Envia também para os grupos selecionados
+      if (Array.isArray(group_jids) && group_jids.length > 0) {
+        const agencyName = (agencyProfile as any).agency_name || (agencyProfile as any).full_name || 'Sua agência'
+        const { data: clientData } = await supabase
+          .from('clients').select('company_name').eq('id', client_id).maybeSingle()
+        const clientName = (clientData as any)?.company_name ?? ''
+        const groupMsg = buildClientMessage(fakeNotif, agencyName) +
+          (clientName ? `\n\n_Cliente: ${clientName}_` : '')
+        for (const jid of group_jids) {
+          await sendToJid(jid, groupMsg).catch(() => {})
+        }
+      }
+
       return new Response(JSON.stringify(result), {
         status: result.ok ? 200 : 422,
         headers: { ...cors, 'Content-Type': 'application/json' },
