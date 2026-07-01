@@ -51,16 +51,22 @@ Deno.serve(async (req) => {
     const invite = ((body as any).invite_code ?? '').trim()
     if (!invite) return json({ ok: false, error: 'invite_code é obrigatório' })
 
-    // ── 1. Tenta entrar no grupo ───────────────────────────────────────────
-    const joinRes = await uazPost('/group/join', { invitecode: invite })
+    // Extrai o código puro do link (sem query string): "https://chat.whatsapp.com/CODE?mode=..."  → "CODE"
+    const inviteCode = invite.includes('chat.whatsapp.com/')
+      ? invite.split('chat.whatsapp.com/')[1].split('?')[0].split('/')[0]
+      : invite.split('?')[0]
+
+    // ── 1. Tenta entrar no grupo (passa URL completa sem query params) ─────
+    const cleanUrl = `https://chat.whatsapp.com/${inviteCode}`
+    const joinRes = await uazPost('/group/join', { invitecode: cleanUrl })
     console.log('join status:', joinRes.status, joinRes.text.slice(0, 200))
     if (joinRes.ok) {
       const group = extractGroup(joinRes.data)
       if (group) return json({ ok: true, group })
     }
 
-    // ── 2. Número já é membro → obtém info do grupo pelo link sem entrar ──
-    const infoRes = await uazPost('/group/inviteInfo', { invitecode: invite })
+    // ── 2. Número já é membro → obtém info pelo código limpo ─────────────
+    const infoRes = await uazPost('/group/inviteInfo', { invitecode: inviteCode })
     console.log('inviteInfo status:', infoRes.status, infoRes.text.slice(0, 200))
     if (infoRes.ok) {
       const group = extractGroup(infoRes.data)
@@ -68,9 +74,7 @@ Deno.serve(async (req) => {
     }
 
     // ── 3. Ambos falharam ─────────────────────────────────────────────────
-    const detail = joinRes.ok
-      ? `join ok mas sem JID. Resposta: ${joinRes.text.slice(0, 200)}`
-      : `join ${joinRes.status}: ${joinRes.text.slice(0, 200)} | inviteInfo ${infoRes.status}: ${infoRes.text.slice(0, 100)}`
+    const detail = `join ${joinRes.status}: ${joinRes.text.slice(0, 150)} | inviteInfo ${infoRes.status}: ${infoRes.text.slice(0, 150)}`
     return json({ ok: false, error: detail })
 
   } catch (err) {
