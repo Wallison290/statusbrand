@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MessageCircle, Users, CheckCircle2, Loader2,
-  Plus, Trash2, ChevronDown, ChevronUp, Search, X, Phone,
+  Plus, Trash2, ChevronDown, ChevronUp, X, Phone,
   AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
@@ -14,7 +14,7 @@ import {
   useAddWhatsappGroup,
   useUpdateWhatsappGroup,
   useDeleteWhatsappGroup,
-  useFetchEvolutionGroups,
+  useResolveGroupInvite,
   type WhatsappGroup,
   type EvolutionGroup,
 } from '@/hooks/useWhatsappGroups'
@@ -62,47 +62,42 @@ function CategoryToggles({
   )
 }
 
-// ── Modal: adicionar grupo ────────────────────────────────────────────────────
+// ── Modal: adicionar grupo por link de convite ────────────────────────────────
 
 function AddGroupModal({ onClose }: { onClose: () => void }) {
-  const { toast } = useToast()
-  const fetchGroups  = useFetchEvolutionGroups()
-  const addGroup     = useAddWhatsappGroup()
-  const [groups, setGroups]     = useState<EvolutionGroup[]>([])
-  const [search, setSearch]     = useState('')
-  const [selected, setSelected] = useState<EvolutionGroup | null>(null)
-  const [cats, setCats]         = useState<WhatsappPrefs>(DEFAULT_CATS)
-  const [step, setStep]         = useState<'pick' | 'config'>('pick')
-  const [loaded, setLoaded]     = useState(false)
+  const { toast }    = useToast()
+  const resolveInvite = useResolveGroupInvite()
+  const addGroup      = useAddWhatsappGroup()
 
-  async function load() {
+  const [link, setLink]         = useState('')
+  const [resolved, setResolved] = useState<EvolutionGroup | null>(null)
+  const [cats, setCats]         = useState<WhatsappPrefs>(DEFAULT_CATS)
+  const [step, setStep]         = useState<'link' | 'config'>('link')
+
+  async function handleResolve() {
     try {
-      const result = await fetchGroups.mutateAsync(undefined)
-      setGroups(result)
-      setLoaded(true)
+      const group = await resolveInvite.mutateAsync(link.trim())
+      setResolved(group)
+      setStep('config')
     } catch (err: any) {
-      toast(err?.message ?? 'Não foi possível carregar os grupos', 'error')
+      toast(err?.message ?? 'Link inválido ou grupo não encontrado', 'error')
     }
   }
 
-  async function save() {
-    if (!selected) return
+  async function handleSave() {
+    if (!resolved) return
     try {
       await addGroup.mutateAsync({
-        group_jid:  selected.jid,
-        group_name: selected.name,
+        group_jid:  resolved.jid,
+        group_name: resolved.name,
         categories: cats,
       })
-      toast(`Grupo "${selected.name}" adicionado!`, 'success')
+      toast(`Grupo "${resolved.name}" adicionado!`, 'success')
       onClose()
     } catch (err: any) {
       toast(err?.message ?? 'Erro ao salvar grupo', 'error')
     }
   }
-
-  const filtered = groups.filter(g =>
-    g.name.toLowerCase().includes(search.toLowerCase())
-  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -117,7 +112,7 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
               <Users className="w-4 h-4 text-[#22C55E]" />
             </div>
             <h2 className="text-[15px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>
-              {step === 'pick' ? 'Escolher grupo' : 'Configurar notificações'}
+              {step === 'link' ? 'Adicionar grupo' : 'Configurar notificações'}
             </h2>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#1F2937] transition-colors">
@@ -127,82 +122,61 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {step === 'pick' ? (
+          {step === 'link' ? (
             <>
-              <p className="text-[13px]" style={{ color: 'var(--sm-text-2)' }}>
-                O número do WhatsApp conectado precisa ser participante do grupo para poder enviar mensagens.
+              {/* Instrução */}
+              <div
+                className="rounded-xl p-3 space-y-1"
+                style={{ background: '#25D36610', border: '1px solid #25D36630' }}
+              >
+                <p className="text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>
+                  Como adicionar um grupo:
+                </p>
+                <ol className="text-[12px] space-y-1 list-decimal list-inside" style={{ color: 'var(--sm-text-2)' }}>
+                  <li>Abra o WhatsApp e entre no grupo desejado</li>
+                  <li>Toque em "Informações do grupo" → "Convidar via link"</li>
+                  <li>Copie o link e cole abaixo</li>
+                </ol>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold" style={{ color: 'var(--sm-text-2)' }}>
+                  LINK DO GRUPO
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://chat.whatsapp.com/..."
+                  value={link}
+                  onChange={e => setLink(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl text-[13px] outline-none"
+                  style={{
+                    background: 'var(--sm-bg-alt)',
+                    border: '1px solid var(--sm-border)',
+                    color: 'var(--sm-text-1)',
+                  }}
+                />
+              </div>
+
+              <p className="text-[11px]" style={{ color: 'var(--sm-text-2)' }}>
+                O número da integração precisa estar no grupo para poder enviar mensagens.
               </p>
-
-              {!loaded ? (
-                <button
-                  onClick={load}
-                  disabled={fetchGroups.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-medium text-white transition-colors"
-                  style={{ background: '#25D366' }}
-                >
-                  {fetchGroups.isPending
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Carregando grupos...</>
-                    : <><MessageCircle className="w-4 h-4" /> Carregar grupos disponíveis</>
-                  }
-                </button>
-              ) : (
-                <>
-                  <div
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                    style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
-                  >
-                    <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sm-text-2)' }} />
-                    <input
-                      type="text"
-                      placeholder="Buscar grupo..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      className="flex-1 bg-transparent text-[13px] outline-none"
-                      style={{ color: 'var(--sm-text-1)' }}
-                    />
-                  </div>
-
-                  {filtered.length === 0 ? (
-                    <p className="text-center text-[13px] py-4" style={{ color: 'var(--sm-text-2)' }}>
-                      Nenhum grupo encontrado.
-                    </p>
-                  ) : (
-                    <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                      {filtered.map(g => (
-                        <button
-                          key={g.jid}
-                          onClick={() => setSelected(g)}
-                          className="w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center gap-2.5"
-                          style={{
-                            background: selected?.jid === g.jid ? '#22C55E20' : 'var(--sm-bg-alt)',
-                            border: `1px solid ${selected?.jid === g.jid ? '#22C55E60' : 'var(--sm-border)'}`,
-                            color: 'var(--sm-text-1)',
-                          }}
-                        >
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: selected?.jid === g.jid ? '#22C55E30' : 'var(--sm-border)' }}>
-                            <Users className="w-4 h-4" style={{ color: selected?.jid === g.jid ? '#22C55E' : 'var(--sm-text-2)' }} />
-                          </div>
-                          <span className="text-[13px] font-medium truncate">{g.name}</span>
-                          {selected?.jid === g.jid && (
-                            <CheckCircle2 className="w-4 h-4 text-[#22C55E] ml-auto flex-shrink-0" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
             </>
           ) : (
             <>
+              {/* Grupo resolvido */}
               <div
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
                 style={{ background: '#22C55E15', border: '1px solid #22C55E30' }}
               >
-                <Users className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
-                <span className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{selected?.name}</span>
+                <CheckCircle2 className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--sm-text-1)' }}>
+                    {resolved?.name}
+                  </p>
+                  <p className="text-[10px]" style={{ color: 'var(--sm-text-2)' }}>Grupo encontrado</p>
+                </div>
               </div>
+
               <p className="text-[13px]" style={{ color: 'var(--sm-text-2)' }}>
                 Escolha quais tipos de notificação serão enviadas para este grupo:
               </p>
@@ -218,7 +192,7 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
         <div className="px-5 py-4 flex items-center justify-end gap-2" style={{ borderTop: '1px solid var(--sm-border)' }}>
           {step === 'config' && (
             <button
-              onClick={() => setStep('pick')}
+              onClick={() => setStep('link')}
               className="px-4 py-2 rounded-xl text-[13px] font-medium transition-colors"
               style={{ background: 'var(--sm-bg-alt)', color: 'var(--sm-text-2)', border: '1px solid var(--sm-border)' }}
             >
@@ -232,18 +206,19 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
           >
             Cancelar
           </button>
-          {step === 'pick' ? (
+          {step === 'link' ? (
             <button
-              onClick={() => selected && setStep('config')}
-              disabled={!selected}
-              className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-40"
+              onClick={handleResolve}
+              disabled={resolveInvite.isPending || !link.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-40"
               style={{ background: '#25D366' }}
             >
-              Continuar
+              {resolveInvite.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {resolveInvite.isPending ? 'Verificando...' : 'Continuar'}
             </button>
           ) : (
             <button
-              onClick={save}
+              onClick={handleSave}
               disabled={addGroup.isPending}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors disabled:opacity-50"
               style={{ background: '#25D366' }}

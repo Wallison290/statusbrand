@@ -39,17 +39,18 @@ export function useWhatsappGroups() {
   })
 }
 
-/** Busca os grupos disponíveis na Evolution API (número precisa estar conectado). */
-export function useFetchEvolutionGroups() {
-  return useMutation<EvolutionGroup[], Error>({
-    mutationFn: async () => {
+/** Resolve um link/código de convite de grupo WhatsApp via Evolution API. */
+export function useResolveGroupInvite() {
+  return useMutation<EvolutionGroup, Error, string>({
+    mutationFn: async (inviteCode: string) => {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await supabase.functions.invoke('whatsapp-fetch-groups', {
+        body: { invite_code: inviteCode },
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
       })
       if (res.error) throw res.error
       if ((res.data as any)?.error) throw new Error((res.data as any).error)
-      return (res.data as any).groups as EvolutionGroup[]
+      return (res.data as any).group as EvolutionGroup
     },
   })
 }
