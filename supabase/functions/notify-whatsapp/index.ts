@@ -329,6 +329,34 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Modo manual apenas grupos (sem cliente específico).
+    if (body?.mode === 'manual_groups') {
+      const authHeader = req.headers.get('Authorization')
+      const jwt = authHeader?.replace('Bearer ', '') ?? ''
+      const { data: { user } } = await supabase.auth.getUser(jwt)
+      if (!user) return new Response(JSON.stringify({ ok: false, error: 'Não autorizado' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+      const { type, group_jids } = body as { type: string; group_jids: string[] }
+      if (!Array.isArray(group_jids) || group_jids.length === 0) {
+        return new Response(JSON.stringify({ ok: false, error: 'Nenhum grupo selecionado' }), {
+          status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: agencyProfile } = await supabase.from('profiles')
+        .select('full_name, agency_name').eq('id', user.id).maybeSingle()
+      const agencyName = (agencyProfile as any)?.agency_name || (agencyProfile as any)?.full_name || 'Agência'
+      const fakeNotif: NotificationRow = {
+        id: crypto.randomUUID(), user_id: user.id, client_id: null,
+        type, title: '', message: '', link: null, created_at: new Date().toISOString(),
+      }
+      const msg = buildClientMessage(fakeNotif, agencyName)
+      for (const jid of group_jids) { await sendToJid(jid, msg).catch(() => {}) }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Modo 1: webhook com um record específico.
     if (body?.record?.id) {
       const status = await processNotification(supabase, body.record as NotificationRow)

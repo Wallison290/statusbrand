@@ -1635,18 +1635,27 @@ export function Planner() {
   }
 
   const sendWhatsApp = async () => {
-    if (!waClientId) return
+    if (!waClientId && waGroupJids.length === 0) return
     setWaSending(true)
     try {
-      const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
-        body: { mode: 'manual_client', client_id: waClientId, type: waType, group_jids: waGroupJids },
-      })
-      if (error || data?.error) throw new Error(data?.error ?? error?.message)
+      if (waClientId) {
+        // Notifica o cliente (pessoal) + grupos selecionados
+        const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
+          body: { mode: 'manual_client', client_id: waClientId, type: waType, group_jids: waGroupJids },
+        })
+        if (error || data?.error) throw new Error(data?.error ?? error?.message)
+      } else {
+        // Só grupos — chama a edge function passando client_id fictício mas sem envio pessoal
+        const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
+          body: { mode: 'manual_groups', type: waType, group_jids: waGroupJids },
+        })
+        if (error || data?.error) throw new Error(data?.error ?? error?.message)
+      }
       toast('Mensagem enviada via WhatsApp!', 'success')
       setWaDropOpen(false)
       setWaClientId(null)
     } catch (err: any) {
-      toast(err?.message || 'Erro ao enviar. Verifique o WhatsApp do cliente.', 'error')
+      toast(err?.message || 'Erro ao enviar.', 'error')
     } finally {
       setWaSending(false)
     }
@@ -2376,7 +2385,7 @@ export function Planner() {
 
                     <button
                       onClick={sendWhatsApp}
-                      disabled={!waClientId || waSending}
+                      disabled={(!waClientId && waGroupJids.length === 0) || waSending}
                       className="w-full h-8 rounded-xl bg-[#25D366] text-white text-[12px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#1eb858] transition-colors"
                     >
                       {waSending
