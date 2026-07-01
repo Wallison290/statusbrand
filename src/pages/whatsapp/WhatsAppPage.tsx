@@ -108,7 +108,7 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div
         className="w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{ background: 'var(--sm-bg)', border: '1px solid var(--sm-border)', maxHeight: '85vh' }}
+        style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)', maxHeight: '85vh' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--sm-border)' }}>

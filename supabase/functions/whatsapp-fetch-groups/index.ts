@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   try {
     const res = await fetch(
       `${EVOLUTION_BASE_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE}?getParticipants=false`,
-      { headers: { token: EVOLUTION_API_KEY } },
+      { headers: { apikey: EVOLUTION_API_KEY } },
     )
 
     if (!res.ok) {
