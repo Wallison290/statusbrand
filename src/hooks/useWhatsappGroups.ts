@@ -55,6 +55,22 @@ export function useResolveGroupInvite() {
   })
 }
 
+/** Lista todos os grupos que o bot (Evolution instance) participa. */
+export function useFetchGroupsList() {
+  return useMutation<EvolutionGroup[], Error>({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await supabase.functions.invoke('whatsapp-fetch-groups', {
+        body: { list: true },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
+      const d = res.data as any
+      if (!d?.ok) throw new Error(d?.error ?? res.error?.message ?? 'Erro desconhecido')
+      return d.groups as EvolutionGroup[]
+    },
+  })
+}
+
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export function useAddWhatsappGroup() {
