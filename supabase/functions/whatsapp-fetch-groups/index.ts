@@ -63,16 +63,19 @@ Deno.serve(async (req) => {
       } else if (Array.isArray(r.data?.chats)) {
         raw = r.data.chats
       }
-      console.log('raw groups count:', raw.length, '| first:', JSON.stringify(raw[0]).slice(0, 200))
+      console.log('raw groups count:', raw.length, '| keys of first:', raw[0] ? Object.keys(raw[0]).join(',') : 'none')
       const groups = raw
-        .map((g: any) => ({
-          jid:  g.id ?? g.remoteJid ?? g.jid ?? g.groupId ?? g.group_id ?? '',
-          name: g.subject ?? g.name ?? g.groupName ?? g.title ?? g.pushName ?? '',
-        }))
-        .filter((g: any) => g.jid && g.jid.endsWith('@g.us'))
+        .map((g: any) => {
+          // UazAPI pode usar PascalCase (JID, Subject) ou lowercase (id, subject)
+          const jid  = g.JID ?? g.id ?? g.remoteJid ?? g.jid ?? g.groupId ?? g.GroupJID ?? g.group_id ?? ''
+          const name = g.Subject ?? g.subject ?? g.name ?? g.groupName ?? g.GroupName ?? g.title ?? g.pushName ?? ''
+          return { jid, name }
+        })
+        // Aceita @g.us (grupo) — filtra fora @s.whatsapp.net (contatos) e @lid (participantes)
+        .filter((g: any) => g.jid && !g.jid.endsWith('@s.whatsapp.net') && !g.jid.endsWith('@lid') && g.name)
         .sort((a: any, b: any) => a.name.localeCompare(b.name))
-      console.log('filtered groups:', groups.length)
-      return json({ ok: true, groups, _debug_raw_count: raw.length, _debug_sample: raw.slice(0, 2) })
+      console.log('filtered groups:', groups.length, '| sample:', JSON.stringify(groups.slice(0, 2)))
+      return json({ ok: true, groups })
     }
 
     // ── Modo convite: entra no grupo e retorna JID + nome ──────────────────
