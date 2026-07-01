@@ -87,9 +87,16 @@ function AddGroupModal({ onClose }: { onClose: () => void }) {
       setMode('config')
     } catch (err: any) {
       const msg: string = err?.message ?? ''
-      // Se a API não tem o endpoint, cai automaticamente no modo lista
-      if (msg.includes('404') || msg.includes('Not Found')) {
-        toast('Link de convite não suportado pela API. Escolha o grupo da lista.', 'error')
+      // Bot já está no grupo, endpoint não disponível ou outro erro de join
+      // → cai automaticamente na lista para o usuário escolher
+      const fallbackToList =
+        msg.includes('404') ||
+        msg.includes('Not Found') ||
+        msg.includes('error joining') ||
+        msg.includes('already') ||
+        msg.includes('500')
+      if (fallbackToList) {
+        toast('Número já está no grupo. Escolha da lista abaixo.', 'success')
         handleLoadList()
       } else {
         toast(msg || 'Link inválido ou grupo não encontrado', 'error')
