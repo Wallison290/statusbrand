@@ -58,19 +58,34 @@ const CATEGORY_OF: Record<string, string> = {
 // Link de destino por tipo (mesma lógica do Header.tsx onView).
 function buildLink(n: NotificationRow): string | null {
   if (n.type === 'NOTE_REQUEST') return `${APP_URL}${n.link || '/notes'}`
-  if (!n.link) return null
+  if (!n.link) {
+    if (['APPROVAL_REQUEST', 'ADJUSTMENT_DONE', 'NEW_CONTENT'].includes(n.type)) {
+      return `${APP_URL}/planner`
+    }
+    return null
+  }
   if (['POST_PUBLISHED', 'POST_FAILED', 'FORM_SUBMITTED'].includes(n.type)) {
     return `${APP_URL}${n.link}`
   }
   return `${APP_URL}/planner?item=${n.link}`
 }
 
-// Monta o texto final da mensagem. Título e mensagem já vêm prontos e
-// localizados do banco — só damos uma moldura e o link.
+const AGENCY_TITLE: Record<string, string> = {
+  APPROVED:           '✅ Aprovação recebida!',
+  REJECTED:           '❌ Conteúdo reprovado',
+  COMMENT:            '✏️ Ajuste solicitado',
+  POST_PUBLISHED:     '📸 Post publicado no Instagram!',
+  POST_FAILED:        '🚨 Falha ao publicar',
+  FORM_SUBMITTED:     '📋 Formulário respondido',
+  NOTE_REQUEST:       '💡 Nova solicitação/ideia',
+  TASK_DONE:          '✔️ Tarefa concluída',
+  TASK_STATUS_UPDATE: '🔄 Atualização de tarefa',
+}
+
 function buildMessage(n: NotificationRow): string {
   const link = buildLink(n)
-  const head = `*${n.title}*`
-  const body = n.message ? `\n${n.message}` : ''
+  const head = `*${AGENCY_TITLE[n.type] ?? n.title}*`
+  const body = n.message ? `\n\n${n.message}` : ''
   const tail = link ? `\n\n👉 ${link}` : ''
   return `${head}${body}${tail}`
 }
@@ -86,19 +101,18 @@ function normalizeNumber(raw: string): string {
   return n
 }
 
-async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: string; error?: string }> {
+async function sendToJid(jid: string, text: string): Promise<{ ok: boolean; id?: string; error?: string }> {
   if (!EVOLUTION_BASE_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE) {
     return { ok: false, error: 'Evolution não configurado (faltam secrets)' }
   }
   try {
-    const res = await fetch(`${EVOLUTION_BASE_URL}/send/text`, {
+    const res = await fetch(`${EVOLUTION_BASE_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', token: EVOLUTION_API_KEY },
-      body: JSON.stringify({ number: normalizeNumber(to), text }),
+      headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+      body: JSON.stringify({ number: jid, text, linkPreview: false }),
     })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}: ${JSON.stringify(data)}` }
-    // Evolution retorna o id em key.id
     const id = data?.key?.id ?? data?.id ?? null
     return { ok: true, id }
   } catch (err) {
@@ -106,26 +120,28 @@ async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: s
   }
 }
 
-// ─── Tipos de notificação que vão para o cliente ─────────────────────────────
+async function sendText(to: string, text: string): Promise<{ ok: boolean; id?: string; error?: string }> {
+  return sendToJid(normalizeNumber(to), text)
+}
 
-const CLIENT_NOTIFY_TYPES = new Set(['APPROVAL_REQUEST', 'POST_PUBLISHED', 'ADJUSTMENT_DONE', 'NEW_CONTENT'])
+// ─── Tipos de notificação que vão para o cliente (envio manual) ──────────────
+
+const CLIENT_NOTIFY_TYPES_MANUAL = new Set(['APPROVAL_REQUEST', 'ADJUSTMENT_DONE', 'NEW_CONTENT'])
 
 // ─── Mensagem para o cliente (formato amigável, sem contexto interno) ─────────
 
 function buildClientMessage(n: NotificationRow, agencyName: string): string {
   const link = buildLink(n)
-  const footer = link ? `\n\n👉 ${link}` : ''
+  const linkLine = link ? `\n👉 ${link}` : ''
   switch (n.type) {
     case 'APPROVAL_REQUEST':
-      return `🔔 *Conteúdo aguardando aprovação!*\nOlá! A *${agencyName}* enviou conteúdo para a sua aprovação.${footer}`
-    case 'POST_PUBLISHED':
-      return `📸 *Post publicado!*\nSeu conteúdo foi publicado com sucesso no Instagram. ✅${footer}`
+      return `🔔 *Conteúdo aguardando sua aprovação*\n\nA *${agencyName}* atualizou o conteúdo e está aguardando o seu feedback.\n\nClique para aprovar, reprovar ou solicitar ajustes:${linkLine}`
     case 'ADJUSTMENT_DONE':
-      return `✅ *Ajuste finalizado!*\nO ajuste solicitado foi concluído e o conteúdo está pronto.${footer}`
+      return `✅ *Ajuste concluído!*\n\nA *${agencyName}* finalizou o ajuste que você solicitou.\nO conteúdo está pronto para a sua aprovação final.${link ? '\n\n👉 ' + link : ''}`
     case 'NEW_CONTENT':
-      return `🆕 *Novo conteúdo no seu planejamento!*\nA *${agencyName}* adicionou novo conteúdo para você.${footer}`
+      return `🆕 *Novo conteúdo no seu planejamento!*\n\nA *${agencyName}* adicionou novos conteúdos para você revisar e aprovar.\n\nAcesse o link abaixo para conferir:${linkLine}`
     default:
-      return `${n.title}\n${n.message ?? ''}${footer}`
+      return `${n.title}\n\n${n.message ?? ''}${link ? '\n\n👉 ' + link : ''}`
   }
 }
 
@@ -133,20 +149,24 @@ function buildClientMessage(n: NotificationRow, agencyName: string): string {
 
 type Supa = ReturnType<typeof createClient>
 
-async function sendClientNotification(supabase: Supa, n: NotificationRow, agencyProfile: any): Promise<void> {
-  if (!n.client_id) return
+async function sendClientNotification(
+  supabase: Supa,
+  n: NotificationRow,
+  agencyProfile: any,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!n.client_id) return { ok: false, error: 'sem client_id' }
   const { data: client } = await supabase
     .from('clients')
-    .select('whatsapp, name')
+    .select('whatsapp, company_name')
     .eq('id', n.client_id)
     .maybeSingle()
 
   const whatsapp = (client as any)?.whatsapp
-  if (!whatsapp) return
+  if (!whatsapp) return { ok: false, error: 'cliente sem WhatsApp cadastrado' }
 
-  const agencyName = agencyProfile.agency_name || agencyProfile.full_name || 'Sua agência'
+  const agencyName = (agencyProfile as any).agency_name || (agencyProfile as any).full_name || 'Sua agência'
   const msg = buildClientMessage(n, agencyName)
-  await sendText(whatsapp, msg)
+  return sendText(whatsapp, msg)
 }
 
 // ─── Processa uma notificação ─────────────────────────────────────────────────
@@ -196,35 +216,6 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
 
   const p = profile as any
 
-  // ── Fan-out para o cliente (dispara uma única vez, independente do opt-in da agência) ──
-  // Notificações para usuário portal (role='client') precisam buscar a agência pelo client_id.
-  if (isFirstTime && CLIENT_NOTIFY_TYPES.has(n.type) && n.client_id) {
-    let agencyForFanOut: any = p?.role === 'agency' ? p : null
-
-    if (!agencyForFanOut) {
-      const { data: clientRow } = await supabase
-        .from('clients')
-        .select('user_id')
-        .eq('id', n.client_id)
-        .maybeSingle()
-
-      if ((clientRow as any)?.user_id) {
-        const { data: agProfile } = await supabase
-          .from('profiles')
-          .select('notify_client_whatsapp, agency_name, full_name')
-          .eq('id', (clientRow as any).user_id)
-          .maybeSingle()
-        agencyForFanOut = agProfile
-      }
-    }
-
-    if (agencyForFanOut?.notify_client_whatsapp) {
-      sendClientNotification(supabase, n, agencyForFanOut).catch(err =>
-        console.error('client whatsapp fan-out error:', err)
-      )
-    }
-  }
-
   // ── Notificação da agência ────────────────────────────────────────────────────
   if (!p)                        return finish('skipped', { error: 'perfil não encontrado' })
   if (p.role !== 'agency')       return finish('skipped', { error: 'destinatário não é agência' })
@@ -244,6 +235,19 @@ async function processNotification(supabase: Supa, n: NotificationRow): Promise<
   // Incrementa tentativas sempre.
   await supabase.rpc('increment_delivery_attempts', { p_notification_id: n.id }).catch(() => {})
 
+  // Fan-out para grupos configurados da agência.
+  const { data: groups } = await (supabase as any)
+    .from('whatsapp_groups')
+    .select('group_jid, categories')
+    .eq('user_id', n.user_id)
+    .eq('is_active', true)
+
+  for (const g of groups ?? []) {
+    const cats = g.categories ?? {}
+    if (cats[category] === false) continue
+    await sendToJid(g.group_jid, text).catch(() => {})
+  }
+
   if (sent.ok) {
     return finish('sent', { provider_msg_id: sent.id ?? null, to_number: normalizeNumber(p.whatsapp), error: null })
   }
@@ -260,6 +264,54 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}))
+
+    // Modo manual: chamado diretamente pelo frontend para notificar um cliente.
+    if (body?.mode === 'manual_client') {
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        return new Response(JSON.stringify({ ok: false, error: 'Não autorizado' }), {
+          status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      const jwt = authHeader.replace('Bearer ', '')
+      const { data: { user }, error: authErr } = await supabase.auth.getUser(jwt)
+      if (authErr || !user) {
+        return new Response(JSON.stringify({ ok: false, error: 'Token inválido' }), {
+          status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      const { client_id, type } = body as { client_id: string; type: string }
+      if (!client_id || !type || !CLIENT_NOTIFY_TYPES_MANUAL.has(type)) {
+        return new Response(JSON.stringify({ ok: false, error: 'Parâmetros inválidos' }), {
+          status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: agencyProfile } = await supabase
+        .from('profiles')
+        .select('role, full_name, agency_name')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (!agencyProfile || (agencyProfile as any).role !== 'agency') {
+        return new Response(JSON.stringify({ ok: false, error: 'Apenas agências podem notificar' }), {
+          status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      const fakeNotif: NotificationRow = {
+        id: crypto.randomUUID(),
+        user_id: user.id,
+        client_id,
+        type,
+        title: '',
+        message: '',
+        link: null,
+        created_at: new Date().toISOString(),
+      }
+      const result = await sendClientNotification(supabase, fakeNotif, agencyProfile)
+      return new Response(JSON.stringify(result), {
+        status: result.ok ? 200 : 422,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Modo 1: webhook com um record específico.
     if (body?.record?.id) {

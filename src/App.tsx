@@ -32,6 +32,7 @@ import { PortalDashboard } from '@/pages/portal/PortalDashboard'
 import { CollaboratorPortal } from '@/pages/portal/CollaboratorPortal'
 import { TeamPage } from '@/pages/team/TeamPage'
 import { InstagramPage } from '@/pages/instagram/InstagramPage'
+import { WhatsAppPage } from '@/pages/whatsapp/WhatsAppPage'
 import { PrivacyPage } from '@/pages/PrivacyPage'
 import { TermsPage } from '@/pages/TermsPage'
 import { WeeklyFormPage } from '@/pages/public/WeeklyFormPage'
@@ -188,6 +189,7 @@ function AppRoutes() {
         <Route path="/ai"            element={<AIPage />} />
         <Route path="/equipe"        element={<TeamPage />} />
         <Route path="/instagram"     element={<InstagramPage />} />
+        <Route path="/whatsapp"      element={<WhatsAppPage />} />
         <Route path="/assinatura"    element={<Subscription />} />
       </Route>
 
