@@ -103,14 +103,27 @@ function hasPaid(r: ClientReport) {
 
 // ─── Metric card ─────────────────────────────────────────────────────────────
 
+const CARD_ACCENT: Record<string, { light: string; dark: string }> = {
+  green:  { light: 'border-green-300 bg-green-100',    dark: 'border-green-700/50 bg-green-950/60'   },
+  blue:   { light: 'border-blue-300 bg-blue-100',      dark: 'border-blue-700/50 bg-blue-950/60'     },
+  pink:   { light: 'border-pink-300 bg-pink-100',      dark: 'border-pink-700/50 bg-pink-950/60'     },
+  purple: { light: 'border-purple-300 bg-purple-100',  dark: 'border-purple-700/50 bg-purple-950/60' },
+  amber:  { light: 'border-amber-300 bg-amber-100',    dark: 'border-amber-700/50 bg-amber-950/60'   },
+  teal:   { light: 'border-teal-300 bg-teal-100',      dark: 'border-teal-700/50 bg-teal-950/60'     },
+  sky:    { light: 'border-sky-300 bg-sky-100',        dark: 'border-sky-700/50 bg-sky-950/60'       },
+  violet: { light: 'border-violet-300 bg-violet-100',  dark: 'border-violet-700/50 bg-violet-950/60' },
+}
+
 function MetricCard({
-  icon, label, value, sub, accent,
-}: { icon: React.ReactNode; label: string; value: string; sub?: string; accent: string }) {
+  icon, label, value, sub, color,
+}: { icon: React.ReactNode; label: string; value: string; sub?: string; color: string }) {
+  const { isDark } = useTheme()
+  const acc = CARD_ACCENT[color] ?? CARD_ACCENT.blue
   return (
-    <div className={`rounded-2xl border p-4 flex flex-col gap-2.5 ${accent}`}>
+    <div className={`rounded-2xl border p-4 flex flex-col gap-2.5 ${isDark ? acc.dark : acc.light}`}>
       <div>{icon}</div>
       <div>
-        <p className="text-[11px] font-medium" style={{ color: 'var(--sm-text-3)' }}>{label}</p>
+        <p className="text-[11px] font-medium" style={{ color: 'var(--sm-text-2)' }}>{label}</p>
         <p className="text-[20px] font-bold leading-tight mt-0.5" style={{ color: 'var(--sm-text-1)' }}>{value}</p>
         {sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--sm-text-3)' }}>{sub}</p>}
       </div>
@@ -123,19 +136,21 @@ function MetricCard({
 const GENDER_LABEL: Record<string, string> = { M: 'Masculino', F: 'Feminino', U: 'Outro' }
 
 function Bar({ label, value, max, suffix }: { label: string; value: number; max: number; suffix?: string }) {
+  const { isDark } = useTheme()
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] text-[#64748b] w-24 flex-shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
-        <div className="h-full rounded-full bg-[#29457a]" style={{ width: `${pct}%` }} />
+      <span className="text-[11px] w-24 flex-shrink-0 truncate" style={{ color: 'var(--sm-text-3)' }}>{label}</span>
+      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : '#f0f0f0' }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: isDark ? '#6b9ed8' : '#29457a' }} />
       </div>
-      <span className="text-[11px] font-semibold text-[#0f0f0f] w-14 text-right flex-shrink-0">{fmt(value)}{suffix ?? ''}</span>
+      <span className="text-[11px] font-semibold w-14 text-right flex-shrink-0" style={{ color: 'var(--sm-text-1)' }}>{fmt(value)}{suffix ?? ''}</span>
     </div>
   )
 }
 
 function IgInsights({ report }: { report: ClientReport }) {
+  const { isDark } = useTheme()
   const ig = report.ig_data
   if (!ig) return null
 
@@ -158,22 +173,22 @@ function IgInsights({ report }: { report: ClientReport }) {
       {hasExtraKpis && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <MetricCard icon={<Eye className="w-4 h-4 text-amber-600" />} label="Visitas ao perfil"
-            value={fmt(ig.profile_views)} accent="border-amber-200 bg-amber-50" />
+            value={fmt(ig.profile_views)} color="amber" />
           <MetricCard icon={<Users className="w-4 h-4 text-teal-600" />} label="Contas engajadas"
-            value={fmt(ig.accounts_engaged)} accent="border-teal-200 bg-teal-50" />
+            value={fmt(ig.accounts_engaged)} color="teal" />
           <MetricCard icon={<TrendingUp className="w-4 h-4 text-sky-600" />} label="Impressões"
-            value={fmt(report.impressions)} accent="border-sky-200 bg-sky-50" />
+            value={fmt(report.impressions)} color="sky" />
           <MetricCard icon={<Zap className="w-4 h-4 text-violet-600" />} label="Interações totais"
-            value={fmt(interTotal)} accent="border-violet-200 bg-violet-50" />
+            value={fmt(interTotal)} color="violet" />
         </div>
       )}
 
       {/* Interações */}
       {hasInter && (
-        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
-            <Heart className="w-3.5 h-3.5 text-[#64748b]" />
-            <p className="text-[13px] font-semibold text-[#0f0f0f]">Interações do mês</p>
+        <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+          <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
+            <Heart className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3)' }} />
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Interações do mês</p>
           </div>
           <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {([
@@ -183,8 +198,8 @@ function IgInsights({ report }: { report: ClientReport }) {
               ['Compartilhamentos', inter!.shares],
             ] as [string, number | null][]).map(([label, value]) => (
               <div key={label}>
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1">{label}</p>
-                <p className="text-[16px] font-bold text-[#0f0f0f]">{fmt(value)}</p>
+                <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3)' }}>{label}</p>
+                <p className="text-[16px] font-bold" style={{ color: 'var(--sm-text-1)' }}>{fmt(value)}</p>
               </div>
             ))}
           </div>
@@ -193,23 +208,24 @@ function IgInsights({ report }: { report: ClientReport }) {
 
       {/* Top publicações */}
       {ig.top_posts && ig.top_posts.length > 0 && (
-        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
-            <Instagram className="w-3.5 h-3.5 text-[#64748b]" />
-            <p className="text-[13px] font-semibold text-[#0f0f0f]">Top publicações do mês</p>
+        <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+          <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
+            <Instagram className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3)' }} />
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Top publicações do mês</p>
           </div>
           <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {ig.top_posts.map(post => (
               <a key={post.id} href={post.permalink ?? undefined} target="_blank" rel="noopener noreferrer"
-                className="group rounded-xl border border-[#e8e8e8] overflow-hidden bg-[#fafafa] hover:border-[#29457a]/50 transition-colors">
-                <div className="aspect-square bg-[#eee] overflow-hidden">
+                className="group rounded-xl overflow-hidden transition-colors"
+                style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>
+                <div className="aspect-square overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#eee' }}>
                   {post.thumbnail
                     ? <img src={post.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    : <div className="w-full h-full flex items-center justify-center text-[#c0c0c0]"><ImageIcon className="w-6 h-6" /></div>}
+                    : <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--sm-text-3)' }}><ImageIcon className="w-6 h-6" /></div>}
                 </div>
                 <div className="p-2.5">
-                  {post.media_type && <p className="text-[9px] uppercase tracking-wide text-[#94a3b8] mb-1">{post.media_type}</p>}
-                  <div className="flex items-center gap-3 text-[11px] text-[#0f0f0f] font-medium">
+                  {post.media_type && <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3)' }}>{post.media_type}</p>}
+                  <div className="flex items-center gap-3 text-[11px] font-medium" style={{ color: 'var(--sm-text-1)' }}>
                     <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-pink-500" /> {fmt(post.likes)}</span>
                     <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3 text-blue-500" /> {fmt(post.reach)}</span>
                   </div>
@@ -222,15 +238,15 @@ function IgInsights({ report }: { report: ClientReport }) {
 
       {/* Audiência */}
       {hasDemo && (
-        <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center gap-2">
-            <Users className="w-3.5 h-3.5 text-[#64748b]" />
-            <p className="text-[13px] font-semibold text-[#0f0f0f]">Audiência</p>
+        <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+          <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
+            <Users className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3)' }} />
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Audiência</p>
           </div>
           <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {genderEntries.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Gênero</p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-3)' }}>Gênero</p>
                 {genderEntries.map(([g, v]) => (
                   <Bar key={g} label={GENDER_LABEL[g] ?? g} value={v} max={genderTotal} />
                 ))}
@@ -238,7 +254,7 @@ function IgInsights({ report }: { report: ClientReport }) {
             )}
             {ageEntries.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Faixa etária</p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-3)' }}>Faixa etária</p>
                 {ageEntries.map(([a, v]) => (
                   <Bar key={a} label={a} value={v} max={ageMax} />
                 ))}
@@ -246,7 +262,7 @@ function IgInsights({ report }: { report: ClientReport }) {
             )}
             {cities.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Principais cidades</p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-3)' }}>Principais cidades</p>
                 {cities.map(c => (
                   <Bar key={c.name} label={c.name} value={c.value} max={cityMax} />
                 ))}
@@ -271,20 +287,22 @@ function AttachmentItem({
     <>
       <div
         onClick={() => isImg && setImgOpen(true)}
-        className={`group flex items-center gap-3 p-3 rounded-xl border border-[#e8e8e8] bg-[#fafafa] transition-all ${isImg ? 'cursor-pointer hover:bg-[#f0f0f0] hover:border-[#d0d0d0]' : ''}`}
+        className={`group flex items-center gap-3 p-3 rounded-xl transition-all ${isImg ? 'cursor-pointer' : ''}`}
+        style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
       >
-        <div className="w-10 h-10 rounded-lg bg-white border border-[#e8e8e8] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+          style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
           {isImg && att.file_url
             ? <img src={att.file_url} alt={att.title} className="w-full h-full object-cover" />
-            : att.type === 'pdf' ? <FileText className="w-4 h-4 text-red-700" />
-            : att.type === 'link' ? <Link2 className="w-4 h-4 text-blue-700" />
-            : <File className="w-4 h-4 text-[#64748b]" />
+            : att.type === 'pdf' ? <FileText className="w-4 h-4 text-red-500" />
+            : att.type === 'link' ? <Link2 className="w-4 h-4 text-blue-500" />
+            : <File className="w-4 h-4" style={{ color: 'var(--sm-text-3)' }} />
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium text-[#0f0f0f] truncate">{att.title}</p>
-          {att.description && <p className="text-[10px] text-[#64748b] truncate mt-0.5">{att.description}</p>}
-          <p className="text-[10px] text-[#94a3b8] mt-0.5 uppercase tracking-wide">
+          <p className="text-[12px] font-medium truncate" style={{ color: 'var(--sm-text-1)' }}>{att.title}</p>
+          {att.description && <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--sm-text-2)' }}>{att.description}</p>}
+          <p className="text-[10px] mt-0.5 uppercase tracking-wide" style={{ color: 'var(--sm-text-3)' }}>
             {att.type === 'imagem' ? 'Imagem' : att.type === 'pdf' ? 'PDF' : 'Link'}
           </p>
         </div>
@@ -292,20 +310,23 @@ function AttachmentItem({
           {att.type === 'link' && att.link_url && (
             <a href={att.link_url} target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-[#64748b] hover:text-[#0f0f0f] hover:bg-[#e8e8e8] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded transition-colors"
+              style={{ color: 'var(--sm-text-3)' }}>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
           {att.file_url && att.type !== 'link' && (
             <a href={att.file_url} download target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="w-7 h-7 flex items-center justify-center rounded text-[#64748b] hover:text-[#0f0f0f] hover:bg-[#e8e8e8] transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded transition-colors"
+              style={{ color: 'var(--sm-text-3)' }}>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
           {onDelete && (
             <button onClick={e => { e.stopPropagation(); onDelete() }}
-              className="w-7 h-7 flex items-center justify-center rounded text-[#94a3b8] hover:text-red-700 hover:bg-red-50 transition-colors">
+              className="w-7 h-7 flex items-center justify-center rounded hover:text-red-400 transition-colors"
+              style={{ color: 'var(--sm-text-3)' }}>
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
@@ -655,30 +676,30 @@ function ReportDetail({
       {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <MetricCard
-          icon={<Users className="w-4 h-4 text-green-700" />}
+          icon={<Users className="w-4 h-4 text-green-600" />}
           label="Crescimento de seguidores"
           value={followerDiff(report)}
           sub={report.followers_end != null ? `${fmt(report.followers_end)} total` : undefined}
-          accent="border-green-300 bg-green-100"
+          color="green"
         />
         <MetricCard
           icon={<Eye className="w-4 h-4 text-blue-600" />}
           label="Alcance"
           value={fmt(report.reach)}
-          accent="border-blue-300 bg-blue-100"
+          color="blue"
         />
         <MetricCard
           icon={<Heart className="w-4 h-4 text-pink-600" />}
           label="Engajamento"
           value={report.engagement != null ? `${report.engagement}%` : '—'}
-          accent="border-pink-300 bg-pink-100"
+          color="pink"
         />
         <MetricCard
           icon={<BarChart3 className="w-4 h-4 text-purple-600" />}
           label="Publicados"
           value={report.posts_published != null ? String(report.posts_published) : '—'}
           sub="conteúdos no mês"
-          accent="border-purple-300 bg-purple-100"
+          color="purple"
         />
       </div>
 
@@ -709,8 +730,8 @@ function ReportDetail({
                 ['Posts publicados', fmt(report.posts_published)],
               ] as [string, string][]).map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[10px] text-[#64748b] uppercase tracking-wide mb-1">{label}</p>
-                  <p className="text-[14px] font-semibold text-[#0f0f0f]">{value}</p>
+                  <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3)' }}>{label}</p>
+                  <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{value}</p>
                 </div>
               ))}
             </>
@@ -747,8 +768,8 @@ function ReportDetail({
                   ['ROAS', report.paid_roas != null ? `${report.paid_roas}x` : '—'],
                 ] as [string, string][]).map(([label, value]) => (
                   <div key={label}>
-                    <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-1">{label}</p>
-                    <p className="text-[14px] font-semibold text-zinc-200">{value}</p>
+                    <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3)' }}>{label}</p>
+                    <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{value}</p>
                   </div>
                 ))}
               </>
@@ -758,11 +779,16 @@ function ReportDetail({
       )}
 
       {/* ── Análise do mês ── */}
-      <section className="rounded-2xl border border-indigo-200 bg-indigo-50 overflow-hidden">
-        <div className="px-5 py-4 border-b border-indigo-100 flex items-center justify-between gap-2">
+      <section className="rounded-2xl overflow-hidden"
+        style={{
+          background: isDark ? 'rgba(99,102,241,0.08)' : '#eef2ff',
+          border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid #c7d2fe',
+        }}>
+        <div className="px-5 py-4 flex items-center justify-between gap-2"
+          style={{ borderBottom: isDark ? '1px solid rgba(99,102,241,0.2)' : '1px solid #ddd6fe' }}>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-            <p className="text-[13px] font-semibold text-indigo-900">Análise do mês</p>
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Análise do mês</p>
           </div>
           {!editMode && (
             <Button size="sm" onClick={handleAiAnalysis} disabled={aiLoading}
@@ -783,9 +809,9 @@ function ReportDetail({
               rows={6}
             />
           ) : report.analysis_text ? (
-            <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{report.analysis_text}</p>
+            <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--sm-text-1)' }}>{report.analysis_text}</p>
           ) : (
-            <p className="text-[12px] text-[#64748b] italic">
+            <p className="text-[12px] italic" style={{ color: 'var(--sm-text-2)' }}>
               Nenhuma análise ainda. Clique em <strong>Gerar com IA</strong> para um resumo automático, ou em Editar para escrever.
             </p>
           )}
@@ -793,13 +819,13 @@ function ReportDetail({
       </section>
 
       {/* ── Anexos ── */}
-      <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
+      <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--sm-border)' }}>
           <div className="flex items-center gap-2">
-            <ImageIcon className="w-3.5 h-3.5 text-[#64748b]" />
-            <p className="text-[13px] font-semibold text-[#0f0f0f]">Anexos</p>
+            <ImageIcon className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3)' }} />
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Anexos</p>
             {atts.length > 0 && (
-              <span className="text-[11px] text-[#94a3b8]">{atts.length}</span>
+              <span className="text-[11px]" style={{ color: 'var(--sm-text-3)' }}>{atts.length}</span>
             )}
           </div>
           <Button size="sm" variant="outline" onClick={() => setAttOpen(true)}>
@@ -808,7 +834,7 @@ function ReportDetail({
         </div>
         <div className="p-5">
           {atts.length === 0 ? (
-            <p className="text-[12px] text-[#64748b] text-center py-4">
+            <p className="text-[12px] text-center py-4" style={{ color: 'var(--sm-text-2)' }}>
               Nenhum anexo ainda. Adicione prints, PDFs ou links de relatórios.
             </p>
           ) : (
