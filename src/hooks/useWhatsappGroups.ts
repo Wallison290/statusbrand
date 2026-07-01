@@ -48,9 +48,9 @@ export function useResolveGroupInvite() {
         body: { invite_code: inviteCode },
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
       })
-      if (res.error) throw res.error
-      if ((res.data as any)?.error) throw new Error((res.data as any).error)
-      return (res.data as any).group as EvolutionGroup
+      const d = res.data as any
+      if (!d?.ok) throw new Error(d?.error ?? res.error?.message ?? 'Erro desconhecido')
+      return d.group as EvolutionGroup
     },
   })
 }
