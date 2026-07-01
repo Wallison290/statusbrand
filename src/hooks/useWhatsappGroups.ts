@@ -55,7 +55,7 @@ export function useResolveGroupInvite() {
   })
 }
 
-/** Lista todos os grupos que o bot (Evolution instance) participa. */
+/** Lista todos os grupos que o bot (UazAPI) participa. */
 export function useFetchGroupsList() {
   return useMutation<EvolutionGroup[], Error>({
     mutationFn: async () => {
@@ -65,6 +65,7 @@ export function useFetchGroupsList() {
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
       })
       const d = res.data as any
+      console.log('[whatsapp-fetch-groups] list response:', JSON.stringify(d))
       if (!d?.ok) throw new Error(d?.error ?? res.error?.message ?? 'Erro desconhecido')
       return d.groups as EvolutionGroup[]
     },

@@ -43,20 +43,36 @@ Deno.serve(async (req) => {
 
     // ── Modo lista ─────────────────────────────────────────────────────────
     if ((body as any).list) {
-      const r = await uazFetch('/group/list', { limit: 1000, offset: 0, noParticipants: true })
+      const r = await uazFetch('/group/list', { limit: 1000, offset: 0, noParticipants: false })
+      console.log('group/list status:', r.status, '| body:', r.text.slice(0, 800))
       if (!r.ok) {
         return json({ ok: false, error: `group/list ${r.status}: ${r.text.slice(0, 300)}` })
       }
-      // Resposta pode ser array direto ou { groups: [...] }
-      const raw = Array.isArray(r.data) ? r.data : (r.data?.groups ?? r.data?.data ?? [])
+      // Tenta todas as formas possíveis de array na resposta
+      let raw: any[] = []
+      if (Array.isArray(r.data)) {
+        raw = r.data
+      } else if (Array.isArray(r.data?.groups)) {
+        raw = r.data.groups
+      } else if (Array.isArray(r.data?.data)) {
+        raw = r.data.data
+      } else if (Array.isArray(r.data?.result)) {
+        raw = r.data.result
+      } else if (Array.isArray(r.data?.list)) {
+        raw = r.data.list
+      } else if (Array.isArray(r.data?.chats)) {
+        raw = r.data.chats
+      }
+      console.log('raw groups count:', raw.length, '| first:', JSON.stringify(raw[0]).slice(0, 200))
       const groups = raw
         .map((g: any) => ({
-          jid:  g.id ?? g.remoteJid ?? g.jid ?? '',
-          name: g.subject ?? g.name ?? g.groupName ?? '',
+          jid:  g.id ?? g.remoteJid ?? g.jid ?? g.groupId ?? g.group_id ?? '',
+          name: g.subject ?? g.name ?? g.groupName ?? g.title ?? g.pushName ?? '',
         }))
-        .filter((g: any) => g.jid.endsWith('@g.us'))
+        .filter((g: any) => g.jid && g.jid.endsWith('@g.us'))
         .sort((a: any, b: any) => a.name.localeCompare(b.name))
-      return json({ ok: true, groups })
+      console.log('filtered groups:', groups.length)
+      return json({ ok: true, groups, _debug_raw_count: raw.length, _debug_sample: raw.slice(0, 2) })
     }
 
     // ── Modo convite: entra no grupo e retorna JID + nome ──────────────────
