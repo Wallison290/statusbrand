@@ -38,6 +38,7 @@ export async function streamChat(
   signal?: AbortSignal,
   generateImage = false,
   imageSize: ImageSize = '1024x1024',
+  referenceAsStyle = false,
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Não autenticado')
@@ -49,7 +50,7 @@ export async function streamChat(
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ messages, systemPrompt, useWebSearch, generateImage, size: imageSize }),
+    body: JSON.stringify({ messages, systemPrompt, useWebSearch, generateImage, size: imageSize, referenceAsStyle }),
     signal,
   })
 

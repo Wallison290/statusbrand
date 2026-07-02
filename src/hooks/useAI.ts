@@ -316,6 +316,7 @@ export function useAIChat(sessionId: string | null) {
     forceImage = false,         // botão "Imagem" liga geração explicitamente
     attachedPdfs?: { name: string; text: string }[], // texto já extraído no navegador
     imageSize: ImageSize = '1024x1024', // formato da imagem gerada (Criação de Imagens)
+    referenceAsStyle = false, // true = referência só informa estilo/cores; sempre gera cena nova (não edita a foto)
   ) => {
     if (!content.trim() && (!attachedImages || attachedImages.length === 0) && (!attachedPdfs || attachedPdfs.length === 0)) return
     if (isStreaming || isLoading) return
@@ -424,6 +425,7 @@ ${squadPrompt}`
         abort.signal,
         generateImage,
         imageSize,
+        referenceAsStyle,
       )
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {

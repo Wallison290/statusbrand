@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { messages, systemPrompt, useWebSearch, generateImage, size, classify, message: classifyMessage } = await req.json()
+  const { messages, systemPrompt, useWebSearch, generateImage, size, referenceAsStyle, classify, message: classifyMessage } = await req.json()
 
   // Tamanho de imagem — valida contra os formatos aceitos pela família gpt-image
   const ALLOWED_IMAGE_SIZES = ['1024x1024', '1024x1536', '1536x1024']
@@ -283,7 +283,7 @@ Rules:
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let imgRes: any
-        if (refImages.length > 0) {
+        if (refImages.length > 0 && !referenceAsStyle) {
           // Edição/geração guiada usando as imagens enviadas como referência
           const files = await Promise.all(refImages.map(async (durl, idx) => {
             const { bytes, mime } = dataUrlToBytes(durl)

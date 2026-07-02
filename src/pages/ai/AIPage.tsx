@@ -779,6 +779,7 @@ ${subAgentContext}`
       true,
       undefined,
       size,
+      true, // referenceAsStyle — a foto anexada só informa cores/produto, sempre gera cena nova
     )
   }, [isStreaming, isLoading, attachedImages, userMemoryContext, clientCtx, activeClientId, messages, sendMessage])
 
