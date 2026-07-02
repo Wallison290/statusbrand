@@ -4,6 +4,7 @@ import { BarChart3, Instagram, Sparkles, ChevronRight, Building2 } from 'lucide-
 import { useClients } from '@/hooks/useClients'
 import { useReportsOverview } from '@/hooks/useReports'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useTheme } from '@/contexts/ThemeContext'
 import type { ClientReport } from '@/types'
 
 const MONTHS = [
@@ -23,11 +24,12 @@ function fmt(n: number | null | undefined): string {
 // ── Card de cliente ─────────────────────────────────────────────────────────
 
 function ClientReportCard({
-  client, report, onClick,
+  client, report, onClick, isDark,
 }: {
   client: { id: string; company_name: string; logo_url: string | null; niche: string }
   report: Pick<ClientReport, 'ig_synced_at' | 'analysis_text' | 'reach' | 'followers_end' | 'posts_published'> | undefined
   onClick: () => void
+  isDark: boolean
 }) {
   const hasReport  = !!report
   const hasIg      = !!report?.ig_synced_at
@@ -57,25 +59,29 @@ function ClientReportCard({
       {hasReport ? (
         <>
           <div className="flex items-center gap-1.5 mb-3">
-            <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${hasIg ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-zinc-100 text-zinc-500 border border-zinc-200'}`}>
+            <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${hasIg
+              ? (isDark ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-100 text-emerald-800 border border-emerald-300')
+              : (isDark ? 'bg-zinc-800/60 text-zinc-400 border border-zinc-700' : 'bg-zinc-100 text-zinc-600 border border-zinc-300')}`}>
               <Instagram className="w-2.5 h-2.5" /> {hasIg ? 'Sincronizado' : 'Sem sync'}
             </span>
-            <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${hasAnalysis ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-zinc-100 text-zinc-500 border border-zinc-200'}`}>
+            <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${hasAnalysis
+              ? (isDark ? 'bg-violet-950/60 text-violet-400 border border-violet-700/50' : 'bg-violet-100 text-violet-800 border border-violet-300')
+              : (isDark ? 'bg-zinc-800/60 text-zinc-400 border border-zinc-700' : 'bg-zinc-100 text-zinc-600 border border-zinc-300')}`}>
               <Sparkles className="w-2.5 h-2.5" /> {hasAnalysis ? 'Análise pronta' : 'Sem análise'}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-[13px] font-bold" style={{ color: 'var(--sm-text-1)' }}>{fmt(report?.followers_end)}</p>
-              <p className="text-[9px]" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Seguidores</p>
+              <p className="text-[9px]" style={{ color: 'var(--sm-text-2)' }}>Seguidores</p>
             </div>
             <div>
               <p className="text-[13px] font-bold" style={{ color: 'var(--sm-text-1)' }}>{fmt(report?.reach)}</p>
-              <p className="text-[9px]" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Alcance</p>
+              <p className="text-[9px]" style={{ color: 'var(--sm-text-2)' }}>Alcance</p>
             </div>
             <div>
               <p className="text-[13px] font-bold" style={{ color: 'var(--sm-text-1)' }}>{fmt(report?.posts_published)}</p>
-              <p className="text-[9px]" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Posts</p>
+              <p className="text-[9px]" style={{ color: 'var(--sm-text-2)' }}>Posts</p>
             </div>
           </div>
         </>
@@ -90,6 +96,7 @@ function ClientReportCard({
 
 export function ReportsOverview() {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
   const { data: subData } = useSubscription()
   const { data: clients = [], isLoading: clientsLoading } = useClients()
   const [month, setMonth] = useState(CURRENT.getMonth() + 1)
@@ -172,6 +179,7 @@ export function ReportsOverview() {
                 client={client}
                 report={reportByClient.get(client.id)}
                 onClick={() => navigate(`/reports/${client.id}?month=${month}&year=${year}`)}
+                isDark={isDark}
               />
             ))}
           </div>

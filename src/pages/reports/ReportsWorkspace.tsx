@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { useClient } from '@/hooks/useClients'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useClientReports, useCreateReport, useUpdateReport } from '@/hooks/useReports'
@@ -82,6 +83,7 @@ export function ReportsWorkspace() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { isDark } = useTheme()
 
   const now = new Date()
   const initialMonth = Number(searchParams.get('month')) || now.getMonth() + 1
@@ -275,7 +277,7 @@ export function ReportsWorkspace() {
                 {/* ── Instagram ── */}
                 <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
                   <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
-                    <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }} />
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-2)' }} />
                     <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Redes sociais</p>
                   </div>
                   <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -288,19 +290,19 @@ export function ReportsWorkspace() {
                       ['Posts publicados', fmt(selected.posts_published)],
                     ] as [string, string][]).map(([label, value]) => (
                       <div key={label}>
-                        <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>{label}</p>
+                        <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-2)' }}>{label}</p>
                         <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{value}</p>
                       </div>
                     ))}
                   </div>
                 </section>
 
-                <IgInsights report={selected} />
+                <IgInsights report={selected} isDark={isDark} />
 
                 {/* ── Planejamento ── */}
                 <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
                   <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
-                    <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }} />
+                    <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-2)' }} />
                     <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Planejamento</p>
                   </div>
                   <div className="p-5 space-y-5">
@@ -314,13 +316,13 @@ export function ReportsWorkspace() {
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Por status</p>
+                            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-2)' }}>Por status</p>
                             {Object.entries(planning.data.byStatus).map(([status, count]) => (
                               <StatRow key={status} label={statusLabels[status] ?? status} count={count} total={planning.data!.total} />
                             ))}
                           </div>
                           <div className="space-y-2">
-                            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Por tipo de conteúdo</p>
+                            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--sm-text-2)' }}>Por tipo de conteúdo</p>
                             {Object.entries(planning.data.byContentType).map(([type, count]) => (
                               <StatRow key={type} label={contentTypeLabels[type] ?? type} count={count} total={planning.data!.total} />
                             ))}
@@ -329,7 +331,7 @@ export function ReportsWorkspace() {
 
                         {planning.data.published.length > 0 && (
                           <div>
-                            <p className="text-[10px] uppercase tracking-wide mb-2" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>Publicados no mês</p>
+                            <p className="text-[10px] uppercase tracking-wide mb-2" style={{ color: 'var(--sm-text-2)' }}>Publicados no mês</p>
                             <div className="space-y-1">
                               {planning.data.published.map(item => (
                                 <button
@@ -354,7 +356,7 @@ export function ReportsWorkspace() {
                 {hasPaid(selected) && (
                   <section className="rounded-2xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
                     <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--sm-border)' }}>
-                      <DollarSign className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }} />
+                      <DollarSign className="w-3.5 h-3.5" style={{ color: 'var(--sm-text-2)' }} />
                       <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Tráfego pago</p>
                     </div>
                     <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -366,7 +368,7 @@ export function ReportsWorkspace() {
                         ['ROAS', selected.paid_roas != null ? `${selected.paid_roas}x` : '—'],
                       ] as [string, string][]).map(([label, value]) => (
                         <div key={label}>
-                          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-3, var(--sm-text-2))' }}>{label}</p>
+                          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--sm-text-2)' }}>{label}</p>
                           <p className="text-[14px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{value}</p>
                         </div>
                       ))}
@@ -375,11 +377,15 @@ export function ReportsWorkspace() {
                 )}
 
                 {/* ── Análise por IA ── */}
-                <section className="rounded-2xl overflow-hidden" style={{ background: '#eef2ff', border: '1px solid #c7d2fe' }}>
-                  <div className="px-5 py-4 flex items-center justify-between gap-2" style={{ borderBottom: '1px solid #ddd6fe' }}>
+                <section className="rounded-2xl overflow-hidden" style={{
+                  background: isDark ? 'rgba(99,102,241,0.08)' : '#eef2ff',
+                  border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid #c7d2fe',
+                }}>
+                  <div className="px-5 py-4 flex items-center justify-between gap-2"
+                    style={{ borderBottom: isDark ? '1px solid rgba(99,102,241,0.2)' : '1px solid #ddd6fe' }}>
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-                      <p className="text-[13px] font-semibold text-[#0f0f0f]">Análise do mês</p>
+                      <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Análise do mês</p>
                     </div>
                     <Button size="sm" onClick={handleAiAnalysis} disabled={aiLoading}
                       className="bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
@@ -391,9 +397,9 @@ export function ReportsWorkspace() {
                   </div>
                   <div className="p-5">
                     {selected.analysis_text ? (
-                      <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-[#0f0f0f]">{selected.analysis_text}</p>
+                      <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--sm-text-1)' }}>{selected.analysis_text}</p>
                     ) : (
-                      <p className="text-[12px] italic text-[#6366f1]/70">
+                      <p className="text-[12px] italic" style={{ color: isDark ? '#a5b4fc' : '#6366f1b3' }}>
                         Nenhuma análise ainda. Clique em <strong>Gerar com IA</strong> pra um resumo automático combinando Instagram e planejamento.
                       </p>
                     )}
