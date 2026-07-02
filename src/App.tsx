@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '@/components/ui/toast'
@@ -8,35 +9,36 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { isConfigured } from '@/integrations/supabase/client'
 import { Setup } from '@/pages/Setup'
 
-import { Login } from '@/pages/auth/Login'
-import { Register } from '@/pages/auth/Register'
-import { ForgotPassword } from '@/pages/auth/ForgotPassword'
-import { ResetPassword } from '@/pages/auth/ResetPassword'
-import { ClientRegister } from '@/pages/auth/ClientRegister'
-import { ClientSetup } from '@/pages/auth/ClientSetup'
-import { AuthCallback } from '@/pages/auth/AuthCallback'
-import { Dashboard } from '@/pages/Dashboard'
-import { ClientList } from '@/pages/clients/ClientList'
-import { ClientForm } from '@/pages/clients/ClientForm'
-import { ClientProfile } from '@/pages/clients/ClientProfile'
-import { FeedOrganizer } from '@/pages/feed/FeedOrganizer'
-import { Planner } from '@/pages/planner/Planner'
-import { Tasks } from '@/pages/tasks/Tasks'
-import { Library } from '@/pages/library/Library'
-import { Financial } from '@/pages/financial/Financial'
-import { Notes } from '@/pages/notes/Notes'
-import { AIPage } from '@/pages/ai/AIPage'
-import { Subscription } from '@/pages/Subscription'
-import { Pricing } from '@/pages/Pricing'
-import { PortalDashboard } from '@/pages/portal/PortalDashboard'
-import { CollaboratorPortal } from '@/pages/portal/CollaboratorPortal'
-import { TeamPage } from '@/pages/team/TeamPage'
-import { InstagramPage } from '@/pages/instagram/InstagramPage'
-import { WhatsAppPage } from '@/pages/whatsapp/WhatsAppPage'
-import { PrivacyPage } from '@/pages/PrivacyPage'
-import { TermsPage } from '@/pages/TermsPage'
-import { WeeklyFormPage } from '@/pages/public/WeeklyFormPage'
-import { LandingPage } from '@/pages/LandingPage'
+// Cada página é um chunk separado — só baixa o JS da rota que o usuário realmente abre.
+const Login             = lazy(() => import('@/pages/auth/Login').then(m => ({ default: m.Login })))
+const Register          = lazy(() => import('@/pages/auth/Register').then(m => ({ default: m.Register })))
+const ForgotPassword    = lazy(() => import('@/pages/auth/ForgotPassword').then(m => ({ default: m.ForgotPassword })))
+const ResetPassword     = lazy(() => import('@/pages/auth/ResetPassword').then(m => ({ default: m.ResetPassword })))
+const ClientRegister    = lazy(() => import('@/pages/auth/ClientRegister').then(m => ({ default: m.ClientRegister })))
+const ClientSetup       = lazy(() => import('@/pages/auth/ClientSetup').then(m => ({ default: m.ClientSetup })))
+const AuthCallback      = lazy(() => import('@/pages/auth/AuthCallback').then(m => ({ default: m.AuthCallback })))
+const Dashboard         = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })))
+const ClientList        = lazy(() => import('@/pages/clients/ClientList').then(m => ({ default: m.ClientList })))
+const ClientForm        = lazy(() => import('@/pages/clients/ClientForm').then(m => ({ default: m.ClientForm })))
+const ClientProfile     = lazy(() => import('@/pages/clients/ClientProfile').then(m => ({ default: m.ClientProfile })))
+const FeedOrganizer     = lazy(() => import('@/pages/feed/FeedOrganizer').then(m => ({ default: m.FeedOrganizer })))
+const Planner           = lazy(() => import('@/pages/planner/Planner').then(m => ({ default: m.Planner })))
+const Tasks             = lazy(() => import('@/pages/tasks/Tasks').then(m => ({ default: m.Tasks })))
+const Library           = lazy(() => import('@/pages/library/Library').then(m => ({ default: m.Library })))
+const Financial         = lazy(() => import('@/pages/financial/Financial').then(m => ({ default: m.Financial })))
+const Notes             = lazy(() => import('@/pages/notes/Notes').then(m => ({ default: m.Notes })))
+const AIPage            = lazy(() => import('@/pages/ai/AIPage').then(m => ({ default: m.AIPage })))
+const Subscription       = lazy(() => import('@/pages/Subscription').then(m => ({ default: m.Subscription })))
+const Pricing            = lazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
+const PortalDashboard    = lazy(() => import('@/pages/portal/PortalDashboard').then(m => ({ default: m.PortalDashboard })))
+const CollaboratorPortal = lazy(() => import('@/pages/portal/CollaboratorPortal').then(m => ({ default: m.CollaboratorPortal })))
+const TeamPage           = lazy(() => import('@/pages/team/TeamPage').then(m => ({ default: m.TeamPage })))
+const InstagramPage      = lazy(() => import('@/pages/instagram/InstagramPage').then(m => ({ default: m.InstagramPage })))
+const WhatsAppPage       = lazy(() => import('@/pages/whatsapp/WhatsAppPage').then(m => ({ default: m.WhatsAppPage })))
+const PrivacyPage        = lazy(() => import('@/pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
+const TermsPage          = lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
+const WeeklyFormPage     = lazy(() => import('@/pages/public/WeeklyFormPage').then(m => ({ default: m.WeeklyFormPage })))
+const LandingPage        = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })))
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -206,7 +208,9 @@ export default function App() {
       <ThemeProvider>
         <ToastProvider>
           <BrowserRouter>
-            <AppRoutes />
+            <Suspense fallback={<LoadingScreen />}>
+              <AppRoutes />
+            </Suspense>
           </BrowserRouter>
         </ToastProvider>
       </ThemeProvider>
