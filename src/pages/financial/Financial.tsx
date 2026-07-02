@@ -70,10 +70,10 @@ const filterLabels: Record<FilterKey, string> = {
 }
 
 const statusStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:          { bg: 'bg-emerald-50 border-emerald-200',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:       { bg: 'bg-red-50 border-red-200',          text: 'text-red-700',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:      { bg: 'bg-zinc-100 border-zinc-300',       text: 'text-zinc-600',    dot: 'bg-zinc-400',    icon: <Ban className="w-3 h-3" /> },
+  ativo:          { bg: 'bg-emerald-500/10 border-emerald-500/30', text: 'text-emerald-400', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-amber-500/10 border-amber-500/30',     text: 'text-amber-400',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-red-500/10 border-red-500/30',         text: 'text-red-400',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-zinc-500/10 border-zinc-500/30',       text: 'text-zinc-400',    dot: 'bg-zinc-500',    icon: <Ban className="w-3 h-3" /> },
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -124,36 +124,36 @@ function AlertCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
-      className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col gap-3"
+      className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col gap-3"
     >
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center mt-0.5">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+        <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mt-0.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-amber-700">Receita prevista menor que o MRR</p>
-          <p className="text-[11px] text-amber-600 mt-0.5">
+          <p className="text-[12px] font-semibold text-amber-300">Receita prevista menor que o MRR</p>
+          <p className="text-[11px] text-amber-400/90 mt-0.5">
             Impacto de {affectedCount} cliente{affectedCount !== 1 ? 's' : ''} em atraso
           </p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <p className="text-[9px] text-[#9ca3af] uppercase tracking-wide mb-0.5">Previsto</p>
-          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(previsto)}</p>
+          <p className="text-[9px] text-[#64748b] uppercase tracking-wide mb-0.5">Previsto</p>
+          <p className="text-[13px] font-semibold text-[#F8FAFC]">{fmtBRL(previsto)}</p>
         </div>
         <div>
-          <p className="text-[9px] text-[#9ca3af] uppercase tracking-wide mb-0.5">MRR</p>
-          <p className="text-[13px] font-semibold text-[#0f0f0f]">{fmtBRL(mrr)}</p>
+          <p className="text-[9px] text-[#64748b] uppercase tracking-wide mb-0.5">MRR</p>
+          <p className="text-[13px] font-semibold text-[#F8FAFC]">{fmtBRL(mrr)}</p>
         </div>
         <div>
-          <p className="text-[9px] text-[#9ca3af] uppercase tracking-wide mb-0.5">Diferença</p>
-          <p className="text-[13px] font-semibold text-red-600">-{fmtBRL(diff)}</p>
+          <p className="text-[9px] text-[#64748b] uppercase tracking-wide mb-0.5">Diferença</p>
+          <p className="text-[13px] font-semibold text-red-400">-{fmtBRL(diff)}</p>
         </div>
       </div>
       <button
         onClick={onViewAffected}
-        className="w-full h-7 rounded-lg border border-amber-200 bg-amber-100 text-[11px] text-amber-700 hover:bg-amber-200 transition-colors"
+        className="w-full h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-300 hover:bg-amber-500/20 transition-colors"
       >
         Ver clientes afetados
       </button>
@@ -433,15 +433,15 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
     <motion.div
       initial={{ opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-[#e8e8e8] bg-white hover:bg-[#f7f7f7] hover:border-[#d0d0d0] transition-all group flex-wrap sm:flex-nowrap"
+      className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-[#1e293b] bg-[#111827] hover:bg-[#182233] hover:border-[#2563EB]/40 transition-all group flex-wrap sm:flex-nowrap"
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
         {client.logo_url ? (
           <img src={client.logo_url} alt={client.company_name}
-            className="w-8 h-8 rounded-lg object-cover border border-[#e8e8e8]" />
+            className="w-8 h-8 rounded-lg object-cover border border-[#1e293b]" />
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-[#f0f0f0] border border-[#e8e8e8] flex items-center justify-center text-[12px] font-medium text-[#737373]">
+          <div className="w-8 h-8 rounded-lg bg-[#182233] border border-[#1e293b] flex items-center justify-center text-[12px] font-medium text-[#94a3b8]">
             {client.company_name[0].toUpperCase()}
           </div>
         )}
@@ -450,25 +450,25 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
       {/* Name — clickable */}
       <div className="flex-1 min-w-0">
         <Link to={`/clients/${client.id}`} className="group/name">
-          <p className="text-[13px] font-medium text-[#0f0f0f] truncate group-hover/name:text-[#0f0f0f] transition-colors">
+          <p className="text-[13px] font-medium text-[#F8FAFC] truncate group-hover/name:text-white transition-colors">
             {client.company_name}
           </p>
         </Link>
         {aux && (
           <p className={`text-[10px] mt-0.5 ${
-            status === 'atrasado' ? 'text-red-600' :
-            status === 'vence_em_breve' ? 'text-amber-600' : 'text-[#737373]'
+            status === 'atrasado' ? 'text-red-400' :
+            status === 'vence_em_breve' ? 'text-amber-400' : 'text-[#94a3b8]'
           }`}>{aux}</p>
         )}
       </div>
 
       {/* Valor mensal */}
       <div className="hidden sm:block w-28 text-right flex-shrink-0">
-        <p className="text-[13px] font-semibold text-[#0f0f0f]">
+        <p className="text-[13px] font-semibold text-[#F8FAFC]">
           {client.valor_mensal != null ? fmtBRLDecimal(client.valor_mensal) : '—'}
         </p>
         {client.dia_vencimento != null && (
-          <p className="text-[10px] text-zinc-600 flex items-center justify-end gap-1 mt-0.5">
+          <p className="text-[10px] text-[#64748b] flex items-center justify-end gap-1 mt-0.5">
             <CalendarDays className="w-2.5 h-2.5" /> dia {client.dia_vencimento}
           </p>
         )}
@@ -481,7 +481,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
 
       {/* Último pagamento */}
       <div className="hidden lg:block w-28 text-right flex-shrink-0">
-        <p className="text-[11px] text-zinc-500">{fmtDate(client.last_payment_date)}</p>
+        <p className="text-[11px] text-[#64748b]">{fmtDate(client.last_payment_date)}</p>
       </div>
 
       {/* Actions */}
@@ -491,7 +491,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
           <button
             onClick={() => onOpenPayment(client)}
             title="Registrar pagamento"
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-emerald-700 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 transition-all"
           >
             <CheckCircle2 className="w-3 h-3" /> Pago
           </button>
@@ -503,7 +503,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
             onClick={handleCobrar}
             disabled={sending}
             title="Enviar cobrança via WhatsApp"
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-lg text-[11px] text-green-400 hover:bg-green-500/10 border border-transparent hover:border-green-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending
               ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -516,7 +516,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
         <button
           onClick={() => onOpenHistory(client)}
           title="Histórico de pagamentos"
-          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e293b] border border-transparent hover:border-[#1e293b] transition-all"
         >
           <History className="w-3 h-3" />
         </button>
@@ -528,7 +528,7 @@ function ClientRow({ client, onOpenPayment, onOpenHistory }: {
         <Link
           to={`/clients/${client.id}`}
           title="Abrir perfil"
-          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#737373] hover:text-[#0f0f0f] hover:bg-[#f0f0f0] border border-transparent hover:border-[#e8e8e8] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e293b] border border-transparent hover:border-[#1e293b] transition-all"
         >
           <ExternalLink className="w-3 h-3" />
         </Link>
