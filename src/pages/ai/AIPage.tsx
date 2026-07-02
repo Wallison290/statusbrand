@@ -1215,6 +1215,16 @@ ${subAgentContext}`
           )}
         </div>
 
+        {/* Input de arquivo (imagem/PDF) — sempre montado, usado pelo chat E pelo ImageBuilder */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          multiple
+          className="hidden"
+          onChange={handleFileAttach}
+        />
+
         {/* ── Barra de input estilo ChatGPT (some quando o builder de imagem está aberto) ── */}
         {!imageBuilderOpen && (
         <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white">
@@ -1341,14 +1351,6 @@ ${subAgentContext}`
                   >
                     <Paperclip className="w-4 h-4" />
                   </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,application/pdf"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileAttach}
-                  />
 
                   {/* Microfone (Web Speech API) */}
                   {voiceSupported && (
