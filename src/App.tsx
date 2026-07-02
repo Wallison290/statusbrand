@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '@/components/ui/toast'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -28,6 +28,7 @@ const Library           = lazy(() => import('@/pages/library/Library').then(m =>
 const Financial         = lazy(() => import('@/pages/financial/Financial').then(m => ({ default: m.Financial })))
 const Notes             = lazy(() => import('@/pages/notes/Notes').then(m => ({ default: m.Notes })))
 const AIPage            = lazy(() => import('@/pages/ai/AIPage').then(m => ({ default: m.AIPage })))
+const AIHub             = lazy(() => import('@/pages/ai/AIHub').then(m => ({ default: m.AIHub })))
 const Subscription       = lazy(() => import('@/pages/Subscription').then(m => ({ default: m.Subscription })))
 const Pricing            = lazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
 const PortalDashboard    = lazy(() => import('@/pages/portal/PortalDashboard').then(m => ({ default: m.PortalDashboard })))
@@ -138,6 +139,12 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/** Remonta o AIPage do zero a cada troca de squad/rota — cada card do hub abre um chat limpo. */
+function AIPageRoute() {
+  const { squadId } = useParams()
+  return <AIPage key={squadId ?? 'livre'} />
+}
+
 // ── Rotas ─────────────────────────────────────────────────────────────────────
 
 function AppRoutes() {
@@ -188,7 +195,10 @@ function AppRoutes() {
         <Route path="/notes"         element={<Notes />} />
         <Route path="/library"       element={<Library />} />
         <Route path="/financial"     element={<Financial />} />
-        <Route path="/ai"            element={<AIPage />} />
+        <Route path="/ai"            element={<AIHub />} />
+        <Route path="/ai/squad/:squadId" element={<AIPageRoute />} />
+        <Route path="/ai/livre"      element={<AIPage key="livre" />} />
+        <Route path="/ai/imagem"     element={<AIPage key="imagem" />} />
         <Route path="/equipe"        element={<TeamPage />} />
         <Route path="/instagram"     element={<InstagramPage />} />
         <Route path="/whatsapp"      element={<WhatsAppPage />} />
