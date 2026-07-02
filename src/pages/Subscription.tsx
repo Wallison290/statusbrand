@@ -351,7 +351,7 @@ export function Subscription() {
               { label: 'Requests IA/mês',        values: ['150', '600', '2.000'] },
               { label: 'Armazenamento',          values: ['10 GB', '50 GB', '100 GB'] },
               { label: 'IA Copilot',             values: [true, true, true] },
-              { label: 'Portal do cliente',      values: ['1 cliente', 'Até 15 clientes', 'Até 50 clientes'] },
+              { label: 'Portal do cliente',      values: ['Até 2 clientes', 'Até 10 clientes', 'Até 50 clientes'] },
               { label: 'Relatórios',             values: [false, true, true] },
               { label: 'Equipe (usuários)',       values: ['1', 'Até 3', 'Ilimitado'] },
               { label: 'Agendamento Instagram',  values: ['1 perfil', 'Até 5 perfis', 'Até 20 perfis'] },
