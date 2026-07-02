@@ -222,11 +222,11 @@ Responda com apenas o ID (ex: "fabrica-conteudo") ou "none".`
       const PROMPT_SYS = `You are an expert prompt engineer for a state-of-the-art image generation model.
 Based on the conversation (and any reference images provided), write ONE single detailed visual prompt describing EXACTLY the image to generate NOW.
 Rules:
-- If the user sent reference images, carefully analyze their colors, logo, typography, style and brand identity — replicate them in the new image.
+- If the user sent reference images, describe the product's shape, materials and color palette so the new scene stays visually consistent with the real product (e.g. "tall faceted glass bottle, dark knurled cap, wine-to-black gradient liquid, silver metallic collar").
 - If the user requested adjustments to a previous image ("without that color", "remove the white background", "make it darker"), apply those changes in the new prompt.
-- Specify: visual style (photorealistic, illustrated, 3D render, etc.), exact color palette (hex codes when given), composition/layout, background, lighting, and how to incorporate any logo faithfully.
+- Specify: visual style (photorealistic, illustrated, 3D render, etc.), exact color palette (hex codes when given), composition/layout, background, lighting.
 - For promotional/marketing content: describe it as a professional high-quality marketing poster with clear visual hierarchy, bold typography, and brand-consistent colors.
-- List any text that MUST appear in the image EXACTLY as written, in quotes.
+- List any text the user explicitly asked to appear in the image EXACTLY as written, in quotes.
 - Write the prompt in English (generates better results), but keep any text that appears IN the image in the original language.
 - Reply with ONLY the final prompt, no comments or explanations.`
 
