@@ -29,6 +29,8 @@ const emptyForm = {
   service_type: '',
   entry_date: new Date().toISOString().split('T')[0],
   logo_url: null as string | null,
+  brand_color_primary: null as string | null,
+  brand_color_secondary: null as string | null,
   responsible_user_id: null as string | null,
   valor_mensal: null as number | null,
   dia_vencimento: null as number | null,
@@ -206,6 +208,50 @@ export function ClientForm() {
                   />
                 </div>
                 <p className="text-[10px] text-gray-500 mt-1.5">PNG, JPG, WEBP, SVG · Máx. 5 MB</p>
+              </div>
+
+              {/* Cores da marca — usadas na Criação de Imagens da StatusIA */}
+              <div className="col-span-full">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Cores da marca</label>
+                <div className="flex items-center gap-5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.brand_color_primary || '#6366f1'}
+                      onChange={e => set('brand_color_primary', e.target.value)}
+                      className="w-8 h-8 rounded-md border border-gray-200 cursor-pointer"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">Cor primária</span>
+                      <input
+                        type="text"
+                        value={form.brand_color_primary || ''}
+                        onChange={e => set('brand_color_primary', e.target.value || null)}
+                        placeholder="#6366f1"
+                        className="w-20 text-xs text-gray-700 border-0 border-b border-gray-200 focus:border-gray-400 outline-none bg-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.brand_color_secondary || '#8b5cf6'}
+                      onChange={e => set('brand_color_secondary', e.target.value)}
+                      className="w-8 h-8 rounded-md border border-gray-200 cursor-pointer"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">Cor secundária</span>
+                      <input
+                        type="text"
+                        value={form.brand_color_secondary || ''}
+                        onChange={e => set('brand_color_secondary', e.target.value || null)}
+                        placeholder="#8b5cf6"
+                        className="w-20 text-xs text-gray-700 border-0 border-b border-gray-200 focus:border-gray-400 outline-none bg-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1.5">Usadas para gerar imagens com IA já na identidade visual do cliente</p>
               </div>
 
               <Input label="Nome da empresa *" value={form.company_name} onChange={e => set('company_name', e.target.value)} required placeholder="Ex: Studio Fitness" />

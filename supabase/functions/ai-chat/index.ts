@@ -147,7 +147,11 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { messages, systemPrompt, useWebSearch, generateImage, classify, message: classifyMessage } = await req.json()
+  const { messages, systemPrompt, useWebSearch, generateImage, size, classify, message: classifyMessage } = await req.json()
+
+  // Tamanho de imagem — valida contra os formatos aceitos pela família gpt-image
+  const ALLOWED_IMAGE_SIZES = ['1024x1024', '1024x1536', '1536x1024']
+  const imgSize = ALLOWED_IMAGE_SIZES.includes(size) ? size : '1024x1024'
 
   // ── Classificação de squad (sem custo de request) ────────────────────────
   if (classify) {
@@ -291,13 +295,13 @@ Rules:
             image: files.length === 1 ? files[0] : files,
             prompt: builtPrompt,
             n: 1,
-            size: '1024x1024',
+            size: imgSize,
             quality: 'high',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any)
         } else {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          imgRes = await (openai.images.generate as any)({ model, prompt: builtPrompt, n: 1, size: '1024x1024', quality: 'high' })
+          imgRes = await (openai.images.generate as any)({ model, prompt: builtPrompt, n: 1, size: imgSize, quality: 'high' })
         }
         const d = imgRes.data?.[0]
         imgUrl = d?.b64_json ? `data:image/png;base64,${d.b64_json}` : (d?.url ?? '')

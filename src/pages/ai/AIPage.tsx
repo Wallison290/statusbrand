@@ -9,14 +9,15 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
-import { useClients } from '@/hooks/useClients'
+import { useClients, useUpdateClient } from '@/hooks/useClients'
 import { useClientContext, useAIUserMemory, buildUserMemoryContext } from '@/hooks/useAIContext'
 import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AIUserMemoryPanel } from '@/components/ai/AIUserMemoryPanel'
 import { AI_SQUADS, detectSquad, getSquadPhases, getSquadSubAgents, getSquadWebSearch, type AISquad } from '@/data/aiSquads'
-import { streamChat } from '@/lib/aiProxy'
+import { streamChat, type ImageSize } from '@/lib/aiProxy'
 import { extractPdfText } from '@/utils/pdfText'
 import { DiagnosticoModal } from './DiagnosticoModal'
+import { ImageBuilder } from './components/ImageBuilder'
 import {
   useAISessions,
   useAIMessages,
@@ -428,6 +429,8 @@ export function AIPage() {
   const [sidebarOpen, setSidebarOpen]           = useState(true)
   const [input, setInput]                       = useState('')
   const [imageMode, setImageMode]               = useState(false)
+  const [imageBuilderOpen, setImageBuilderOpen] = useState(false)
+  const [hubDismissed, setHubDismissed]         = useState(false)
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null)
   const [activeClientId, setActiveClientId]     = useState<string | null>(null)
   const [clientPickerOpen, setClientPickerOpen] = useState(false)
@@ -478,6 +481,7 @@ export function AIPage() {
   const { data: clientCtx }                                 = useClientContext(activeClientId)
   const { data: userMemories = [] }                         = useAIUserMemory()
   const deleteSession  = useDeleteSession()
+  const updateClient   = useUpdateClient()
 
   const effectiveSessionId = activeSessionId ?? pendingSessionId
   const { sendMessage, isStreaming, isLoading, streamingContent, stopGeneration } =
@@ -556,7 +560,7 @@ export function AIPage() {
     // Detecção automática de squad (qualquer mensagem enquanto não há squad ativo)
     // Em modo imagem não ativa squad — a geração é independente de squad
     let currentSquad = activeSquad
-    if (!currentSquad && text && !imageMode) {
+    if (!currentSquad && text && !imageMode && !imageBuilderOpen) {
       // Fase 1: keyword match rápido (instantâneo)
       const detected = detectSquad(text)
       if (detected) {
@@ -700,7 +704,7 @@ ${subAgentContext}`
         try { localStorage.setItem(`sf_phase_${sid}`, JSON.stringify(phaseData)) } catch { /* storage cheio */ }
       }
     }
-  }, [input, attachedImages, attachedPdfs, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
+  }, [input, attachedImages, attachedPdfs, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, imageBuilderOpen, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -708,7 +712,7 @@ ${subAgentContext}`
 
   const handleNewChat = () => {
     setActiveSessionId(null); setPendingSessionId(null)
-    setInput(''); setImageMode(false); setActiveSquad(null); setAttachedImages([])
+    setInput(''); setImageMode(false); setImageBuilderOpen(false); setHubDismissed(false); setActiveSquad(null); setAttachedImages([])
     setAttachedPdfs([]); setPdfError(null)
     sessionPhaseRef.current = null
     setCurrentPhaseDisplay(0)
@@ -746,6 +750,37 @@ ${subAgentContext}`
       }
     }
   }
+
+  // Geração de imagem formatada (vinda do card "Criação de Imagens")
+  const handleGenerateFormattedImage = useCallback(async (fullPrompt: string, size: ImageSize) => {
+    if (isStreaming || isLoading) return
+    setImageBuilderOpen(false)
+    const imgs = [...attachedImages]
+    setAttachedImages([])
+
+    const fullContext = [userMemoryContext, clientCtx?.contextString].filter(Boolean).join('\n\n') || null
+    const onSessionCreated = (session: AISession) => {
+      setActiveSessionId(session.id)
+      setPendingSessionId(null)
+    }
+
+    await sendMessage(
+      fullPrompt, messages, false,
+      onSessionCreated,
+      fullContext,
+      activeClientId,
+      null,
+      imgs.length > 0 ? imgs : undefined,
+      true,
+      undefined,
+      size,
+    )
+  }, [isStreaming, isLoading, attachedImages, userMemoryContext, clientCtx, activeClientId, messages, sendMessage])
+
+  const handleSaveBrandColors = useCallback((primary: string, secondary: string) => {
+    if (!activeClientId) return
+    updateClient.mutate({ id: activeClientId, brand_color_primary: primary, brand_color_secondary: secondary })
+  }, [activeClientId, updateClient])
 
   const handleExportToCalendar = useCallback(async () => {
     if (!activeClientId || isExporting || messages.length < 4) return
@@ -856,6 +891,7 @@ ${subAgentContext}`
   }
 
   const isEmpty    = !activeSessionId && !pendingSessionId
+  const showHub    = isEmpty && !activeSquad && !hubDismissed && !imageBuilderOpen
   const hasContent = input.trim().length > 0 || attachedImages.length > 0 || attachedPdfs.length > 0
   const canSend    = hasContent && !isStreaming && !isLoading && !isSubAgentRunning
 
@@ -1071,31 +1107,100 @@ ${subAgentContext}`
 
         {/* ── Área de mensagens ── */}
         <div className="flex-1 overflow-y-auto">
-          {isEmpty ? (
-            /* Tela de boas-vindas — minimalista */
+          {imageBuilderOpen ? (
+            <ImageBuilder
+              isGenerating={isLoading || isStreaming}
+              activeClientName={clientCtx?.client.company_name ?? null}
+              brandColorPrimary={clientCtx?.client.brand_color_primary ?? null}
+              brandColorSecondary={clientCtx?.client.brand_color_secondary ?? null}
+              canSaveColors={!!activeClientId}
+              onSaveColors={handleSaveBrandColors}
+              attachedImages={attachedImages}
+              onAttachClick={() => fileInputRef.current?.click()}
+              onRemoveAttachedImage={i => setAttachedImages(prev => prev.filter((_, j) => j !== i))}
+              onGenerate={handleGenerateFormattedImage}
+              onCancel={() => setImageBuilderOpen(false)}
+            />
+          ) : showHub ? (
+            /* Ecossistema — grade de squads */
+            <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
+              <div className="text-center mb-6">
+                <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2">Como posso ajudar?</h1>
+                <p className="text-[13px] text-[#666]">Escolha uma especialidade da StatusIA ou comece uma conversa livre.</p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {/* Chat livre */}
+                <button
+                  onClick={() => { setHubDismissed(true); setTimeout(() => textareaRef.current?.focus(), 0) }}
+                  className="flex flex-col items-start gap-2 p-4 rounded-2xl border border-[#e0e0e0] bg-white hover:shadow-md hover:-translate-y-0.5 transition-all text-left"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#0f0f0f] flex items-center justify-center">
+                    <MessageSquare className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#0f0f0f]">Chat livre</span>
+                  <span className="text-[11px] text-[#888] line-clamp-2">Converse sem ativar um squad específico</span>
+                </button>
+
+                {/* Criação de imagens — destaque */}
+                <button
+                  onClick={() => setImageBuilderOpen(true)}
+                  className="flex flex-col items-start gap-2 p-4 rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 hover:shadow-md hover:-translate-y-0.5 transition-all text-left"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center">
+                    <Wand2 className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-violet-700">Criação de Imagens</span>
+                  <span className="text-[11px] text-violet-500 line-clamp-2">Formato, cores da marca e referência num só lugar</span>
+                </button>
+
+                {AI_SQUADS.map(squad => (
+                  <button
+                    key={squad.id}
+                    onClick={() => { setActiveSquad(squad); setHubDismissed(true); setTimeout(() => textareaRef.current?.focus(), 0) }}
+                    className="flex flex-col items-start gap-2 p-4 rounded-2xl border hover:shadow-md hover:-translate-y-0.5 transition-all text-left"
+                    style={{ backgroundColor: squad.color.bg, borderColor: squad.color.border }}
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[17px]" style={{ backgroundColor: squad.color.dot }}>
+                      {squad.emoji}
+                    </div>
+                    <span className="text-[13px] font-semibold" style={{ color: squad.color.text }}>{squad.name}</span>
+                    <span className="text-[11px] text-[#666] line-clamp-2">{squad.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : isEmpty ? (
+            /* Squad ou chat livre escolhido — tela de composição, ainda sem mensagens */
             <div className="flex flex-col items-center justify-center min-h-full px-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mb-5 shadow-lg">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2 text-center">Como posso ajudar?</h1>
+              <h1 className="text-[22px] font-bold text-[#0f0f0f] mb-2 text-center">
+                {activeSquad ? `${activeSquad.emoji} ${activeSquad.name}` : 'Como posso ajudar?'}
+              </h1>
               <p className="text-[13px] text-[#666] text-center max-w-md">
-                Especialista em Social Media e Marketing Digital. Ative um squad ou pergunte diretamente.
+                {activeSquad ? activeSquad.description : 'Pergunte sobre estratégias, tendências, conteúdo...'}
               </p>
+              <button
+                onClick={() => {
+                  setHubDismissed(false)
+                  setActiveSquad(null)
+                  sessionPhaseRef.current = null
+                  setCurrentPhaseDisplay(0)
+                  setActiveSubAgents([])
+                }}
+                className="mt-4 text-[11px] text-[#6366f1] hover:underline"
+              >
+                ← Voltar ao ecossistema
+              </button>
 
               {/* Informação sutil de contexto ativo (sem barra) */}
-              {(activeSquad || (activeClientId && clientCtx)) && (
+              {activeClientId && clientCtx && (
                 <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4">
-                  {activeSquad && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                      style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}>
-                      <span>{activeSquad.emoji}</span> {activeSquad.name}
-                    </span>
-                  )}
-                  {activeClientId && clientCtx && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 border border-emerald-200 text-emerald-700">
-                      <Building2 className="w-3 h-3" /> {clientCtx.client.company_name}
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    <Building2 className="w-3 h-3" /> {clientCtx.client.company_name}
+                  </span>
                 </div>
               )}
             </div>
@@ -1315,7 +1420,7 @@ ${subAgentContext}`
 
                   {/* Toggle gerar imagem (gpt-image-1.5) */}
                   <button
-                    onClick={() => setImageMode(m => !m)}
+                    onClick={() => { setImageMode(m => !m); setImageBuilderOpen(false) }}
                     disabled={isLoading || isStreaming}
                     title={imageMode ? 'Desativar modo imagem' : 'Gerar imagem com IA (gpt-image-1.5)'}
                     className={cn(

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
-import { callProxy, streamChat } from '@/lib/aiProxy'
+import { callProxy, streamChat, type ImageSize } from '@/lib/aiProxy'
 
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Você é a StatusIA — o assistente de IA do sistema StatusMedia, construído sobre o SocialForge v3. Você é um time completo de marketing digital com 13 especialidades e 48 agentes especializados.
@@ -315,6 +315,7 @@ export function useAIChat(sessionId: string | null) {
     attachedImages?: string[],  // base64 data URLs
     forceImage = false,         // botão "Imagem" liga geração explicitamente
     attachedPdfs?: { name: string; text: string }[], // texto já extraído no navegador
+    imageSize: ImageSize = '1024x1024', // formato da imagem gerada (Criação de Imagens)
   ) => {
     if (!content.trim() && (!attachedImages || attachedImages.length === 0) && (!attachedPdfs || attachedPdfs.length === 0)) return
     if (isStreaming || isLoading) return
@@ -422,6 +423,7 @@ ${squadPrompt}`
         (chunk) => setStreamingContent(prev => prev + chunk),
         abort.signal,
         generateImage,
+        imageSize,
       )
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {

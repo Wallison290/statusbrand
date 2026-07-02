@@ -48,6 +48,8 @@ export interface Client {
   forbidden_words: string | null
   observations: string | null
   logo_url: string | null
+  brand_color_primary: string | null
+  brand_color_secondary: string | null
   status: ClientStatus
   responsible_user_id: string | null
   entry_date: string

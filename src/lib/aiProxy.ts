@@ -28,6 +28,8 @@ export async function callProxy<T extends { content?: string | null }>(
 
 // ── Streaming de chat via SSE ──────────────────────────────────────────────────
 
+export type ImageSize = '1024x1024' | '1024x1536' | '1536x1024'
+
 export async function streamChat(
   messages: { role: 'user' | 'assistant'; content: string }[],
   systemPrompt: string,
@@ -35,6 +37,7 @@ export async function streamChat(
   onChunk: (text: string) => void,
   signal?: AbortSignal,
   generateImage = false,
+  imageSize: ImageSize = '1024x1024',
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new Error('Não autenticado')
@@ -46,7 +49,7 @@ export async function streamChat(
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ messages, systemPrompt, useWebSearch, generateImage }),
+    body: JSON.stringify({ messages, systemPrompt, useWebSearch, generateImage, size: imageSize }),
     signal,
   })
 
