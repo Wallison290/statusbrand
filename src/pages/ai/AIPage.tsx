@@ -15,6 +15,7 @@ import { AIMemoryPanel } from '@/components/ai/AIMemoryPanel'
 import { AIUserMemoryPanel } from '@/components/ai/AIUserMemoryPanel'
 import { AI_SQUADS, detectSquad, getSquadPhases, getSquadSubAgents, getSquadWebSearch, type AISquad } from '@/data/aiSquads'
 import { streamChat } from '@/lib/aiProxy'
+import { extractPdfText } from '@/utils/pdfText'
 import { DiagnosticoModal } from './DiagnosticoModal'
 import {
   useAISessions,
@@ -173,6 +174,7 @@ function formatMessage(text: string): JSX.Element[] {
 function MessageContent({ content, isUser }: { content: string; isUser: boolean }) {
   const ATTACHED = /\[\[IMG:([\s\S]*?)\]\]/g
   const GENERATED = /\[\[GENERATED_IMAGE:([\s\S]*?)\]\]/g
+  const PDF = /\[\[PDF:([^|]*?)\|[\s\S]*?\]\]/g
 
   // Extrai imagens do usuário
   const userImages: string[] = []
@@ -181,6 +183,10 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
   // Extrai imagens geradas pela IA
   const genImages: string[] = []
   cleanContent = cleanContent.replace(GENERATED, (_, url) => { genImages.push(url); return '' }).trim()
+
+  // Extrai PDFs anexados (mostra só o nome do arquivo, não o texto extraído)
+  const pdfNames: string[] = []
+  cleanContent = cleanContent.replace(PDF, (_, name) => { pdfNames.push(name); return '' }).trim()
 
   return (
     <div>
@@ -194,6 +200,21 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
               alt="Imagem enviada"
               className="max-h-48 max-w-[280px] rounded-xl object-cover border border-white/20"
             />
+          ))}
+        </div>
+      )}
+
+      {/* PDFs anexados pelo usuário */}
+      {pdfNames.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {pdfNames.map((name, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#e0e0e0] text-[11px] text-[#374151] max-w-[220px]"
+            >
+              <FileText className="w-3.5 h-3.5 flex-shrink-0 text-[#6366f1]" />
+              <span className="truncate">{name}</span>
+            </div>
           ))}
         </div>
       )}
@@ -439,6 +460,11 @@ export function AIPage() {
   const [attachedImages, setAttachedImages]     = useState<string[]>([])
   const fileInputRef                            = useRef<HTMLInputElement>(null)
 
+  // PDFs anexados (texto extraído no navegador)
+  const [attachedPdfs, setAttachedPdfs]         = useState<{ name: string; text: string; truncated: boolean }[]>([])
+  const [pdfProcessing, setPdfProcessing]       = useState(false)
+  const [pdfError, setPdfError]                 = useState<string | null>(null)
+
   // Modal: Diagnóstico de Perfil
   const [diagnosticoOpen, setDiagnosticoOpen]   = useState(false)
 
@@ -519,11 +545,13 @@ export function AIPage() {
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleSend = useCallback(async () => {
-    if ((!input.trim() && attachedImages.length === 0) || isStreaming || isLoading || isSubAgentRunning) return
+    if ((!input.trim() && attachedImages.length === 0 && attachedPdfs.length === 0) || isStreaming || isLoading || isSubAgentRunning) return
     const text = input.trim()
     setInput('')
     const imgs = [...attachedImages]
     setAttachedImages([])
+    const pdfs = [...attachedPdfs]
+    setAttachedPdfs([])
 
     // Detecção automática de squad (qualquer mensagem enquanto não há squad ativo)
     // Em modo imagem não ativa squad — a geração é independente de squad
@@ -630,6 +658,7 @@ ${subAgentContext}`
           phasedSquadPrompt,
           imgs.length > 0 ? imgs : undefined,
           imageMode,
+          pdfs.length > 0 ? pdfs : undefined,
         )
 
         setActiveSubAgents(prev => prev.map(a => a.id === consolidator.id ? { ...a, status: 'done' as const } : a))
@@ -644,7 +673,7 @@ ${subAgentContext}`
       // Squad com useWebSearch: sempre ativa (exceto saudações/imagens)
       // Sem squad ativo: mantém heurística genérica
       const squadWantsSearch = currentSquad ? getSquadWebSearch(currentSquad.id) : false
-      const useSearch = imgs.length === 0 && !historyHasImages && !imageMode
+      const useSearch = imgs.length === 0 && pdfs.length === 0 && !historyHasImages && !imageMode
         && (squadWantsSearch ? shouldUseWebSearch(text) : shouldUseWebSearch(text) && !currentSquad)
       await sendMessage(
         text, messages, useSearch,
@@ -654,6 +683,7 @@ ${subAgentContext}`
         phasedSquadPrompt,
         imgs.length > 0 ? imgs : undefined,
         imageMode,
+        pdfs.length > 0 ? pdfs : undefined,
       )
     }
 
@@ -670,7 +700,7 @@ ${subAgentContext}`
         try { localStorage.setItem(`sf_phase_${sid}`, JSON.stringify(phaseData)) } catch { /* storage cheio */ }
       }
     }
-  }, [input, attachedImages, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
+  }, [input, attachedImages, attachedPdfs, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -679,6 +709,7 @@ ${subAgentContext}`
   const handleNewChat = () => {
     setActiveSessionId(null); setPendingSessionId(null)
     setInput(''); setImageMode(false); setActiveSquad(null); setAttachedImages([])
+    setAttachedPdfs([]); setPdfError(null)
     sessionPhaseRef.current = null
     setCurrentPhaseDisplay(0)
     setActiveSubAgents([])
@@ -688,9 +719,32 @@ ${subAgentContext}`
   const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
-    const encoded = await Promise.all(files.map(f => resizeAndEncode(f)))
-    setAttachedImages(prev => [...prev, ...encoded].slice(0, 4)) // máx 4 imagens
     e.target.value = ''
+
+    const pdfFiles   = files.filter(f => f.type === 'application/pdf')
+    const imageFiles = files.filter(f => f.type !== 'application/pdf')
+
+    if (imageFiles.length > 0) {
+      const encoded = await Promise.all(imageFiles.map(f => resizeAndEncode(f)))
+      setAttachedImages(prev => [...prev, ...encoded].slice(0, 4)) // máx 4 imagens
+    }
+
+    if (pdfFiles.length > 0) {
+      setPdfError(null)
+      setPdfProcessing(true)
+      try {
+        const extracted = await Promise.all(pdfFiles.map(async f => {
+          const { text, truncated } = await extractPdfText(f)
+          return { name: f.name, text, truncated }
+        }))
+        setAttachedPdfs(prev => [...prev, ...extracted].slice(0, 2)) // máx 2 PDFs
+      } catch (err: any) {
+        setPdfError(err?.message ?? 'Não foi possível ler o PDF.')
+        setTimeout(() => setPdfError(null), 5000)
+      } finally {
+        setPdfProcessing(false)
+      }
+    }
   }
 
   const handleExportToCalendar = useCallback(async () => {
@@ -802,7 +856,7 @@ ${subAgentContext}`
   }
 
   const isEmpty    = !activeSessionId && !pendingSessionId
-  const hasContent = input.trim().length > 0 || attachedImages.length > 0
+  const hasContent = input.trim().length > 0 || attachedImages.length > 0 || attachedPdfs.length > 0
   const canSend    = hasContent && !isStreaming && !isLoading && !isSubAgentRunning
 
   // Detecta se a conversa tem plano de conteúdo exportável
@@ -1130,6 +1184,33 @@ ${subAgentContext}`
               </div>
             )}
 
+            {/* Preview de PDFs anexados */}
+            {attachedPdfs.length > 0 && (
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {attachedPdfs.map((pdf, i) => (
+                  <div key={i} className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-xl bg-[#f7f7f8] border border-[#e0e0e0] text-[11px] text-[#374151] max-w-[220px]">
+                    <FileText className="w-3.5 h-3.5 flex-shrink-0 text-[#6366f1]" />
+                    <span className="truncate">{pdf.name}</span>
+                    {pdf.truncated && <span className="text-[9px] text-amber-600 flex-shrink-0" title="Documento grande — só o início foi lido">✂️</span>}
+                    <button
+                      onClick={() => setAttachedPdfs(prev => prev.filter((_, j) => j !== i))}
+                      className="w-4 h-4 rounded-full bg-[#0f0f0f] text-white flex items-center justify-center flex-shrink-0"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {pdfProcessing && (
+              <div className="flex items-center gap-1.5 mb-2 text-[11px] text-[#64748b]">
+                <Loader2 className="w-3 h-3 animate-spin" /> Lendo PDF...
+              </div>
+            )}
+            {pdfError && (
+              <div className="mb-2 text-[11px] text-red-500">{pdfError}</div>
+            )}
+
             {/* Caixa de input */}
             <div className={cn(
               'flex flex-col bg-white border rounded-3xl shadow-sm transition-all',
@@ -1146,6 +1227,7 @@ ${subAgentContext}`
                     isRecording ? '🔴 Ouvindo... fale agora' :
                     imageMode ? '🎨 Descreva a imagem que quer gerar...' :
                     attachedImages.length > 0 ? 'Pergunte algo sobre essa imagem...' :
+                    attachedPdfs.length > 0 ? 'Pergunte algo sobre esse documento...' :
                     'Pergunte sobre estratégias, tendências, conteúdo...'
                   }
                   rows={1}
@@ -1196,11 +1278,11 @@ ${subAgentContext}`
                       </button>
                     )
                   )}
-                  {/* Anexar imagem */}
+                  {/* Anexar imagem ou PDF */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || isStreaming}
-                    title="Anexar imagem"
+                    disabled={isLoading || isStreaming || pdfProcessing}
+                    title="Anexar imagem ou PDF"
                     className="w-8 h-8 flex items-center justify-center rounded-xl text-[#888] hover:bg-[#f0f0f0] hover:text-[#333] transition-all disabled:opacity-40"
                   >
                     <Paperclip className="w-4 h-4" />
@@ -1208,7 +1290,7 @@ ${subAgentContext}`
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
                     multiple
                     className="hidden"
                     onChange={handleFileAttach}

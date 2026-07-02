@@ -54,6 +54,15 @@ async function checkUsage(userId: string, cost = 1): Promise<{ allowed: boolean;
   return { allowed: true, plan, limit }
 }
 
+// ── PDF: converte [[PDF:nome|texto-codificado]] no texto extraído legível ─────
+function stripPdfMarkers(content: string): string {
+  return content.replace(/\[\[PDF:([^|]*?)\|([\s\S]*?)\]\]/g, (_, name: string, encoded: string) => {
+    let text: string
+    try { text = decodeURIComponent(encoded) } catch { text = encoded }
+    return `\n📄 Conteúdo do arquivo "${name}":\n"""\n${text}\n"""\n`
+  })
+}
+
 // ── Multimodal: converte conteúdo com [[IMG:url]] para o formato da OpenAI ──
 type ContentPart =
   | { type: 'text'; text: string }
@@ -92,10 +101,13 @@ function buildMessages(
   ]
 
   for (const m of messages) {
-    if (m.role === 'user' && hasImages(m.content)) {
-      result.push({ role: 'user', content: buildContentParts(m.content) as OpenAI.Chat.ChatCompletionContentPart[] })
-    } else if (m.role === 'user') {
-      result.push({ role: 'user', content: m.content })
+    if (m.role === 'user') {
+      const withPdfText = stripPdfMarkers(m.content)
+      if (hasImages(withPdfText)) {
+        result.push({ role: 'user', content: buildContentParts(withPdfText) as OpenAI.Chat.ChatCompletionContentPart[] })
+      } else {
+        result.push({ role: 'user', content: withPdfText })
+      }
     } else if (m.role === 'assistant') {
       // Remove [[GENERATED_IMAGE:...]] markers from assistant history (só guarda o texto)
       const text = m.content.replace(/\[\[GENERATED_IMAGE:[\s\S]*?\]\]/g, '[imagem gerada]')

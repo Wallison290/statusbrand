@@ -314,8 +314,9 @@ export function useAIChat(sessionId: string | null) {
     squadPrompt?: string | null,
     attachedImages?: string[],  // base64 data URLs
     forceImage = false,         // botão "Imagem" liga geração explicitamente
+    attachedPdfs?: { name: string; text: string }[], // texto já extraído no navegador
   ) => {
-    if (!content.trim() && (!attachedImages || attachedImages.length === 0)) return
+    if (!content.trim() && (!attachedImages || attachedImages.length === 0) && (!attachedPdfs || attachedPdfs.length === 0)) return
     if (isStreaming || isLoading) return
 
     // Monta conteúdo com imagens (marcadores [[IMG:...]])
@@ -325,9 +326,17 @@ export function useAIChat(sessionId: string | null) {
       fullContent = fullContent ? `${fullContent}${imgMarkers}` : imgMarkers.trim()
     }
 
+    // Monta conteúdo com PDFs (marcadores [[PDF:nome|texto-codificado]])
+    if (attachedPdfs && attachedPdfs.length > 0) {
+      const pdfMarkers = attachedPdfs
+        .map(pdf => `\n[[PDF:${pdf.name}|${encodeURIComponent(pdf.text)}]]`)
+        .join('')
+      fullContent = fullContent ? `${fullContent}${pdfMarkers}` : pdfMarkers.trim()
+    }
+
     // Gera imagem se: o botão Imagem estiver ligado (usa imagens anexadas como referência),
-    // OU o texto pedir geração e NÃO houver imagem anexada (sem botão, imagem anexada = análise/visão).
-    const generateImage = forceImage || (isImageGenRequest(fullContent) && !attachedImages?.length)
+    // OU o texto pedir geração e NÃO houver imagem/PDF anexado (sem botão, anexo = análise/leitura).
+    const generateImage = forceImage || (isImageGenRequest(fullContent) && !attachedImages?.length && !attachedPdfs?.length)
 
     let activeSessionId = sessionId
 
