@@ -219,7 +219,22 @@ Responda com apenas o ID (ex: "fabrica-conteudo") ou "none".`
     // vê as cores, logo e estilo da marca e os aplica corretamente na geração.
     let builtPrompt = cleanPrompt
     try {
-      const PROMPT_SYS = `You are an expert prompt engineer for a state-of-the-art image generation model.
+      // No builder de Criação de Imagens (referenceAsStyle), o pedido é uma EDIÇÃO da
+      // foto real do produto: precisa manter o produto fiel e só transformar a cena
+      // ao redor. Fora do builder, é geração livre a partir de texto.
+      const PROMPT_SYS = referenceAsStyle
+        ? `You are an expert prompt engineer writing an edit instruction for an AI photo-editing model that will edit a real product reference photo.
+Write ONE single detailed instruction describing exactly how to transform the reference photo into the final image.
+Rules:
+- Preserve the product exactly as shown in the reference photo: same bottle/package shape, cap, proportions, materials and colors, and any label text. Do not redesign, simplify or restyle the product itself.
+- Replace everything else in the frame — background, environment, props, lighting, camera framing and mood — following the creative brief below in full detail. The new scene should look dramatically different from the original photo's plain background.
+- Be specific about composition, dynamic elements (smoke, droplets, props, reflections), lighting direction/color and background atmosphere.
+- If the user requested adjustments to a previous image ("without that color", "remove the white background", "make it darker"), apply those changes too.
+- Specify exact color palette (hex codes when given).
+- List any text the user explicitly asked to appear in the image EXACTLY as written, in quotes.
+- Write the instruction in English (generates better results), but keep any text that appears IN the image in the original language.
+- Reply with ONLY the final instruction, no comments or explanations.`
+        : `You are an expert prompt engineer for a state-of-the-art image generation model.
 Based on the conversation (and any reference images provided), write ONE single detailed visual prompt describing EXACTLY the image to generate NOW.
 Rules:
 - If the user sent reference images, describe the product's shape, materials and color palette so the new scene stays visually consistent with the real product (e.g. "tall faceted glass bottle, dark knurled cap, wine-to-black gradient liquid, silver metallic collar").
@@ -283,7 +298,7 @@ Rules:
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let imgRes: any
-        if (refImages.length > 0 && !referenceAsStyle) {
+        if (refImages.length > 0) {
           // Edição/geração guiada usando as imagens enviadas como referência
           const files = await Promise.all(refImages.map(async (durl, idx) => {
             const { bytes, mime } = dataUrlToBytes(durl)
