@@ -4,7 +4,7 @@ import {
   MessageSquare, Square, Sparkles, TrendingUp, FileText,
   Lightbulb, Users, X, Building2, ChevronDown, Brain,
   Mic, MicOff, Paperclip, Download,
-  ImageIcon, PanelLeftOpen, PanelLeftClose, Wand2, Calendar, ArrowRight,
+  ImageIcon, ArrowLeft, History, Wand2, Calendar, ArrowRight,
 } from 'lucide-react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { cn } from '@/utils/formatters'
@@ -428,8 +428,10 @@ export function AIPage() {
   const { squadId } = useParams<{ squadId?: string }>()
   const location = useLocation()
   const isImagemRoute = location.pathname === '/ai/imagem'
+  // Identifica em qual estúdio estamos — usado pra filtrar/gravar o histórico
+  const squadContext = isImagemRoute ? 'imagem' : (squadId || 'livre')
   const [activeSessionId, setActiveSessionId]   = useState<string | null>(null)
-  const [sidebarOpen, setSidebarOpen]           = useState(true)
+  const [historyOpen, setHistoryOpen]           = useState(false)
   const [input, setInput]                       = useState('')
   const [imageMode, setImageMode]               = useState(false)
   const [imageBuilderOpen, setImageBuilderOpen] = useState(isImagemRoute)
@@ -478,8 +480,9 @@ export function AIPage() {
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pickerRef      = useRef<HTMLDivElement>(null)
+  const historyRef     = useRef<HTMLDivElement>(null)
 
-  const { data: sessions = [], isLoading: sessionsLoading } = useAISessions()
+  const { data: sessions = [], isLoading: sessionsLoading } = useAISessions(squadContext)
   const { data: messages = [], isLoading: messagesLoading } = useAIMessages(activeSessionId)
   const { data: clients  = [] }                             = useClients()
   const { data: clientCtx }                                 = useClientContext(activeClientId)
@@ -502,6 +505,7 @@ export function AIPage() {
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setClientPickerOpen(false)
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) setHistoryOpen(false)
     }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
@@ -667,6 +671,9 @@ ${subAgentContext}`
           imgs.length > 0 ? imgs : undefined,
           imageMode,
           pdfs.length > 0 ? pdfs : undefined,
+          '1024x1024',
+          false,
+          squadContext,
         )
 
         setActiveSubAgents(prev => prev.map(a => a.id === consolidator.id ? { ...a, status: 'done' as const } : a))
@@ -692,6 +699,9 @@ ${subAgentContext}`
         imgs.length > 0 ? imgs : undefined,
         imageMode,
         pdfs.length > 0 ? pdfs : undefined,
+        '1024x1024',
+        false,
+        squadContext,
       )
     }
 
@@ -708,7 +718,7 @@ ${subAgentContext}`
         try { localStorage.setItem(`sf_phase_${sid}`, JSON.stringify(phaseData)) } catch { /* storage cheio */ }
       }
     }
-  }, [input, attachedImages, attachedPdfs, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, imageBuilderOpen, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId])
+  }, [input, attachedImages, attachedPdfs, isStreaming, isLoading, isSubAgentRunning, sendMessage, messages, imageMode, imageBuilderOpen, clientCtx, activeSquad, activeClientId, userMemoryContext, activeSessionId, squadContext])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
@@ -780,8 +790,9 @@ ${subAgentContext}`
       undefined,
       size,
       true, // referenceAsStyle — a foto anexada só informa cores/produto, sempre gera cena nova
+      squadContext,
     )
-  }, [isStreaming, isLoading, attachedImages, userMemoryContext, clientCtx, activeClientId, messages, sendMessage])
+  }, [isStreaming, isLoading, attachedImages, userMemoryContext, clientCtx, activeClientId, messages, sendMessage, squadContext])
 
   const handleSaveBrandColors = useCallback((primary: string, secondary: string) => {
     if (!activeClientId) return
@@ -887,6 +898,11 @@ ${subAgentContext}`
       activeClientId,
       diagSquad?.systemPrompt ?? null,
       images.length > 0 ? images : undefined,
+      false,
+      undefined,
+      '1024x1024',
+      false,
+      squadContext,
     )
   }
 
@@ -916,101 +932,110 @@ ${subAgentContext}`
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* ── SIDEBAR ESCURA ── */}
-      <div className={cn(
-        'flex flex-col flex-shrink-0 transition-all duration-200 overflow-hidden',
-        sidebarOpen ? 'w-64' : 'w-0',
-      )} style={{ background: '#171717' }}>
-
-        {/* Logo — volta pro ecossistema de squads */}
-        <button
-          onClick={() => navigate('/ai')}
-          className="flex items-center gap-2.5 h-14 px-4 border-b border-white/8 flex-shrink-0 hover:bg-white/5 transition-colors text-left"
-          title="Voltar ao ecossistema"
-        >
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="text-[13px] font-semibold text-white/90 truncate">IA StatusMedia</span>
-        </button>
-
-        {/* Nova conversa */}
-        <div className="px-3 py-3 flex-shrink-0">
-          <button
-            onClick={handleNewChat}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/10 text-[13px] font-medium text-white/90 hover:bg-white/15 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Nova conversa
-          </button>
-        </div>
-
-        {/* Lista de sessões */}
-        <div className="flex-1 overflow-y-auto px-2 pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
-          {sessionsLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-4 h-4 animate-spin text-white/30" />
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageSquare className="w-7 h-7 text-white/20 mx-auto mb-2" />
-              <p className="text-[11px] text-white/30">Nenhuma conversa ainda</p>
-            </div>
-          ) : (
-            <div className="space-y-0.5 mt-1">
-              <p className="text-[10px] font-semibold text-white/25 uppercase tracking-wider px-2 mb-2">Conversas recentes</p>
-              {sessions.map(session => (
-                <button
-                  key={session.id}
-                  onClick={() => setActiveSessionId(session.id)}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left text-[12px] transition-all group',
-                    activeSessionId === session.id
-                      ? 'bg-white/15 text-white'
-                      : 'text-white/60 hover:bg-white/8 hover:text-white/90',
-                  )}
-                >
-                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
-                  <span className="flex-1 truncate">{session.title}</span>
-                  <button
-                    onClick={e => handleDeleteSession(session.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:text-red-400 transition-all flex-shrink-0"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-white/8 flex-shrink-0">
-          <p className="text-[10px] text-white/25 leading-relaxed">Powered by GPT-4o · gpt-image-1.5 · Voz pt-BR</p>
-        </div>
-      </div>
-
-      {/* ── ÁREA PRINCIPAL ── */}
+      {/* ── ÁREA PRINCIPAL — estúdio de criação, sem sidebar de histórico ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
 
-        {/* Topbar */}
-        <div className="h-14 flex items-center gap-2 px-3 bg-white border-b border-[#efefef] flex-shrink-0">
-          {/* Toggle sidebar */}
+        {/* Header minimalista */}
+        <div className="h-14 flex items-center gap-2 px-4 bg-white border-b border-[#efefef] flex-shrink-0">
           <button
-            onClick={() => setSidebarOpen(o => !o)}
+            onClick={() => navigate('/ai')}
+            title="Voltar ao ecossistema"
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#f5f5f5] text-[#737373] transition-colors flex-shrink-0"
           >
-            {sidebarOpen
-              ? <PanelLeftClose className="w-4 h-4" />
-              : <PanelLeftOpen  className="w-4 h-4" />}
+            <ArrowLeft className="w-4 h-4" />
           </button>
 
-          <p className="text-[13px] font-medium text-[#0f0f0f] truncate flex-1">
-            {activeSessionId
-              ? (sessions.find(s => s.id === activeSessionId)?.title ?? 'Conversa')
-              : 'Nova conversa'}
-          </p>
+          {/* Identidade do estúdio */}
+          <div className="flex items-center gap-2 min-w-0">
+            {activeSquad ? (
+              <>
+                <span
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[13px] flex-shrink-0"
+                  style={{ backgroundColor: activeSquad.color.bg }}
+                >
+                  {activeSquad.emoji}
+                </span>
+                <p className="text-[13px] font-medium text-[#0f0f0f] truncate">{activeSquad.name}</p>
+              </>
+            ) : isImagemRoute ? (
+              <>
+                <Wand2 className="w-4 h-4 text-[#8b5cf6] flex-shrink-0" />
+                <p className="text-[13px] font-medium text-[#0f0f0f] truncate">Criação de Imagens</p>
+              </>
+            ) : (
+              <>
+                <MessageSquare className="w-4 h-4 text-[#737373] flex-shrink-0" />
+                <p className="text-[13px] font-medium text-[#0f0f0f] truncate">Chat livre</p>
+              </>
+            )}
+          </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+
+            {/* Nova conversa */}
+            <button
+              onClick={handleNewChat}
+              title="Nova conversa"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#f5f5f5] text-[#737373] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            {/* Histórico deste estúdio */}
+            <div className="relative" ref={historyRef}>
+              <button
+                onClick={() => setHistoryOpen(o => !o)}
+                title="Histórico"
+                className={cn(
+                  'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
+                  historyOpen ? 'bg-[#f0f0f0] text-[#333]' : 'hover:bg-[#f5f5f5] text-[#737373]',
+                )}
+              >
+                <History className="w-4 h-4" />
+              </button>
+
+              {historyOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-[#e2e8f0] rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[#f0f0f0]">
+                    <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Histórico deste estúdio</p>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {sessionsLoading ? (
+                      <div className="flex justify-center py-6">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#ccc]" />
+                      </div>
+                    ) : sessions.length === 0 ? (
+                      <div className="text-center py-6 px-3">
+                        <p className="text-[11px] text-[#999]">Nenhuma criação ainda</p>
+                      </div>
+                    ) : (
+                      sessions.map(session => (
+                        <button
+                          key={session.id}
+                          onClick={() => { setActiveSessionId(session.id); setHistoryOpen(false) }}
+                          className={cn(
+                            'w-full flex items-center gap-2 px-3 py-2 text-left text-[12px] transition-all group',
+                            activeSessionId === session.id
+                              ? 'bg-[#f5f5f5] text-[#0f0f0f]'
+                              : 'text-[#555] hover:bg-[#f9f9f9]',
+                          )}
+                        >
+                          <span className="flex-1 truncate">{session.title}</span>
+                          <button
+                            onClick={e => handleDeleteSession(session.id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:text-red-500 transition-all flex-shrink-0"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Seletor de cliente */}
             <div className="relative" ref={pickerRef}>
@@ -1074,33 +1099,6 @@ ${subAgentContext}`
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Squad ativo */}
-            {activeSquad && (
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border"
-                style={{ backgroundColor: activeSquad.color.bg, borderColor: activeSquad.color.border, color: activeSquad.color.text }}
-              >
-                <span>{activeSquad.emoji}</span>
-                <span className="max-w-[90px] truncate">{activeSquad.name}</span>
-                <button
-                  onClick={() => navigate('/ai')}
-                  className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
-                  title="Trocar squad"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            )}
-
-            {/* Badge modelo */}
-            <div className={cn(
-              'hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium border',
-              imageMode ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-blue-50 border-blue-200 text-blue-700',
-            )}>
-              {imageMode ? <Wand2 className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
-              {imageMode ? 'gpt-image-1.5' : 'gpt-4o-search'}
             </div>
 
           </div>

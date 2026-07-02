@@ -95,21 +95,26 @@ export interface AISession {
   id: string
   user_id: string
   title: string
+  squad_id: string | null // 'livre' | 'imagem' | id de um squad — filtra o histórico por estúdio
   created_at: string
   updated_at: string
 }
 
 // ── Hooks de sessão ────────────────────────────────────────────────────────────
-export function useAISessions() {
+// squadId: 'livre' | 'imagem' | id de squad — filtra o histórico daquele estúdio.
+// Sem valor, retorna tudo (uso legado/administrativo).
+export function useAISessions(squadId?: string) {
   return useQuery({
-    queryKey: ['ai_sessions'],
+    queryKey: ['ai_sessions', squadId ?? 'all'],
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      let query = (supabase as any)
         .from('ai_sessions')
         .select('*')
         .order('updated_at', { ascending: false })
         .limit(50)
+      if (squadId) query = query.eq('squad_id', squadId)
+      const { data, error } = await query
       if (error) throw error
       return data as AISession[]
     },
@@ -317,6 +322,7 @@ export function useAIChat(sessionId: string | null) {
     attachedPdfs?: { name: string; text: string }[], // texto já extraído no navegador
     imageSize: ImageSize = '1024x1024', // formato da imagem gerada (Criação de Imagens)
     referenceAsStyle = false, // true = referência só informa estilo/cores; sempre gera cena nova (não edita a foto)
+    squadContext = 'livre', // 'livre' | 'imagem' | id do squad — grava em qual estúdio a sessão nasceu
   ) => {
     if (!content.trim() && (!attachedImages || attachedImages.length === 0) && (!attachedPdfs || attachedPdfs.length === 0)) return
     if (isStreaming || isLoading) return
@@ -350,7 +356,7 @@ export function useAIChat(sessionId: string | null) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: session, error } = await (supabase as any)
         .from('ai_sessions')
-        .insert({ user_id: user.id, title })
+        .insert({ user_id: user.id, title, squad_id: squadContext })
         .select()
         .single()
       if (error || !session) return
