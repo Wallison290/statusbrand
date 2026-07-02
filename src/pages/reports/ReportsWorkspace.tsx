@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, BarChart3, Instagram, Sparkles, RefreshCw, Plus,
+  ArrowLeft, BarChart3, Instagram, Sparkles, RefreshCw, Plus, Trash2,
   Users, Eye, Heart, DollarSign, TrendingUp, Calendar, CheckCircle2, BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useClient } from '@/hooks/useClients'
 import { useSubscription } from '@/hooks/useSubscription'
-import { useClientReports, useCreateReport, useUpdateReport } from '@/hooks/useReports'
+import { useClientReports, useCreateReport, useUpdateReport, useDeleteReport } from '@/hooks/useReports'
 import { usePlanningReport } from '@/hooks/usePlanningReport'
 import { IgInsights } from '@/components/reports/IgInsights'
 import { supabase } from '@/integrations/supabase/client'
@@ -21,6 +23,8 @@ const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ]
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
 
 function monthLabel(month: number, year: number) {
   return `${MONTHS[month - 1]} ${year}`
@@ -47,6 +51,63 @@ function followerDiff(r: ClientReport): string {
 function hasPaid(r: ClientReport) {
   return r.paid_investment != null || r.paid_leads != null || r.paid_cpl != null
     || r.paid_conversions != null || r.paid_roas != null
+}
+
+// ── Modal: novo relatório (escolhe mês/ano) ─────────────────────────────────
+
+function CreateReportModal({
+  clientId, open, onClose, onCreated,
+}: { clientId: string; open: boolean; onClose: () => void; onCreated: (id: string) => void }) {
+  const { toast } = useToast()
+  const create = useCreateReport()
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1))
+  const [year, setYear] = useState(String(CURRENT_YEAR))
+
+  const handleCreate = async () => {
+    try {
+      const report = await create.mutateAsync({ client_id: clientId, month: Number(month), year: Number(year) })
+      toast('Relatório criado!', 'success')
+      onCreated(report.id)
+      onClose()
+    } catch (err: any) {
+      toast(err.message === 'duplicate key value violates unique constraint "client_reports_client_id_month_year_key"'
+        ? 'Já existe um relatório para esse mês.' : err.message, 'error')
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Novo relatório</DialogTitle></DialogHeader>
+        <div className="space-y-4 mt-1">
+          <div>
+            <label className="block text-[12px] mb-1.5" style={{ color: 'var(--sm-text-2)' }}>Mês</label>
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-[12px] mb-1.5" style={{ color: 'var(--sm-text-2)' }}>Ano</label>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {YEARS.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
+          <Button size="sm" onClick={handleCreate} disabled={create.isPending}>
+            <Plus className="w-3 h-3" /> Criar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ── KPI pequeno pro resumo do mês ──────────────────────────────────────────
@@ -92,12 +153,14 @@ export function ReportsWorkspace() {
   const { data: subData } = useSubscription()
   const { data: client } = useClient(clientId!)
   const { data: reports = [], isLoading: reportsLoading } = useClientReports(clientId!)
-  const createReport = useCreateReport()
   const updateReport = useUpdateReport()
+  const deleteReport = useDeleteReport()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [syncing, setSyncing]       = useState(false)
   const [aiLoading, setAiLoading]   = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
 
   useEffect(() => {
     if (reports.length === 0) { setSelectedId(null); return }
@@ -116,12 +179,16 @@ export function ReportsWorkspace() {
     clientVisibleOnly: false,
   })
 
-  const handleNewReport = async () => {
+  useEffect(() => { setConfirmDel(false) }, [selectedId])
+
+  const handleDelete = async () => {
+    if (!selected) return
     try {
-      const report = await createReport.mutateAsync({ client_id: clientId!, month: initialMonth, year: initialYear })
-      setSelectedId(report.id)
-      toast('Relatório criado!', 'success')
-    } catch (err: any) { toast(err.message ?? 'Erro ao criar relatório.', 'error') }
+      await deleteReport.mutateAsync(selected.id)
+      toast('Relatório removido.', 'success')
+      setConfirmDel(false)
+      setSelectedId(reports.find(r => r.id !== selected.id)?.id ?? null)
+    } catch (err: any) { toast(err.message ?? 'Erro ao remover relatório.', 'error') }
   }
 
   const handleAutoGenerate = async () => {
@@ -217,7 +284,7 @@ export function ReportsWorkspace() {
               <p className="text-[12px]" style={{ color: 'var(--sm-text-2)' }}>Relatório combinado — Instagram, planejamento e IA</p>
             </div>
           </div>
-          <Button size="sm" onClick={handleNewReport} disabled={createReport.isPending}>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="w-3 h-3" /> Novo relatório
           </Button>
         </div>
@@ -229,7 +296,7 @@ export function ReportsWorkspace() {
             <BarChart3 className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--sm-text-2)' }} />
             <p className="text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>Nenhum relatório ainda</p>
             <p className="text-[11px] mt-1 mb-4" style={{ color: 'var(--sm-text-2)' }}>Crie o primeiro relatório mensal para este cliente.</p>
-            <Button size="sm" onClick={handleNewReport} disabled={createReport.isPending}>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="w-3 h-3" /> Criar primeiro relatório
             </Button>
           </div>
@@ -256,6 +323,23 @@ export function ReportsWorkspace() {
 
                 {/* ── Ações ── */}
                 <div className="flex items-center justify-end gap-2">
+                  {confirmDel ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px]" style={{ color: 'var(--sm-text-2)' }}>Excluir relatório de {monthLabel(selected.month, selected.year)}?</span>
+                      <Button variant="outline" size="sm" onClick={() => setConfirmDel(false)}>Não</Button>
+                      <Button size="sm" onClick={handleDelete} disabled={deleteReport.isPending}
+                        className="bg-red-50 text-red-800 border-red-200 hover:bg-red-100">
+                        Sim, excluir
+                      </Button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setConfirmDel(true)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:text-red-500"
+                      style={{ color: 'var(--sm-text-2)' }}
+                      title="Excluir relatório deste mês">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <Button variant="outline" size="sm" onClick={handleAutoGenerate} disabled={syncing}
                     title="Preencher com os dados reais da conta de Instagram conectada">
                     {syncing
@@ -411,6 +495,13 @@ export function ReportsWorkspace() {
           </>
         )}
       </div>
+
+      <CreateReportModal
+        clientId={clientId!}
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={id => setSelectedId(id)}
+      />
     </div>
   )
 }
