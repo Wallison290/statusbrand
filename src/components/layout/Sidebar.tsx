@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
-  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, MessageCircle,
+  LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, MessageCircle, BarChart3,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,6 +19,7 @@ const navItems = [
   { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },
   { href: '/instagram', icon: Instagram,        label: 'Instagram', comingSoon: true },
   { href: '/whatsapp',  icon: MessageCircle,   label: 'WhatsApp'   },
+  { href: '/reports',   icon: BarChart3,       label: 'Relatórios'     },
   { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'        },
   { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },

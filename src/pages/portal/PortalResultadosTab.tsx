@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import {
   TrendingUp, Users, Eye, Heart, BarChart3,
-  DollarSign, BookOpen, FileText, Link2, File, ExternalLink, ImageIcon, Instagram,
+  DollarSign, BookOpen, FileText, Link2, File, ExternalLink, ImageIcon, Instagram, Calendar,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { usePortalReports } from '@/hooks/usePortal'
+import { usePlanningReport } from '@/hooks/usePlanningReport'
 import { IgInsights } from '@/components/reports/IgInsights'
+import { contentTypeLabels, statusLabels } from '@/utils/formatters'
 import type { ClientReport, ReportAttachment } from '@/types'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -120,6 +122,65 @@ function AttachmentItem({ att }: { att: ReportAttachment }) {
   )
 }
 
+// ─── Planejamento do mês (somente leitura) ───────────────────────────────────
+
+function PlanningBar({ label, count, total }: { label: string; count: number; total: number }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-gray-600 w-20 flex-shrink-0 truncate">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
+        <div className="h-full rounded-full bg-[#29457a]" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[11px] font-semibold text-[#0f0f0f] w-6 text-right flex-shrink-0">{count}</span>
+    </div>
+  )
+}
+
+function PlanningSection({ clientId, month, year }: { clientId: string; month: number; year: number }) {
+  const { data: planning } = usePlanningReport({ clientId, month, year, clientVisibleOnly: true })
+  if (!planning || planning.total === 0) return null
+
+  return (
+    <section className="rounded-2xl border border-[#e8e8e8] bg-white overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#e8e8e8] flex items-center gap-2">
+        <Calendar className="w-3.5 h-3.5 text-gray-500" />
+        <p className="text-[13px] font-semibold text-[#0f0f0f]">Planejamento do mês</p>
+      </div>
+      <div className="p-5 space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <p className="text-[10px] text-gray-600 uppercase tracking-wide">Por status</p>
+            {Object.entries(planning.byStatus).map(([status, count]) => (
+              <PlanningBar key={status} label={statusLabels[status] ?? status} count={count} total={planning.total} />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <p className="text-[10px] text-gray-600 uppercase tracking-wide">Por tipo de conteúdo</p>
+            {Object.entries(planning.byContentType).map(([type, count]) => (
+              <PlanningBar key={type} label={contentTypeLabels[type] ?? type} count={count} total={planning.total} />
+            ))}
+          </div>
+        </div>
+
+        {planning.published.length > 0 && (
+          <div>
+            <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-2">Publicados no mês</p>
+            <div className="space-y-1">
+              {planning.published.map(item => (
+                <div key={item.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#f7f7f7]">
+                  <span className="text-[12px] text-[#0f0f0f] truncate">{item.title}</span>
+                  <span className="text-[10px] text-gray-600 flex-shrink-0">{contentTypeLabels[item.content_type] ?? item.content_type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 // ─── Report view (client read-only) ──────────────────────────────────────────
 
 function ReportView({ report }: { report: ClientReport }) {
@@ -170,6 +231,9 @@ function ReportView({ report }: { report: ClientReport }) {
 
       {/* Insights ricos do Instagram (visitas, interações, top posts, audiência) */}
       <IgInsights report={report} />
+
+      {/* Execução do planejamento do mês */}
+      <PlanningSection clientId={report.client_id} month={report.month} year={report.year} />
 
       {/* Paid traffic — only if has data */}
       {hasPaid(report) && (

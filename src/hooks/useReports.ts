@@ -101,3 +101,22 @@ export function useDeleteReportAttachment() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['client-reports'] }),
   })
 }
+
+// ── Visão geral: relatórios de todos os clientes num mês (aba Relatórios) ─────
+
+export function useReportsOverview(month: number, year: number) {
+  return useQuery({
+    queryKey: ['reports-overview', month, year],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_reports')
+        .select('id, client_id, month, year, ig_synced_at, analysis_text, reach, followers_end, posts_published')
+        .eq('month', month)
+        .eq('year', year)
+      if (error) throw error
+      return data as Pick<ClientReport,
+        'id' | 'client_id' | 'month' | 'year' | 'ig_synced_at' | 'analysis_text' | 'reach' | 'followers_end' | 'posts_published'
+      >[]
+    },
+  })
+}

@@ -36,6 +36,8 @@ const CollaboratorPortal = lazy(() => import('@/pages/portal/CollaboratorPortal'
 const TeamPage           = lazy(() => import('@/pages/team/TeamPage').then(m => ({ default: m.TeamPage })))
 const InstagramPage      = lazy(() => import('@/pages/instagram/InstagramPage').then(m => ({ default: m.InstagramPage })))
 const WhatsAppPage       = lazy(() => import('@/pages/whatsapp/WhatsAppPage').then(m => ({ default: m.WhatsAppPage })))
+const ReportsOverview    = lazy(() => import('@/pages/reports/ReportsOverview').then(m => ({ default: m.ReportsOverview })))
+const ReportsWorkspace   = lazy(() => import('@/pages/reports/ReportsWorkspace').then(m => ({ default: m.ReportsWorkspace })))
 const PrivacyPage        = lazy(() => import('@/pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
 const TermsPage          = lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
 const WeeklyFormPage     = lazy(() => import('@/pages/public/WeeklyFormPage').then(m => ({ default: m.WeeklyFormPage })))
@@ -145,6 +147,12 @@ function AIPageRoute() {
   return <AIPage key={squadId ?? 'livre'} />
 }
 
+/** Remonta o workspace de relatório do zero a cada troca de cliente. */
+function ReportsWorkspaceRoute() {
+  const { clientId } = useParams()
+  return <ReportsWorkspace key={clientId} />
+}
+
 // ── Rotas ─────────────────────────────────────────────────────────────────────
 
 function AppRoutes() {
@@ -202,6 +210,8 @@ function AppRoutes() {
         <Route path="/equipe"        element={<TeamPage />} />
         <Route path="/instagram"     element={<InstagramPage />} />
         <Route path="/whatsapp"      element={<WhatsAppPage />} />
+        <Route path="/reports"            element={<ReportsOverview />} />
+        <Route path="/reports/:clientId"  element={<ReportsWorkspaceRoute />} />
         <Route path="/assinatura"    element={<Subscription />} />
       </Route>
 
