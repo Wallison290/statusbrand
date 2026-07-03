@@ -323,14 +323,16 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
       {/* ── Botão colapsar (oculto no mobile) ── */}
       <button
         onClick={() => setCollapsed(!collapsed)}
+        title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+        aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
         className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full hidden md:flex items-center justify-center transition-colors shadow-lg"
-        style={{ background: 'var(--sm-sidebar-card)', border: '1px solid var(--sm-sidebar-border)', color: 'var(--sm-sidebar-text)' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-text-1)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sm-sidebar-text)' }}
+        style={{ background: 'var(--sm-sidebar-card)', border: '1px solid rgba(37,99,235,0.55)', color: '#60A5FA' }}
+        onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#2563EB'; b.style.color = '#ffffff' }}
+        onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--sm-sidebar-card)'; b.style.color = '#60A5FA' }}
       >
         {collapsed
-          ? <ChevronRight className="w-3 h-3" />
-          : <ChevronLeft className="w-3 h-3" />}
+          ? <ChevronRight className="w-3.5 h-3.5" />
+          : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
       {/* ── Tooltip Instagram (portal para escapar do overflow-hidden) ── */}
