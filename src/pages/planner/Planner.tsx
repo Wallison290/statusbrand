@@ -746,9 +746,9 @@ function PlannerItemView({
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row lg:h-full overflow-visible lg:overflow-hidden">
 
-          {/* ══ ESQUERDA: Prévia estilo Instagram ══ */}
+          {/* ══ ESQUERDA: Prévia estilo Instagram (dark mode — icones brancos sobressaem) ══ */}
           {hasMedia && (
-            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[var(--sm-bg-alt)] overflow-hidden lg:h-full">
+            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[#0b0f14] overflow-hidden lg:h-full">
 
               {/* Header estilo Instagram */}
               <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0">
@@ -757,14 +757,14 @@ function PlannerItemView({
                     {(item.client?.company_name ?? 'P')[0].toUpperCase()}
                   </span>
                 </div>
-                <span className="text-[13px] font-semibold text-[var(--sm-text-1)] flex-1 truncate">
+                <span className="text-[13px] font-semibold text-white flex-1 truncate">
                   {item.client?.company_name ?? 'Post'}
                 </span>
-                <MoreHorizontal className="w-5 h-5 text-[var(--sm-text-4)] flex-shrink-0" />
+                <MoreHorizontal className="w-5 h-5 text-white/60 flex-shrink-0" />
               </div>
 
               {/* Mídia principal — object-contain: exibe imagem inteira sem cortar */}
-              <div className="relative bg-[var(--sm-bg-page)] h-72 lg:h-auto lg:flex-1 lg:min-h-0">
+              <div className="relative bg-black h-72 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img
                     src={currentMedia.file_url}
@@ -828,7 +828,7 @@ function PlannerItemView({
               </div>
 
               {/* Barra de ações estilo Instagram */}
-              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[var(--sm-bg-alt)]">
+              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[#0b0f14]">
                 <div className="flex items-center gap-4 flex-1">
                   <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
                   <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
@@ -849,7 +849,7 @@ function PlannerItemView({
                       >
                         {m.kind === 'image'
                           ? <img src={m.file_url} alt="" className="w-full h-full object-cover" />
-                          : <div className="w-full h-full bg-[var(--sm-bg-alt)] flex items-center justify-center"><Film className="w-4 h-4 text-[var(--sm-text-4)]" /></div>}
+                          : <div className="w-full h-full bg-[#182233] flex items-center justify-center"><Film className="w-4 h-4 text-[#64748b]" /></div>}
                         <div className="absolute bottom-0 right-0 bg-black/60 text-[8px] px-1 leading-4 rounded-tl font-bold text-white">{i + 1}</div>
                       </button>
                     ))}
