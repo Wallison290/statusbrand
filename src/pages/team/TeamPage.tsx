@@ -27,10 +27,10 @@ const COLORS = [
 ]
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  a_fazer:      { label: 'A fazer',       color: '#64748b', bg: '#f1f5f9' },
-  em_andamento: { label: 'Em andamento',  color: '#d97706', bg: '#fef3c7' },
-  revisao:      { label: 'Em revisão',    color: '#2563eb', bg: '#dbeafe' },
-  concluido:    { label: 'Concluído',     color: '#059669', bg: '#d1fae5' },
+  a_fazer:      { label: 'A fazer',       color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' },
+  em_andamento: { label: 'Em andamento',  color: '#fbbf24', bg: 'rgba(245,158,11,0.15)' },
+  revisao:      { label: 'Em revisão',    color: '#60a5fa', bg: 'rgba(37,99,235,0.18)' },
+  concluido:    { label: 'Concluído',     color: '#34d399', bg: 'rgba(16,185,129,0.15)' },
 }
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
@@ -408,7 +408,7 @@ function TaskEditPanel({
   }
 
   return (
-    <div className="bg-[#f8fafc] rounded-xl p-3 mt-2 space-y-3 border border-[#1e293b]">
+    <div className="bg-[#182233] rounded-xl p-3 mt-2 space-y-3 border border-[#1e293b]">
       {/* Título */}
       <div>
         <label className="text-[10px] font-medium text-[#64748b] block mb-1">Título</label>
@@ -548,13 +548,13 @@ function TaskViewModal({
                 {pri.label}
               </span>
               {task.clients && (
-                <span className="text-[10px] text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[10px] text-[#60A5FA] bg-[#2563EB]/15 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Building2 className="w-2.5 h-2.5" /> {task.clients.company_name}
                 </span>
               )}
               {task.due_date && (
                 <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  overdue ? 'text-red-800 bg-red-50 font-semibold' : 'text-[#64748b] bg-[#f1f5f9]'
+                  overdue ? 'text-red-400 bg-red-500/10 font-semibold' : 'text-[#94a3b8] bg-[#1e293b]'
                 }`}>
                   <Calendar className="w-2.5 h-2.5" />
                   {overdue && 'Atrasado · '}{formatDate(task.due_date)}
@@ -566,11 +566,11 @@ function TaskViewModal({
             <button
               onClick={onEdit}
               title="Editar"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#1e293b] text-[11px] text-[#475569] hover:bg-[#f8fafc] transition-colors font-medium"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#1e293b] text-[11px] text-[#94a3b8] hover:text-white hover:bg-[#1e293b] transition-colors font-medium"
             >
               <Pencil className="w-3 h-3" /> Editar
             </button>
-            <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#f1f5f9] flex items-center justify-center">
+            <button onClick={onClose} className="w-7 h-7 rounded-full hover:bg-[#1e293b] flex items-center justify-center">
               <X className="w-4 h-4 text-[#94a3b8]" />
             </button>
           </div>
@@ -579,7 +579,7 @@ function TaskViewModal({
         <div className="px-5 py-4 space-y-4">
           {/* Descrição */}
           {task.description && (
-            <div className="bg-[#f8fafc] rounded-xl p-3.5">
+            <div className="bg-[#182233] border border-[#1e293b] rounded-xl p-3.5">
               <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1.5">Descrição</p>
               <p className="text-[13px] text-[#CBD5E1] leading-relaxed whitespace-pre-wrap">{task.description}</p>
             </div>
@@ -644,8 +644,8 @@ function TaskViewModal({
                   const Icon = iconMap[link.type] ?? LinkIcon
                   const colorMap: Record<string, string> = {
                     link:    'text-[#a78bfa] bg-[#8b5cf6]/10',
-                    arquivo: 'text-amber-800 bg-amber-50',
-                    pasta:   'text-emerald-800 bg-emerald-50',
+                    arquivo: 'text-amber-300 bg-amber-500/10',
+                    pasta:   'text-emerald-300 bg-emerald-500/10',
                   }
                   const colorCls = colorMap[link.type] ?? 'text-[#a78bfa] bg-[#8b5cf6]/10'
 
@@ -676,7 +676,7 @@ function TaskViewModal({
               )}
               {task.delivery_url && (
                 <a href={task.delivery_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[11px] text-violet-600 hover:text-[#a78bfa] font-medium">
+                  className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-[#a78bfa] font-medium">
                   <ExternalLink className="w-3 h-3" /> Ver entrega enviada
                 </a>
               )}
