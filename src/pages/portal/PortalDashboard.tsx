@@ -214,7 +214,7 @@ function PartialApprovalBlock({
           <button
             onClick={() => onAction('aprovado')}
             disabled={isBusy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50"
+            className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50"
           >
             {busyThis && !pending
               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -226,10 +226,10 @@ function PartialApprovalBlock({
           <button
             onClick={() => onAction('ajuste_solicitado')}
             disabled={isBusy}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
+            className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
               ${pending === 'ajuste_solicitado'
                 ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
-                : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
           >
             {busyThis && pending === 'ajuste_solicitado'
               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -241,10 +241,10 @@ function PartialApprovalBlock({
           <button
             onClick={() => onAction('reprovado')}
             disabled={isBusy}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
+            className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed
               ${pending === 'reprovado'
                 ? 'bg-red-500 border-red-500 text-white shadow-sm'
-                : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}
+                : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}
           >
             {busyThis && pending === 'reprovado'
               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -532,12 +532,14 @@ function ItemDetailView({
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md font-medium">
+            <h2 className="text-[17px] font-bold text-gray-900 leading-tight tracking-tight break-words">{item.title}</h2>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[11px] px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold">
                 {statusLabels[item.status as PlannerStatus]}
               </span>
-              <span className="text-[10px] text-gray-400">{contentTypeLabels[item.content_type as ContentType]}</span>
+              <span className="text-[11px] px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg font-medium">
+                {contentTypeLabels[item.content_type as ContentType]}
+              </span>
             </div>
           </div>
 
@@ -567,6 +569,13 @@ function ItemDetailView({
                     autoPlay muted loop playsInline controls
                     className="absolute inset-0 w-full h-full object-contain" />
                 ) : null}
+
+                {/* Número do slide (estilo referência) */}
+                {isCarousel && (
+                  <div className="absolute top-2 left-2 z-10 min-w-[26px] h-7 px-1.5 rounded-lg bg-white/90 border border-gray-200 shadow-sm flex items-center justify-center text-[11px] font-bold text-gray-700">
+                    {String(mediaIdx + 1).padStart(2, '0')}
+                  </div>
+                )}
 
                 {/* Setas de navegação */}
                 {isCarousel && (
@@ -610,11 +619,11 @@ function ItemDetailView({
                       return (
                         <button key={m.id} onClick={() => setMediaIdx(i)}
                           className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all
-                            ${i === mediaIdx ? 'border-blue-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300 opacity-60'}`}>
+                            ${i === mediaIdx ? 'border-indigo-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300 opacity-60'}`}>
                           {m.kind === 'image'
                             ? <img src={m.file_url} className="w-full h-full object-cover" />
                             : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
-                          <div className="absolute bottom-0 right-0 bg-black/50 text-[8px] px-1 leading-4 rounded-tl font-bold" style={{ color: '#fff' }}>{i + 1}</div>
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/65 text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none" style={{ color: '#fff' }}>{String(i + 1).padStart(2, '0')}</div>
                           {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-3 h-3" style={{ color: '#fff' }} /></div>}
                           {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
                           {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
@@ -622,8 +631,9 @@ function ItemDetailView({
                       )
                     })}
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-2">
-                    ℹ️ Esse post contém {mediaItems.length} artes (imagem, vídeo ou carrossel)
+                  <p className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-2.5">
+                    <span className="w-3.5 h-3.5 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-[8px] font-bold flex-shrink-0">i</span>
+                    Esse post contém {mediaItems.length} artes (imagem, vídeo ou carrossel)
                   </p>
                 </div>
               )}
@@ -653,12 +663,14 @@ function ItemDetailView({
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <h2 className="text-[15px] font-semibold text-gray-900 leading-snug break-words">{item.title}</h2>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md font-medium">
+              <h2 className="text-[19px] font-bold text-gray-900 leading-tight tracking-tight break-words">{item.title}</h2>
+              <div className="flex items-center gap-2 mt-2.5">
+                <span className="text-[11px] px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold">
                   {statusLabels[item.status as PlannerStatus]}
                 </span>
-                <span className="text-[10px] text-gray-400">{contentTypeLabels[item.content_type as ContentType]}</span>
+                <span className="text-[11px] px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg font-medium">
+                  {contentTypeLabels[item.content_type as ContentType]}
+                </span>
               </div>
             </div>
 
@@ -667,17 +679,19 @@ function ItemDetailView({
 
               {/* Legenda */}
               {item.notes && (
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">Legenda</p>
-                  <p className={`text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-3' : ''}`}>
+                <div className="rounded-2xl border border-gray-100 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Legenda</p>
+                    {item.notes.length > 120 && (
+                      <button onClick={() => setNotesExpanded(v => !v)}
+                        className="text-[12px] text-blue-600 hover:text-blue-700 font-semibold transition-colors flex-shrink-0">
+                        {notesExpanded ? 'Ver menos' : 'Ver mais'}
+                      </button>
+                    )}
+                  </div>
+                  <p className={`text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap break-words select-text ${!notesExpanded ? 'line-clamp-3' : ''}`}>
                     {item.notes}
                   </p>
-                  {item.notes.length > 120 && (
-                    <button onClick={() => setNotesExpanded(v => !v)}
-                      className="text-[12px] text-blue-500 hover:text-blue-700 mt-0.5 font-medium transition-colors">
-                      {notesExpanded ? 'ver menos' : 'ver mais'}
-                    </button>
-                  )}
                 </div>
               )}
 
@@ -720,21 +734,21 @@ function ItemDetailView({
               <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
 
                 {/* Card header */}
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-[13px] font-semibold text-gray-800">Aprovação do cliente</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Escolha como deseja aprovar este post.</p>
+                <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                  <p className="text-[14px] font-bold text-gray-900">Aprovação do cliente</p>
+                  <p className="text-[12px] text-gray-400 mt-0.5">Escolha como deseja aprovar este post.</p>
                 </div>
 
                 {/* ─ Opção 1: Aprovação completa ─ */}
                 <div className="border-b border-gray-100">
                   <button
                     onClick={() => setExpandedSection(s => s === 'completa' ? 'partes' : 'completa')}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                    <div className="w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${expandedSection === 'completa' ? 'bg-green-50/70' : 'hover:bg-gray-50'}`}>
+                    <div className="w-9 h-9 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-gray-800">Aprovação completa</p>
+                      <p className="text-[12.5px] font-semibold text-gray-800">Aprovação completa</p>
                       <p className="text-[11px] text-gray-400">Aprova todas as artes e textos do post de uma vez.</p>
                     </div>
                     <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${expandedSection === 'completa' ? 'rotate-90' : ''}`} />
@@ -764,12 +778,12 @@ function ItemDetailView({
                 <div>
                   <button
                     onClick={() => setExpandedSection(s => s === 'partes' ? 'completa' : 'partes')}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                    <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-blue-500" />
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${expandedSection === 'partes' ? 'bg-indigo-50/60' : 'hover:bg-gray-50'}`}>
+                    <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-indigo-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-gray-800">Aprovação por partes</p>
+                      <p className="text-[12.5px] font-semibold text-gray-800">Aprovação por partes</p>
                       <p className="text-[11px] text-gray-400">Aprove ou reprove cada arte ou texto individualmente.</p>
                     </div>
                     <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${expandedSection === 'partes' ? 'rotate-90' : ''}`} />
@@ -815,7 +829,7 @@ function ItemDetailView({
                                 return (
                                   <button key={slide.id} onClick={() => setMediaIdx(i)}
                                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border transition-all
-                                      ${isActive ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+                                      ${isActive ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
                                     Slide {i + 1}
                                   </button>
@@ -870,7 +884,7 @@ function ItemDetailView({
                                   ) : (
                                     /* Slide aguardando decisão */
                                     <div className="space-y-2">
-                                      <div className="flex gap-1.5 flex-wrap">
+                                      <div className="grid grid-cols-3 gap-2">
                                         <button onClick={async () => {
                                             // Aprovar não precisa de feedback — confirma direto
                                             const updatedDecisions = {
@@ -891,17 +905,17 @@ function ItemDetailView({
                                             } catch (err: any) { toast(err.message, 'error') }
                                             finally { setBusyField(null) }
                                           }} disabled={isBusy}
-                                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                                          className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border bg-green-50 border-green-200 text-green-700 hover:bg-green-100 transition-all disabled:opacity-50">
                                           <CheckCircle2 className="w-3 h-3" /> Aprovar
                                         </button>
                                         <button onClick={() => handleSlideStatus(slide.id, 'ajuste_solicitado')} disabled={isBusy}
-                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                            ${pending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}>
+                                          className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                            ${pending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
                                           <AlertCircle className="w-3 h-3" /> Solicitar ajuste
                                         </button>
                                         <button onClick={() => handleSlideStatus(slide.id, 'reprovado')} disabled={isBusy}
-                                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                            ${pending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}>
+                                          className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                            ${pending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
                                           <XCircle className="w-3 h-3" /> Reprovar
                                         </button>
                                       </div>
@@ -955,20 +969,20 @@ function ItemDetailView({
                         ) : (
                           /* Arte única */
                           <div className="space-y-2">
-                            <div className="flex gap-1.5 flex-wrap">
+                            <div className="grid grid-cols-3 gap-2">
                               <button onClick={() => handleArtAction('aprovado')} disabled={isBusy}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                                className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border bg-green-50 border-green-200 text-green-700 hover:bg-green-100 transition-all disabled:opacity-50">
                                 {busyField === 'art' && !artPending ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                                 Aprovar
                               </button>
                               <button onClick={() => handleArtAction('ajuste_solicitado')} disabled={isBusy}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                  ${artPending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}>
+                                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                  ${artPending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
                                 <AlertCircle className="w-3 h-3" /> Solicitar ajuste
                               </button>
                               <button onClick={() => handleArtAction('reprovado')} disabled={isBusy}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                  ${artPending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}>
+                                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                  ${artPending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
                                 <XCircle className="w-3 h-3" /> Reprovar
                               </button>
                             </div>
@@ -1038,21 +1052,21 @@ function ItemDetailView({
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <div className="flex gap-1.5 flex-wrap">
+                            <div className="grid grid-cols-3 gap-2">
                               <button onClick={() => handleCopyAction('aprovado')} disabled={isBusy}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border bg-white border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-700 hover:bg-green-50 transition-all disabled:opacity-50">
+                                className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border bg-green-50 border-green-200 text-green-700 hover:bg-green-100 transition-all disabled:opacity-50">
                                 {busyField === 'copy' && !copyPending ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                                 Aprovar
                               </button>
                               <button onClick={() => handleCopyAction('ajuste_solicitado')} disabled={isBusy}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                  ${copyPending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50'}`}>
+                                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                  ${copyPending === 'ajuste_solicitado' ? 'bg-orange-100 border-orange-400 text-orange-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
                                 <AlertCircle className="w-3 h-3" />
                                 Solicitar ajuste
                               </button>
                               <button onClick={() => handleCopyAction('reprovado')} disabled={isBusy}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all disabled:opacity-50
-                                  ${copyPending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-700 hover:bg-red-50'}`}>
+                                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-[12px] font-semibold border transition-all disabled:opacity-50
+                                  ${copyPending === 'reprovado' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
                                 <XCircle className="w-3 h-3" />
                                 Reprovar
                               </button>
