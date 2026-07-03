@@ -500,20 +500,20 @@ export function PlannerItemViewModal({
 
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
-          {/* ── Coluna Esquerda: Prévia estilo Instagram ─────────────── */}
-          <div className="w-[42%] min-w-[260px] hidden sm:flex flex-col flex-shrink-0 overflow-hidden border-r border-gray-100 bg-white">
+          {/* ── Coluna Esquerda: Prévia estilo Instagram (dark mode) ─────────────── */}
+          <div className="w-[42%] min-w-[260px] hidden sm:flex flex-col flex-shrink-0 overflow-hidden border-r border-white/10 bg-[#0b0f14]">
 
             {/* Header estilo Instagram — fixo no topo */}
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 flex-shrink-0 bg-white">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0 bg-[#0b0f14]">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-bold">
                   {(item.client?.company_name ?? 'P')[0].toUpperCase()}
                 </span>
               </div>
-              <span className="text-[13px] font-semibold text-gray-900 flex-1 truncate">
+              <span className="text-[13px] font-semibold text-white flex-1 truncate">
                 {item.client?.company_name ?? 'Post'}
               </span>
-              <MoreHorizontal className="w-5 h-5 text-gray-600 flex-shrink-0" />
+              <MoreHorizontal className="w-5 h-5 text-white/60 flex-shrink-0" />
             </div>
 
             {/* Área da imagem — ocupa todo espaço restante, sem cortar */}
@@ -580,38 +580,38 @@ export function PlannerItemViewModal({
                   </a>
                 </>
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-100">
-                  <ImageIcon className="w-10 h-10 text-gray-300" />
-                  <p className="text-sm text-gray-400">Sem mídia</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#111827]">
+                  <ImageIcon className="w-10 h-10 text-gray-600" />
+                  <p className="text-sm text-gray-500">Sem mídia</p>
                 </div>
               )}
             </div>
 
             {/* Barra de ações estilo Instagram — fixo na base */}
-            <div className="flex items-center px-3 py-2.5 flex-shrink-0 bg-white border-t border-gray-100">
+            <div className="flex items-center px-3 py-2.5 flex-shrink-0 bg-[#0b0f14] border-t border-white/10">
               <div className="flex items-center gap-3.5 flex-1">
-                <Heart className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
-                <MessageCircle className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
-                <Send className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+                <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
+                <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
+                <Send className="w-6 h-6 text-white" strokeWidth={1.75} />
               </div>
-              <Bookmark className="w-6 h-6 text-gray-800" strokeWidth={1.75} />
+              <Bookmark className="w-6 h-6 text-white" strokeWidth={1.75} />
             </div>
 
             {/* Tira de thumbnails para carrossel — fixo na base */}
             {allMedia.length > 1 && (
-              <div className="flex gap-1.5 px-3 py-2 overflow-x-auto flex-shrink-0 border-t border-gray-100 bg-white scrollbar-thin">
+              <div className="flex gap-1.5 px-3 py-2 overflow-x-auto flex-shrink-0 border-t border-white/10 bg-[#0b0f14] scrollbar-thin">
                 {allMedia.map((m, i) => (
                   <button
                     key={m.id}
                     onClick={() => setImgIdx(i)}
                     className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      i === imgIdx ? 'border-indigo-500 shadow-md' : 'border-transparent hover:border-gray-300'
+                      i === imgIdx ? 'border-[#2563EB] shadow-md' : 'border-transparent opacity-60 hover:opacity-100 hover:border-white/25'
                     }`}
                   >
                     {m.file_type.startsWith('image/') ? (
                       <img src={m.file_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                      <div className="w-full h-full bg-[#182233] flex items-center justify-center">
                         <Video className="w-4 h-4 text-gray-500" />
                       </div>
                     )}
@@ -622,8 +622,8 @@ export function PlannerItemViewModal({
 
             {/* Nome do arquivo */}
             {allMedia.length > 0 && (
-              <div className="px-3 py-1.5 border-t border-gray-100 flex-shrink-0 bg-white">
-                <p className="text-[10px] text-gray-400 truncate">
+              <div className="px-3 py-1.5 border-t border-white/10 flex-shrink-0 bg-[#0b0f14]">
+                <p className="text-[10px] text-gray-500 truncate">
                   {allMedia[imgIdx].file_name}
                   {allMedia[imgIdx].file_size ? ` · ${formatFileSize(allMedia[imgIdx].file_size!)}` : ''}
                 </p>
