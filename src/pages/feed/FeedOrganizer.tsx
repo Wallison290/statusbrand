@@ -282,6 +282,7 @@ function DraggableCard({ post, index, onRemove, isActive }: {
       className={`relative aspect-square rounded-[2px] overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-150 select-none
         ${isDragging ? 'opacity-0 scale-95' : ''}
         ${isOver && !isActive ? 'ring-2 ring-blue-400 ring-inset scale-[1.03]' : ''}`}
+      style={{ touchAction: 'none' }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       {...listeners} {...attributes}
