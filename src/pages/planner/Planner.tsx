@@ -1668,8 +1668,9 @@ export function Planner() {
   const { toast } = useToast()
 
   const openWaDrop = () => {
-    // Pré-seleciona todos os grupos ativos ao abrir
-    setWaGroupJids(waGroups.map(g => g.group_jid))
+    // Nada vem pré-selecionado — evita enviar sem querer pra cliente/grupo errado
+    setWaClientIds([])
+    setWaGroupJids([])
     setWaDropOpen(true)
   }
 
