@@ -11,7 +11,7 @@ import {
   Plus, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon,
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
-  LayoutGrid, Film, ChevronDown, Heart, MessageCircle, Bookmark, MoreHorizontal,
+  LayoutGrid, Film, ChevronDown, MessageCircle,
   Clock, CheckCircle2, ClipboardList, Folder,
 } from 'lucide-react'
 import {
@@ -789,37 +789,24 @@ function PlannerItemView({
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row lg:h-full overflow-visible lg:overflow-hidden">
 
-          {/* ══ ESQUERDA: Prévia estilo Instagram (dark mode — icones brancos sobressaem) ══ */}
+          {/* ══ ESQUERDA: apenas a mídia, cheia, sem nenhuma barra (estilo Instagram web) ══ */}
           {hasMedia && (
-            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-[#0b0f14] overflow-hidden lg:h-full">
+            <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-black overflow-hidden lg:h-full">
 
-              {/* Header estilo Instagram */}
-              <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">
-                    {(item.client?.company_name ?? 'P')[0].toUpperCase()}
-                  </span>
-                </div>
-                <span className="text-[13px] font-semibold text-white flex-1 truncate">
-                  {item.client?.company_name ?? 'Post'}
-                </span>
-                <MoreHorizontal className="w-5 h-5 text-white/60 flex-shrink-0" />
-              </div>
-
-              {/* Mídia principal — object-contain: exibe imagem inteira sem cortar */}
+              {/* Mídia principal — object-cover: preenche o painel de ponta a ponta */}
               <div className="relative bg-black h-72 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img
                     src={currentMedia.file_url}
                     alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-contain"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : currentMedia?.kind === 'video' ? (
                   <video
                     key={currentMedia.file_url}
                     src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-contain"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : null}
 
@@ -843,20 +830,6 @@ function PlannerItemView({
                   </>
                 )}
 
-                {/* Dots + contador — sobreposto na base */}
-                {mediaItems.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
-                    {mediaItems.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setMediaIdx(i)}
-                        className={`rounded-full transition-all ${i === mediaIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'}`}
-                      />
-                    ))}
-                    <span className="ml-1 text-[10px] text-white font-semibold">{mediaIdx + 1}/{mediaItems.length}</span>
-                  </div>
-                )}
-
                 {/* Abrir original */}
                 {currentMedia && (
                   <a
@@ -868,37 +841,24 @@ function PlannerItemView({
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
-              </div>
 
-              {/* Barra de ações estilo Instagram */}
-              <div className="flex items-center px-4 py-2.5 flex-shrink-0 border-t border-white/10 bg-[#0b0f14]">
-                <div className="flex items-center gap-4 flex-1">
-                  <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
-                  <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
-                  <Send className="w-6 h-6 text-white" strokeWidth={1.75} />
-                </div>
-                <Bookmark className="w-6 h-6 text-white" strokeWidth={1.75} />
-              </div>
-
-              {/* Tira de miniaturas dos slides (carrossel) — igual ao acesso do cliente */}
-              {mediaItems.length > 1 && (
-                <div className="flex-shrink-0 bg-[#0d0f14] border-t border-white/10 px-3 py-2.5">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {/* Miniaturas do carrossel — sobrepostas na base da imagem, com leve transparência */}
+                {mediaItems.length > 1 && (
+                  <div className="absolute bottom-0 inset-x-0 z-10 flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
                     {mediaItems.map((m, i) => (
                       <button
                         key={m.id}
                         onClick={() => setMediaIdx(i)}
-                        className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === mediaIdx ? 'border-[#2563EB]' : 'border-white/10 hover:border-white/25 opacity-60 hover:opacity-100'}`}
+                        className={`relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === mediaIdx ? 'border-white shadow-md' : 'border-white/30 opacity-70 hover:opacity-100'}`}
                       >
                         {m.kind === 'image'
                           ? <img src={m.file_url} alt="" className="w-full h-full object-cover" />
                           : <div className="w-full h-full bg-[#182233] flex items-center justify-center"><Film className="w-4 h-4 text-[#64748b]" /></div>}
-                        <div className="absolute bottom-0 right-0 bg-black/60 text-[8px] px-1 leading-4 rounded-tl font-bold text-white">{i + 1}</div>
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
