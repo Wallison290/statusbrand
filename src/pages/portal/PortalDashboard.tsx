@@ -543,31 +543,19 @@ function ItemDetailView({
             </div>
           </div>
 
-          {/* ══ ESQUERDA: Prévia ══ */}
+          {/* ══ ESQUERDA: apenas a mídia, cheia, sem nenhuma barra (estilo Instagram web) ══ */}
           {mediaItems.length > 0 && (
-            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-[#f7f7f7] border-b lg:border-b-0 lg:border-r border-gray-100">
-              {/* Badge "Prévia do post" */}
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-white border-b border-gray-100 flex-shrink-0">
-                <div className="w-5 h-5 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <ImageIcon className="w-3 h-3 text-gray-500" />
-                </div>
-                <span className="text-[11px] font-medium text-gray-600">Prévia do post</span>
-                {isCarousel && (
-                  <span className="ml-auto text-[10px] text-gray-400 font-medium">
-                    {mediaIdx + 1} / {mediaItems.length}
-                  </span>
-                )}
-              </div>
+            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-black border-b lg:border-b-0 lg:border-r border-gray-100">
 
-              {/* Mídia principal — h-64 fixo no mobile, flex-1 no desktop */}
-              <div className="relative bg-[#e8e8e8] h-64 lg:h-auto lg:flex-1 lg:min-h-0">
+              {/* Mídia principal — object-cover: preenche o painel de ponta a ponta */}
+              <div className="relative bg-black h-64 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-contain" />
+                    className="absolute inset-0 w-full h-full object-cover" />
                 ) : currentMedia?.kind === 'video' ? (
                   <video key={currentMedia.file_url} src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-contain" />
+                    className="absolute inset-0 w-full h-full object-cover" />
                 ) : null}
 
                 {/* Número do slide (estilo referência) */}
@@ -591,52 +579,35 @@ function ItemDetailView({
                   </>
                 )}
 
-                {/* Dots indicadores */}
-                {isCarousel && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
-                    {mediaItems.map((_, i) => (
-                      <button key={i} onClick={() => setMediaIdx(i)}
-                        className={`rounded-full transition-all ${i === mediaIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`} />
-                    ))}
-                  </div>
-                )}
-
                 {currentMedia && (
                   <a href={currentMedia.file_url} target="_blank" rel="noopener noreferrer"
                     className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/25 hover:bg-black/40 flex items-center justify-center transition-all">
                     <ExternalLink className="w-3 h-3" style={{ color: '#fff' }} />
                   </a>
                 )}
-              </div>
 
-              {/* Thumbnails de slides (carrossel) */}
-              {isCarousel && (
-                <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {/* Miniaturas do carrossel — sobrepostas na base da imagem, com leve transparência */}
+                {isCarousel && (
+                  <div className="absolute bottom-0 inset-x-0 z-10 flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
                     {mediaItems.map((m, i) => {
                       const sd = slideDecisions[m.id]
                       const ss = sd?.status
                       return (
                         <button key={m.id} onClick={() => setMediaIdx(i)}
-                          className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all
-                            ${i === mediaIdx ? 'border-indigo-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 hover:border-gray-300 opacity-60'}`}>
+                          className={`relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden border-2 transition-all
+                            ${i === mediaIdx ? 'border-white shadow-md' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-white/30 opacity-70 hover:opacity-100'}`}>
                           {m.kind === 'image'
                             ? <img src={m.file_url} className="w-full h-full object-cover" />
                             : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/65 text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none" style={{ color: '#fff' }}>{String(i + 1).padStart(2, '0')}</div>
-                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-3 h-3" style={{ color: '#fff' }} /></div>}
-                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
-                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-3 h-3" style={{ color: '#fff' }} /></div>}
+                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
                         </button>
                       )
                     })}
                   </div>
-                  <p className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-[8px] font-bold flex-shrink-0">i</span>
-                    Esse post contém {mediaItems.length} artes (imagem, vídeo ou carrossel)
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
