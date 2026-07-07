@@ -3,7 +3,6 @@ import {
   ImageIcon, Video, Music, FileText, File,
   ExternalLink, Link2, Building2, Pencil, Trash2, Check,
   Instagram, Loader2, AlertCircle, ChevronLeft, ChevronRight, X,
-  Heart, MessageCircle, Send, Bookmark, MoreHorizontal,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -500,21 +499,8 @@ export function PlannerItemViewModal({
 
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-2xl">
 
-          {/* ── Coluna Esquerda: Prévia estilo Instagram (dark mode) ─────────────── */}
-          <div className="w-[42%] min-w-[260px] hidden sm:flex flex-col flex-shrink-0 overflow-hidden border-r border-white/10 bg-[#0b0f14]">
-
-            {/* Header estilo Instagram — fixo no topo */}
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 flex-shrink-0 bg-[#0b0f14]">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">
-                  {(item.client?.company_name ?? 'P')[0].toUpperCase()}
-                </span>
-              </div>
-              <span className="text-[13px] font-semibold text-white flex-1 truncate">
-                {item.client?.company_name ?? 'Post'}
-              </span>
-              <MoreHorizontal className="w-5 h-5 text-white/60 flex-shrink-0" />
-            </div>
+          {/* ── Coluna Esquerda: apenas a mídia, cheia, sem nenhuma barra (estilo Instagram web) ── */}
+          <div className="w-[42%] min-w-[260px] hidden sm:flex flex-col flex-shrink-0 overflow-hidden bg-black">
 
             {/* Área da imagem — cheia, sem letterbox (object-cover) */}
             <div className="flex-1 min-h-0 relative bg-black">
@@ -594,16 +580,6 @@ export function PlannerItemViewModal({
                   <p className="text-sm text-gray-500">Sem mídia</p>
                 </div>
               )}
-            </div>
-
-            {/* Barra de ações estilo Instagram — fixo na base */}
-            <div className="flex items-center px-3 py-2.5 flex-shrink-0 bg-[#0b0f14] border-t border-white/10">
-              <div className="flex items-center gap-3.5 flex-1">
-                <Heart className="w-6 h-6 text-white" strokeWidth={1.75} />
-                <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.75} />
-                <Send className="w-6 h-6 text-white" strokeWidth={1.75} />
-              </div>
-              <Bookmark className="w-6 h-6 text-white" strokeWidth={1.75} />
             </div>
           </div>
 
