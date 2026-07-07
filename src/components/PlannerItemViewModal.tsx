@@ -516,7 +516,7 @@ export function PlannerItemViewModal({
               <MoreHorizontal className="w-5 h-5 text-white/60 flex-shrink-0" />
             </div>
 
-            {/* Área da imagem — ocupa todo espaço restante, sem cortar */}
+            {/* Área da imagem — cheia, sem letterbox (object-cover) */}
             <div className="flex-1 min-h-0 relative bg-black">
               {allMedia.length > 0 ? (
                 <>
@@ -524,14 +524,14 @@ export function PlannerItemViewModal({
                     <img
                       src={allMedia[imgIdx].file_url}
                       alt=""
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-cover"
                       draggable={false}
                     />
                   ) : (
                     <video
                       src={allMedia[imgIdx].file_url}
                       controls
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   )}
 
@@ -555,20 +555,6 @@ export function PlannerItemViewModal({
                     </>
                   )}
 
-                  {/* Dots do carrossel */}
-                  {allMedia.length > 1 && (
-                    <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {allMedia.map((_, i) => (
-                        <div
-                          key={i}
-                          className={`rounded-full transition-all ${
-                            i === imgIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/55'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-
                   {/* Abrir em nova aba */}
                   <a
                     href={allMedia[imgIdx].file_url}
@@ -578,6 +564,29 @@ export function PlannerItemViewModal({
                   >
                     <ExternalLink className="w-3.5 h-3.5 text-gray-600" />
                   </a>
+
+                  {/* Miniaturas do carrossel — sobrepostas na base da imagem, com leve transparência */}
+                  {allMedia.length > 1 && (
+                    <div className="absolute bottom-0 inset-x-0 flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-thin">
+                      {allMedia.map((m, i) => (
+                        <button
+                          key={m.id}
+                          onClick={() => setImgIdx(i)}
+                          className={`w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                            i === imgIdx ? 'border-white shadow-md' : 'border-white/30 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          {m.file_type.startsWith('image/') ? (
+                            <img src={m.file_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-[#182233] flex items-center justify-center">
+                              <Video className="w-4 h-4 text-gray-400" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#111827]">
@@ -596,39 +605,6 @@ export function PlannerItemViewModal({
               </div>
               <Bookmark className="w-6 h-6 text-white" strokeWidth={1.75} />
             </div>
-
-            {/* Tira de thumbnails para carrossel — fixo na base */}
-            {allMedia.length > 1 && (
-              <div className="flex gap-1.5 px-3 py-2 overflow-x-auto flex-shrink-0 border-t border-white/10 bg-[#0b0f14] scrollbar-thin">
-                {allMedia.map((m, i) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setImgIdx(i)}
-                    className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      i === imgIdx ? 'border-[#2563EB] shadow-md' : 'border-transparent opacity-60 hover:opacity-100 hover:border-white/25'
-                    }`}
-                  >
-                    {m.file_type.startsWith('image/') ? (
-                      <img src={m.file_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-[#182233] flex items-center justify-center">
-                        <Video className="w-4 h-4 text-gray-500" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Nome do arquivo */}
-            {allMedia.length > 0 && (
-              <div className="px-3 py-1.5 border-t border-white/10 flex-shrink-0 bg-[#0b0f14]">
-                <p className="text-[10px] text-gray-500 truncate">
-                  {allMedia[imgIdx].file_name}
-                  {allMedia[imgIdx].file_size ? ` · ${formatFileSize(allMedia[imgIdx].file_size!)}` : ''}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* ── Coluna Direita: Detalhes ──────────────────────────────────── */}
