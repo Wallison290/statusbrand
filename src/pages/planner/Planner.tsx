@@ -12,6 +12,7 @@ import {
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
   LayoutGrid, Film, ChevronDown, Heart, MessageCircle, Bookmark, MoreHorizontal,
+  Clock, CheckCircle2, ClipboardList, Folder,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -64,6 +65,48 @@ const statusLabels: Record<PlannerStatus, string> = {
   revisao: 'Revisão',
   aprovado: 'Aprovado',
   publicado: 'Publicado',
+}
+
+// ─── Notificar cliente (WhatsApp) — opções de mensagem ───────────────────────
+
+const WA_MESSAGE_OPTIONS = [
+  {
+    value: 'NEW_CONTENT' as const,
+    label: 'Novo conteúdo no planejamento',
+    description: 'Informe que um novo conteúdo foi adicionado ao planejamento.',
+    Icon: ClipboardList,
+    iconBg: '#2563EB1a',
+    iconColor: '#2563EB',
+  },
+  {
+    value: 'APPROVAL_REQUEST' as const,
+    label: 'Conteúdo aguardando aprovação',
+    description: 'Lembre o cliente que há conteúdos pendentes de aprovação.',
+    Icon: Clock,
+    iconBg: '#F5A6231a',
+    iconColor: '#B45309',
+  },
+  {
+    value: 'ADJUSTMENT_DONE' as const,
+    label: 'Ajuste concluído',
+    description: 'Notifique que as alterações solicitadas foram realizadas.',
+    Icon: CheckCircle2,
+    iconBg: '#22C55E1a',
+    iconColor: '#16A34A',
+  },
+]
+
+function WaCheckbox({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+      style={checked
+        ? { background: '#2563EB', borderColor: '#2563EB' }
+        : { borderColor: 'var(--sm-border)' }}
+    >
+      {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+    </span>
+  )
 }
 
 // ─── Approval config ─────────────────────────────────────────────────────────
@@ -1570,7 +1613,7 @@ export function Planner() {
 
   // WhatsApp — notificador manual
   const [waDropOpen,  setWaDropOpen]  = useState(false)
-  const [waClientId,  setWaClientId]  = useState<string | null>(null)
+  const [waClientIds, setWaClientIds] = useState<string[]>([])
   const [waType,      setWaType]      = useState<'NEW_CONTENT' | 'APPROVAL_REQUEST' | 'ADJUSTMENT_DONE'>('NEW_CONTENT')
   const [waSending,   setWaSending]   = useState(false)
   const [waGroupJids, setWaGroupJids] = useState<string[]>([])
@@ -1634,18 +1677,23 @@ export function Planner() {
     setWaGroupJids(prev => prev.includes(jid) ? prev.filter(j => j !== jid) : [...prev, jid])
   }
 
+  const toggleWaClient = (id: string) => {
+    setWaClientIds(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id])
+  }
+
   const sendWhatsApp = async () => {
-    if (!waClientId && waGroupJids.length === 0) return
+    if (waClientIds.length === 0 && waGroupJids.length === 0) return
     setWaSending(true)
     try {
-      if (waClientId) {
-        // Notifica o cliente (pessoal) + grupos selecionados
+      // Notifica cada cliente selecionado (grupos vão numa chamada separada, pra não duplicar)
+      for (const clientId of waClientIds) {
         const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
-          body: { mode: 'manual_client', client_id: waClientId, type: waType, group_jids: waGroupJids },
+          body: { mode: 'manual_client', client_id: clientId, type: waType },
         })
         if (error || data?.error) throw new Error(data?.error ?? error?.message)
-      } else {
-        // Só grupos — chama a edge function passando client_id fictício mas sem envio pessoal
+      }
+      // Notifica os grupos selecionados uma única vez
+      if (waGroupJids.length > 0) {
         const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
           body: { mode: 'manual_groups', type: waType, group_jids: waGroupJids },
         })
@@ -1653,7 +1701,7 @@ export function Planner() {
       }
       toast('Mensagem enviada via WhatsApp!', 'success')
       setWaDropOpen(false)
-      setWaClientId(null)
+      setWaClientIds([])
     } catch (err: any) {
       toast(err?.message || 'Erro ao enviar.', 'error')
     } finally {
@@ -2288,117 +2336,134 @@ export function Planner() {
           })()}
 
           {/* Notificador WhatsApp manual */}
-          <div className="relative">
-            <button
-              onClick={() => { if (waDropOpen) setWaDropOpen(false); else { openWaDrop(); setClientDropOpen(false); setStatusDropOpen(false) } }}
-              className="flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl text-[12px] font-medium border transition-all bg-[var(--sm-bg-card)] text-[#25D366] border-[var(--sm-border)] hover:border-[#25D366]/30 hover:bg-[var(--sm-bg-alt)]"
-            >
-              <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>Notificar cliente</span>
-              <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform ${waDropOpen ? 'rotate-180' : ''}`} />
-            </button>
+          <button
+            onClick={() => { openWaDrop(); setClientDropOpen(false); setStatusDropOpen(false) }}
+            className="flex items-center gap-2 h-9 pl-3 pr-3 rounded-xl text-[12px] font-medium border transition-all bg-[var(--sm-bg-card)] text-[#25D366] border-[var(--sm-border)] hover:border-[#25D366]/30 hover:bg-[var(--sm-bg-alt)]"
+          >
+            <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Notificar cliente</span>
+          </button>
 
-            <AnimatePresence>
-              {waDropOpen && (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setWaDropOpen(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
-                    transition={{ duration: 0.12 }}
-                    className="absolute left-0 top-full mt-1.5 z-30 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-2xl shadow-xl p-4 w-[280px]"
-                  >
-                    <p className="text-[11px] text-[var(--sm-text-3)] mb-3 font-medium uppercase tracking-wider">WhatsApp — Notificar cliente</p>
+          <Dialog open={waDropOpen} onOpenChange={setWaDropOpen}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-start gap-3 pr-6">
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#25D36620', border: '1px solid #25D36640' }}
+                >
+                  <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                </div>
+                <div className="min-w-0">
+                  <DialogTitle>Notificar cliente</DialogTitle>
+                  <p className="text-[13px] mt-1" style={{ color: 'var(--sm-text-2)' }}>
+                    Envie uma mensagem via WhatsApp para um ou mais clientes.
+                  </p>
+                </div>
+              </div>
 
-                    <p className="text-[11px] text-[var(--sm-text-3)] mb-1.5">Cliente</p>
-                    <div className="flex flex-col gap-0.5 mb-3">
-                      {(clients || []).filter(c => c.whatsapp).length === 0 ? (
-                        <p className="text-[11px] text-[var(--sm-text-3)] px-2 py-1">Nenhum cliente com WhatsApp cadastrado</p>
-                      ) : (clients || []).filter(c => c.whatsapp).map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setWaClientId(c.id)}
-                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-left transition-colors ${
-                            waClientId === c.id
-                              ? 'bg-[#25D366]/10 text-[#25D366]'
-                              : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
-                          }`}
-                        >
-                          {c.logo_url ? (
-                            <img src={c.logo_url} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
-                          ) : (
-                            <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0">
-                              {c.company_name[0].toUpperCase()}
-                            </span>
-                          )}
-                          <span className="flex-1 truncate">{c.company_name}</span>
-                          {waClientId === c.id && <Check className="w-3 h-3 flex-shrink-0 text-[#25D366]" />}
-                        </button>
-                      ))}
-                    </div>
+              {/* Cliente */}
+              <div>
+                <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--sm-text-1)' }}>Cliente</p>
+                <div className="flex flex-col gap-1.5">
+                  {(clients || []).filter(c => c.whatsapp).length === 0 ? (
+                    <p className="text-[12px] px-1" style={{ color: 'var(--sm-text-2)' }}>Nenhum cliente com WhatsApp cadastrado</p>
+                  ) : (clients || []).filter(c => c.whatsapp).map(c => {
+                    const checked = waClientIds.includes(c.id)
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => toggleWaClient(c.id)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left"
+                        style={checked
+                          ? { background: '#2563EB0d', borderColor: '#2563EB66' }
+                          : { borderColor: 'var(--sm-border)' }}
+                      >
+                        {c.logo_url ? (
+                          <img src={c.logo_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[12px] font-bold text-white flex-shrink-0">
+                            {c.company_name[0].toUpperCase()}
+                          </span>
+                        )}
+                        <span className="flex-1 min-w-0 truncate text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>{c.company_name}</span>
+                        <WaCheckbox checked={checked} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-                    <p className="text-[11px] text-[var(--sm-text-3)] mb-1.5">Mensagem</p>
-                    <div className="flex flex-col gap-0.5 mb-4">
-                      {([
-                        { value: 'NEW_CONTENT',      label: '🆕 Novo conteúdo no planejamento' },
-                        { value: 'APPROVAL_REQUEST', label: '🔔 Conteúdo aguardando aprovação' },
-                        { value: 'ADJUSTMENT_DONE',  label: '✅ Ajuste concluído' },
-                      ] as const).map(opt => (
-                        <button
-                          key={opt.value}
-                          onClick={() => setWaType(opt.value)}
-                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-left transition-colors ${
-                            waType === opt.value
-                              ? 'bg-[#25D366]/10 text-[#25D366]'
-                              : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
-                          }`}
-                        >
-                          <span className="flex-1">{opt.label}</span>
-                          {waType === opt.value && <Check className="w-3 h-3 flex-shrink-0 text-[#25D366]" />}
-                        </button>
-                      ))}
-                    </div>
-
-                    {waGroups.length > 0 && (
-                      <>
-                        <p className="text-[11px] text-[var(--sm-text-3)] mb-1.5 mt-1">Grupos</p>
-                        <div className="flex flex-col gap-0.5 mb-4">
-                          {waGroups.map(g => (
-                            <button
-                              key={g.group_jid}
-                              onClick={() => toggleWaGroup(g.group_jid)}
-                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-left transition-colors ${
-                                waGroupJids.includes(g.group_jid)
-                                  ? 'bg-[#25D366]/10 text-[#25D366]'
-                                  : 'text-[var(--sm-text-2)] hover:bg-[var(--sm-bg-card)]'
-                              }`}
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="flex-1 truncate">{g.group_name}</span>
-                              {waGroupJids.includes(g.group_jid) && <Check className="w-3 h-3 flex-shrink-0 text-[#25D366]" />}
-                            </button>
-                          ))}
+              {/* Mensagem */}
+              <div>
+                <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--sm-text-1)' }}>Mensagem</p>
+                <div className="flex flex-col gap-2">
+                  {WA_MESSAGE_OPTIONS.map(opt => {
+                    const checked = waType === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => setWaType(opt.value)}
+                        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 transition-colors text-left"
+                        style={checked
+                          ? { background: '#2563EB0d', borderColor: '#2563EB' }
+                          : { borderColor: 'var(--sm-border)' }}
+                      >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: opt.iconBg }}>
+                          <opt.Icon className="w-4 h-4" style={{ color: opt.iconColor }} />
                         </div>
-                      </>
-                    )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{opt.label}</p>
+                          <p className="text-[11px] mt-0.5" style={{ color: 'var(--sm-text-2)' }}>{opt.description}</p>
+                        </div>
+                        <WaCheckbox checked={checked} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-                    <button
-                      onClick={sendWhatsApp}
-                      disabled={(!waClientId && waGroupJids.length === 0) || waSending}
-                      className="w-full h-8 rounded-xl bg-[#25D366] text-white text-[12px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#1eb858] transition-colors"
-                    >
-                      {waSending
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <MessageCircle className="w-3.5 h-3.5" />
-                      }
-                      {waSending ? 'Enviando...' : 'Enviar mensagem'}
-                    </button>
-                  </motion.div>
-                </>
+              {/* Grupos */}
+              {waGroups.length > 0 && (
+                <div>
+                  <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--sm-text-1)' }}>Grupos</p>
+                  <div className="flex flex-col gap-1.5">
+                    {waGroups.map(g => {
+                      const checked = waGroupJids.includes(g.group_jid)
+                      return (
+                        <button
+                          key={g.group_jid}
+                          onClick={() => toggleWaGroup(g.group_jid)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left"
+                          style={checked
+                            ? { background: '#2563EB0d', borderColor: '#2563EB66' }
+                            : { borderColor: 'var(--sm-border)' }}
+                        >
+                          <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sm-bg-alt)' }}>
+                            <Folder className="w-4 h-4" style={{ color: 'var(--sm-text-2)' }} />
+                          </span>
+                          <span className="flex-1 min-w-0 truncate text-[13px] font-medium" style={{ color: 'var(--sm-text-1)' }}>{g.group_name}</span>
+                          <WaCheckbox checked={checked} />
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
+
+              <button
+                onClick={sendWhatsApp}
+                disabled={(waClientIds.length === 0 && waGroupJids.length === 0) || waSending}
+                className="w-full h-11 rounded-xl bg-[#25D366] text-white text-[13px] font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#1eb858] transition-colors"
+              >
+                {waSending
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <MessageCircle className="w-4 h-4" />
+                }
+                {waSending ? 'Enviando...' : 'Enviar mensagem'}
+              </button>
+            </DialogContent>
+          </Dialog>
 
         </div>
 
