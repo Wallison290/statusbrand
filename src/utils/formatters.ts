@@ -1,5 +1,7 @@
 import { format, formatDistanceToNow, isAfter, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? parseISO(date) : date
@@ -21,8 +23,8 @@ export function isOverdue(date: string | null): boolean {
   return !isAfter(parseISO(date), new Date())
 }
 
-export function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ')
+export function cn(...classes: ClassValue[]): string {
+  return twMerge(clsx(classes))
 }
 
 export const statusColors: Record<string, string> = {
