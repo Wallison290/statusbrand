@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 interface ThemeCtx {
   isDark: boolean
@@ -16,10 +16,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   })
 
-  // Sync CSS custom properties with the DOM so all pages respond automatically
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
-  }, [isDark])
+  // O atributo data-theme no <html> só é aplicado dentro do app autenticado
+  // (veja Layout.tsx) — páginas públicas (landing, login, portal...) não devem
+  // herdar a preferência de tema da agência; elas têm sua própria paleta fixa.
 
   function toggleTheme() {
     setIsDark(d => {

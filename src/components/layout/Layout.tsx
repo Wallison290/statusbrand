@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { Menu, Clock } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useTheme } from '@/contexts/ThemeContext'
 
 function TrialBanner() {
   const { data: sub } = useSubscription()
@@ -23,6 +24,14 @@ function TrialBanner() {
 
 export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { isDark } = useTheme()
+
+  // Aplica o data-theme só enquanto o app autenticado estiver montado — páginas
+  // públicas (landing, login, portal do cliente...) nunca herdam essa preferência.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+    return () => { document.documentElement.removeAttribute('data-theme') }
+  }, [isDark])
 
   return (
     <div className="flex h-screen h-[100dvh] overflow-hidden" style={{ background: 'var(--sm-bg-page)' }}>
