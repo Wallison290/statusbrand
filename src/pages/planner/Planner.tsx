@@ -751,6 +751,19 @@ function PlannerItemView({
   const updateItem = useUpdatePlannerItem()
   const { toast }  = useToast()
 
+  const scrollRef     = useRef<HTMLDivElement>(null)  // wrapper mobile
+  const bodyScrollRef = useRef<HTMLDivElement>(null)  // corpo desktop
+
+  // Garante que o modal sempre abre no topo em ambos os layouts
+  useEffect(() => {
+    if (!open) return
+    const t = setTimeout(() => {
+      if (scrollRef.current)     scrollRef.current.scrollTop = 0
+      if (bodyScrollRef.current) bodyScrollRef.current.scrollTop = 0
+    }, 0)
+    return () => clearTimeout(t)
+  }, [open])
+
   // Status efetivo: calcula a partir dos parciais quando disponíveis
   const artPartial  = (item as any).art_approval_status  as ApprovalStatus | null
   const copyPartial = (item as any).copy_approval_status as ApprovalStatus | null
@@ -784,7 +797,11 @@ function PlannerItemView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
-      <DialogContent className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 !bg-[#0d0f14] flex flex-col max-h-[90vh] overflow-y-auto lg:h-[90vh] lg:overflow-hidden">
+      <DialogContent
+        ref={scrollRef}
+        onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
+        className="w-[96vw] max-w-[96vw] lg:max-w-4xl p-0 !bg-[#0d0f14] flex flex-col max-h-[90vh] overflow-y-auto lg:h-[90vh] lg:overflow-hidden"
+      >
 
         {/* ── Layout dois painéis, cada um com altura 100% do modal ── */}
         <div className="flex flex-col lg:flex-row lg:h-full overflow-visible lg:overflow-hidden">
@@ -922,7 +939,7 @@ function PlannerItemView({
             </div>
 
             {/* Corpo — rola independentemente */}
-            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div ref={bodyScrollRef} className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
 
               {/* Legenda */}
               {item.notes && (
