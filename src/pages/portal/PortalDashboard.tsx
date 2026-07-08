@@ -185,6 +185,50 @@ const approvalDot: Record<ApprovalStatus, string> = {
   reprovado:          'bg-red-500',
 }
 
+// ─── Feedback do cliente: carrossel (JSON por slide) ou texto simples ─────────
+
+type ParsedSlideFeedback = { slide: number; status: 'aprovado' | 'ajuste_solicitado' | 'reprovado'; feedback: string }
+
+function parseCarouselFeedback(feedback: string | null | undefined): ParsedSlideFeedback[] | null {
+  if (!feedback) return null
+  try {
+    const data = JSON.parse(feedback)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0]?.slide === 'number') return data as ParsedSlideFeedback[]
+    return null
+  } catch { return null }
+}
+
+const slideFbDot: Record<string, string> = { aprovado: 'bg-green-500', ajuste_solicitado: 'bg-orange-400', reprovado: 'bg-red-500' }
+const slideFbText: Record<string, string> = { aprovado: 'text-green-700', ajuste_solicitado: 'text-orange-600', reprovado: 'text-red-600' }
+const slideFbLabel: Record<string, string> = { aprovado: 'Aprovado', ajuste_solicitado: 'Ajuste solicitado', reprovado: 'Reprovado' }
+
+/** Mostra o feedback do cliente de forma legível — se for carrossel (JSON), quebra por slide. */
+function ClientFeedbackView({ feedback }: { feedback: string }) {
+  const slides = parseCarouselFeedback(feedback)
+  if (slides) {
+    return (
+      <div className="mt-2 space-y-1.5">
+        {slides.map(s => (
+          <div key={s.slide} className="p-2.5 bg-gray-50 border border-gray-100 rounded-xl space-y-1">
+            <div className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${slideFbDot[s.status] ?? 'bg-gray-400'}`} />
+              <span className="text-[10px] font-semibold text-gray-500">Slide {s.slide}</span>
+              <span className={`text-[10px] font-semibold ml-auto ${slideFbText[s.status] ?? 'text-gray-500'}`}>{slideFbLabel[s.status] ?? s.status}</span>
+            </div>
+            {s.feedback && <p className="text-[11px] text-gray-600 leading-relaxed break-words pl-3">"{s.feedback}"</p>}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  return (
+    <div className="mt-2 flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+      <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+      <p className="text-[11px] text-gray-600 leading-relaxed break-words select-text">{feedback}</p>
+    </div>
+  )
+}
+
 function PartialApprovalBlock({
   label, description, status, pending, feedback, isBusy, busyThis, onAction, onFeedbackChange, onCancelPending,
 }: PartialApprovalBlockProps) {
@@ -501,7 +545,7 @@ function ItemDetailView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent
-        className="w-[96vw] max-w-[96vw] lg:max-w-5xl p-0 overflow-hidden bg-white flex flex-col"
+        className="w-[96vw] max-w-[96vw] lg:w-auto lg:max-w-[94vw] p-0 overflow-hidden bg-white flex flex-col"
         style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}
         onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
       >
@@ -543,19 +587,19 @@ function ItemDetailView({
             </div>
           </div>
 
-          {/* ══ ESQUERDA: apenas a mídia, cheia, sem nenhuma barra (estilo Instagram web) ══ */}
+          {/* ══ ESQUERDA: a mídia — painel abraça a imagem (tamanho natural, sem corte e sem borda) ══ */}
           {mediaItems.length > 0 && (
-            <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-black border-b lg:border-b-0 lg:border-r border-gray-100">
+            <div className="lg:w-auto flex-shrink-0 flex flex-col bg-black border-b lg:border-b-0 lg:border-r border-gray-100">
 
-              {/* Mídia principal — mobile: tamanho natural (sem bordas pretas); desktop: object-cover preenchendo o painel */}
-              <div className="relative bg-black lg:flex-1 lg:min-h-0">
+              {/* Mídia principal — mobile: largura total natural; desktop: altura do modal, largura natural (sem corte) */}
+              <div className="relative bg-black lg:h-full lg:min-h-0 lg:flex lg:items-center lg:justify-center">
                 {currentMedia?.kind === 'image' ? (
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
-                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover" />
+                    className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain" />
                 ) : currentMedia?.kind === 'video' ? (
                   <video key={currentMedia.file_url} src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover" />
+                    className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain" />
                 ) : null}
 
                 {/* Número do slide (estilo referência) */}
@@ -586,27 +630,6 @@ function ItemDetailView({
                   </a>
                 )}
 
-                {/* Miniaturas — DESKTOP: sobrepostas na base da imagem, com leve transparência */}
-                {isCarousel && (
-                  <div className="absolute bottom-0 inset-x-0 z-10 hidden lg:flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
-                    {mediaItems.map((m, i) => {
-                      const sd = slideDecisions[m.id]
-                      const ss = sd?.status
-                      return (
-                        <button key={m.id} onClick={() => setMediaIdx(i)}
-                          className={`relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden border-2 transition-all
-                            ${i === mediaIdx ? 'border-white shadow-md' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-white/30 opacity-70 hover:opacity-100'}`}>
-                          {m.kind === 'image'
-                            ? <img src={m.file_url} className="w-full h-full object-cover" />
-                            : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
-                          {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                          {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                          {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
               </div>
 
               {/* Miniaturas — MOBILE: faixa própria abaixo da imagem (não sobrepõe a arte) */}
@@ -634,7 +657,7 @@ function ItemDetailView({
           )}
 
           {/* ══ DIREITA: Info + Aprovação ══ */}
-          <div className="lg:flex lg:flex-col lg:flex-1 lg:overflow-hidden bg-white min-w-0">
+          <div className="lg:flex lg:flex-col lg:flex-1 lg:min-w-[380px] lg:max-w-[560px] lg:overflow-hidden bg-white min-w-0">
 
             {/* Header — oculto no mobile (aparece acima no bloco dedicado) */}
             <div className="hidden lg:block flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
@@ -669,6 +692,28 @@ function ItemDetailView({
 
             {/* Corpo — sem scroll próprio no mobile (o wrapper pai rola); scroll interno apenas no desktop */}
             <div ref={bodyScrollRef} className="px-5 py-4 space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+
+              {/* Miniaturas — DESKTOP: no painel direito, acima da legenda */}
+              {isCarousel && (
+                <div className="hidden lg:flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {mediaItems.map((m, i) => {
+                    const sd = slideDecisions[m.id]
+                    const ss = sd?.status
+                    return (
+                      <button key={m.id} onClick={() => setMediaIdx(i)}
+                        className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all
+                          ${i === mediaIdx ? 'border-indigo-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 opacity-60 hover:opacity-100'}`}>
+                        {m.kind === 'image'
+                          ? <img src={m.file_url} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
+                        {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                        {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                        {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
 
               {/* Legenda */}
               {item.notes && (
@@ -1005,12 +1050,9 @@ function ItemDetailView({
                           </div>
                         )}
 
-                        {/* Feedback arte salvo */}
+                        {/* Feedback arte salvo — carrossel vira lista por slide; texto simples fica como está */}
                         {artFeedback && (artResolved === 'reprovado' || artResolved === 'ajuste_solicitado') && (
-                          <div className="mt-2 flex items-start gap-2 p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
-                            <MessageSquare className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <p className="text-[11px] text-gray-600 leading-relaxed">{artFeedback}</p>
-                          </div>
+                          <ClientFeedbackView feedback={artFeedback} />
                         )}
                       </div>
 
