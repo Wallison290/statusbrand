@@ -547,15 +547,15 @@ function ItemDetailView({
           {mediaItems.length > 0 && (
             <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-black border-b lg:border-b-0 lg:border-r border-gray-100">
 
-              {/* Mídia principal — object-cover: preenche o painel de ponta a ponta */}
+              {/* Mídia principal — mobile: imagem completa, ancorada no topo (sem cortar); desktop: object-cover preenchendo o painel */}
               <div className="relative bg-black h-64 lg:h-auto lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-cover" />
+                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover" />
                 ) : currentMedia?.kind === 'video' ? (
                   <video key={currentMedia.file_url} src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-cover" />
+                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover" />
                 ) : null}
 
                 {/* Número do slide (estilo referência) */}
