@@ -545,7 +545,7 @@ function ItemDetailView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent
-        className="w-[96vw] max-w-[96vw] lg:w-auto lg:max-w-[94vw] p-0 overflow-hidden !bg-white [&>button.absolute]:hidden flex flex-col"
+        className="w-[96vw] max-w-[96vw] lg:w-[min(1100px,94vw)] p-0 overflow-hidden !bg-white [&>button.absolute]:hidden flex flex-col"
         style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}
         onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
       >
@@ -657,7 +657,7 @@ function ItemDetailView({
           )}
 
           {/* ══ DIREITA: Info + Aprovação ══ */}
-          <div className="lg:flex lg:flex-col lg:flex-1 lg:min-w-[380px] lg:max-w-[560px] lg:overflow-hidden bg-white min-w-0">
+          <div className="lg:flex lg:flex-col lg:flex-1 lg:overflow-hidden bg-white min-w-0">
 
             {/* Header — oculto no mobile (aparece acima no bloco dedicado) */}
             <div className="hidden lg:block flex-shrink-0 px-5 pt-4 pb-3 border-b border-gray-100">
