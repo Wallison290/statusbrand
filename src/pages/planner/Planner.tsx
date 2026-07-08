@@ -810,20 +810,20 @@ function PlannerItemView({
           {hasMedia && (
             <div className="lg:w-1/2 flex-shrink-0 flex flex-col bg-black overflow-hidden lg:h-full">
 
-              {/* Mídia principal — mobile: imagem completa, ancorada no topo (sem cortar); desktop: object-cover preenchendo o painel */}
-              <div className="relative bg-black h-72 lg:h-auto lg:flex-1 lg:min-h-0">
+              {/* Mídia principal — mobile: tamanho natural (sem bordas pretas); desktop: object-cover preenchendo o painel */}
+              <div className="relative bg-black lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img
                     src={currentMedia.file_url}
                     alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover"
+                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover"
                   />
                 ) : currentMedia?.kind === 'video' ? (
                   <video
                     key={currentMedia.file_url}
                     src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover"
+                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover"
                   />
                 ) : null}
 
@@ -859,9 +859,9 @@ function PlannerItemView({
                   </a>
                 )}
 
-                {/* Miniaturas do carrossel — sobrepostas na base da imagem, com leve transparência */}
+                {/* Miniaturas — DESKTOP: sobrepostas na base da imagem, com leve transparência */}
                 {mediaItems.length > 1 && (
-                  <div className="absolute bottom-0 inset-x-0 z-10 flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
+                  <div className="absolute bottom-0 inset-x-0 z-10 hidden lg:flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
                     {mediaItems.map((m, i) => (
                       <button
                         key={m.id}
@@ -876,6 +876,23 @@ function PlannerItemView({
                   </div>
                 )}
               </div>
+
+              {/* Miniaturas — MOBILE: faixa própria abaixo da imagem (não sobrepõe a arte) */}
+              {mediaItems.length > 1 && (
+                <div className="lg:hidden flex gap-1.5 px-3 py-2.5 overflow-x-auto bg-black border-t border-white/10 scrollbar-none">
+                  {mediaItems.map((m, i) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMediaIdx(i)}
+                      className={`relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === mediaIdx ? 'border-white shadow-md' : 'border-white/25 opacity-70'}`}
+                    >
+                      {m.kind === 'image'
+                        ? <img src={m.file_url} alt="" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full bg-[#182233] flex items-center justify-center"><Film className="w-4 h-4 text-[#64748b]" /></div>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

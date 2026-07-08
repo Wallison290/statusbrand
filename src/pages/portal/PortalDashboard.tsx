@@ -547,15 +547,15 @@ function ItemDetailView({
           {mediaItems.length > 0 && (
             <div className="lg:w-[44%] flex-shrink-0 flex flex-col bg-black border-b lg:border-b-0 lg:border-r border-gray-100">
 
-              {/* Mídia principal — mobile: imagem completa, ancorada no topo (sem cortar); desktop: object-cover preenchendo o painel */}
-              <div className="relative bg-black h-64 lg:h-auto lg:flex-1 lg:min-h-0">
+              {/* Mídia principal — mobile: tamanho natural (sem bordas pretas); desktop: object-cover preenchendo o painel */}
+              <div className="relative bg-black lg:flex-1 lg:min-h-0">
                 {currentMedia?.kind === 'image' ? (
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
-                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover" />
+                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover" />
                 ) : currentMedia?.kind === 'video' ? (
                   <video key={currentMedia.file_url} src={currentMedia.file_url}
                     autoPlay muted loop playsInline controls
-                    className="absolute inset-0 w-full h-full object-contain object-top lg:object-cover" />
+                    className="block w-full h-auto lg:absolute lg:inset-0 lg:w-full lg:h-full lg:object-cover" />
                 ) : null}
 
                 {/* Número do slide (estilo referência) */}
@@ -586,9 +586,9 @@ function ItemDetailView({
                   </a>
                 )}
 
-                {/* Miniaturas do carrossel — sobrepostas na base da imagem, com leve transparência */}
+                {/* Miniaturas — DESKTOP: sobrepostas na base da imagem, com leve transparência */}
                 {isCarousel && (
-                  <div className="absolute bottom-0 inset-x-0 z-10 flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
+                  <div className="absolute bottom-0 inset-x-0 z-10 hidden lg:flex gap-1.5 px-3 pt-6 pb-2.5 overflow-x-auto bg-gradient-to-t from-black/75 to-transparent scrollbar-none">
                     {mediaItems.map((m, i) => {
                       const sd = slideDecisions[m.id]
                       const ss = sd?.status
@@ -608,6 +608,28 @@ function ItemDetailView({
                   </div>
                 )}
               </div>
+
+              {/* Miniaturas — MOBILE: faixa própria abaixo da imagem (não sobrepõe a arte) */}
+              {isCarousel && (
+                <div className="lg:hidden flex gap-1.5 px-4 py-3 overflow-x-auto bg-white border-t border-gray-100 scrollbar-none">
+                  {mediaItems.map((m, i) => {
+                    const sd = slideDecisions[m.id]
+                    const ss = sd?.status
+                    return (
+                      <button key={m.id} onClick={() => setMediaIdx(i)}
+                        className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all
+                          ${i === mediaIdx ? 'border-indigo-500 shadow-sm' : ss === 'aprovado' ? 'border-green-400' : ss === 'ajuste_solicitado' ? 'border-orange-400' : ss === 'reprovado' ? 'border-red-400' : 'border-gray-200 opacity-60'}`}>
+                        {m.kind === 'image'
+                          ? <img src={m.file_url} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-gray-100 flex items-center justify-center"><Video className="w-4 h-4 text-gray-400" /></div>}
+                        {ss === 'aprovado'          && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                        {ss === 'ajuste_solicitado' && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center"><AlertCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                        {ss === 'reprovado'         && <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center"><XCircle className="w-2.5 h-2.5" style={{ color: '#fff' }} /></div>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
