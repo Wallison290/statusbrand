@@ -545,7 +545,7 @@ function ItemDetailView({
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent
-        className="w-[96vw] max-w-[96vw] lg:w-auto lg:max-w-[94vw] p-0 overflow-hidden bg-white flex flex-col"
+        className="w-[96vw] max-w-[96vw] lg:w-auto lg:max-w-[94vw] p-0 overflow-hidden !bg-white [&>button.absolute]:hidden flex flex-col"
         style={{ maxHeight: 'min(92vh, 900px)', height: 'min(92vh, 900px)' }}
         onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
       >

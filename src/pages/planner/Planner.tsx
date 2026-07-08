@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react'
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable,
@@ -754,14 +754,12 @@ function PlannerItemView({
   const scrollRef     = useRef<HTMLDivElement>(null)  // wrapper mobile
   const bodyScrollRef = useRef<HTMLDivElement>(null)  // corpo desktop
 
-  // Garante que o modal sempre abre no topo em ambos os layouts
-  useEffect(() => {
+  // Garante que o modal sempre abre no topo — useLayoutEffect roda ANTES da
+  // pintura, então não há o "desce e sobe" visível que o setTimeout causava.
+  useLayoutEffect(() => {
     if (!open) return
-    const t = setTimeout(() => {
-      if (scrollRef.current)     scrollRef.current.scrollTop = 0
-      if (bodyScrollRef.current) bodyScrollRef.current.scrollTop = 0
-    }, 0)
-    return () => clearTimeout(t)
+    if (scrollRef.current)     scrollRef.current.scrollTop = 0
+    if (bodyScrollRef.current) bodyScrollRef.current.scrollTop = 0
   }, [open])
 
   // Status efetivo: calcula a partir dos parciais quando disponíveis
@@ -799,7 +797,7 @@ function PlannerItemView({
       {/* Modal estilo Instagram — altura fixa para scroll funcionar */}
       <DialogContent
         ref={scrollRef}
-        onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0 }}
+        onOpenAutoFocus={e => { e.preventDefault(); if (scrollRef.current) scrollRef.current.scrollTop = 0; if (bodyScrollRef.current) bodyScrollRef.current.scrollTop = 0 }}
         className="w-[96vw] max-w-[96vw] lg:w-auto lg:max-w-[94vw] p-0 !bg-[#0d0f14] flex flex-col max-h-[90vh] overflow-y-auto lg:h-[90vh] lg:overflow-hidden"
       >
 
