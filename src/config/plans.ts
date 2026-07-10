@@ -46,7 +46,7 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceId: 'price_1Tjj4F0khDYycmTvwkNmnfFk',
     description: 'Para quem está começando a agência',
     featureGroups: [
-      { title: 'Gestão da Agência', items: ['Até 5 clientes', '1 usuário na equipe', '10 GB de armazenamento'] },
+      { title: 'Gestão da Agência', items: ['Até 5 clientes', 'Equipe com 1 usuário', '10 GB de armazenamento'] },
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (1 perfil)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 2 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['150 créditos de IA por mês'] },
@@ -70,7 +70,7 @@ export const PLANS: Record<PlanId, Plan> = {
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
     featureGroups: [
-      { title: 'Gestão da Agência', items: ['Até 20 clientes', 'Até 3 usuários na equipe', '50 GB de armazenamento', 'Relatórios mensais'] },
+      { title: 'Gestão da Agência', items: ['Até 20 clientes', 'Equipe com até 3 usuários', '50 GB de armazenamento', 'Relatórios mensais'] },
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 5 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 10 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['600 créditos de IA por mês', 'IA Copilot completo'] },
@@ -94,7 +94,7 @@ export const PLANS: Record<PlanId, Plan> = {
     badge: 'Ilimitado',
     description: 'Para agências consolidadas',
     featureGroups: [
-      { title: 'Gestão da Agência', items: ['Até 50 clientes', 'Equipe ilimitada', '100 GB de armazenamento', 'Relatórios mensais'] },
+      { title: 'Gestão da Agência', items: ['Até 50 clientes', 'Equipe com usuários ilimitados', '100 GB de armazenamento', 'Relatórios mensais'] },
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 20 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 50 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['2.000 créditos de IA por mês', 'IA Copilot completo'] },
