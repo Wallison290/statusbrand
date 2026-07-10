@@ -187,7 +187,10 @@ function StatusDropdown({ client }: { client: Client }) {
       await updateClient.mutateAsync({
         id: client.id,
         financial_status: status,
-        manual_status_override: status === 'cancelado',
+        // Qualquer escolha manual fixa o status (override), senão o cálculo
+        // automático por data de vencimento reverte na hora. O override é
+        // limpo quando um pagamento é registrado (volta ao modo automático).
+        manual_status_override: true,
       })
       toast('Status atualizado.', 'success')
       setOpen(false)
