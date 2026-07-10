@@ -8,6 +8,7 @@ export interface Profile {
   linked_client_id: string | null
   created_at: string
   updated_at: string
+  is_admin?: boolean
   // Notificações via WhatsApp (Evolution API)
   whatsapp?: string | null
   whatsapp_opt_in?: boolean

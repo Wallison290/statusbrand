@@ -42,6 +42,7 @@ const PrivacyPage        = lazy(() => import('@/pages/PrivacyPage').then(m => ({
 const TermsPage          = lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
 const WeeklyFormPage     = lazy(() => import('@/pages/public/WeeklyFormPage').then(m => ({ default: m.WeeklyFormPage })))
 const LandingPage        = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })))
+const AdminPanel         = lazy(() => import('@/pages/admin/AdminPanel').then(m => ({ default: m.AdminPanel })))
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -141,6 +142,16 @@ function PortalGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/** Painel de admin — exige is_admin=true no profile. A RLS do banco é quem
+ *  realmente bloqueia os dados; este guard só evita renderizar a tela pra
+ *  quem não tem acesso (não é a camada de segurança). */
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { profile, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!profile?.is_admin) return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
+
 /** Remonta o AIPage do zero a cada troca de squad/rota — cada card do hub abre um chat limpo. */
 function AIPageRoute() {
   const { squadId } = useParams()
@@ -213,6 +224,12 @@ function AppRoutes() {
         <Route path="/reports"            element={<ReportsOverview />} />
         <Route path="/reports/:clientId"  element={<ReportsWorkspaceRoute />} />
         <Route path="/assinatura"    element={<Subscription />} />
+      </Route>
+
+      {/* Painel de admin — sem SubscriptionGuard (não posso ficar trancado
+          fora se minha própria assinatura expirar) */}
+      <Route element={<AuthGuard><AdminGuard><Layout /></AdminGuard></AuthGuard>}>
+        <Route path="/admin" element={<AdminPanel />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
   LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, MessageCircle, BarChart3,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -129,6 +130,11 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const stWarning = stPct >= 80
   const stLabel   = stUsedGB < 1 ? `${(stUsedGB * 1024).toFixed(0)} MB` : `${stUsedGB.toFixed(1)} GB`
 
+  // Item extra visível só para a conta marcada como is_admin no banco
+  const items = profile?.is_admin
+    ? [...navItems, { href: '/admin', icon: ShieldCheck, label: 'Admin' }]
+    : navItems
+
   useEffect(() => {
     onMobileClose?.()
   }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -150,7 +156,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         className="flex-1 py-1.5 px-2 space-y-0.5 overflow-y-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
       >
-        {navItems.map((item) => {
+        {items.map((item) => {
           const active =
             location.pathname === item.href ||
             (item.href !== '/' && location.pathname.startsWith(item.href))
