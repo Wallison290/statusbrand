@@ -449,13 +449,20 @@ function Pricing() {
                   style={featured ? { background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' } : {}}>
                   Começar teste de 3 dias
                 </Link>
-                <ul className="space-y-2.5 mt-6">
-                  {p.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-[13px] text-[#CBD5E1]">
-                      <Check className="w-4 h-4 text-[#6f93c9] flex-shrink-0 mt-0.5" /> {f}
-                    </li>
+                <div className="mt-6 space-y-4">
+                  {p.featureGroups.map(g => (
+                    <div key={g.title}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748b] mb-2">{g.title}</p>
+                      <ul className="space-y-2">
+                        {g.items.map(f => (
+                          <li key={f} className="flex items-start gap-2 text-[13px] text-[#CBD5E1]">
+                            <Check className="w-4 h-4 text-[#6f93c9] flex-shrink-0 mt-0.5" /> {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )
           })}

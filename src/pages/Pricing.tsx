@@ -117,15 +117,22 @@ function PlanCard({
         <span className="text-[13px] text-[#94a3b8]">/mês</span>
       </div>
 
-      {/* Features */}
-      <ul className="space-y-2.5 flex-1">
-        {plan.features.map(f => (
-          <li key={f} className="flex items-start gap-2.5 text-[13px] text-[#374151]">
-            <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-            {f}
-          </li>
+      {/* Features agrupadas por categoria */}
+      <div className="space-y-4 flex-1">
+        {plan.featureGroups.map(g => (
+          <div key={g.title}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8] mb-2">{g.title}</p>
+            <ul className="space-y-2">
+              {g.items.map(f => (
+                <li key={f} className="flex items-start gap-2.5 text-[13px] text-[#374151]">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {/* CTA */}
       {isCurrent ? (

@@ -179,14 +179,21 @@ function PlanCard({
         <span className="text-[12px] text-[#94a3b8]">/mês</span>
       </div>
 
-      <ul className="space-y-2 flex-1">
-        {plan.features.map(f => (
-          <li key={f} className="flex items-start gap-2 text-[12.5px] text-[#374151]">
-            <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
-            {f}
-          </li>
+      <div className="space-y-3.5 flex-1">
+        {plan.featureGroups.map(g => (
+          <div key={g.title}>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1.5">{g.title}</p>
+            <ul className="space-y-1.5">
+              {g.items.map(f => (
+                <li key={f} className="flex items-start gap-2 text-[12.5px] text-[#374151]">
+                  <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {isCurrent ? (
         hasStripe ? (

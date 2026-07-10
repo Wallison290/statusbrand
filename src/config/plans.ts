@@ -3,6 +3,13 @@
 
 export type PlanId = 'starter' | 'pro' | 'agency'
 
+// Features agrupadas por categoria — facilita a comparação entre planos
+// (padrão recomendado para páginas de preços de SaaS)
+export interface PlanFeatureGroup {
+  title: string
+  items: string[]
+}
+
 export interface Plan {
   id: PlanId
   name: string
@@ -19,7 +26,7 @@ export interface Plan {
   stripePriceId: string | null
   badge?: string
   description: string
-  features: string[]
+  featureGroups: PlanFeatureGroup[]
 }
 
 export const PLANS: Record<PlanId, Plan> = {
@@ -38,17 +45,12 @@ export const PLANS: Record<PlanId, Plan> = {
     supportLabel: 'E-mail',
     stripePriceId: 'price_1Tjj4F0khDYycmTvwkNmnfFk',
     description: 'Para quem está começando a agência',
-    features: [
-      'Até 5 clientes',
-      '150 requests de IA por mês',
-      '10 GB de armazenamento',
-      'Portal do cliente (até 2 clientes)',
-      'Agendamento Instagram (1 perfil)',
-      '1 usuário na equipe',
-      'Planejador de conteúdo',
-      'Tarefas, notas e biblioteca',
-      'Notificações pelo WhatsApp',
-      'Suporte por e-mail',
+    featureGroups: [
+      { title: 'Gestão da Agência', items: ['Até 5 clientes', '1 usuário na equipe', '10 GB de armazenamento'] },
+      { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (1 perfil)', 'Biblioteca inteligente', 'Tarefas e notas'] },
+      { title: 'Cliente', items: ['Portal de aprovação (até 2 clientes)', 'Notificações via WhatsApp'] },
+      { title: 'IA', items: ['150 créditos de IA por mês'] },
+      { title: 'Suporte', items: ['E-mail'] },
     ],
   },
   pro: {
@@ -67,17 +69,12 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceId: 'price_1Tjj4w0khDYycmTvDDOmCvi7',
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
-    features: [
-      'Até 20 clientes',
-      '600 requests de IA por mês',
-      '50 GB de armazenamento',
-      'Portal do cliente (até 10 clientes)',
-      'Agendamento Instagram (até 5 perfis)',
-      'Até 3 usuários na equipe',
-      'IA Copilot completo',
-      'Relatórios mensais',
-      'Notificações pelo WhatsApp',
-      'Suporte prioritário (24h)',
+    featureGroups: [
+      { title: 'Gestão da Agência', items: ['Até 20 clientes', 'Até 3 usuários na equipe', '50 GB de armazenamento', 'Relatórios mensais'] },
+      { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 5 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
+      { title: 'Cliente', items: ['Portal de aprovação (até 10 clientes)', 'Notificações via WhatsApp'] },
+      { title: 'IA', items: ['600 créditos de IA por mês', 'IA Copilot completo'] },
+      { title: 'Suporte', items: ['Prioritário (24h)'] },
     ],
   },
   agency: {
@@ -96,17 +93,12 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceId: 'price_1Tjj5c0khDYycmTvDDntAKuf',
     badge: 'Ilimitado',
     description: 'Para agências consolidadas',
-    features: [
-      'Até 50 clientes',
-      '2.000 requests de IA por mês',
-      '100 GB de armazenamento',
-      'Portal do cliente (até 50 clientes)',
-      'Agendamento Instagram (até 20 perfis)',
-      'Equipe ilimitada',
-      'IA Copilot completo',
-      'Relatórios mensais',
-      'Notificações pelo WhatsApp',
-      'Suporte WhatsApp + SLA 4h',
+    featureGroups: [
+      { title: 'Gestão da Agência', items: ['Até 50 clientes', 'Equipe ilimitada', '100 GB de armazenamento', 'Relatórios mensais'] },
+      { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 20 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
+      { title: 'Cliente', items: ['Portal de aprovação (até 50 clientes)', 'Notificações via WhatsApp'] },
+      { title: 'IA', items: ['2.000 créditos de IA por mês', 'IA Copilot completo'] },
+      { title: 'Suporte', items: ['WhatsApp + SLA 4h'] },
     ],
   },
 }
