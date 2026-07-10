@@ -136,18 +136,18 @@ function SquadsBar() {
     ['🖌️', 'Design Criativo'],
   ]
   return (
-    <section className="py-14 px-4 sm:px-6 border-y border-[#1e293b] bg-[#0d1424]">
+    <section className="py-16 px-4 sm:px-6 bg-white">
       <div className="max-w-5xl mx-auto text-center">
-        <h2 className="text-[20px] font-bold text-white">13 squads de IA, 52 agentes especializados</h2>
-        <p className="text-[13px] text-[#94a3b8] mt-1.5">Um time de IA por área da operação — do conteúdo ao tráfego, da venda à retenção</p>
+        <h2 className="text-[20px] font-bold text-[#0B1020]">13 squads de IA, 52 agentes especializados</h2>
+        <p className="text-[13px] text-[#475569] mt-1.5">Um time de IA por área da operação — do conteúdo ao tráfego, da venda à retenção</p>
         <div className="flex flex-wrap items-center justify-center gap-2.5 mt-8">
           {squads.map(([emoji, name]) => (
-            <span key={name} className="px-3.5 py-2 rounded-xl bg-[#111827] border border-[#1e293b] text-[12.5px] text-[#CBD5E1] font-medium flex items-center gap-1.5">
+            <span key={name} className="px-3.5 py-2 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] text-[12.5px] text-[#16284d] font-medium flex items-center gap-1.5 hover:border-[#29457a]/40 transition-colors">
               <span>{emoji}</span> {name}
             </span>
           ))}
         </div>
-        <p className="text-[12px] text-[#64748b] mt-6">Movidos por GPT-4o, com busca na web em tempo real e geração de imagem por IA</p>
+        <p className="text-[12px] text-[#94a3b8] mt-6">Movidos por GPT-4o, com busca na web em tempo real e geração de imagem por IA</p>
       </div>
     </section>
   )
@@ -198,23 +198,23 @@ function HowItWorks() {
     { n: 3, icon: CheckCircle2, title: 'Entrega e aprova', desc: 'Calendário organizado, aprovação registrada, histórico salvo. O próximo mês começa de onde o anterior parou.' },
   ]
   return (
-    <section id="como-funciona" className="py-20 px-4 sm:px-6">
+    <section id="como-funciona" className="py-20 px-4 sm:px-6 bg-white">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Como funciona</h2>
-          <p className="text-[15px] text-[#94a3b8] mt-2">Sua operação organizada em 3 passos simples.</p>
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-[#0B1020]">Como funciona</h2>
+          <p className="text-[15px] text-[#475569] mt-2">Sua operação organizada em 3 passos simples.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {steps.map(s => (
-            <div key={s.n} className="bg-[#111827] border border-[#1e293b] rounded-2xl p-6">
+            <div key={s.n} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-6 hover:border-[#29457a]/40 hover:shadow-lg hover:shadow-[#0B1020]/5 transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-[#29457a]/20 border border-[#29457a]/40 flex items-center justify-center">
-                  <s.icon className="w-5 h-5 text-[#6f93c9]" />
+                <div className="w-10 h-10 rounded-xl bg-[#29457a]/10 border border-[#29457a]/25 flex items-center justify-center">
+                  <s.icon className="w-5 h-5 text-[#29457a]" />
                 </div>
-                <span className="text-[13px] font-bold text-[#64748b]">Passo {s.n}</span>
+                <span className="text-[13px] font-bold text-[#94a3b8]">Passo {s.n}</span>
               </div>
-              <h3 className="text-[16px] font-semibold text-white mb-2">{s.title}</h3>
-              <p className="text-[13.5px] text-[#94a3b8] leading-relaxed">{s.desc}</p>
+              <h3 className="text-[16px] font-semibold text-[#0B1020] mb-2">{s.title}</h3>
+              <p className="text-[13.5px] text-[#475569] leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
@@ -231,7 +231,7 @@ function WhyItWorks() {
     { icon: Workflow, title: 'Do briefing à aprovação', desc: 'Tudo no mesmo lugar. Seu cliente acompanha pelo portal, você produz com clareza e o histórico fica salvo.' },
   ]
   return (
-    <section className="py-20 px-4 sm:px-6 bg-[#0d1424] border-y border-[#1e293b]">
+    <section className="py-20 px-4 sm:px-6 bg-[#0B1020]">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Por que a StatusMedia funciona?</h2>
@@ -270,28 +270,28 @@ function Platform() {
     { icon: BarChart3, title: 'Visão Geral', subtitle: 'O dashboard que centraliza tudo', bullets: ['Resumo de clientes, conteúdo e prazos', 'O que precisa da sua atenção hoje', 'Comece o dia sabendo por onde ir'] },
   ]
   return (
-    <section id="plataforma" className="py-20 px-4 sm:px-6">
+    <section id="plataforma" className="py-20 px-4 sm:px-6 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Explore a plataforma</h2>
-          <p className="text-[15px] text-[#94a3b8] mt-2">Tudo que a rotina de quem atende cliente precisa — do briefing ao financeiro, num só lugar.</p>
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-[#0B1020]">Explore a plataforma</h2>
+          <p className="text-[15px] text-[#475569] mt-2">Tudo que a rotina de quem atende cliente precisa — do briefing ao financeiro, num só lugar.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map(f => (
-            <div key={f.title} className="bg-[#111827] border border-[#1e293b] rounded-2xl p-5 transition-colors hover:border-[#29457a]/60">
+            <div key={f.title} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-5 transition-all hover:border-[#29457a]/40 hover:shadow-lg hover:shadow-[#0B1020]/5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#29457a]/20 border border-[#29457a]/40 flex items-center justify-center flex-shrink-0">
-                  <f.icon className="w-5 h-5 text-[#6f93c9]" />
+                <div className="w-10 h-10 rounded-xl bg-[#29457a]/10 border border-[#29457a]/25 flex items-center justify-center flex-shrink-0">
+                  <f.icon className="w-5 h-5 text-[#29457a]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-white leading-tight">{f.title}</h3>
-                  <p className="text-[12px] text-[#64748b]">{f.subtitle}</p>
+                  <h3 className="text-[15px] font-semibold text-[#0B1020] leading-tight">{f.title}</h3>
+                  <p className="text-[12px] text-[#94a3b8]">{f.subtitle}</p>
                 </div>
               </div>
               <ul className="space-y-2 mt-4">
                 {f.bullets.map(b => (
-                  <li key={b} className="flex items-start gap-2 text-[13px] text-[#CBD5E1]">
-                    <Check className="w-4 h-4 text-[#6f93c9] flex-shrink-0 mt-0.5" /> {b}
+                  <li key={b} className="flex items-start gap-2 text-[13px] text-[#334155]">
+                    <Check className="w-4 h-4 text-[#29457a] flex-shrink-0 mt-0.5" /> {b}
                   </li>
                 ))}
               </ul>
@@ -314,7 +314,7 @@ function Testimonials() {
     { name: 'Rafael Torres', role: 'Estrategista de conteúdo', text: 'Acabou o ciclo de 10 abas abertas. Briefing, IA e aprovação no mesmo fluxo.' },
   ]
   return (
-    <section className="py-20 px-4 sm:px-6 bg-[#0d1424] border-y border-[#1e293b]">
+    <section className="py-20 px-4 sm:px-6 bg-[#0B1020]">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Não acredite só na nossa palavra</h2>
@@ -353,30 +353,30 @@ function Comparison() {
     ['Processo manual', 'Depende demais de pessoas e memória', 'Cria padrão repetível para escalar'],
   ]
   return (
-    <section className="py-20 px-4 sm:px-6">
+    <section className="py-20 px-4 sm:px-6 bg-white">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-[28px] sm:text-[34px] font-bold text-white max-w-2xl mx-auto leading-tight">
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-[#0B1020] max-w-2xl mx-auto leading-tight">
             Centralizar a operação muda o jogo em relação ao modelo fragmentado.
           </h2>
         </div>
-        <div className="overflow-x-auto rounded-2xl border border-[#1e293b] bg-[#111827]">
+        <div className="overflow-x-auto rounded-2xl border border-[#e2e8f0] bg-white shadow-lg shadow-[#0B1020]/5">
           <table className="w-full min-w-[640px] text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#1e293b] bg-[#0d1424]">
-                <th className="px-5 py-4 text-[13px] font-semibold text-[#94a3b8]">Abordagem</th>
-                <th className="px-5 py-4 text-[13px] font-semibold text-[#94a3b8]">Limitação</th>
-                <th className="px-5 py-4 text-[13px] font-semibold text-[#6f93c9]">Com a StatusMedia</th>
+              <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#64748b]">Abordagem</th>
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#64748b]">Limitação</th>
+                <th className="px-5 py-4 text-[13px] font-semibold text-[#29457a]">Com a StatusMedia</th>
               </tr>
             </thead>
             <tbody>
               {rows.map(([approach, limitation, advantage]) => (
-                <tr key={approach} className="border-b border-[#1e293b] last:border-b-0">
-                  <td className="px-5 py-4 text-[13.5px] text-white font-medium align-top">{approach}</td>
-                  <td className="px-5 py-4 text-[13.5px] text-[#94a3b8] align-top">{limitation}</td>
-                  <td className="px-5 py-4 text-[13.5px] text-[#CBD5E1] align-top">
+                <tr key={approach} className="border-b border-[#e2e8f0] last:border-b-0">
+                  <td className="px-5 py-4 text-[13.5px] text-[#0B1020] font-medium align-top">{approach}</td>
+                  <td className="px-5 py-4 text-[13.5px] text-[#64748b] align-top">{limitation}</td>
+                  <td className="px-5 py-4 text-[13.5px] text-[#334155] align-top">
                     <span className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[#6f93c9] flex-shrink-0 mt-0.5" /> {advantage}
+                      <Check className="w-4 h-4 text-[#29457a] flex-shrink-0 mt-0.5" /> {advantage}
                     </span>
                   </td>
                 </tr>
@@ -482,20 +482,20 @@ function FAQ() {
   ]
   const [open, setOpen] = useState<number | null>(0)
   return (
-    <section id="faq" className="py-20 px-4 sm:px-6 bg-[#0d1424] border-y border-[#1e293b]">
+    <section id="faq" className="py-20 px-4 sm:px-6 bg-white">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-[28px] sm:text-[34px] font-bold text-white">Perguntas frequentes</h2>
-          <p className="text-[15px] text-[#94a3b8] mt-2">O que normalmente perguntam antes de assinar.</p>
+          <h2 className="text-[28px] sm:text-[34px] font-bold text-[#0B1020]">Perguntas frequentes</h2>
+          <p className="text-[15px] text-[#475569] mt-2">O que normalmente perguntam antes de assinar.</p>
         </div>
         <div className="space-y-3">
           {faqs.map(([q, a], i) => (
-            <div key={i} className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
+            <div key={i} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl overflow-hidden transition-colors hover:border-[#29457a]/30">
               <button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left">
-                <span className="text-[14px] font-semibold text-white">{q}</span>
-                <ChevronDown className={`w-4 h-4 text-[#94a3b8] flex-shrink-0 transition-transform ${open === i ? 'rotate-180' : ''}`} />
+                <span className="text-[14px] font-semibold text-[#0B1020]">{q}</span>
+                <ChevronDown className={`w-4 h-4 text-[#64748b] flex-shrink-0 transition-transform ${open === i ? 'rotate-180' : ''}`} />
               </button>
-              {open === i && <p className="px-5 pb-4 text-[13.5px] text-[#94a3b8] leading-relaxed">{a}</p>}
+              {open === i && <p className="px-5 pb-4 text-[13.5px] text-[#475569] leading-relaxed">{a}</p>}
             </div>
           ))}
         </div>
