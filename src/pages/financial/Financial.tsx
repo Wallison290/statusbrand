@@ -5,6 +5,7 @@ import {
   TrendingUp, DollarSign, AlertCircle, BarChart3,
   CheckCircle2, Clock, Ban, Search, ExternalLink, ChevronDown,
   CalendarDays, AlertTriangle, MessageCircle, History, X, Loader2,
+  RefreshCw, Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -201,6 +202,23 @@ function StatusDropdown({ client }: { client: Client }) {
     }
   }
 
+  // Volta ao modo automático: limpa o override e o status passa a seguir a
+  // data de vencimento novamente (sem precisar registrar pagamento).
+  const handleAuto = async () => {
+    setSaving(true)
+    try {
+      await updateClient.mutateAsync({ id: client.id, manual_status_override: false })
+      toast('Status no automático (segue a data de vencimento).', 'success')
+      setOpen(false)
+    } catch (err: any) {
+      toast(err.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const isAuto = !client.manual_status_override
+
   return (
     <div className="relative">
       <button
@@ -213,9 +231,23 @@ function StatusDropdown({ client }: { client: Client }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 w-44 max-w-[90vw] rounded-xl border border-[#1e293b] bg-[#182233] shadow-xl overflow-hidden">
+          <div className="absolute right-0 top-full mt-1 z-20 w-52 max-w-[90vw] rounded-xl border border-[#1e293b] bg-[#182233] shadow-xl overflow-hidden">
+            {/* Automático — limpa o override e volta a seguir a data de vencimento */}
+            <button
+              onClick={handleAuto}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#1e293b] text-[#CBD5E1]"
+            >
+              <RefreshCw className="w-3 h-3 flex-shrink-0 text-[#64748b]" />
+              <span className="flex-1 min-w-0">
+                Automático
+                <span className="block text-[10px] text-[#64748b]">Segue a data de vencimento</span>
+              </span>
+              {isAuto && <Check className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />}
+            </button>
+            <div className="h-px bg-[#1e293b]" />
             {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
               const st = statusStyles[s]
+              const active = client.manual_status_override && client.financial_status === s
               return (
                 <button
                   key={s}
@@ -223,7 +255,8 @@ function StatusDropdown({ client }: { client: Client }) {
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#1e293b] ${st.text}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
-                  {financialStatusLabel(s)}
+                  <span className="flex-1 min-w-0">{financialStatusLabel(s)}</span>
+                  {active && <Check className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />}
                 </button>
               )
             })}
