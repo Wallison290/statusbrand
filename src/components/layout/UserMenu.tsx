@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, CreditCard, LogOut, Key, ChevronRight,
   Camera, Check, X, Loader2, Building2, Zap, Crown,
-  HelpCircle, Sun, Moon,
+  HelpCircle, Sun, Moon, Users,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -402,6 +402,13 @@ export function UserMenu({ dark = true }: UserMenuProps) {
                     label="Suporte"
                     description="Falar no WhatsApp"
                     onClick={() => { setOpen(false); window.open('https://wa.me/5587988693940', '_blank') }}
+                  />
+                  <MenuItem
+                    icon={Users}
+                    label="Comunidade"
+                    description="Novidades, atualizações e feedbacks"
+                    highlight
+                    onClick={() => { setOpen(false); window.open('https://chat.whatsapp.com/HMFkOUKuMW4CdbjBgggkCG?mode=gi_t', '_blank', 'noopener,noreferrer') }}
                   />
 
                   {/* Toggle de tema */}
