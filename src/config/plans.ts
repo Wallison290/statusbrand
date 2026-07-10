@@ -42,7 +42,7 @@ export const PLANS: Record<PlanId, Plan> = {
     maxTeamMembers: 1,
     instagramProfiles: 1,
     supportLevel: 'email',
-    supportLabel: 'WhatsApp e e-mail',
+    supportLabel: 'WhatsApp',
     stripePriceId: 'price_1Tjj4F0khDYycmTvwkNmnfFk',
     description: 'Para quem está começando a agência',
     featureGroups: [
@@ -50,7 +50,7 @@ export const PLANS: Record<PlanId, Plan> = {
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (1 perfil)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 2 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['150 créditos de IA por mês'] },
-      { title: 'Suporte', items: ['WhatsApp e e-mail'] },
+      { title: 'Suporte', items: ['WhatsApp'] },
     ],
   },
   pro: {
@@ -65,7 +65,7 @@ export const PLANS: Record<PlanId, Plan> = {
     maxTeamMembers: 3,
     instagramProfiles: 5,
     supportLevel: 'priority',
-    supportLabel: 'WhatsApp prioritário (24h)',
+    supportLabel: 'WhatsApp',
     stripePriceId: 'price_1Tjj4w0khDYycmTvDDOmCvi7',
     badge: 'Mais popular',
     description: 'Para agências em crescimento',
@@ -74,7 +74,7 @@ export const PLANS: Record<PlanId, Plan> = {
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 5 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 10 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['600 créditos de IA por mês', 'IA Copilot completo'] },
-      { title: 'Suporte', items: ['WhatsApp prioritário (24h)'] },
+      { title: 'Suporte', items: ['WhatsApp'] },
     ],
   },
   agency: {
@@ -89,7 +89,7 @@ export const PLANS: Record<PlanId, Plan> = {
     maxTeamMembers: -1,
     instagramProfiles: 20,
     supportLevel: 'sla',
-    supportLabel: 'WhatsApp + SLA 4h',
+    supportLabel: 'WhatsApp',
     stripePriceId: 'price_1Tjj5c0khDYycmTvDDntAKuf',
     badge: 'Ilimitado',
     description: 'Para agências consolidadas',
@@ -98,7 +98,7 @@ export const PLANS: Record<PlanId, Plan> = {
       { title: 'Marketing', items: ['Planejamento de conteúdo', 'Agendamento Instagram (até 20 perfis)', 'Biblioteca inteligente', 'Tarefas e notas'] },
       { title: 'Cliente', items: ['Portal de aprovação (até 50 clientes)', 'Notificações via WhatsApp'] },
       { title: 'IA', items: ['2.000 créditos de IA por mês', 'IA Copilot completo'] },
-      { title: 'Suporte', items: ['WhatsApp + SLA 4h'] },
+      { title: 'Suporte', items: ['WhatsApp'] },
     ],
   },
 }
