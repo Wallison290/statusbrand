@@ -2,6 +2,14 @@
 // Só carrega dados quando profile.is_admin === true. A RLS do banco (policies
 // *_admin_read_all) é quem realmente bloqueia o acesso — esta tela é só a
 // camada visual. Nenhum dado de senha é lido, exibido ou armazenado aqui.
+//
+// Badges de categoria/status usam fundo SÓLIDO + texto branco (via inline
+// style) de propósito: o app tem um tema claro/escuro que reconverte várias
+// cores fixas via CSS global (index.css), mas combinações "fundo translúcido
+// + texto claro" (ex.: bg-purple-500/15 + text-purple-300) não têm essa
+// reconversão e ficam ilegíveis no tema claro (texto quase da cor do fundo).
+// Fundo sólido + branco garante contraste em qualquer tema, sem depender do
+// sistema de overrides.
 
 import { useMemo, useState } from 'react'
 import {
@@ -14,22 +22,37 @@ import { calcFinancialStatus, financialStatusLabel } from '@/utils/financial'
 import type { PlanId } from '@/config/plans'
 
 type Tab = 'users' | 'clients'
+type UserFilter = 'todos' | 'agencia' | 'portal' | 'pagante' | 'trial'
 
 const PLAN_LABEL: Record<PlanId, string> = { starter: 'Starter', pro: 'Pro', agency: 'Agency' }
 
-const SUB_STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  active:   { label: 'Pagante',   color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
-  trialing: { label: 'Trial',     color: '#60a5fa', bg: 'rgba(37,99,235,0.14)' },
-  past_due: { label: 'Em atraso', color: '#fbbf24', bg: 'rgba(245,158,11,0.14)' },
-  canceled: { label: 'Cancelado', color: '#f87171', bg: 'rgba(239,68,68,0.12)' },
-  inactive: { label: 'Inativo',   color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+const USER_FILTER_LABELS: Record<UserFilter, string> = {
+  todos: 'Todos',
+  agencia: 'Contas de agência',
+  portal: 'Clientes com portal',
+  pagante: 'Assinantes pagantes',
+  trial: 'Em trial',
 }
 
-const FIN_STATUS_CFG: Record<string, { color: string; bg: string }> = {
-  ativo:          { color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
-  vence_em_breve: { color: '#fbbf24', bg: 'rgba(245,158,11,0.14)' },
-  atrasado:       { color: '#f87171', bg: 'rgba(239,68,68,0.12)' },
-  cancelado:      { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+// Fundos sólidos — sempre legíveis com texto branco, em qualquer tema
+const ROLE_BADGE: Record<'agency' | 'client', string> = {
+  agency: '#2563EB',
+  client: '#7c3aed',
+}
+
+const SUB_STATUS_CFG: Record<string, { label: string; bg: string }> = {
+  active:   { label: 'Pagante',   bg: '#059669' },
+  trialing: { label: 'Trial',     bg: '#2563EB' },
+  past_due: { label: 'Em atraso', bg: '#b45309' },
+  canceled: { label: 'Cancelado', bg: '#dc2626' },
+  inactive: { label: 'Inativo',   bg: '#475569' },
+}
+
+const FIN_STATUS_CFG: Record<string, { bg: string }> = {
+  ativo:          { bg: '#059669' },
+  vence_em_breve: { bg: '#b45309' },
+  atrasado:       { bg: '#dc2626' },
+  cancelado:      { bg: '#475569' },
 }
 
 function KpiCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
@@ -47,11 +70,24 @@ function KpiCard({ icon, label, value, sub }: { icon: React.ReactNode; label: st
   )
 }
 
+/** Pill de status/categoria com fundo sólido — cor inline garante contraste
+ *  independente do tema (claro/escuro) e não depende do sistema de overrides. */
+function SolidBadge({ label, bg }: { label: string; bg: string }) {
+  return (
+    <span
+      className="text-[10px] font-semibold px-2 py-1 rounded-full inline-block flex-shrink-0"
+      style={{ background: bg, color: '#ffffff' }}
+    >
+      {label}
+    </span>
+  )
+}
+
 function Avatar({ label }: { label: string }) {
   return (
     <div
-      className="w-9 h-9 rounded-lg flex items-center justify-center text-[12px] font-bold text-white flex-shrink-0"
-      style={{ background: 'linear-gradient(135deg, #29457a, #16284d)' }}
+      className="w-9 h-9 rounded-lg flex items-center justify-center text-[12px] font-bold flex-shrink-0"
+      style={{ background: 'linear-gradient(135deg, #29457a, #16284d)', color: '#ffffff' }}
     >
       {label[0]?.toUpperCase() ?? '?'}
     </div>
@@ -62,24 +98,31 @@ function Avatar({ label }: { label: string }) {
 
 function UsersTab({ search }: { search: string }) {
   const { data: rows = [], isLoading, error } = useAdminUsers()
+  const [filter, setFilter] = useState<UserFilter>('todos')
+
+  const counts = useMemo(() => ({
+    todos: rows.length,
+    agencia: rows.filter(r => r.role === 'agency').length,
+    portal: rows.filter(r => r.role === 'client').length,
+    pagante: rows.filter(r => r.subStatus === 'active').length,
+    trial: rows.filter(r => r.subStatus === 'trialing').length,
+  }), [rows])
 
   const filtered = useMemo(() => {
+    let list = rows
+    if (filter === 'agencia') list = list.filter(r => r.role === 'agency')
+    else if (filter === 'portal') list = list.filter(r => r.role === 'client')
+    else if (filter === 'pagante') list = list.filter(r => r.subStatus === 'active')
+    else if (filter === 'trial') list = list.filter(r => r.subStatus === 'trialing')
+
     const q = search.trim().toLowerCase()
-    const base = !q ? rows : rows.filter(r =>
+    if (!q) return list
+    return list.filter(r =>
       r.email.toLowerCase().includes(q) ||
       (r.full_name ?? '').toLowerCase().includes(q) ||
       (r.agency_name ?? '').toLowerCase().includes(q)
     )
-    return base
-  }, [rows, search])
-
-  const kpis = useMemo(() => {
-    const agencies = rows.filter(r => r.role === 'agency')
-    const clientsPortal = rows.filter(r => r.role === 'client')
-    const trialing = rows.filter(r => r.subStatus === 'trialing').length
-    const paying = rows.filter(r => r.subStatus === 'active').length
-    return { agencies: agencies.length, clientsPortal: clientsPortal.length, trialing, paying }
-  }, [rows])
+  }, [rows, filter, search])
 
   if (isLoading) {
     return <div className="py-16 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#64748b]" /></div>
@@ -91,10 +134,34 @@ function UsersTab({ search }: { search: string }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={<Building2 className="w-4 h-4 text-[#6f93c9]" />} label="Contas de agência" value={String(kpis.agencies)} />
-        <KpiCard icon={<Users className="w-4 h-4 text-purple-400" />} label="Clientes com portal" value={String(kpis.clientsPortal)} sub="acesso via /portal" />
-        <KpiCard icon={<TrendingUp className="w-4 h-4 text-emerald-400" />} label="Assinantes pagantes" value={String(kpis.paying)} />
-        <KpiCard icon={<Crown className="w-4 h-4 text-amber-400" />} label="Em trial" value={String(kpis.trialing)} />
+        <KpiCard icon={<Building2 className="w-4 h-4 text-[#6f93c9]" />} label="Contas de agência" value={String(counts.agencia)} />
+        <KpiCard icon={<Users className="w-4 h-4 text-purple-400" />} label="Clientes com portal" value={String(counts.portal)} sub="acesso via /portal" />
+        <KpiCard icon={<TrendingUp className="w-4 h-4 text-emerald-400" />} label="Assinantes pagantes" value={String(counts.pagante)} />
+        <KpiCard icon={<Crown className="w-4 h-4 text-amber-400" />} label="Em trial" value={String(counts.trial)} />
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-1.5 flex-wrap">
+        {(Object.keys(USER_FILTER_LABELS) as UserFilter[]).map(key => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-all border ${
+              filter === key
+                ? 'bg-[#2563EB] text-white border-transparent'
+                : 'bg-[#182233] text-[#94a3b8] hover:text-white hover:bg-[#1e293b] border-[#1e293b]'
+            }`}
+          >
+            {USER_FILTER_LABELS[key]}
+            {counts[key] > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${
+                filter === key ? 'bg-white/20 text-white' : 'bg-[#0d1424] text-[#94a3b8]'
+              }`}>
+                {counts[key]}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {filtered.length === 0 ? (
@@ -109,11 +176,10 @@ function UsersTab({ search }: { search: string }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-[13px] font-medium text-[#F8FAFC] truncate">{u.full_name || '—'}</p>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                      u.role === 'client' ? 'bg-purple-500/15 text-purple-300' : 'bg-[#2563EB]/15 text-[#60A5FA]'
-                    }`}>
-                      {u.role === 'client' ? 'Cliente (portal)' : 'Agência'}
-                    </span>
+                    <SolidBadge
+                      label={u.role === 'client' ? 'Cliente (portal)' : 'Agência'}
+                      bg={u.role === 'client' ? ROLE_BADGE.client : ROLE_BADGE.agency}
+                    />
                   </div>
                   <p className="text-[11px] text-[#64748b] truncate mt-0.5">{u.email}</p>
                 </div>
@@ -128,11 +194,7 @@ function UsersTab({ search }: { search: string }) {
                   ) : <span className="text-[11px] text-[#475569]">—</span>}
                 </div>
                 <div className="hidden md:flex w-24 flex-shrink-0">
-                  {subCfg && (
-                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: subCfg.color, background: subCfg.bg }}>
-                      {subCfg.label}
-                    </span>
-                  )}
+                  {subCfg && <SolidBadge label={subCfg.label} bg={subCfg.bg} />}
                 </div>
                 <div className="hidden lg:block w-24 text-right text-[11px] text-[#64748b] flex-shrink-0">
                   {formatDate(u.created_at)}
@@ -212,11 +274,9 @@ function ClientsTab({ search }: { search: string }) {
                   </span>
                 </div>
                 <div className="hidden md:flex w-28 flex-shrink-0">
-                  {c.valor_mensal != null ? (
-                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: finCfg.color, background: finCfg.bg }}>
-                      {financialStatusLabel(finStatus)}
-                    </span>
-                  ) : <span className="text-[11px] text-[#475569]">—</span>}
+                  {c.valor_mensal != null
+                    ? <SolidBadge label={financialStatusLabel(finStatus)} bg={finCfg.bg} />
+                    : <span className="text-[11px] text-[#475569]">—</span>}
                 </div>
                 <div className="hidden lg:block w-24 text-right text-[11px] text-[#64748b] flex-shrink-0">
                   {formatDate(c.entry_date)}
