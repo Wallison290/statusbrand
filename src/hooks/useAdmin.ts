@@ -38,9 +38,11 @@ export function useAdminUsers() {
     enabled: isAdmin,
     staleTime: 30_000,
     queryFn: async () => {
+      // As RPCs admin_list_* não estão no types.ts gerado (criadas direto no
+      // banco) — cast necessário, mesmo padrão usado em sync_client_auth_email.
       const [{ data: profiles, error: profErr }, { data: subs, error: subErr }] = await Promise.all([
-        supabase.rpc('admin_list_profiles'),
-        supabase.rpc('admin_list_subscriptions'),
+        (supabase as any).rpc('admin_list_profiles'),
+        (supabase as any).rpc('admin_list_subscriptions'),
       ])
       if (profErr) throw profErr
       if (subErr) throw subErr
@@ -86,8 +88,8 @@ export function useAdminClients() {
     staleTime: 30_000,
     queryFn: async () => {
       const [{ data: clients, error: cliErr }, { data: profiles, error: profErr }] = await Promise.all([
-        supabase.rpc('admin_list_clients'),
-        supabase.rpc('admin_list_profiles'),
+        (supabase as any).rpc('admin_list_clients'),
+        (supabase as any).rpc('admin_list_profiles'),
       ])
       if (cliErr) throw cliErr
       if (profErr) throw profErr
