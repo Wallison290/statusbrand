@@ -476,6 +476,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   const createPost = useCreateScheduledPost()
   const updatePlanner = useUpdatePlannerItem()
   const { toast }  = useToast()
+  const { isDark } = useTheme()
 
   // Tipo vem direto do planner (sem re-seleção)
   const postType = item.ig_post_type as IgPostType | null
@@ -635,24 +636,24 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
   )
 
   if (!postType) return (
-    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/25 space-y-1">
-      <p className="text-xs text-amber-300 font-medium">Tipo de post não configurado</p>
-      <p className="text-[11px] text-amber-200/80">Edite o post e selecione o tipo (Imagem, Carrossel ou Reel) para poder agendar.</p>
+    <div className={`p-3 rounded-xl border space-y-1 ${isDark ? 'bg-amber-500/10 border-amber-500/25' : 'bg-amber-50 border-amber-300'}`}>
+      <p className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Tipo de post não configurado</p>
+      <p className={`text-[11px] ${isDark ? 'text-amber-200/80' : 'text-amber-700'}`}>Edite o post e selecione o tipo (Imagem, Carrossel ou Reel) para poder agendar.</p>
     </div>
   )
 
   if (igMedia.length === 0) return (
-    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/25 space-y-1">
-      <p className="text-xs text-amber-300 font-medium">Sem mídia configurada</p>
-      <p className="text-[11px] text-amber-200/80">Edite o post e adicione as mídias na seção "Publicação no Instagram".</p>
+    <div className={`p-3 rounded-xl border space-y-1 ${isDark ? 'bg-amber-500/10 border-amber-500/25' : 'bg-amber-50 border-amber-300'}`}>
+      <p className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Sem mídia configurada</p>
+      <p className={`text-[11px] ${isDark ? 'text-amber-200/80' : 'text-amber-700'}`}>Edite o post e adicione as mídias na seção "Publicação no Instagram".</p>
     </div>
   )
 
   if (success) return (
-    <div className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/25">
-      <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+    <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-emerald-50 border-emerald-300'}`}>
+      <Check className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`} />
       <div>
-        <p className="text-xs font-medium text-emerald-300">Post agendado!</p>
+        <p className={`text-xs font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Post agendado!</p>
         <p className="text-[11px] text-[var(--sm-text-3)] mt-0.5">Veja em <strong>Instagram → Agendados</strong>.</p>
       </div>
     </div>
@@ -670,7 +671,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
           : <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}><Instagram className="w-3.5 h-3.5 text-white" /></div>
         }
         <span className="text-xs text-[var(--sm-text-2)] font-medium">@{igAccount.username}</span>
-        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">Conectado</span>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: '#059669', color: '#ffffff' }}>Conectado</span>
       </div>
 
       {/* Tipo + prévia das mídias */}
@@ -729,6 +730,7 @@ function PlannerItemView({
   onEdit: () => void
   userId: string
 }) {
+  const { isDark } = useTheme()
   const otherAttachments = item.attachments?.filter(a => !isImageAttachment(a) && !isVideoAttachment(a)) || []
 
   // Carrossel: segue a MESMA ordem dos slides (sort_order) que o cliente vê no
@@ -999,8 +1001,8 @@ function PlannerItemView({
                     {item.links.map(link => (
                       <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2 p-2.5 bg-[var(--sm-bg-alt)] border border-[var(--sm-border)] rounded-lg hover:bg-[var(--sm-bg-card)] transition-colors min-w-0 overflow-hidden">
-                        <Link2 className="w-3.5 h-3.5 text-[#60A5FA] flex-shrink-0" />
-                        <span className="text-xs text-[#93c5fd] flex-1 min-w-0 truncate">{link.label || link.url}</span>
+                        <Link2 className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? 'text-[#60A5FA]' : 'text-blue-600'}`} />
+                        <span className={`text-xs flex-1 min-w-0 truncate ${isDark ? 'text-[#93c5fd]' : 'text-blue-700'}`}>{link.label || link.url}</span>
                         <ExternalLink className="w-3 h-3 text-[var(--sm-text-4)] flex-shrink-0" />
                       </a>
                     ))}
@@ -1102,7 +1104,7 @@ function PlannerItemView({
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
                             disabled={updateItem.isPending}
-                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50"
+                            className={`mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${isDark ? 'bg-[#2563EB]/15 text-[#93c5fd] border-[#2563EB]/30 hover:bg-[#2563EB]/25' : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'}`}
                           >
                             {updateItem.isPending
                               ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
@@ -1157,7 +1159,7 @@ function PlannerItemView({
                               } catch (err: any) { toast(err.message, 'error') }
                             }}
                             disabled={updateItem.isPending}
-                            className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50"
+                            className={`mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${isDark ? 'bg-[#2563EB]/15 text-[#93c5fd] border-[#2563EB]/30 hover:bg-[#2563EB]/25' : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'}`}
                           >
                             {updateItem.isPending
                               ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
@@ -1180,7 +1182,7 @@ function PlannerItemView({
                   {!(item as any).art_approval_status && !(item as any).copy_approval_status &&
                     (localApprovalStatus ?? item.approval_status) === 'ajuste_solicitado' && (
                     <button onClick={handleMarkAdjustmentDone} disabled={updateItem.isPending}
-                      className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#2563EB]/15 text-[#93c5fd] border border-[#2563EB]/30 hover:bg-[#2563EB]/25 transition-colors disabled:opacity-50">
+                      className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${isDark ? 'bg-[#2563EB]/15 text-[#93c5fd] border-[#2563EB]/30 hover:bg-[#2563EB]/25' : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'}`}>
                       {updateItem.isPending
                         ? <span className="w-3 h-3 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
                         : <Check className="w-3 h-3" />}

@@ -12,6 +12,7 @@ import {
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useToast } from '@/components/ui/toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { supabase } from '@/integrations/supabase/client'
 import {
   useAllInstagramAccounts,
@@ -42,12 +43,14 @@ const POST_TYPE_CFG = {
   REELS:          { label: 'Reel',      Icon: Film       },
 } as const
 
+// solidBg: usado no pill de status (fundo sólido + texto branco, imune ao tema).
+// cardBgDark/cardBgLight: usados no wash sutil do card inteiro, por tema.
 const STATUS_CFG = {
-  scheduled:  { label: 'Agendado',   color: 'text-[#60A5FA]', bg: 'bg-[#2563EB]/10 border-[#2563EB]/30', dot: 'bg-[#2563EB]', Icon: Clock,        spin: false },
-  publishing: { label: 'Publicando', color: 'text-[#FBBF24]', bg: 'bg-[#F59E0B]/10 border-[#F59E0B]/30', dot: 'bg-[#F59E0B]', Icon: Loader2,      spin: true  },
-  published:  { label: 'Publicado',  color: 'text-[#4ADE80]', bg: 'bg-[#22C55E]/10 border-[#22C55E]/30', dot: 'bg-[#22C55E]', Icon: CheckCircle2, spin: false },
-  failed:     { label: 'Falhou',     color: 'text-[#F87171]', bg: 'bg-[#EF4444]/10 border-[#EF4444]/30', dot: 'bg-[#EF4444]', Icon: XCircle,      spin: false },
-  cancelled:  { label: 'Cancelado',  color: 'text-[#9CA3AF]', bg: 'bg-[#6B7280]/10 border-[#6B7280]/30', dot: 'bg-[#6B7280]', Icon: X,            spin: false },
+  scheduled:  { label: 'Agendado',   solidBg: '#2563EB', cardBgDark: 'bg-[#2563EB]/10 border-[#2563EB]/30', cardBgLight: 'bg-blue-50 border-blue-300',       dot: 'bg-[#2563EB]', Icon: Clock,        spin: false },
+  publishing: { label: 'Publicando', solidBg: '#b45309', cardBgDark: 'bg-[#F59E0B]/10 border-[#F59E0B]/30', cardBgLight: 'bg-amber-50 border-amber-300',     dot: 'bg-[#F59E0B]', Icon: Loader2,      spin: true  },
+  published:  { label: 'Publicado',  solidBg: '#059669', cardBgDark: 'bg-[#22C55E]/10 border-[#22C55E]/30', cardBgLight: 'bg-emerald-50 border-emerald-300', dot: 'bg-[#22C55E]', Icon: CheckCircle2, spin: false },
+  failed:     { label: 'Falhou',     solidBg: '#dc2626', cardBgDark: 'bg-[#EF4444]/10 border-[#EF4444]/30', cardBgLight: 'bg-red-50 border-red-300',         dot: 'bg-[#EF4444]', Icon: XCircle,      spin: false },
+  cancelled:  { label: 'Cancelado',  solidBg: '#475569', cardBgDark: 'bg-[#6B7280]/10 border-[#6B7280]/30', cardBgLight: 'bg-gray-100 border-gray-300',      dot: 'bg-[#6B7280]', Icon: X,            spin: false },
 } as const
 
 const TABS: { value: TabType; label: string; statuses: string[] }[] = [
@@ -111,17 +114,17 @@ function AccountListCard({
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             {scheduledCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#2563EB]/10 text-[#60A5FA] border border-[#2563EB]/30">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#2563EB', color: '#ffffff' }}>
                 {scheduledCount} ag.
               </span>
             )}
             {publishedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#22C55E]/10 text-[#4ADE80] border border-[#22C55E]/30">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#059669', color: '#ffffff' }}>
                 {publishedCount} pub.
               </span>
             )}
             {failedCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#EF4444]/10 text-[#F87171] border border-[#EF4444]/30">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#dc2626', color: '#ffffff' }}>
                 {failedCount} falha{failedCount > 1 ? 's' : ''}
               </span>
             )}
@@ -138,6 +141,7 @@ function AccountListCard({
 // ── Post Card ─────────────────────────────────────────────────────────────────
 
 function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPost; onCancel: (id: string) => void; onRetry: (id: string) => void; onReschedule: (id: string, scheduledAt: string) => void }) {
+  const { isDark } = useTheme()
   const cfg        = STATUS_CFG[post.status]
   const StatusIcon = cfg.Icon
   const typeCfg    = POST_TYPE_CFG[post.post_type]
@@ -161,7 +165,7 @@ function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPo
   }
 
   return (
-    <div className={`rounded-2xl border p-4 space-y-3 ${cfg.bg}`}>
+    <div className={`rounded-2xl border p-4 space-y-3 ${isDark ? cfg.cardBgDark : cfg.cardBgLight}`}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
@@ -173,13 +177,17 @@ function PostCard({ post, onCancel, onRetry, onReschedule }: { post: ScheduledPo
           {(post.retry_count ?? 0) > 0 && post.status !== 'published' && post.status !== 'cancelled' && (
             <div
               title={`Falha temporária ao publicar. Tentando novamente automaticamente (tentativa ${post.retry_count}/${MAX_RETRIES}).`}
-              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#FBBF24]"
+              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+              style={{ background: '#b45309', color: '#ffffff' }}
             >
               <RefreshCw className="w-3 h-3" />
               Tentativa {post.retry_count}/{MAX_RETRIES}
             </div>
           )}
-          <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#0B0F14]/60 border border-[#1F2937] ${cfg.color}`}>
+          <div
+            className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+            style={{ background: cfg.solidBg, color: '#ffffff' }}
+          >
             <StatusIcon className={`w-3 h-3 ${cfg.spin ? 'animate-spin' : ''}`} />
             {cfg.label}
           </div>
@@ -314,6 +322,7 @@ function AccountDetailView({
   onDisconnect: (id: string) => void
   onRefreshPic: (id: string) => void
 }) {
+  const { isDark } = useTheme()
   const [tab, setTab] = useState<TabType>('all')
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
@@ -402,13 +411,13 @@ function AccountDetailView({
       {/* Stats da conta */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Agendados',  value: stats.scheduled, color: 'text-[#60A5FA]', bg: 'bg-[#2563EB]/10 border-[#2563EB]/20'  },
-          { label: 'Publicados', value: stats.published, color: 'text-[#4ADE80]', bg: 'bg-[#22C55E]/10 border-[#22C55E]/20' },
-          { label: 'Falhas',     value: stats.failed,    color: 'text-[#F87171]', bg: 'bg-[#EF4444]/10 border-[#EF4444]/20'   },
-          { label: 'Cancelados', value: stats.cancelled, color: 'text-[#9CA3AF]', bg: 'bg-[#6B7280]/10 border-[#6B7280]/20'  },
+          { label: 'Agendados',  value: stats.scheduled, colorDark: 'text-[#60A5FA]', colorLight: 'text-blue-700',    bgDark: 'bg-[#2563EB]/10 border-[#2563EB]/20', bgLight: 'bg-blue-50 border-blue-300'       },
+          { label: 'Publicados', value: stats.published, colorDark: 'text-[#4ADE80]', colorLight: 'text-emerald-700', bgDark: 'bg-[#22C55E]/10 border-[#22C55E]/20', bgLight: 'bg-emerald-50 border-emerald-300' },
+          { label: 'Falhas',     value: stats.failed,    colorDark: 'text-[#F87171]', colorLight: 'text-red-700',     bgDark: 'bg-[#EF4444]/10 border-[#EF4444]/20', bgLight: 'bg-red-50 border-red-300'         },
+          { label: 'Cancelados', value: stats.cancelled, colorDark: 'text-[#9CA3AF]', colorLight: 'text-gray-600',    bgDark: 'bg-[#6B7280]/10 border-[#6B7280]/20', bgLight: 'bg-gray-100 border-gray-300'      },
         ].map(s => (
-          <div key={s.label} className={`rounded-2xl border ${s.bg} p-4 text-center`}>
-            <div className={`text-[22px] font-bold ${s.color}`}>{s.value}</div>
+          <div key={s.label} className={`rounded-2xl border p-4 text-center ${isDark ? s.bgDark : s.bgLight}`}>
+            <div className={`text-[22px] font-bold ${isDark ? s.colorDark : s.colorLight}`}>{s.value}</div>
             <div className="text-[11px] text-[#9CA3AF] mt-0.5 font-medium">{s.label}</div>
           </div>
         ))}

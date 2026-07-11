@@ -85,7 +85,10 @@ export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
           </span>
         )}
         {note.origin === 'client' && (
-          <span className="text-[10px] text-purple-300 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded-md">
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded-md"
+            style={{ background: '#7c3aed', color: '#ffffff' }}
+          >
             do cliente
           </span>
         )}
@@ -388,7 +391,8 @@ export function NoteModal({
                 <button
                   onClick={handleDelete}
                   disabled={deleteNote.isPending}
-                  className="text-[12px] px-2.5 py-1 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#f87171] hover:bg-[#ef4444]/20 transition-colors"
+                  className="text-[12px] px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                  style={{ background: '#dc2626', color: '#ffffff' }}
                 >
                   Sim, excluir
                 </button>
@@ -444,13 +448,13 @@ function NoteViewModal({
           <div className="flex-1 min-w-0">
             <h2 className="text-[16px] font-semibold text-[#F8FAFC] leading-snug break-words">{note.title || 'Sem título'}</h2>
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-[#2563EB]/15 text-[#60A5FA]">{typeLabels[note.type]}</span>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md" style={{ background: '#2563EB', color: '#ffffff' }}>{typeLabels[note.type]}</span>
               {note.client && (
                 <span className="text-[10px] text-[#94a3b8] bg-[#182233] px-1.5 py-0.5 rounded-md flex items-center gap-1">
                   <Building2 className="w-2.5 h-2.5" /> {note.client.company_name}
                 </span>
               )}
-              <span className="text-[10px] text-purple-300 bg-purple-500/15 px-1.5 py-0.5 rounded-md">enviada pelo cliente</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: '#7c3aed', color: '#ffffff' }}>enviada pelo cliente</span>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#1e293b] transition-colors flex-shrink-0">
@@ -487,7 +491,7 @@ function NoteViewModal({
             <div className="flex items-center gap-2">
               <span className="text-[12px] text-[#94a3b8]">Excluir?</span>
               <button onClick={() => setConfirmDelete(false)} className="text-[12px] px-2.5 py-1 rounded-lg border border-[#1e293b] text-[#94a3b8] hover:bg-[#1e293b]">Não</button>
-              <button onClick={() => onDelete(note.id)} className="text-[12px] px-2.5 py-1 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#f87171] hover:bg-[#ef4444]/20">Sim</button>
+              <button onClick={() => onDelete(note.id)} className="text-[12px] px-2.5 py-1 rounded-lg" style={{ background: '#dc2626', color: '#ffffff' }}>Sim</button>
             </div>
           ) : (
             <div className="flex items-center gap-2">

@@ -125,7 +125,11 @@ function StatusSection({ client }: { client: Client }) {
           <button
             onClick={handleFechado}
             disabled={updateStatus.isPending}
-            className="px-3 py-1.5 rounded-md border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[12px] hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+            className={`px-3 py-1.5 rounded-md border text-[12px] transition-colors disabled:opacity-50 ${
+              isDark
+                ? 'border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20'
+                : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'
+            }`}
           >
             Negócio fechado → Iniciar onboarding
           </button>
@@ -138,7 +142,11 @@ function StatusSection({ client }: { client: Client }) {
         <button
           onClick={handleFinalizar}
           disabled={updateStatus.isPending}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-300 text-[13px] font-medium hover:bg-green-500/20 transition-colors disabled:opacity-50"
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border text-[13px] font-medium transition-colors disabled:opacity-50 ${
+            isDark
+              ? 'border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20'
+              : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+          }`}
         >
           <Check className="w-3.5 h-3.5" />
           Finalizar onboarding → Marcar como Ativo

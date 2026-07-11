@@ -474,14 +474,16 @@ function groupPlannerByWeek(items: PlannerItem[]): WeekGroup[] {
   return sorted
 }
 
-function getPlannerBadge(item: PlannerItem): { label: string; cls: string } {
-  if (item.status === 'publicado') return { label: 'Publicado', cls: 'bg-[#22C55E]/15 text-emerald-900 border border-[#22C55E]/30' }
+// Fundo sólido + texto branco (via inline style no local de uso) — imune ao
+// tema claro/escuro, ao contrário de fundo translúcido + texto claro.
+function getPlannerBadge(item: PlannerItem): { label: string; bg: string } {
+  if (item.status === 'publicado') return { label: 'Publicado', bg: '#059669' }
   switch (item.approval_status) {
-    case 'aprovado':          return { label: 'Aprovado',     cls: 'bg-[#22C55E]/15 text-[#4ade80] border border-green-200' }
-    case 'reprovado':         return { label: 'Reprovado',    cls: 'bg-[#ef4444]/15 text-[#f87171] border border-[#ef4444]/30' }
-    case 'ajuste_solicitado': return { label: 'Ajuste',       cls: 'bg-[#f97316]/15 text-[#fb923c] border border-[#f97316]/30' }
-    case 'ajuste_realizado':  return { label: 'Ajuste Feito', cls: 'bg-[#2563EB]/15 text-[#60a5fa] border border-[#2563EB]/30' }
-    default:                  return { label: 'Em Aprovação', cls: 'bg-[#F5A623]/15 text-amber-900 border border-[#F5A623]/30' }
+    case 'aprovado':          return { label: 'Aprovado',     bg: '#059669' }
+    case 'reprovado':         return { label: 'Reprovado',    bg: '#dc2626' }
+    case 'ajuste_solicitado': return { label: 'Ajuste',       bg: '#c2410c' }
+    case 'ajuste_realizado':  return { label: 'Ajuste Feito', bg: '#2563EB' }
+    default:                  return { label: 'Em Aprovação', bg: '#b45309' }
   }
 }
 
@@ -496,16 +498,16 @@ function getCardAccentColor(item: PlannerItem): string {
   }
 }
 
-function getWeekSummaryBadge(items: PlannerItem[]): { label: string; cls: string } {
+function getWeekSummaryBadge(items: PlannerItem[]): { label: string; bg: string } {
   const hasAjuste    = items.some(i => i.approval_status === 'ajuste_solicitado')
   const hasReprovado = items.some(i => i.approval_status === 'reprovado')
   const allPublished = items.length > 0 && items.every(i => i.status === 'publicado')
   const allApproved  = items.length > 0 && items.every(i => i.approval_status === 'aprovado' || i.status === 'publicado')
-  if (hasReprovado) return { label: 'Reprovado',   cls: 'bg-[#ef4444]/15 text-[#f87171]' }
-  if (hasAjuste)    return { label: 'Ajuste',       cls: 'bg-[#f97316]/15 text-[#fb923c]' }
-  if (allPublished) return { label: 'Publicado',    cls: 'bg-[#22C55E]/15 text-emerald-800' }
-  if (allApproved)  return { label: 'Aprovado',     cls: 'bg-[#22C55E]/15 text-[#4ade80]' }
-  return              { label: 'Em Aprovação',  cls: 'bg-[#F5A623]/15 text-amber-800' }
+  if (hasReprovado) return { label: 'Reprovado',   bg: '#dc2626' }
+  if (hasAjuste)    return { label: 'Ajuste',      bg: '#c2410c' }
+  if (allPublished) return { label: 'Publicado',   bg: '#059669' }
+  if (allApproved)  return { label: 'Aprovado',    bg: '#059669' }
+  return              { label: 'Em Aprovação', bg: '#b45309' }
 }
 
 // ─── Instagram Tab ────────────────────────────────────────────────────────────
@@ -1254,7 +1256,10 @@ export function ClientProfile() {
                               <p className="text-[13px] font-semibold text-[#F8FAFC]">{week.label}</p>
                               <p className="text-[11px] text-[#64748b] mt-0.5">{week.dateRange}</p>
                             </div>
-                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full mt-0.5 ${summary.cls}`}>
+                            <span
+                              className="text-[10px] font-medium px-2 py-0.5 rounded-full mt-0.5"
+                              style={{ background: summary.bg, color: '#ffffff' }}
+                            >
                               {summary.label}
                             </span>
                           </div>
@@ -1308,7 +1313,10 @@ export function ClientProfile() {
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(37,99,235,0.12)', color: '#6f93c9' }}>
                                           {contentTypeLabels[item.content_type] || item.content_type}
                                         </span>
-                                        <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${badge.cls}`}>
+                                        <span
+                                          className="ml-auto text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
+                                          style={{ background: badge.bg, color: '#ffffff' }}
+                                        >
                                           {badge.label}
                                         </span>
                                       </div>

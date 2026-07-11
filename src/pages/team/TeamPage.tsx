@@ -548,7 +548,7 @@ function TaskViewModal({
                 {pri.label}
               </span>
               {task.clients && (
-                <span className="text-[10px] text-[#60A5FA] bg-[#2563EB]/15 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: '#2563EB', color: '#ffffff' }}>
                   <Building2 className="w-2.5 h-2.5" /> {task.clients.company_name}
                 </span>
               )}
@@ -642,18 +642,18 @@ function TaskViewModal({
                     pasta:   Folder,
                   }
                   const Icon = iconMap[link.type] ?? LinkIcon
-                  const colorMap: Record<string, string> = {
-                    link:    'text-[#a78bfa] bg-[#8b5cf6]/10',
-                    arquivo: 'text-amber-300 bg-amber-500/10',
-                    pasta:   'text-emerald-300 bg-emerald-500/10',
+                  const bgMap: Record<string, string> = {
+                    link:    '#7c3aed',
+                    arquivo: '#b45309',
+                    pasta:   '#059669',
                   }
-                  const colorCls = colorMap[link.type] ?? 'text-[#a78bfa] bg-[#8b5cf6]/10'
+                  const iconBg = bgMap[link.type] ?? '#7c3aed'
 
                   return (
                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 p-3 rounded-xl border border-[#1e293b] hover:border-[#2563EB]/50 hover:bg-[#1e293b] transition-all group">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorCls}`}>
-                        <Icon className="w-4 h-4" />
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
+                        <Icon className="w-4 h-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-medium text-[#CBD5E1] truncate group-hover:text-[#a78bfa]">{link.label}</p>

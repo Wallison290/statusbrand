@@ -15,6 +15,7 @@ import { useClients, useUpdateClient } from '@/hooks/useClients'
 import { useCreatePayment, useClientPayments } from '@/hooks/usePayments'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { supabase } from '@/integrations/supabase/client'
 import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '@/utils/financial'
 import type { Client, FinancialStatus } from '@/types'
@@ -70,11 +71,14 @@ const filterLabels: Record<FilterKey, string> = {
   cancelado: 'Cancelados',
 }
 
-const statusStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:          { bg: 'bg-emerald-500/10 border-emerald-500/30', text: 'text-emerald-400', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve: { bg: 'bg-amber-500/10 border-amber-500/30',     text: 'text-amber-400',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:       { bg: 'bg-red-500/10 border-red-500/30',         text: 'text-red-400',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:      { bg: 'bg-zinc-500/10 border-zinc-500/30',       text: 'text-zinc-400',    dot: 'bg-zinc-500',    icon: <Ban className="w-3 h-3" /> },
+// solidBg: usado no StatusBadge (pill) — fundo sólido + texto branco, imune ao
+// tema. text/dot: usados no menu "Alterar" (linha de texto, não pill) — mantêm
+// classe de tema escuro; a variante clara é escolhida no local via isDark.
+const statusStyles: Record<FinancialStatus, { solidBg: string; text: string; textLight: string; dot: string; icon: React.ReactNode }> = {
+  ativo:          { solidBg: '#059669', text: 'text-emerald-400', textLight: 'text-emerald-700', dot: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { solidBg: '#b45309', text: 'text-amber-400',   textLight: 'text-amber-700',   dot: 'bg-amber-500',   icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { solidBg: '#dc2626', text: 'text-red-400',     textLight: 'text-red-700',     dot: 'bg-red-500',     icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { solidBg: '#475569', text: 'text-zinc-400',    textLight: 'text-zinc-700',    dot: 'bg-zinc-500',    icon: <Ban className="w-3 h-3" /> },
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -120,20 +124,25 @@ function AlertCard({
   mrr: number; previsto: number; diff: number
   affectedCount: number; onViewAffected: () => void; delay?: number
 }) {
+  const { isDark } = useTheme()
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
-      className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col gap-3"
+      className={`rounded-xl border p-4 flex flex-col gap-3 ${
+        isDark ? 'border-amber-500/30 bg-amber-500/10' : 'border-amber-300 bg-amber-50'
+      }`}
     >
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mt-0.5">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+        <div className={`flex-shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center mt-0.5 ${
+          isDark ? 'bg-amber-500/15 border-amber-500/30' : 'bg-amber-100 border-amber-300'
+        }`}>
+          <AlertTriangle className={`w-3.5 h-3.5 ${isDark ? 'text-amber-400' : 'text-amber-700'}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-amber-300">Receita prevista menor que o MRR</p>
-          <p className="text-[11px] text-amber-400/90 mt-0.5">
+          <p className={`text-[12px] font-semibold ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Receita prevista menor que o MRR</p>
+          <p className={`text-[11px] mt-0.5 ${isDark ? 'text-amber-400/90' : 'text-amber-700'}`}>
             Impacto de {affectedCount} cliente{affectedCount !== 1 ? 's' : ''} em atraso
           </p>
         </div>
@@ -149,12 +158,16 @@ function AlertCard({
         </div>
         <div>
           <p className="text-[9px] text-[#64748b] uppercase tracking-wide mb-0.5">Diferença</p>
-          <p className="text-[13px] font-semibold text-red-400">-{fmtBRL(diff)}</p>
+          <p className={`text-[13px] font-semibold ${isDark ? 'text-red-400' : 'text-red-600'}`}>-{fmtBRL(diff)}</p>
         </div>
       </div>
       <button
         onClick={onViewAffected}
-        className="w-full h-7 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-300 hover:bg-amber-500/20 transition-colors"
+        className={`w-full h-7 rounded-lg border text-[11px] transition-colors ${
+          isDark
+            ? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'
+            : 'border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200'
+        }`}
       >
         Ver clientes afetados
       </button>
@@ -167,7 +180,10 @@ function AlertCard({
 function StatusBadge({ status }: { status: FinancialStatus }) {
   const s = statusStyles[status]
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-medium ${s.bg} ${s.text}`}>
+    <span
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium"
+      style={{ background: s.solidBg, color: '#ffffff' }}
+    >
       {s.icon}
       {financialStatusLabel(status)}
     </span>
@@ -179,6 +195,7 @@ function StatusBadge({ status }: { status: FinancialStatus }) {
 function StatusDropdown({ client }: { client: Client }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { isDark } = useTheme()
   const updateClient = useUpdateClient()
   const { toast } = useToast()
 
@@ -252,7 +269,7 @@ function StatusDropdown({ client }: { client: Client }) {
                 <button
                   key={s}
                   onClick={() => handleSelect(s)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#1e293b] ${st.text}`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#1e293b] ${isDark ? st.text : st.textLight}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
                   <span className="flex-1 min-w-0">{financialStatusLabel(s)}</span>
