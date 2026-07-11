@@ -1,8 +1,12 @@
 // ── Hook: Painel de Admin (visão de todos os usuários e clientes do sistema) ──
-// Só retorna dados quando a conta logada tem is_admin=true — a RLS do banco
-// (policies profiles_admin_read_all / clients_admin_read_all /
-// subscriptions_admin_read_all) já bloqueia no servidor quem não é admin;
-// aqui é só a leitura em si.
+// Usa RPCs dedicadas (admin_list_profiles/admin_list_clients/
+// admin_list_subscriptions) em vez de consultar as tabelas diretamente. Isso é
+// proposital: se o "ver tudo" fosse uma policy de RLS nas tabelas, ele vazaria
+// para QUALQUER tela do app que consulta profiles/clients (Clientes,
+// Financeiro...), misturando dados de todas as agências nas telas normais do
+// admin. As RPCs são SECURITY DEFINER e só devolvem linhas quando
+// is_admin()=true — RLS das tabelas continua isolando cada usuário aos
+// próprios dados em todo o resto do sistema.
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
@@ -35,31 +39,34 @@ export function useAdminUsers() {
     staleTime: 30_000,
     queryFn: async () => {
       const [{ data: profiles, error: profErr }, { data: subs, error: subErr }] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('subscriptions').select('user_id, plan, status, trial_ends_at, current_period_end'),
+        supabase.rpc('admin_list_profiles'),
+        supabase.rpc('admin_list_subscriptions'),
       ])
       if (profErr) throw profErr
       if (subErr) throw subErr
 
       const subByUser = new Map((subs ?? []).map((s: any) => [s.user_id, s]))
 
-      return ((profiles ?? []) as Profile[]).map(p => {
-        const sub = subByUser.get(p.id)
-        return {
-          id: p.id,
-          email: p.email,
-          full_name: p.full_name,
-          agency_name: p.agency_name,
-          role: p.role,
-          linked_client_id: p.linked_client_id,
-          created_at: p.created_at,
-          whatsapp: p.whatsapp ?? null,
-          plan: sub?.plan ?? null,
-          subStatus: sub?.status ?? null,
-          trial_ends_at: sub?.trial_ends_at ?? null,
-          current_period_end: sub?.current_period_end ?? null,
-        }
-      })
+      return ((profiles ?? []) as Profile[])
+        .slice()
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(p => {
+          const sub = subByUser.get(p.id)
+          return {
+            id: p.id,
+            email: p.email,
+            full_name: p.full_name,
+            agency_name: p.agency_name,
+            role: p.role,
+            linked_client_id: p.linked_client_id,
+            created_at: p.created_at,
+            whatsapp: p.whatsapp ?? null,
+            plan: sub?.plan ?? null,
+            subStatus: sub?.status ?? null,
+            trial_ends_at: sub?.trial_ends_at ?? null,
+            current_period_end: sub?.current_period_end ?? null,
+          }
+        })
     },
   })
 }
@@ -79,22 +86,26 @@ export function useAdminClients() {
     staleTime: 30_000,
     queryFn: async () => {
       const [{ data: clients, error: cliErr }, { data: profiles, error: profErr }] = await Promise.all([
-        supabase.from('clients').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('id, email, agency_name').eq('role', 'agency'),
+        supabase.rpc('admin_list_clients'),
+        supabase.rpc('admin_list_profiles'),
       ])
       if (cliErr) throw cliErr
       if (profErr) throw profErr
 
-      const ownerById = new Map((profiles ?? []).map((p: any) => [p.id, p]))
+      const agencyProfiles = ((profiles ?? []) as Profile[]).filter(p => p.role === 'agency')
+      const ownerById = new Map(agencyProfiles.map(p => [p.id, p]))
 
-      return ((clients ?? []) as Client[]).map(c => {
-        const owner = ownerById.get(c.user_id)
-        return {
-          ...c,
-          ownerEmail: owner?.email ?? null,
-          ownerAgencyName: owner?.agency_name ?? null,
-        }
-      })
+      return ((clients ?? []) as Client[])
+        .slice()
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(c => {
+          const owner = ownerById.get(c.user_id)
+          return {
+            ...c,
+            ownerEmail: owner?.email ?? null,
+            ownerAgencyName: owner?.agency_name ?? null,
+          }
+        })
     },
   })
 }

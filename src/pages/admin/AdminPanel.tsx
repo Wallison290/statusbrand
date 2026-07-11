@@ -1,7 +1,9 @@
 // ── Painel de Admin — visão de todos os usuários e clientes do sistema ────────
-// Só carrega dados quando profile.is_admin === true. A RLS do banco (policies
-// *_admin_read_all) é quem realmente bloqueia o acesso — esta tela é só a
-// camada visual. Nenhum dado de senha é lido, exibido ou armazenado aqui.
+// Só carrega dados quando profile.is_admin === true. Os dados vêm de RPCs
+// dedicadas (admin_list_profiles/admin_list_clients/admin_list_subscriptions,
+// ver useAdmin.ts) — não de policies de RLS nas tabelas, para que o "ver
+// tudo" fique restrito só a esta tela e não vaze para Clientes/Financeiro do
+// próprio admin. Nenhum dado de senha é lido, exibido ou armazenado aqui.
 //
 // Badges de categoria/status usam fundo SÓLIDO + texto branco (via inline
 // style) de propósito: o app tem um tema claro/escuro que reconverte várias
@@ -14,14 +16,14 @@
 import { useMemo, useState } from 'react'
 import {
   ShieldCheck, Users, Building2, Search, Loader2,
-  Crown, TrendingUp, Wallet,
+  Crown, TrendingUp, Wallet, ChevronDown, UsersRound,
 } from 'lucide-react'
-import { useAdminUsers, useAdminClients } from '@/hooks/useAdmin'
+import { useAdminUsers, useAdminClients, type AdminUserRow, type AdminClientRow } from '@/hooks/useAdmin'
 import { formatDate, statusLabels } from '@/utils/formatters'
 import { calcFinancialStatus, financialStatusLabel } from '@/utils/financial'
 import type { PlanId } from '@/config/plans'
 
-type Tab = 'users' | 'clients'
+type Tab = 'users' | 'clients' | 'byAgency'
 type UserFilter = 'todos' | 'agencia' | 'portal' | 'pagante' | 'trial'
 
 const PLAN_LABEL: Record<PlanId, string> = { starter: 'Starter', pro: 'Pro', agency: 'Agency' }
@@ -290,6 +292,134 @@ function ClientsTab({ search }: { search: string }) {
   )
 }
 
+// ─── Aba: Usuários & Clientes (agrupado por agência) ─────────────────────────
+
+function AgencyGroupCard({ agency, clients }: { agency: AdminUserRow; clients: AdminClientRow[] }) {
+  const [open, setOpen] = useState(false)
+  const subCfg = agency.subStatus ? SUB_STATUS_CFG[agency.subStatus] : null
+
+  return (
+    <div className="rounded-xl border border-[#1e293b] bg-[#111827] overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-[#141d2e] transition-all flex-wrap sm:flex-nowrap text-left"
+      >
+        <Avatar label={agency.agency_name || agency.full_name || agency.email} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-[#F8FAFC] truncate">
+            {agency.agency_name || agency.full_name || 'Sem nome'}
+          </p>
+          <p className="text-[11px] text-[#64748b] truncate mt-0.5">{agency.email}</p>
+        </div>
+        <div className="hidden md:flex w-24 flex-shrink-0">
+          {agency.plan ? (
+            <span className="text-[10px] font-semibold text-[#CBD5E1] bg-[#182233] border border-[#1e293b] px-2 py-1 rounded-lg">
+              {PLAN_LABEL[agency.plan] ?? agency.plan}
+            </span>
+          ) : <span className="text-[11px] text-[#475569]">—</span>}
+        </div>
+        <div className="hidden md:flex w-24 flex-shrink-0">
+          {subCfg && <SolidBadge label={subCfg.label} bg={subCfg.bg} />}
+        </div>
+        <div className="w-28 flex-shrink-0 flex justify-end">
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-[#182233] border border-[#1e293b] text-[#94a3b8]">
+            {clients.length} cliente{clients.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-[#64748b] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="border-t border-[#1e293b] bg-[#0d1424] px-4 py-3">
+          {clients.length === 0 ? (
+            <p className="text-[12px] text-[#64748b] py-2">Essa agência ainda não cadastrou clientes.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {clients.map(c => {
+                const finStatus = calcFinancialStatus(c)
+                const finCfg = FIN_STATUS_CFG[finStatus]
+                return (
+                  <div key={c.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#111827] border border-[#1e293b] flex-wrap sm:flex-nowrap">
+                    {c.logo_url ? (
+                      <img src={c.logo_url} alt={c.company_name} className="w-7 h-7 rounded-md object-cover border border-[#1e293b] flex-shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0" style={{ background: 'linear-gradient(135deg, #29457a, #16284d)' }}>
+                        {c.company_name[0]?.toUpperCase() ?? '?'}
+                      </div>
+                    )}
+                    <p className="text-[12px] font-medium text-[#CBD5E1] flex-1 min-w-0 truncate">{c.company_name}</p>
+                    <span className="hidden sm:inline-block text-[9px] font-semibold text-[#94a3b8] bg-[#182233] border border-[#1e293b] px-1.5 py-0.5 rounded-md flex-shrink-0">
+                      {statusLabels[c.status] ?? c.status}
+                    </span>
+                    {c.valor_mensal != null && (
+                      <SolidBadge label={financialStatusLabel(finStatus)} bg={finCfg.bg} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AgencyGroupsTab({ search }: { search: string }) {
+  const { data: users = [], isLoading: loadingUsers, error: usersError } = useAdminUsers()
+  const { data: clients = [], isLoading: loadingClients, error: clientsError } = useAdminClients()
+
+  const agencies = useMemo(() => users.filter(u => u.role === 'agency'), [users])
+
+  const groups = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return agencies
+      .map(agency => ({
+        agency,
+        clients: clients.filter(c => c.user_id === agency.id),
+      }))
+      .filter(({ agency, clients: cs }) => {
+        if (!q) return true
+        const agencyMatch =
+          (agency.agency_name ?? '').toLowerCase().includes(q) ||
+          (agency.full_name ?? '').toLowerCase().includes(q) ||
+          agency.email.toLowerCase().includes(q)
+        const clientMatch = cs.some(c => c.company_name.toLowerCase().includes(q))
+        return agencyMatch || clientMatch
+      })
+  }, [agencies, clients, search])
+
+  const isLoading = loadingUsers || loadingClients
+  const error = usersError || clientsError
+
+  if (isLoading) {
+    return <div className="py-16 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#64748b]" /></div>
+  }
+  if (error) {
+    return <div className="py-16 text-center text-[13px] text-red-400">Erro ao carregar dados: {(error as Error).message}</div>
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <KpiCard icon={<Building2 className="w-4 h-4 text-[#6f93c9]" />} label="Agências" value={String(agencies.length)} />
+        <KpiCard icon={<Users className="w-4 h-4 text-emerald-400" />} label="Clientes cadastrados" value={String(clients.length)} sub="somando todas as agências" />
+        <KpiCard icon={<UsersRound className="w-4 h-4 text-purple-400" />} label="Média por agência" value={agencies.length > 0 ? (clients.length / agencies.length).toFixed(1) : '0'} />
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="py-16 text-center text-[13px] text-[#64748b]">Nenhuma agência encontrada.</div>
+      ) : (
+        <div className="space-y-1.5">
+          {groups.map(({ agency, clients: cs }) => (
+            <AgencyGroupCard key={agency.id} agency={agency} clients={cs} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Página ─────────────────────────────────────────────────────────────────
 
 export function AdminPanel() {
@@ -333,13 +463,23 @@ export function AdminPanel() {
             >
               <Building2 className="w-3.5 h-3.5" /> Clientes
             </button>
+            <button
+              onClick={() => setTab('byAgency')}
+              className={`px-3.5 py-2 rounded-lg text-[12px] font-medium transition-all border flex items-center gap-1.5 ${
+                tab === 'byAgency'
+                  ? 'bg-[#2563EB] text-white border-transparent'
+                  : 'bg-[#182233] text-[#94a3b8] hover:text-white hover:bg-[#1e293b] border-[#1e293b]'
+              }`}
+            >
+              <UsersRound className="w-3.5 h-3.5" /> Usuários & Clientes
+            </button>
           </div>
 
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none" />
             <input
               type="text"
-              placeholder={tab === 'users' ? 'Buscar usuário...' : 'Buscar cliente...'}
+              placeholder={tab === 'users' ? 'Buscar usuário...' : tab === 'clients' ? 'Buscar cliente...' : 'Buscar agência ou cliente...'}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#1e293b] bg-[#182233] text-[12px] text-[#E2E8F0] placeholder:text-[#64748b] focus:outline-none focus:border-[#2563EB]/50 transition-colors"
@@ -347,7 +487,9 @@ export function AdminPanel() {
           </div>
         </div>
 
-        {tab === 'users' ? <UsersTab search={search} /> : <ClientsTab search={search} />}
+        {tab === 'users' && <UsersTab search={search} />}
+        {tab === 'clients' && <ClientsTab search={search} />}
+        {tab === 'byAgency' && <AgencyGroupsTab search={search} />}
       </div>
     </div>
   )
