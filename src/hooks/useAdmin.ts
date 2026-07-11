@@ -47,7 +47,7 @@ export function useAdminUsers() {
       if (profErr) throw profErr
       if (subErr) throw subErr
 
-      const subByUser = new Map((subs ?? []).map((s: any) => [s.user_id, s]))
+      const subByUser = new Map<string, any>((subs ?? []).map((s: any) => [s.user_id, s]))
 
       return ((profiles ?? []) as Profile[])
         .slice()
