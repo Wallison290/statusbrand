@@ -31,6 +31,7 @@ import { ReportsTab } from './tabs/ReportsTab'
 import { WeeklyFormTab } from './tabs/WeeklyFormTab'
 import { RequestsIdeasTab } from './tabs/RequestsIdeasTab'
 import { useToast } from '@/components/ui/toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { formatDate, contentTypeLabels, cn } from '@/utils/formatters'
 import { format, parseISO, startOfWeek, endOfWeek, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -221,17 +222,29 @@ function AssetViewDialog({
 
 // ─── Financial Status Card ────────────────────────────────────────────────────
 
-const financialBadgeStyles: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
-  ativo:          { bg: 'bg-[#22C55E]/15 border-[#22C55E]/30',  text: 'text-[#4ade80]', dot: 'bg-[#22C55E]/150', icon: <CheckCircle2 className="w-3 h-3" /> },
-  vence_em_breve: { bg: 'bg-[#F5A623]/15 border-[#F5A623]/30',     text: 'text-[#fbbf24]',   dot: 'bg-[#F5A623]/150',   icon: <Clock className="w-3 h-3" /> },
-  atrasado:       { bg: 'bg-[#ef4444]/15 border-[#ef4444]/30',          text: 'text-[#f87171]',     dot: 'bg-[#ef4444]/150',     icon: <AlertCircle className="w-3 h-3" /> },
-  cancelado:      { bg: 'bg-[#1e293b] border-[#334155]',       text: 'text-[#94a3b8]',    dot: 'bg-[#64748b]',    icon: <Ban className="w-3 h-3" /> },
+// Duas variantes (escuro/claro) — mesmo esquema do componente <Badge>. Uma cor
+// única não funciona nos dois temas: translúcido+claro some no tema claro
+// (o card por trás fica branco), e claro+escuro fica ilegível no tema escuro.
+const financialBadgeStylesDark: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
+  ativo:          { bg: 'bg-[#22C55E]/15 border-[#22C55E]/30', text: 'text-[#4ade80]', dot: 'bg-[#22C55E]', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-[#F5A623]/15 border-[#F5A623]/30', text: 'text-[#fbbf24]', dot: 'bg-[#F5A623]', icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-[#ef4444]/15 border-[#ef4444]/30', text: 'text-[#f87171]', dot: 'bg-[#ef4444]', icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-[#1e293b] border-[#334155]',       text: 'text-[#94a3b8]', dot: 'bg-[#64748b]', icon: <Ban className="w-3 h-3" /> },
+}
+
+const financialBadgeStylesLight: Record<FinancialStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
+  ativo:          { bg: 'bg-green-100 border-green-300', text: 'text-green-700', dot: 'bg-green-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+  vence_em_breve: { bg: 'bg-amber-100 border-amber-300', text: 'text-amber-700', dot: 'bg-amber-500', icon: <Clock className="w-3 h-3" /> },
+  atrasado:       { bg: 'bg-red-100 border-red-300',     text: 'text-red-700',   dot: 'bg-red-500',   icon: <AlertCircle className="w-3 h-3" /> },
+  cancelado:      { bg: 'bg-gray-100 border-gray-300',   text: 'text-gray-600',  dot: 'bg-gray-400',  icon: <Ban className="w-3 h-3" /> },
 }
 
 function FinancialCard({ client }: { client: import('@/types').Client }) {
   const updateClient = useUpdateClient()
   const registerPayment = useRegisterPayment()
   const { toast } = useToast()
+  const { isDark } = useTheme()
+  const financialBadgeStyles = isDark ? financialBadgeStylesDark : financialBadgeStylesLight
 
   const [overrideOpen, setOverrideOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -315,8 +328,8 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
             <div className="min-w-0 hidden sm:block">
               <p className="text-[10px] text-[#64748b] uppercase tracking-wide">Info</p>
               <p className={`text-[12px] font-medium break-words whitespace-normal ${
-                computedStatus === 'atrasado' ? 'text-[#f87171]' :
-                computedStatus === 'vence_em_breve' ? 'text-[#fbbf24]' : 'text-[#94a3b8]'
+                computedStatus === 'atrasado' ? (isDark ? 'text-[#f87171]' : 'text-red-700') :
+                computedStatus === 'vence_em_breve' ? (isDark ? 'text-[#fbbf24]' : 'text-amber-700') : 'text-[#94a3b8]'
               }`}>{auxText}</p>
             </div>
           )}

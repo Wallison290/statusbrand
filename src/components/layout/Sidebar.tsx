@@ -26,7 +26,7 @@ const navItems = [
   { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
   { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
   { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
-  { href: '/ai',        icon: Sparkles,         label: 'StatusIA', highlight: true },
+  { href: '/ai',        icon: Sparkles,         label: 'StatusIA' },
 ]
 
 // ── Initials avatar ───────────────────────────────────────────────────────────
@@ -160,29 +160,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           const active =
             location.pathname === item.href ||
             (item.href !== '/' && location.pathname.startsWith(item.href))
-          const isAI = 'highlight' in item && item.highlight
-
-          // StatusIA — não ativo
-          if (isAI && !active) {
-            return (
-              <Link key={item.href} to={item.href}>
-                <div
-                  title={collapsed ? item.label : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
-                  style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(29,78,216,0.10) 100%)', border: '1px solid rgba(37,99,235,0.25)' }}
-                >
-                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-[#2563EB]" />
-                  {!collapsed && (
-                    <>
-                      <span className="whitespace-nowrap text-[#60A5FA] font-medium flex-1">
-                        {item.label}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </Link>
-            )
-          }
 
           const isComingSoon = 'comingSoon' in item && item.comingSoon
           const collapsedTitle = isComingSoon
