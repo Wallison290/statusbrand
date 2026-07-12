@@ -270,12 +270,12 @@ export async function submitWeeklyFormResponse(payload: SubmitFormPayload) {
 // ── Config by public token (sem auth) ────────────────────────────────────────
 
 export async function fetchConfigByToken(token: string) {
+  // RPC SECURITY DEFINER: valida o token dentro da função, no banco — a
+  // tabela weekly_form_configs não é mais legível direto por anon (evitava
+  // que qualquer chamada à API, sem passar pelo app, listasse os tokens de
+  // todos os clientes só filtrando por is_active=true).
   const { data, error } = await (supabase as any)
-    .from('weekly_form_configs')
-    .select('*, clients(company_name)')
-    .eq('public_token', token)
-    .eq('is_active', true)
-    .maybeSingle()
+    .rpc('get_weekly_form_config_by_token', { p_token: token })
   if (error) throw error
   return data as (WeeklyFormConfig & { clients: { company_name: string } }) | null
 }
