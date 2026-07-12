@@ -1,0 +1,32 @@
+-- =============================================
+-- StatusMedia — Correção CRÍTICA: exposição pública de dados
+--
+-- Achado durante a auditoria do incidente de escalonamento de privilégio
+-- (063_fix_privilege_escalation.sql). Duas policies de SELECT permissivas
+-- ficaram sem nenhum filtro por identidade do requisitante:
+--
+-- 1. team_members_public_by_token (031_team_members.sql:39) — FOR SELECT
+--    USING (true). Não checa token nenhum: qualquer pessoa, MESMO SEM LOGIN
+--    (usando a anon key pública que já vem no bundle do site), conseguia ler
+--    a tabela inteira — nome, whatsapp, email, avatar e o portal_token
+--    (secreto) de TODOS os colaboradores de TODAS as agências. Com esses
+--    tokens em mãos dava pra acessar/editar as tarefas de qualquer
+--    colaborador em /colaborador/:token.
+--    O Portal do Colaborador NÃO depende dessa policy: ele usa as RPCs
+--    get_collaborator_data() / update_collaborator_task()
+--    (032_collaborator_portal_rpc.sql), que são SECURITY DEFINER e validam
+--    o token dentro da própria função — essas continuam funcionando normal.
+--
+-- 2. agency_profiles_read (007_onboarding.sql:21) — FOR SELECT
+--    USING (role = 'agency'). Não checa quem está pedindo: qualquer usuário
+--    autenticado (inclusive um cliente do portal) conseguia listar email e
+--    whatsapp de TODAS as contas de agência do sistema — de qualquer
+--    cliente da StatusMedia, não só a própria. Usada só pelo dropdown
+--    "Responsável Interno" do onboarding, que passa a mostrar apenas a
+--    própria conta (coberto pela policy "profiles_own").
+--
+-- Execute no SQL Editor do Supabase.
+-- =============================================
+
+DROP POLICY IF EXISTS "team_members_public_by_token" ON public.team_members;
+DROP POLICY IF EXISTS "agency_profiles_read"          ON public.profiles;
