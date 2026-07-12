@@ -1,15 +1,18 @@
 // ── Portal do Colaborador ─────────────────────────────────────────────────────
 // Rota pública: /colaborador/:token
-// O colaborador visualiza suas tarefas e pode atualizar status, nota e URL de entrega.
+// O colaborador visualiza um dashboard com suas demandas separadas por cliente
+// e pode atualizar status, nota e URL de entrega de cada uma.
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   CheckCircle2, Clock, AlertCircle, Circle, ExternalLink, ChevronDown,
-  Loader2, Send, FileText, Link as LinkIcon, Calendar, User, Briefcase,
-  X, Image, Film, Folder,
+  Loader2, Send, FileText, Link as LinkIcon, Calendar, Briefcase,
+  X, Image, Film, Folder, Building2, AlertTriangle, ListChecks,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -44,6 +47,15 @@ interface CollaboratorTask {
   updated_at:        string
   client_id:         string | null
   clients:           { id: string; company_name: string } | null
+}
+
+interface ClientTaskGroup {
+  clientId:    string | null
+  companyName: string
+  tasks:       CollaboratorTask[]
+  openCount:   number
+  totalCount:  number
+  nextDueDate: string | null
 }
 
 // Ícone por tipo de link
@@ -94,6 +106,42 @@ function isOverdue(due_date: string | null, status: string) {
 
 function getStatusConfig(value: string) {
   return STATUS_OPTIONS.find(s => s.value === value) ?? STATUS_OPTIONS[0]
+}
+
+// Agrupa as demandas por cliente — tarefas sem client_id caem no grupo "Sem cliente"
+function buildClientGroups(tasks: CollaboratorTask[]): ClientTaskGroup[] {
+  const buckets = new Map<string, { clientId: string | null; companyName: string; tasks: CollaboratorTask[] }>()
+
+  for (const t of tasks) {
+    const key = t.client_id ?? '__none__'
+    if (!buckets.has(key)) {
+      buckets.set(key, { clientId: t.client_id, companyName: t.clients?.company_name ?? 'Sem cliente', tasks: [] })
+    }
+    buckets.get(key)!.tasks.push(t)
+  }
+
+  const groups: ClientTaskGroup[] = Array.from(buckets.values()).map(b => {
+    const openTasksWithDate = b.tasks.filter(t => t.status !== 'concluido' && t.due_date)
+    const nextDueDate = openTasksWithDate.length
+      ? openTasksWithDate.reduce((min, t) => (t.due_date! < min ? t.due_date! : min), openTasksWithDate[0].due_date!)
+      : null
+    return {
+      clientId:    b.clientId,
+      companyName: b.companyName,
+      tasks:       b.tasks,
+      openCount:   b.tasks.filter(t => t.status !== 'concluido').length,
+      totalCount:  b.tasks.length,
+      nextDueDate,
+    }
+  })
+
+  groups.sort((a, b) => {
+    if (a.clientId === null) return 1
+    if (b.clientId === null) return -1
+    return a.companyName.localeCompare(b.companyName, 'pt-BR')
+  })
+
+  return groups
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -543,6 +591,468 @@ function TaskCard({
   )
 }
 
+// ── KPI card (cópia local do padrão usado no portal do cliente) ───────────────
+
+type CardColor = 'amber' | 'green' | 'blue' | 'purple' | 'red' | 'default'
+
+const cardColorMap: Record<CardColor, { icon: string; label: string; value: string; ring: string; dot: string; bar: string }> = {
+  amber:   { icon: 'text-orange-800', label: 'text-orange-900', value: 'text-orange-900', ring: 'border-orange-200 bg-orange-50', dot: 'bg-orange-400', bar: 'bg-[#f97316]' },
+  green:   { icon: 'text-green-800',  label: 'text-green-900',  value: 'text-green-900',  ring: 'border-green-200 bg-green-50',  dot: 'bg-green-500',  bar: 'bg-[#3fa06e]' },
+  blue:    { icon: 'text-blue-800',   label: 'text-blue-900',   value: 'text-blue-900',   ring: 'border-blue-200 bg-blue-50',    dot: 'bg-blue-500',   bar: 'bg-[#3b82f6]' },
+  purple:  { icon: 'text-purple-800', label: 'text-purple-900', value: 'text-purple-900', ring: 'border-purple-200 bg-purple-50', dot: 'bg-purple-500', bar: 'bg-[#8b5cf6]' },
+  red:     { icon: 'text-red-800',    label: 'text-red-900',    value: 'text-red-900',    ring: 'border-red-200 bg-red-50',      dot: 'bg-red-500',    bar: 'bg-[#ef4444]' },
+  default: { icon: 'text-gray-500',   label: 'text-slate-500',  value: 'text-slate-800',  ring: 'border-slate-200 bg-white',     dot: 'bg-gray-400',   bar: 'bg-slate-200' },
+}
+
+function StatusKpiCard({
+  icon, label, value, color, onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  color: CardColor
+  onClick?: () => void
+}) {
+  const c = cardColorMap[color]
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-2xl border overflow-hidden flex flex-col transition-all shadow-sm ${c.ring} ${onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.01]' : ''}`}
+    >
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <div className="flex items-center justify-between">
+          <span className={c.icon}>{icon}</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+        </div>
+        <div>
+          <p className={`text-[11px] leading-snug ${c.label}`}>{label}</p>
+          <p className={`text-[15px] font-semibold mt-1 leading-tight ${c.value}`}>{value}</p>
+        </div>
+      </div>
+      <div className={`h-1 w-full ${c.bar}`} />
+    </div>
+  )
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+function CollaboratorHeader({ member }: { member: CollaboratorMember }) {
+  const initials = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  return (
+    <header className="h-14 border-b border-slate-200 bg-white flex items-center px-4 sm:px-6 sticky top-0 z-30 shadow-sm">
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+          <img src="/logo-icon.png" alt="StatusMedia" className="w-full h-full object-contain select-none" draggable={false} />
+        </div>
+        <span className="text-slate-900 font-bold text-[14px] tracking-tight hidden sm:inline">
+          Status<span className="text-violet-600">Media</span>
+        </span>
+        <span className="text-slate-300 text-xs mx-1 hidden sm:inline">/</span>
+        <span className="text-slate-500 text-[12px] truncate">Portal do colaborador</span>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {member.avatar_url ? (
+          <img src={member.avatar_url} alt={member.name}
+            className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm" />
+        ) : (
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-white shadow-sm"
+            style={{ background: member.color }}>
+            {initials}
+          </div>
+        )}
+        <div className="hidden sm:block">
+          <p className="text-[13px] font-semibold text-slate-800 leading-tight truncate max-w-[140px]">{member.name}</p>
+          {member.role && <p className="text-[11px] text-slate-400 leading-tight truncate max-w-[140px]">{member.role}</p>}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+// ── Hero (saudação + resumo dinâmico) ──────────────────────────────────────────
+
+function CollaboratorHero({
+  member,
+  counts,
+}: {
+  member: CollaboratorMember
+  counts: { total: number; aFazer: number; emProgresso: number; atrasadas: number; concluidas: number }
+}) {
+  const firstName = member.name.split(' ')[0]
+  const pendentes = counts.aFazer + counts.emProgresso
+
+  let headline: string
+  let subline: string
+  let tone: 'red' | 'amber' | 'green' | 'neutral'
+
+  if (counts.total === 0) {
+    headline = `Bem-vindo, ${firstName}`
+    subline  = 'Você ainda não tem nenhuma demanda. Assim que a agência atribuir algo, aparece aqui.'
+    tone = 'neutral'
+  } else if (counts.atrasadas > 0) {
+    headline = counts.atrasadas === 1 ? 'Você tem 1 demanda atrasada' : `Você tem ${counts.atrasadas} demandas atrasadas`
+    subline  = 'Dá uma olhada nelas primeiro pra não acumular.'
+    tone = 'red'
+  } else if (pendentes > 0) {
+    headline = pendentes === 1 ? 'Você tem 1 demanda em aberto' : `Você tem ${pendentes} demandas em aberto`
+    subline  = `${counts.concluidas} já ${counts.concluidas === 1 ? 'concluída' : 'concluídas'}. Continue assim.`
+    tone = 'amber'
+  } else {
+    headline = 'Tudo em dia!'
+    subline  = `${counts.concluidas} ${counts.concluidas === 1 ? 'demanda concluída' : 'demandas concluídas'}. Nenhuma pendência no momento.`
+    tone = 'green'
+  }
+
+  const toneClasses: Record<typeof tone, string> = {
+    red:     'border-red-200 bg-gradient-to-br from-red-50 via-red-50/40 to-transparent',
+    amber:   'border-amber-200 bg-gradient-to-br from-amber-50 via-amber-50/40 to-transparent',
+    green:   'border-green-200 bg-gradient-to-br from-green-50 via-green-50/40 to-transparent',
+    neutral: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-transparent',
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+      className={`rounded-2xl p-6 border ${toneClasses[tone]}`}
+    >
+      <div className="flex items-center gap-4">
+        <Avatar member={member} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-slate-500 uppercase tracking-[0.12em] mb-1">Olá, {firstName}</p>
+          <h2 className="text-[18px] sm:text-[20px] font-semibold text-slate-800 leading-snug">{headline}</h2>
+          <p className="text-[13px] text-slate-500 mt-1 leading-relaxed">{subline}</p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Card de resumo por cliente ─────────────────────────────────────────────────
+
+function ClientSummaryCard({ group, onClick }: { group: ClientTaskGroup; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="text-left bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-violet-300 hover:shadow-md transition-all p-4 w-full"
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center flex-shrink-0">
+          <Building2 className="w-4 h-4 text-violet-500" />
+        </div>
+        {group.openCount > 0 && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 flex-shrink-0">
+            {group.openCount} em aberto
+          </span>
+        )}
+      </div>
+      <p className="text-sm font-semibold text-slate-800 truncate">{group.companyName}</p>
+      <p className="text-xs text-slate-400 mt-0.5">
+        {group.totalCount - group.openCount}/{group.totalCount} concluídas
+      </p>
+      {group.nextDueDate && (
+        <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+          <Calendar className="w-3 h-3" /> Próxima: {formatDate(group.nextDueDate)}
+        </p>
+      )}
+    </button>
+  )
+}
+
+// ── Linha compacta de tarefa (próximas entregas / atividade recente) ──────────
+
+function TaskMiniRow({ task, onOpen }: { task: CollaboratorTask; onOpen: () => void }) {
+  const sc = getStatusConfig(task.status)
+  const Icon = sc.icon
+  const overdue = isOverdue(task.due_date, task.status)
+  return (
+    <button
+      onClick={onOpen}
+      className="w-full flex items-center gap-3 text-left hover:bg-slate-50 rounded-xl px-2 py-2 -mx-2 transition-colors"
+    >
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${sc.bg}`}>
+        <Icon className={`w-3.5 h-3.5 ${sc.color}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[12px] font-medium text-slate-800 truncate">{task.title}</p>
+        <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+          {task.clients?.company_name ?? 'Sem cliente'}
+          {task.due_date && (
+            <span className={overdue ? 'text-red-500 font-medium' : ''}> · {formatDate(task.due_date)}</span>
+          )}
+        </p>
+      </div>
+    </button>
+  )
+}
+
+// ── Aba Dashboard ───────────────────────────────────────────────────────────────
+
+function CollaboratorDashboardTab({
+  counts,
+  clientGroups,
+  upcoming,
+  recent,
+  onNavigate,
+  onOpenTask,
+}: {
+  counts: { total: number; aFazer: number; emProgresso: number; atrasadas: number; concluidas: number }
+  clientGroups: ClientTaskGroup[]
+  upcoming: CollaboratorTask[]
+  recent: CollaboratorTask[]
+  onNavigate: (tab: 'dashboard' | 'demandas', clientId?: string | null) => void
+  onOpenTask: (task: CollaboratorTask) => void
+}) {
+  if (counts.total === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 className="w-7 h-7 text-slate-300" />
+        </div>
+        <p className="text-slate-500 font-medium">Nenhuma demanda atribuída</p>
+        <p className="text-sm text-slate-400 mt-1">Fique de olho, novas demandas aparecerão aqui.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Alerta de atrasadas */}
+      {counts.atrasadas > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+          className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50"
+        >
+          <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-red-700">
+              {counts.atrasadas === 1 ? '1 demanda atrasada' : `${counts.atrasadas} demandas atrasadas`}
+            </p>
+            <p className="text-[12px] text-red-800 mt-0.5 leading-snug">Priorize essas antes das outras.</p>
+          </div>
+          <button
+            onClick={() => onNavigate('demandas')}
+            className="flex-shrink-0 flex items-center gap-1 text-[11px] font-medium text-red-700 hover:text-red-600 transition-colors whitespace-nowrap"
+          >
+            Ver
+          </button>
+        </motion.div>
+      )}
+
+      {/* KPIs */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, delay: 0.06 }}
+        className="grid grid-cols-2 sm:grid-cols-5 gap-3"
+      >
+        <StatusKpiCard
+          icon={<ListChecks className="w-4 h-4" />}
+          label="Total"
+          value={String(counts.total)}
+          color="purple"
+        />
+        <StatusKpiCard
+          icon={<Circle className="w-4 h-4" />}
+          label="A fazer"
+          value={String(counts.aFazer)}
+          color="default"
+          onClick={() => onNavigate('demandas')}
+        />
+        <StatusKpiCard
+          icon={<Clock className="w-4 h-4" />}
+          label="Em progresso"
+          value={String(counts.emProgresso)}
+          color={counts.emProgresso > 0 ? 'blue' : 'default'}
+          onClick={() => onNavigate('demandas')}
+        />
+        <StatusKpiCard
+          icon={<AlertTriangle className="w-4 h-4" />}
+          label="Atrasadas"
+          value={String(counts.atrasadas)}
+          color={counts.atrasadas > 0 ? 'red' : 'default'}
+          onClick={() => onNavigate('demandas')}
+        />
+        <StatusKpiCard
+          icon={<CheckCircle2 className="w-4 h-4" />}
+          label="Concluídas"
+          value={String(counts.concluidas)}
+          color={counts.concluidas > 0 ? 'green' : 'default'}
+        />
+      </motion.div>
+
+      {/* Por cliente — só faz sentido com mais de um cliente */}
+      {clientGroups.length > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, delay: 0.1 }}
+        >
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
+            Por cliente ({clientGroups.length})
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {clientGroups.map(g => (
+              <ClientSummaryCard
+                key={g.clientId ?? '__none__'}
+                group={g}
+                onClick={() => onNavigate('demandas', g.clientId)}
+              />
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Próximas entregas / Atividade recente */}
+      {(upcoming.length > 0 || recent.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {upcoming.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: 0.14 }}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Próximas entregas</h3>
+              <div className="space-y-0.5">
+                {upcoming.map(t => <TaskMiniRow key={t.id} task={t} onOpen={() => onOpenTask(t)} />)}
+              </div>
+            </motion.div>
+          )}
+          {recent.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: 0.18 }}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Atividade recente</h3>
+              <div className="space-y-0.5">
+                {recent.map(t => <TaskMiniRow key={t.id} task={t} onOpen={() => onOpenTask(t)} />)}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Aba Minhas Demandas (lista completa, separada por cliente) ────────────────
+
+function CollaboratorDemandsTab({
+  tasks,
+  clientGroups,
+  clientFilter,
+  onFilterChange,
+  onOpenTask,
+}: {
+  tasks: CollaboratorTask[]
+  clientGroups: ClientTaskGroup[]
+  clientFilter: string
+  onFilterChange: (filter: string) => void
+  onOpenTask: (task: CollaboratorTask) => void
+}) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  function toggleCollapsed(key: string) {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 className="w-7 h-7 text-slate-300" />
+        </div>
+        <p className="text-slate-500 font-medium">Nenhuma demanda atribuída</p>
+        <p className="text-sm text-slate-400 mt-1">Fique de olho, novas demandas aparecerão aqui.</p>
+      </div>
+    )
+  }
+
+  const visibleGroups = clientFilter === 'all'
+    ? clientGroups
+    : clientGroups.filter(g => (g.clientId ?? '__none__') === clientFilter)
+
+  return (
+    <div className="space-y-5">
+      {/* Chips de filtro por cliente */}
+      {clientGroups.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onFilterChange('all')}
+            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+              clientFilter === 'all'
+                ? 'bg-violet-600 border-violet-600 text-white'
+                : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
+            }`}
+          >
+            Todos ({tasks.length})
+          </button>
+          {clientGroups.map(g => {
+            const key = g.clientId ?? '__none__'
+            const active = clientFilter === key
+            return (
+              <button
+                key={key}
+                onClick={() => onFilterChange(key)}
+                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  active
+                    ? 'bg-violet-600 border-violet-600 text-white'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
+                }`}
+              >
+                {g.companyName} ({g.totalCount})
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Seções por cliente */}
+      {visibleGroups.map(group => {
+        const key = group.clientId ?? '__none__'
+        const isCollapsed = collapsed.has(key)
+        return (
+          <div key={key} className="space-y-3">
+            {clientGroups.length > 1 && (
+              <button
+                onClick={() => toggleCollapsed(key)}
+                className="w-full flex items-center justify-between px-1 py-1"
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {group.companyName} ({group.totalCount - group.openCount}/{group.totalCount})
+                  </h3>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+              </button>
+            )}
+            {!isCollapsed && (
+              <div className="space-y-3">
+                {group.tasks.map(task => (
+                  <TaskCard key={task.id} task={task} onOpen={() => onOpenTask(task)} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Loading ───────────────────────────────────────────────────────────────────
 
 function PortalLoading() {
@@ -552,7 +1062,7 @@ function PortalLoading() {
         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
           <Loader2 className="w-5 h-5 text-white animate-spin" />
         </div>
-        <p className="text-slate-500 text-sm">Carregando suas tarefas...</p>
+        <p className="text-slate-500 text-sm">Carregando suas demandas...</p>
       </div>
     </div>
   )
@@ -583,6 +1093,8 @@ export function CollaboratorPortal() {
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
   const [openTask,    setOpenTask]    = useState<CollaboratorTask | null>(null)
+  const [activeTab,   setActiveTab]   = useState<'dashboard' | 'demandas'>('dashboard')
+  const [clientFilter, setClientFilter] = useState('all')
 
   useEffect(() => {
     if (!token) { setError('Token não encontrado na URL.'); setLoading(false); return }
@@ -611,77 +1123,66 @@ export function CollaboratorPortal() {
     setOpenTask(prev => prev && prev.id === updated.id ? { ...prev, ...updated } : prev)
   }
 
+  function handleNavigate(tab: 'dashboard' | 'demandas', clientId?: string | null) {
+    setActiveTab(tab)
+    if (clientId !== undefined) setClientFilter(clientId ?? '__none__')
+  }
+
   if (loading) return <PortalLoading />
   if (error || !member) return <PortalError message={error ?? 'Colaborador não encontrado.'} />
 
   const counts = {
-    total:     tasks.length,
-    pendentes: tasks.filter(t => t.status !== 'concluido').length,
-    concluidas: tasks.filter(t => t.status === 'concluido').length,
+    total:       tasks.length,
+    aFazer:      tasks.filter(t => t.status === 'a_fazer').length,
+    emProgresso: tasks.filter(t => t.status === 'em_andamento' || t.status === 'revisao').length,
+    atrasadas:   tasks.filter(t => isOverdue(t.due_date, t.status)).length,
+    concluidas:  tasks.filter(t => t.status === 'concluido').length,
   }
-  const initials = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  const clientGroups = buildClientGroups(tasks)
+  const upcoming = tasks
+    .filter(t => t.due_date && t.status !== 'concluido')
+    .sort((a, b) => a.due_date!.localeCompare(b.due_date!))
+    .slice(0, 5)
+  const recent = [...tasks]
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .slice(0, 5)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          {member.avatar_url ? (
-            <img src={member.avatar_url} alt={member.name}
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm" />
-          ) : (
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-white shadow-sm"
-              style={{ background: member.color }}>
-              {initials}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-800 text-sm truncate">{member.name}</p>
-            {member.role && <p className="text-xs text-slate-400 truncate">{member.role}</p>}
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
-            <User className="w-3 h-3" /> Portal do colaborador
-          </div>
-        </div>
-      </div>
+      <CollaboratorHeader member={member} />
 
-      {/* Conteúdo */}
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Resumo */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Total',      value: counts.total,      color: 'text-slate-700', bg: 'bg-white'    },
-            { label: 'Pendentes',  value: counts.pendentes,  color: 'text-amber-800', bg: 'bg-amber-50' },
-            { label: 'Concluídas', value: counts.concluidas, color: 'text-green-800', bg: 'bg-green-50' },
-          ].map(s => (
-            <div key={s.label} className={`${s.bg} rounded-2xl p-3 border border-slate-200 text-center shadow-sm`}>
-              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+        <CollaboratorHero member={member} counts={counts} />
 
-        {/* Lista de tarefas */}
-        {tasks.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-7 h-7 text-slate-300" />
-            </div>
-            <p className="text-slate-500 font-medium">Nenhuma tarefa atribuída</p>
-            <p className="text-sm text-slate-400 mt-1">Fique de olho, novas tarefas aparecerão aqui.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
-              Minhas tarefas ({tasks.length})
-            </h2>
-            {tasks.map(task => (
-              <TaskCard key={task.id} task={task} onOpen={() => setOpenTask(task)} />
-            ))}
-          </div>
-        )}
+        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'dashboard' | 'demandas')}>
+          <TabsList className="w-full flex gap-1">
+            <TabsTrigger value="dashboard" className="flex-1 justify-center">Dashboard</TabsTrigger>
+            <TabsTrigger value="demandas" className="flex-1 justify-center">Minhas Demandas ({tasks.length})</TabsTrigger>
+          </TabsList>
 
-        <div className="text-center pt-4 pb-8">
+          <TabsContent value="dashboard" className="mt-6">
+            <CollaboratorDashboardTab
+              counts={counts}
+              clientGroups={clientGroups}
+              upcoming={upcoming}
+              recent={recent}
+              onNavigate={handleNavigate}
+              onOpenTask={setOpenTask}
+            />
+          </TabsContent>
+
+          <TabsContent value="demandas" className="mt-6">
+            <CollaboratorDemandsTab
+              tasks={tasks}
+              clientGroups={clientGroups}
+              clientFilter={clientFilter}
+              onFilterChange={setClientFilter}
+              onOpenTask={setOpenTask}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <div className="text-center pt-2 pb-8">
           <p className="text-xs text-slate-300">Powered by StatusMedia</p>
         </div>
       </div>
