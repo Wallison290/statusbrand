@@ -79,7 +79,7 @@ const LINK_TYPE_COLORS: Record<TaskLink['type'], string> = {
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = [
-  { value: 'a_fazer',      label: 'A fazer',       icon: Circle,       color: 'text-slate-400',  bg: 'bg-slate-100' },
+  { value: 'a_fazer',      label: 'A fazer',       icon: Circle,       color: 'text-slate-700',  bg: 'bg-slate-100' },
   { value: 'em_andamento', label: 'Em andamento',  icon: Clock,        color: 'text-blue-800',   bg: 'bg-blue-50'   },
   { value: 'revisao',      label: 'Em revisão',    icon: AlertCircle,  color: 'text-amber-800',  bg: 'bg-amber-50'  },
   { value: 'concluido',    label: 'Concluído',     icon: CheckCircle2, color: 'text-green-800',  bg: 'bg-green-50'  },
@@ -205,8 +205,8 @@ function StatusDropdown({
                 <button
                   key={opt.value}
                   onClick={() => { onChange(opt.value); setOpen(false) }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-slate-50
-                    ${opt.value === value ? 'font-semibold' : 'text-slate-600'}`}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50
+                    ${opt.value === value ? 'font-semibold' : ''}`}
                 >
                   <Ic className={`w-4 h-4 ${opt.color}`} />
                   {opt.label}
