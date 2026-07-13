@@ -93,6 +93,13 @@ Deno.serve(async (req) => {
 
   const { type, payload } = await req.json()
 
+  // Análise de relatório por IA é recurso dos planos Pro/Agency — sem essa
+  // checagem, o gate era só visual (a tela escondia o botão, mas a função
+  // aceitava a chamada de qualquer plano).
+  if (type === 'report-analysis' && plan !== 'pro' && plan !== 'agency') {
+    return json({ error: 'Relatórios com análise por IA estão disponíveis nos planos Pro e Agency.' }, 403)
+  }
+
   try {
     let content: string | null = null
 

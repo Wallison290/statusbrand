@@ -136,6 +136,16 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE)
 
+    // Relatórios (incluindo a sincronização com o Instagram) são recurso dos
+    // planos Pro/Agency — sem essa checagem, o gate era só visual (a tela
+    // escondia o botão, mas a função aceitava a chamada de qualquer plano).
+    const { data: sub } = await admin
+      .from('subscriptions').select('plan').eq('user_id', user.id).maybeSingle()
+    const plan = (sub as any)?.plan ?? 'starter'
+    if (plan !== 'pro' && plan !== 'agency') {
+      return json({ ok: false, error: 'plan_required', message: 'Relatórios estão disponíveis nos planos Pro e Agency.' }, 403)
+    }
+
     const { data: client } = await admin
       .from('clients').select('id, user_id, company_name').eq('id', client_id).maybeSingle()
     if (!client || (client as any).user_id !== user.id) {
