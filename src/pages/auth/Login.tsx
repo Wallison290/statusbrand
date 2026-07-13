@@ -5,22 +5,6 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, UserCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 
-// Borda com gradiente girando nas cores da marca (só decorativa, sem neon —
-// tons de azul da própria identidade visual). Usada atrás do card de login
-// no desktop, visível por trás do recorte arredondado do card.
-function RotatingBorder() {
-  return (
-    <div className="absolute -inset-px rounded-2xl overflow-hidden pointer-events-none">
-      <div
-        className="absolute inset-[-60%] animate-[spin_7s_linear_infinite] opacity-70 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: 'conic-gradient(from 0deg, transparent 0deg, #29457a 40deg, #5b7fb8 70deg, transparent 110deg, transparent 250deg, #16284d 290deg, #29457a 320deg, transparent 360deg)',
-        }}
-      />
-    </div>
-  )
-}
-
 // Input claro local (tema de login não usa o Input dark global)
 function LightField({
   label, icon, ...props
@@ -189,8 +173,7 @@ export function Login() {
 
           {/* Card — desktop: recolhido num pill, expande no hover revelando o formulário */}
           <div className="hidden lg:block relative group cursor-pointer">
-            <RotatingBorder />
-            <div className="relative bg-white rounded-2xl m-px overflow-hidden shadow-sm">
+            <div className="relative bg-white rounded-2xl border border-[#e8e8e8] overflow-hidden shadow-sm">
               {/* Pill recolhido — some assim que o hover começa */}
               <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-100 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
                 <Lock className="w-3.5 h-3.5 text-[#29457a]" />
