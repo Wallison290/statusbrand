@@ -8,11 +8,15 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const CRON_SECRET       = Deno.env.get('CRON_SECRET') ?? ''
 
 Deno.serve(async (req) => {
-  // Valida o secret enviado pelo cron-job.org no header Authorization
+  // Aceita o secret via Authorization: Bearer ou X-Cron-Secret (mesmo padrão
+  // usado em trial-reminder) — o cron-job.org está configurado com o header
+  // X-Cron-Secret, não Authorization.
   const authHeader = req.headers.get('Authorization') ?? ''
-  const provided   = authHeader.replace('Bearer ', '').trim()
+  const cronHeader = req.headers.get('X-Cron-Secret') ?? ''
+  const bearer     = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
+  const authorized = !!CRON_SECRET && (bearer === CRON_SECRET || cronHeader === CRON_SECRET)
 
-  if (!CRON_SECRET || provided !== CRON_SECRET) {
+  if (!authorized) {
     return new Response('Unauthorized', { status: 401 })
   }
 

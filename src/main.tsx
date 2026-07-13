@@ -9,6 +9,18 @@ Sentry.init({
   sendDefaultPii: false,
 })
 
+// Recarrega a página automaticamente quando um chunk lazy-loaded não existe
+// mais (usuário com a aba aberta desde antes do último deploy, tentando
+// carregar um asset com hash antigo). Um reload busca o index.html fresco,
+// que aponta pros hashes novos. Guard evita loop infinito caso o reload
+// também falhe (ex: deploy realmente quebrado).
+window.addEventListener('vite:preloadError', () => {
+  const key = 'sm_chunk_reload_attempted'
+  if (sessionStorage.getItem(key)) return
+  sessionStorage.setItem(key, '1')
+  window.location.reload()
+})
+
 // Patch: Google Translate injects <font> elements into text nodes, causing
 // React's removeChild/insertBefore to fail when it can't find the original node.
 // This silently ignores those mismatched operations instead of crashing React.
