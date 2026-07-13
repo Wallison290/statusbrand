@@ -215,10 +215,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           )
         })}
 
-      </nav>
-
-      {/* ── Plano + uso de IA + Armazenamento ── */}
-      <div className="px-2 pb-1 flex-shrink-0">
+        {/* ── Plano + uso de IA + Armazenamento — rola junto com o menu ── */}
+        <div className="pt-1 pb-1">
         <Link to="/assinatura">
           <div
             className="rounded-xl px-2.5 py-2 transition-colors"
@@ -281,7 +279,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             )}
           </div>
         </Link>
-      </div>
+        </div>
+      </nav>
 
       {/* ── Sair ── */}
       <div className="px-2 pb-2 pt-1 flex-shrink-0" style={{ borderTop: '1px solid var(--sm-sidebar-border)' }}>
