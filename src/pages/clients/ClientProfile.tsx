@@ -558,8 +558,7 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
       return
     }
     const url = buildClientOAuthUrl(userId, clientId)
-    const newTab = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!newTab) window.location.href = url
+    window.location.href = url
   }
 
   const handleDisconnect = async () => {
