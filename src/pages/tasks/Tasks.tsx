@@ -1124,7 +1124,7 @@ export function Tasks() {
   // Ao trocar de semana, volta a janela para o início (seg–sex)
   useEffect(() => { setDayWindow(0) }, [weekBase])
 
-  const [activeTab, setActiveTab]     = useState<ViewTab>('semanal')
+  const [activeTab, setActiveTab]     = useState<ViewTab>('calendario')
   const [draggingId, setDraggingId]   = useState<string | null>(null)
   const [noDateOpen, setNoDateOpen]   = useState(false)
   const [templatesOpen, setTemplatesOpen] = useState(false)
