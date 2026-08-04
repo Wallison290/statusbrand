@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
   LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, MessageCircle, BarChart3,
   ShieldCheck,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,20 +14,72 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useAIUsage } from '@/hooks/useAIUsage'
 import { useStorageUsage } from '@/hooks/useStorageUsage'
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard'      },
-  { href: '/clients',   icon: Users,            label: 'Clientes'       },
-  { href: '/feed',      icon: LayoutGrid,       label: 'Feed do Perfil' },
-  { href: '/planner',   icon: Calendar,         label: 'Planejamento'   },
-  { href: '/instagram', icon: Instagram,        label: 'Instagram', comingSoon: true },
-  { href: '/whatsapp',  icon: MessageCircle,   label: 'WhatsApp'   },
-  { href: '/reports',   icon: BarChart3,       label: 'Relatórios'     },
-  { href: '/tasks',     icon: CheckSquare,      label: 'Tarefas'        },
-  { href: '/notes',     icon: NotebookPen,      label: 'Notas'          },
-  { href: '/library',   icon: BookOpen,         label: 'Biblioteca'     },
-  { href: '/financial', icon: Wallet,           label: 'Financeiro'     },
-  { href: '/equipe',    icon: UserCheck,        label: 'Equipe'         },
-  { href: '/ai',        icon: Sparkles,         label: 'StatusIA' },
+interface NavItem {
+  href:       string
+  icon:       LucideIcon
+  label:      string
+  comingSoon?: boolean
+  adminOnly?: boolean
+}
+
+interface NavGroup {
+  /** null = bloco sem cabeçalho (Dashboard no topo, StatusIA no fim) */
+  title: string | null
+  items: NavItem[]
+}
+
+// Os itens são agrupados por assunto em vez de virem numa lista corrida.
+// CLIENTES  = o que se abre pensando num cliente específico
+// PRODUÇÃO  = o trabalho sendo feito
+// CANAIS    = por onde o conteúdo sai
+// AGÊNCIA   = a casa, não o cliente
+// Dashboard e StatusIA ficam soltos de propósito: um é a porta de entrada,
+// o outro é o diferencial do produto e perde força dentro de um grupo.
+const navGroups: NavGroup[] = [
+  {
+    title: null,
+    items: [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    ],
+  },
+  {
+    title: 'Clientes',
+    items: [
+      { href: '/clients', icon: Users,      label: 'Clientes'       },
+      { href: '/feed',    icon: LayoutGrid, label: 'Feed do Perfil' },
+      { href: '/reports', icon: BarChart3,  label: 'Relatórios'     },
+    ],
+  },
+  {
+    title: 'Produção',
+    items: [
+      { href: '/planner', icon: Calendar,    label: 'Planejamento' },
+      { href: '/tasks',   icon: CheckSquare, label: 'Tarefas'      },
+      { href: '/library', icon: BookOpen,    label: 'Biblioteca'   },
+      { href: '/notes',   icon: NotebookPen, label: 'Notas'        },
+    ],
+  },
+  {
+    title: 'Canais',
+    items: [
+      { href: '/instagram', icon: Instagram,     label: 'Instagram', comingSoon: true },
+      { href: '/whatsapp',  icon: MessageCircle, label: 'WhatsApp'   },
+    ],
+  },
+  {
+    title: 'Agência',
+    items: [
+      { href: '/financial', icon: Wallet,      label: 'Financeiro' },
+      { href: '/equipe',    icon: UserCheck,   label: 'Equipe'     },
+      { href: '/admin',     icon: ShieldCheck, label: 'Admin', adminOnly: true },
+    ],
+  },
+  {
+    title: null,
+    items: [
+      { href: '/ai', icon: Sparkles, label: 'StatusIA' },
+    ],
+  },
 ]
 
 // ── Initials avatar ───────────────────────────────────────────────────────────
@@ -103,6 +156,86 @@ function ComingSoonBadge({ onInfo }: { onInfo: (pos: { x: number; y: number } | 
   )
 }
 
+// ── Cabeçalho de grupo ────────────────────────────────────────────────────────
+// Expandido: o nome do grupo. Recolhido: só uma linha, porque o texto não cabe
+// nos 56px — a separação continua existindo, sem o rótulo.
+
+function GroupHeading({ title, collapsed }: { title: string | null; collapsed: boolean }) {
+  if (collapsed) {
+    return <div className="mx-2 my-2 h-px" style={{ background: 'var(--sm-sidebar-border)' }} />
+  }
+  if (!title) return <div className="pt-3" />
+  return (
+    <div
+      className="px-2.5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider select-none"
+      style={{ color: 'var(--sm-sidebar-text)' }}
+    >
+      {title}
+    </div>
+  )
+}
+
+// ── Item de navegação ─────────────────────────────────────────────────────────
+
+function NavEntry({ item, active, collapsed, onInfo }: {
+  item:      NavItem
+  active:    boolean
+  collapsed: boolean
+  onInfo:    (pos: { x: number; y: number } | null) => void
+}) {
+  const collapsedTitle = item.comingSoon
+    ? `${item.label} — Em breve (aguardando liberação do Meta)`
+    : item.label
+
+  // Item ativo
+  if (active) {
+    return (
+      <Link to={item.href}>
+        <div
+          title={collapsed ? collapsedTitle : undefined}
+          className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
+          style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
+        >
+          <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
+          {!collapsed && (
+            <>
+              <span className="whitespace-nowrap text-white flex-1">{item.label}</span>
+              {item.comingSoon && <ComingSoonBadge onInfo={onInfo} />}
+            </>
+          )}
+        </div>
+      </Link>
+    )
+  }
+
+  // Item normal inativo
+  return (
+    <Link to={item.href}>
+      <div
+        title={collapsed ? collapsedTitle : undefined}
+        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
+        style={{ color: 'var(--sm-sidebar-text)' }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.background = 'var(--sm-sidebar-hover)'
+          ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-text-1)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+          ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-sidebar-text)'
+        }}
+      >
+        <item.icon className="w-[15px] h-[15px] flex-shrink-0 transition-colors" style={{ color: 'var(--sm-sidebar-icon)' }} />
+        {!collapsed && (
+          <>
+            <span className="whitespace-nowrap flex-1">{item.label}</span>
+            {item.comingSoon && <ComingSoonBadge onInfo={onInfo} />}
+          </>
+        )}
+      </div>
+    </Link>
+  )
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
@@ -130,10 +263,11 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const stWarning = stPct >= 80
   const stLabel   = stUsedGB < 1 ? `${(stUsedGB * 1024).toFixed(0)} MB` : `${stUsedGB.toFixed(1)} GB`
 
-  // Item extra visível só para a conta marcada como is_admin no banco
-  const items = profile?.is_admin
-    ? [...navItems, { href: '/admin', icon: ShieldCheck, label: 'Admin' }]
-    : navItems
+  // "Admin" só aparece para a conta marcada como is_admin no banco. Grupo que
+  // ficar vazio depois desse filtro não é renderizado — evita cabeçalho órfão.
+  const groups = navGroups
+    .map(group => ({ ...group, items: group.items.filter(i => !i.adminOnly || profile?.is_admin) }))
+    .filter(group => group.items.length > 0)
 
   useEffect(() => {
     onMobileClose?.()
@@ -153,67 +287,29 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 
       {/* ── Nav ── */}
       <nav
-        className="flex-1 py-1.5 px-2 space-y-0.5 overflow-y-auto"
+        className="flex-1 py-1.5 px-2 overflow-y-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
       >
-        {items.map((item) => {
-          const active =
-            location.pathname === item.href ||
-            (item.href !== '/' && location.pathname.startsWith(item.href))
-
-          const isComingSoon = 'comingSoon' in item && item.comingSoon
-          const collapsedTitle = isComingSoon
-            ? `${item.label} — Em breve (aguardando liberação do Meta)`
-            : item.label
-
-          // Item ativo
-          if (active) {
-            return (
-              <Link key={item.href} to={item.href}>
-                <div
-                  title={collapsed ? collapsedTitle : undefined}
-                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
-                  style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
-                >
-                  <item.icon className="w-[15px] h-[15px] flex-shrink-0 text-white" />
-                  {!collapsed && (
-                    <>
-                      <span className="whitespace-nowrap text-white flex-1">{item.label}</span>
-                      {isComingSoon && <ComingSoonBadge onInfo={setIgTooltip} />}
-                    </>
-                  )}
-                </div>
-              </Link>
-            )
-          }
-
-          // Item normal inativo
-          return (
-            <Link key={item.href} to={item.href}>
-              <div
-                title={collapsed ? collapsedTitle : undefined}
-                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
-                style={{ color: 'var(--sm-sidebar-text)' }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLDivElement).style.background = 'var(--sm-sidebar-hover)'
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-text-1)'
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLDivElement).style.background = 'transparent'
-                  ;(e.currentTarget as HTMLDivElement).style.color = 'var(--sm-sidebar-text)'
-                }}
-              >
-                <item.icon className="w-[15px] h-[15px] flex-shrink-0 transition-colors" style={{ color: 'var(--sm-sidebar-icon)' }} />
-                {!collapsed && (
-                  <>
-                    <span className="whitespace-nowrap flex-1">{item.label}</span>
-                    {isComingSoon && <ComingSoonBadge onInfo={setIgTooltip} />}
-                  </>
-                )}
-              </div>
-            </Link>
-          )
-        })}
+        {groups.map((group, gi) => (
+          <div key={group.title ?? `bloco-${gi}`}>
+            {/* O primeiro bloco encosta no topo — cabeçalho só a partir do segundo */}
+            {gi > 0 && <GroupHeading title={group.title} collapsed={collapsed} />}
+            <div className="space-y-0.5">
+              {group.items.map(item => (
+                <NavEntry
+                  key={item.href}
+                  item={item}
+                  active={
+                    location.pathname === item.href ||
+                    (item.href !== '/' && location.pathname.startsWith(item.href))
+                  }
+                  collapsed={collapsed}
+                  onInfo={setIgTooltip}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
 
         {/* ── Plano + uso de IA + Armazenamento — rola junto com o menu ── */}
         <div className="pt-1 pb-1">
