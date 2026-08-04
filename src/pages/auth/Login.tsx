@@ -23,9 +23,7 @@ function LightField({
   )
 }
 
-// Conteúdo do card de login (logo, título e formulário) — reaproveitado
-// tanto na versão mobile (sempre visível) quanto na versão desktop
-// (recolhida, expande no hover).
+// Conteúdo do card de login (logo, título e formulário).
 function LoginFormCard({
   email, setEmail, password, setPassword,
   showPassword, setShowPassword, loading, onSubmit,
@@ -166,27 +164,9 @@ export function Login() {
           className="min-h-full w-full max-w-sm mx-auto flex flex-col justify-center p-5"
         >
 
-          {/* Card — mobile/tablet: sempre visível, sem efeito de hover (não existe em touch) */}
-          <div className="lg:hidden bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-6">
+          {/* Card de login — sempre visível, em qualquer tamanho de tela */}
+          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm p-6">
             <LoginFormCard {...formCardProps} />
-          </div>
-
-          {/* Card — desktop: recolhido num pill, expande no hover revelando o formulário */}
-          <div className="hidden lg:block relative group cursor-pointer">
-            <div className="relative bg-white rounded-2xl border border-[#e8e8e8] overflow-hidden shadow-sm">
-              {/* Pill recolhido — some assim que o hover começa */}
-              <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-100 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
-                <Lock className="w-3.5 h-3.5 text-[#29457a]" />
-                <span className="text-[13px] font-semibold tracking-wide text-[#29457a] uppercase">Entrar</span>
-              </div>
-
-              {/* Conteúdo completo — 0 de altura até o hover, expande suavemente */}
-              <div className="max-h-14 group-hover:max-h-[640px] transition-[max-height] duration-500 ease-in-out overflow-hidden">
-                <div className="p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
-                  <LoginFormCard {...formCardProps} />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Cliente da agência */}
