@@ -6,6 +6,7 @@ import {
   DollarSign, CalendarDays, CheckCircle2, AlertCircle, Clock, Ban, ChevronDown,
   Unlink, RefreshCw, Send, Lightbulb,
   Home, CheckSquare, UserCircle, Dna, Briefcase, Folder, Headphones, TrendingUp, ClipboardList,
+  MoreHorizontal,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -858,22 +859,173 @@ function SituacaoDoCliente({
 // Ordem por frequência de uso, não por ordem histórica: o que se abre todo dia
 // vem primeiro. Sem cor própria — cor aqui é reservada para status.
 
-const TABS = [
-  { value: 'overview',   label: 'Visão Geral',   Icon: Home },
-  { value: 'planner',    label: 'Planejamento',  Icon: CalendarDays },
-  { value: 'tasks',      label: 'Tarefas',       Icon: CheckSquare },
-  { value: 'requests',   label: 'Solicitações',  Icon: Lightbulb },
-  { value: 'contents',   label: 'Arsenal',       Icon: Briefcase },
-  { value: 'materials',  label: 'Materiais',     Icon: Folder },
-  { value: 'instagram',  label: 'Instagram',     Icon: Instagram },
-  { value: 'results',    label: 'Resultados',    Icon: TrendingUp },
-  { value: 'dna',        label: 'DNA da Marca',  Icon: Dna },
-  { value: 'onboarding', label: 'Onboarding',    Icon: UserCircle },
-  { value: 'formulario', label: 'Formulário',    Icon: ClipboardList },
-  { value: 'support',    label: 'Suporte',       Icon: Headphones },
-] as const
+type TabDef = { value: string; label: string; Icon: React.ElementType }
 
-const TAB_VALUES = TABS.map(t => t.value) as readonly string[]
+// As quatro do dia a dia ficam sempre visíveis.
+const TABS_PRINCIPAIS: TabDef[] = [
+  { value: 'overview', label: 'Visão Geral',  Icon: Home },
+  { value: 'planner',  label: 'Planejamento', Icon: CalendarDays },
+  { value: 'tasks',    label: 'Tarefas',      Icon: CheckSquare },
+  { value: 'requests', label: 'Solicitações', Icon: Lightbulb },
+]
+
+// O resto entra no "Mais", agrupado por assunto. Assim as 12 abas cabem sem
+// barra de rolagem e param de disputar atenção igual entre si.
+const GRUPOS_EXTRAS: { titulo: string; itens: TabDef[] }[] = [
+  { titulo: 'Conteúdo', itens: [
+    { value: 'contents',  label: 'Arsenal',    Icon: Briefcase },
+    { value: 'materials', label: 'Materiais',  Icon: Folder },
+  ]},
+  { titulo: 'Canais e resultados', itens: [
+    { value: 'instagram', label: 'Instagram',  Icon: Instagram },
+    { value: 'results',   label: 'Resultados', Icon: TrendingUp },
+  ]},
+  { titulo: 'Marca', itens: [
+    { value: 'dna',        label: 'DNA da Marca', Icon: Dna },
+    { value: 'onboarding', label: 'Onboarding',   Icon: UserCircle },
+  ]},
+  { titulo: 'Cliente', itens: [
+    { value: 'formulario', label: 'Formulário', Icon: ClipboardList },
+    { value: 'support',    label: 'Suporte',    Icon: Headphones },
+  ]},
+]
+
+const TABS_EXTRAS = GRUPOS_EXTRAS.flatMap(g => g.itens)
+const TAB_VALUES: readonly string[] = [...TABS_PRINCIPAIS, ...TABS_EXTRAS].map(t => t.value)
+
+// ─── Barra de abas ────────────────────────────────────────────────────────────
+// Uma linha, sem barra de rolagem. As quatro do dia a dia ficam à vista; as
+// outras oito vivem no "Mais", separadas por assunto. Quando a aba ativa é uma
+// das de dentro, o botão "Mais" assume o nome dela, para você nunca perder a
+// referência de onde está.
+
+function BotaoAba({
+  tab, active, pending, onClick, dentroDoMenu = false,
+}: {
+  tab: TabDef
+  active: boolean
+  pending?: number
+  onClick: () => void
+  dentroDoMenu?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`flex items-center gap-2 whitespace-nowrap transition-colors ${
+        dentroDoMenu ? 'w-full px-3 h-9 rounded-lg text-left' : 'px-3 h-9 rounded-lg flex-shrink-0'
+      }`}
+      style={active ? { background: 'rgba(37,99,235,0.10)' } : undefined}
+    >
+      <tab.Icon
+        className="w-4 h-4 flex-shrink-0"
+        strokeWidth={1.8}
+        style={{ color: active ? '#2563EB' : 'var(--sm-text-3)' }}
+      />
+      <span
+        className="text-[12.5px] font-medium"
+        style={{ color: active ? '#2563EB' : 'var(--sm-text-2)' }}
+      >
+        {tab.label}
+      </span>
+      {/* Só aparece quando há algo esperando. Sem número = nada a fazer aqui. */}
+      {!!pending && pending > 0 && (
+        <span
+          className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ml-auto"
+          style={{ background: 'rgba(245,166,35,0.15)', color: '#b45309' }}
+          title={`${pending} ${pending === 1 ? 'item aguardando' : 'itens aguardando'}`}
+        >
+          {pending}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function TabBar({
+  activeTab, onChange, pendencias,
+}: {
+  activeTab: string
+  onChange: (v: string) => void
+  pendencias: Record<string, number>
+}) {
+  const [menuAberto, setMenuAberto] = useState(false)
+  const abaExtraAtiva = TABS_EXTRAS.find(t => t.value === activeTab)
+
+  return (
+    <div
+      className="flex items-center gap-1 p-1.5 rounded-xl"
+      style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
+    >
+      {TABS_PRINCIPAIS.map(t => (
+        <BotaoAba
+          key={t.value}
+          tab={t}
+          active={activeTab === t.value}
+          pending={pendencias[t.value]}
+          onClick={() => onChange(t.value)}
+        />
+      ))}
+
+      <span className="w-px h-5 mx-1 flex-shrink-0" style={{ background: 'var(--sm-border)' }} />
+
+      <div className="relative">
+        <button
+          onClick={() => setMenuAberto(o => !o)}
+          aria-expanded={menuAberto}
+          className="flex items-center gap-2 px-3 h-9 rounded-lg whitespace-nowrap transition-colors"
+          style={abaExtraAtiva ? { background: 'rgba(37,99,235,0.10)' } : undefined}
+        >
+          {abaExtraAtiva
+            ? <abaExtraAtiva.Icon className="w-4 h-4" strokeWidth={1.8} style={{ color: '#2563EB' }} />
+            : <MoreHorizontal className="w-4 h-4" strokeWidth={1.8} style={{ color: 'var(--sm-text-3)' }} />}
+          <span
+            className="text-[12.5px] font-medium"
+            style={{ color: abaExtraAtiva ? '#2563EB' : 'var(--sm-text-2)' }}
+          >
+            {abaExtraAtiva ? abaExtraAtiva.label : 'Mais'}
+          </span>
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform"
+            style={{
+              color: abaExtraAtiva ? '#2563EB' : 'var(--sm-text-3)',
+              transform: menuAberto ? 'rotate(180deg)' : undefined,
+            }}
+          />
+        </button>
+
+        {menuAberto && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setMenuAberto(false)} />
+            <div
+              className="absolute left-0 top-full mt-1.5 z-20 w-56 rounded-xl shadow-lg p-1.5"
+              style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
+            >
+              {GRUPOS_EXTRAS.map((grupo, i) => (
+                <div key={grupo.titulo} className={i > 0 ? 'mt-1.5 pt-1.5 border-t' : ''}
+                  style={i > 0 ? { borderColor: 'var(--sm-border)' } : undefined}>
+                  <p className="text-[10px] font-bold uppercase tracking-wide px-3 pb-1" style={{ color: 'var(--sm-text-3)' }}>
+                    {grupo.titulo}
+                  </p>
+                  {grupo.itens.map(t => (
+                    <BotaoAba
+                      key={t.value}
+                      tab={t}
+                      active={activeTab === t.value}
+                      pending={pendencias[t.value]}
+                      dentroDoMenu
+                      onClick={() => { onChange(t.value); setMenuAberto(false) }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -1258,50 +1410,11 @@ export function ClientProfile() {
             arco-íris gastava as cores que o sistema usa para status. Agora é uma
             barra de uma linha, ícones neutros, e cor só onde há ação pendente. */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
-            <div className="flex items-stretch gap-0.5 overflow-x-auto p-1.5 sm-scroll-x">
-              {TABS.map(t => {
-                const active  = activeTab === t.value
-                const pending = pendencias[t.value] ?? 0
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setActiveTab(t.value)}
-                    aria-current={active ? 'page' : undefined}
-                    title={t.label}
-                    className="group relative flex items-center gap-2 px-3 h-9 rounded-lg whitespace-nowrap flex-shrink-0 transition-colors"
-                    style={active
-                      ? { background: 'rgba(37,99,235,0.10)' }
-                      : undefined}
-                  >
-                    <t.Icon
-                      className="w-4 h-4 flex-shrink-0"
-                      strokeWidth={1.8}
-                      style={{ color: active ? '#2563EB' : 'var(--sm-text-3)' }}
-                    />
-                    <span
-                      className="text-[12.5px] font-medium"
-                      style={{ color: active ? '#2563EB' : 'var(--sm-text-2)' }}
-                    >
-                      {t.label}
-                    </span>
-
-                    {/* Só aparece quando existe algo esperando por você.
-                        Sem número = nada a fazer nesta aba. */}
-                    {pending > 0 && (
-                      <span
-                        className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'rgba(245,166,35,0.15)', color: '#b45309' }}
-                        title={`${pending} ${pending === 1 ? 'item aguardando' : 'itens aguardando'}`}
-                      >
-                        {pending}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          <TabBar
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            pendencias={pendencias}
+          />
 
           {/* ── Visão Geral ───────────────────────────────────────────────── */}
           {/* Antes eram 8 caixas de texto fixo. Isso não responde à pergunta que
