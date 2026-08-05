@@ -893,7 +893,11 @@ const GRUPO_CLIENTE: Grupo = { titulo: 'Cliente', itens: [
 // Em tela estreita, descem para o "Mais", para nada estourar nem voltar a
 // aparecer barra de rolagem. O menu só lista o que NÃO está visível, então
 // nenhuma aba aparece em dois lugares ao mesmo tempo.
-const GRUPOS_PROMOVIVEIS: Grupo[] = [GRUPO_CONTEUDO, GRUPO_CANAIS]
+// A ordem aqui é a ordem de prioridade: o primeiro é o primeiro a subir para a
+// barra quando há espaço. Canais e resultados vem antes de Conteúdo porque
+// Instagram e Resultados são consultados com mais frequência que Arsenal e
+// Materiais.
+const GRUPOS_PROMOVIVEIS: Grupo[] = [GRUPO_CANAIS, GRUPO_CONTEUDO]
 const GRUPOS_SEMPRE_NO_MENU: Grupo[] = [GRUPO_MARCA, GRUPO_CLIENTE]
 
 const TAB_VALUES: readonly string[] = [
