@@ -902,20 +902,24 @@ const TAB_VALUES: readonly string[] = [
   ...GRUPOS_SEMPRE_NO_MENU.flatMap(g => g.itens),
 ].map(t => t.value)
 
-/** true quando a janela tem largura suficiente para a barra estendida. */
-function useTelaLarga(): boolean {
-  const query = '(min-width: 1500px)'
-  const [larga, setLarga] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(query).matches
-  )
+// Largura mínima da própria barra para caber cada grupo promovido, somando os
+// botões que já existem à esquerda. Medir a barra em vez da janela é o que faz
+// isso funcionar com qualquer escala de tela do Windows, qualquer zoom do
+// navegador e com o menu lateral recolhido ou não.
+const LARGURA_PARA_GRUPO = [900, 1160]
+
+/** Observa a largura real do elemento e devolve em pixels de CSS. */
+function useLarguraDe<T extends HTMLElement>(ref: React.RefObject<T>): number {
+  const [largura, setLargura] = useState(0)
   useEffect(() => {
-    const mq = window.matchMedia(query)
-    const onChange = (e: MediaQueryListEvent) => setLarga(e.matches)
-    mq.addEventListener('change', onChange)
-    setLarga(mq.matches)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-  return larga
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setLargura(entry.contentRect.width))
+    ro.observe(el)
+    setLargura(el.getBoundingClientRect().width)
+    return () => ro.disconnect()
+  }, [ref])
+  return largura
 }
 
 // ─── Barra de abas ────────────────────────────────────────────────────────────
@@ -975,11 +979,13 @@ function TabBar({
   pendencias: Record<string, number>
 }) {
   const [menuAberto, setMenuAberto] = useState(false)
-  const telaLarga = useTelaLarga()
+  const barraRef = useRef<HTMLDivElement>(null)
+  const largura = useLarguraDe(barraRef)
 
-  // Grupos que cabem na barra agora, e os que sobram para o menu.
-  const gruposNaBarra = telaLarga ? GRUPOS_PROMOVIVEIS : []
-  const gruposNoMenu  = telaLarga ? GRUPOS_SEMPRE_NO_MENU : [...GRUPOS_PROMOVIVEIS, ...GRUPOS_SEMPRE_NO_MENU]
+  // Quantos grupos cabem na barra agora, medindo a barra de verdade.
+  const quantosCabem = LARGURA_PARA_GRUPO.filter(min => largura >= min).length
+  const gruposNaBarra = GRUPOS_PROMOVIVEIS.slice(0, quantosCabem)
+  const gruposNoMenu  = [...GRUPOS_PROMOVIVEIS.slice(quantosCabem), ...GRUPOS_SEMPRE_NO_MENU]
   const abaExtraAtiva = gruposNoMenu.flatMap(g => g.itens).find(t => t.value === activeTab)
 
   const Divisor = () => (
@@ -988,6 +994,7 @@ function TabBar({
 
   return (
     <div
+      ref={barraRef}
       className="flex items-center gap-1 p-1.5 rounded-xl"
       style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
     >
