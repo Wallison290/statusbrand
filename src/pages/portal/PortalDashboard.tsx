@@ -41,6 +41,7 @@ import { contentTypeLabels, formatDate, formatRelative } from '@/utils/formatter
 import { calcFinancialStatus, getFinancialAuxText, hasPaidCurrentCycle } from '@/utils/financial'
 import { isImageUrl, isVideoUrl } from '@/utils/media'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType } from '@/types'
+import { VideoComSom } from '@/components/VideoComSom'
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -597,8 +598,12 @@ function ItemDetailView({
                   <img src={currentMedia.file_url} alt={currentMedia.file_name}
                     className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain" />
                 ) : currentMedia?.kind === 'video' ? (
-                  <video key={currentMedia.file_url} src={currentMedia.file_url}
-                    autoPlay muted loop playsInline controls
+                  // Tela onde o cliente aprova o conteúdo. Antes começava mudo
+                  // e o som só saía pelo ícone minúsculo dos controles nativos
+                  // — no celular, quase impossível de acertar. Agora tem botão
+                  // grande, e depois do primeiro toque os vídeos seguintes da
+                  // sessão já vêm com som.
+                  <VideoComSom key={currentMedia.file_url} src={currentMedia.file_url}
                     className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain" />
                 ) : null}
 
