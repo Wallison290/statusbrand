@@ -3,3 +3,10 @@ dist
 .env
 .env.local
 .vercel
+
+# Arquivos de credencial que ficam soltos na pasta do projeto.
+# Sem isto eles entram no commit e vao parar no GitHub.
+Credenciais*
+credenciais*
+*.secret
+*secrets*.txt
