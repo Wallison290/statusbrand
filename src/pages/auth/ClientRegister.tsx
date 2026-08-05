@@ -4,22 +4,32 @@ import { motion } from 'framer-motion'
 import { Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle2, Lock, Mail } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 
-// ─── Wordmark (igual ao Login) ────────────────────────────────────────────────
+// ─── Wordmark ─────────────────────────────────────────────────────────────────
+// Mesma identidade do login: logo real + "StatusMedia" com o navy da marca.
+// Antes esta era a única tela do app que dizia "StatusBrand", em Georgia serif
+// e com um quadrado "SB" — sobra de antes do rebrand. Numa página onde o
+// cliente da agência cria senha, marca divergente lê como página falsa.
 
 function Wordmark() {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 rounded-md bg-[#0f0f0f] flex items-center justify-center flex-shrink-0">
-        <span className="text-white font-bold text-[12px] select-none">SB</span>
-      </div>
+    <div className="flex flex-col items-center gap-2.5">
+      <picture>
+        <source srcSet="/logo-icon.avif" type="image/avif" />
+        <source srcSet="/logo-icon.webp" type="image/webp" />
+        <img
+          src="/logo-icon.png"
+          alt="StatusMedia"
+          width={56}
+          height={56}
+          className="w-14 h-14 object-contain select-none"
+          draggable={false}
+        />
+      </picture>
       <div className="text-center">
-        <p
-          className="font-bold text-[#0f0f0f] leading-none text-[26px]"
-          style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
-        >
-          Status<span style={{ fontFamily: 'inherit' }}>Brand</span>
+        <p className="font-bold text-[#0f0f0f] leading-none text-[24px]">
+          Status<span className="text-[#29457a]">Media</span>
         </p>
-        <p className="text-[#a0a0a0] uppercase tracking-[0.22em] mt-1 font-light text-[10px]">
+        <p className="text-[#a0a0a0] uppercase tracking-[0.22em] mt-1.5 font-medium text-[10px]">
           Área do Cliente
         </p>
       </div>
@@ -224,12 +234,16 @@ export function ClientRegister() {
 
       {/* Left panel — imagem (igual ao Login) */}
       <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
-        <img
-          src="/planer.png"
-          alt="StatusMedia"
-          className="absolute inset-0 w-full h-full object-cover object-center select-none"
-          draggable={false}
-        />
+        <picture>
+          <source srcSet="/planer.avif" type="image/avif" />
+          <source srcSet="/planer.webp" type="image/webp" />
+          <img
+            src="/planer.png"
+            alt="StatusMedia"
+            className="absolute inset-0 w-full h-full object-cover object-center select-none"
+            draggable={false}
+          />
+        </picture>
       </div>
 
       {/* Right panel — formulário */}
@@ -240,8 +254,9 @@ export function ClientRegister() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-sm"
         >
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-10 flex justify-center">
+          {/* Identidade da marca — visível em qualquer largura, como no login.
+              Antes era lg:hidden, então o card no desktop não tinha logo nenhuma. */}
+          <div className="mb-8 flex justify-center">
             <Wordmark />
           </div>
 

@@ -3,11 +3,13 @@ export function TermsPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-gray-100 px-6 py-4 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-[#0f0f0f] flex items-center justify-center">
-          <span className="text-white font-bold text-sm">S</span>
-        </div>
-        <span className="font-semibold text-[#0f0f0f]" style={{ fontFamily: 'Georgia, serif' }}>
-          StatusMedia
+        <picture>
+          <source srcSet="/logo-icon.avif" type="image/avif" />
+          <source srcSet="/logo-icon.webp" type="image/webp" />
+          <img src="/logo-icon.png" alt="" width={32} height={32} className="w-8 h-8 object-contain" />
+        </picture>
+        <span className="font-semibold text-[#0f0f0f]">
+          Status<span className="text-[#29457a]">Media</span>
         </span>
       </header>
 

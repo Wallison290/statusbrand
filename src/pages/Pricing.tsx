@@ -233,12 +233,14 @@ export function Pricing() {
       {/* Topbar mínima */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-[#f1f5f9]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-[#0f0f0f] flex items-center justify-center">
-            <span className="text-white font-bold text-[11px]">SB</span>
-          </div>
-          <span className="text-[13px] font-semibold text-[#0f0f0f]"
-                style={{ fontFamily: "'Georgia', serif" }}>
-            StatusMedia
+          {/* Era um quadrado preto "SB" com Georgia serif — sobra do rebrand. */}
+          <picture>
+            <source srcSet="/logo-icon.avif" type="image/avif" />
+            <source srcSet="/logo-icon.webp" type="image/webp" />
+            <img src="/logo-icon.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" />
+          </picture>
+          <span className="text-[13px] font-semibold text-[#0f0f0f]">
+            Status<span className="text-[#29457a]">Media</span>
           </span>
         </div>
         <div className="flex items-center gap-3">
