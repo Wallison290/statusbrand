@@ -39,24 +39,35 @@
 -- =============================================
 
 
--- ── 1. Reverte vínculos que não batem com o e-mail ───────────────────────────
--- Se alguém já se ligou a um cliente que não é o dele, isso desfaz.
--- Rode o SELECT antes para ver o que será afetado.
+-- ── 1. Auditoria dos vínculos existentes ─────────────────────────────────────
+-- ATENÇÃO: rode APENAS este SELECT primeiro e olhe o resultado.
+--
+-- Ele lista todo perfil de cliente cujo e-mail é diferente do e-mail do
+-- cliente ao qual ele está ligado. Pode ser das duas coisas:
+--   (a) acesso indevido — alguém se ligou a um cliente que não é dele;
+--   (b) caso legítimo — a agência convidou num e-mail secundário, ou trocou
+--       o e-mail no cadastro depois do convite.
+--
+-- Só dá para saber olhando. NÃO existe desfazer automático seguro aqui.
 
--- SELECT p.id, p.email, p.linked_client_id, c.email AS email_do_cliente
--- FROM profiles p
--- LEFT JOIN clients c ON c.id = p.linked_client_id
--- WHERE p.role = 'client'
---   AND (c.id IS NULL OR LOWER(TRIM(c.email)) IS DISTINCT FROM LOWER(TRIM(p.email)));
-
-UPDATE profiles p
-SET    linked_client_id = NULL,
-       role             = 'agency',
-       updated_at       = NOW()
-FROM   clients c
+SELECT p.id            AS perfil,
+       p.email         AS email_do_login,
+       c.company_name  AS empresa_vinculada,
+       c.email         AS email_no_cadastro
+FROM   profiles p
+JOIN   clients  c ON c.id = p.linked_client_id
 WHERE  p.role = 'client'
-  AND  p.linked_client_id = c.id
   AND  LOWER(TRIM(c.email)) IS DISTINCT FROM LOWER(TRIM(p.email));
+
+-- Se o SELECT acima trouxer alguma linha que seja acesso INDEVIDO, desligue
+-- só aquela pessoa, trocando o id abaixo e removendo os dois hifens:
+--
+-- UPDATE profiles
+-- SET    role = 'agency', linked_client_id = NULL, updated_at = NOW()
+-- WHERE  id = 'COLE_AQUI_O_ID_DO_PERFIL';
+--
+-- Os itens 2 a 5 abaixo podem ser executados independente desse resultado:
+-- eles fecham a porta para novos casos.
 
 
 -- ── 2. setup_client_profile: vínculo derivado do e-mail ──────────────────────
@@ -79,7 +90,16 @@ DECLARE
   v_auth_email  TEXT;
   v_client_id   UUID;
   v_client_name TEXT;
+  v_service     BOOLEAN;
 BEGIN
+  -- A Edge Function invite-client roda com a service role e já validou quem
+  -- é a agência e qual cliente ela está convidando. Nesse caso o p_client_id
+  -- é confiável — inclusive quando a agência convida num e-mail diferente do
+  -- que está no cadastro do cliente. O navegador NUNCA tem service role.
+  v_service := COALESCE(
+    current_setting('request.jwt.claims', TRUE)::json->>'role', ''
+  ) = 'service_role';
+
   -- O usuário informado precisa existir e ter exatamente o e-mail informado.
   SELECT u.email INTO v_auth_email
   FROM   auth.users u
@@ -90,11 +110,18 @@ BEGIN
     RAISE EXCEPTION 'Usuário e e-mail não conferem.';
   END IF;
 
-  -- O cliente é DERIVADO do e-mail, nunca aceito por parâmetro.
-  SELECT c.id, c.company_name INTO v_client_id, v_client_name
-  FROM   clients c
-  WHERE  LOWER(TRIM(c.email)) = LOWER(TRIM(v_auth_email))
-  LIMIT  1;
+  IF v_service THEN
+    -- Convite pela agência: usa o cliente que a Edge Function indicou.
+    SELECT c.id, c.company_name INTO v_client_id, v_client_name
+    FROM   clients c
+    WHERE  c.id = p_client_id;
+  ELSE
+    -- Auto-cadastro: o cliente é DERIVADO do e-mail, nunca do parâmetro.
+    SELECT c.id, c.company_name INTO v_client_id, v_client_name
+    FROM   clients c
+    WHERE  LOWER(TRIM(c.email)) = LOWER(TRIM(v_auth_email))
+    LIMIT  1;
+  END IF;
 
   IF v_client_id IS NULL THEN
     RAISE EXCEPTION 'Este e-mail não pertence a nenhum cliente cadastrado.';
@@ -136,14 +163,26 @@ DECLARE
   v_client_id   UUID;
   v_client_name TEXT;
   v_role        TEXT := 'agency';
+  v_pediu_client BOOLEAN;
 BEGIN
-  SELECT c.id, c.company_name INTO v_client_id, v_client_name
-  FROM   clients c
-  WHERE  LOWER(TRIM(c.email)) = LOWER(TRIM(NEW.email))
-  LIMIT  1;
+  -- O metadado vira apenas uma INTENÇÃO, nunca uma permissão. Só vale se o
+  -- e-mail do usuário realmente for o de um cliente cadastrado.
+  -- Exigir as duas coisas evita dois erros opostos:
+  --   • quem pede role=client sem ter e-mail de cliente não entra em portal
+  --     nenhum (era o buraco);
+  --   • dono de agência cujo e-mail por acaso também esteja na tabela de
+  --     clientes continua nascendo como agência.
+  v_pediu_client := COALESCE(NEW.raw_user_meta_data->>'role', 'agency') = 'client';
 
-  IF v_client_id IS NOT NULL THEN
-    v_role := 'client';
+  IF v_pediu_client THEN
+    SELECT c.id, c.company_name INTO v_client_id, v_client_name
+    FROM   clients c
+    WHERE  LOWER(TRIM(c.email)) = LOWER(TRIM(NEW.email))
+    LIMIT  1;
+
+    IF v_client_id IS NOT NULL THEN
+      v_role := 'client';
+    END IF;
   END IF;
 
   INSERT INTO profiles (id, email, full_name, role, linked_client_id)
