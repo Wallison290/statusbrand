@@ -869,29 +869,54 @@ const TABS_PRINCIPAIS: TabDef[] = [
   { value: 'requests', label: 'Solicitações', Icon: Lightbulb },
 ]
 
-// O resto entra no "Mais", agrupado por assunto. Assim as 12 abas cabem sem
-// barra de rolagem e param de disputar atenção igual entre si.
-const GRUPOS_EXTRAS: { titulo: string; itens: TabDef[] }[] = [
-  { titulo: 'Conteúdo', itens: [
-    { value: 'contents',  label: 'Arsenal',    Icon: Briefcase },
-    { value: 'materials', label: 'Materiais',  Icon: Folder },
-  ]},
-  { titulo: 'Canais e resultados', itens: [
-    { value: 'instagram', label: 'Instagram',  Icon: Instagram },
-    { value: 'results',   label: 'Resultados', Icon: TrendingUp },
-  ]},
-  { titulo: 'Marca', itens: [
-    { value: 'dna',        label: 'DNA da Marca', Icon: Dna },
-    { value: 'onboarding', label: 'Onboarding',   Icon: UserCircle },
-  ]},
-  { titulo: 'Cliente', itens: [
-    { value: 'formulario', label: 'Formulário', Icon: ClipboardList },
-    { value: 'support',    label: 'Suporte',    Icon: Headphones },
-  ]},
-]
+// Os outros oito, agrupados por assunto.
+type Grupo = { titulo: string; itens: TabDef[] }
 
-const TABS_EXTRAS = GRUPOS_EXTRAS.flatMap(g => g.itens)
-const TAB_VALUES: readonly string[] = [...TABS_PRINCIPAIS, ...TABS_EXTRAS].map(t => t.value)
+const GRUPO_CONTEUDO: Grupo = { titulo: 'Conteúdo', itens: [
+  { value: 'contents',  label: 'Arsenal',   Icon: Briefcase },
+  { value: 'materials', label: 'Materiais', Icon: Folder },
+]}
+const GRUPO_CANAIS: Grupo = { titulo: 'Canais e resultados', itens: [
+  { value: 'instagram', label: 'Instagram',  Icon: Instagram },
+  { value: 'results',   label: 'Resultados', Icon: TrendingUp },
+]}
+const GRUPO_MARCA: Grupo = { titulo: 'Marca', itens: [
+  { value: 'dna',        label: 'DNA da Marca', Icon: Dna },
+  { value: 'onboarding', label: 'Onboarding',   Icon: UserCircle },
+]}
+const GRUPO_CLIENTE: Grupo = { titulo: 'Cliente', itens: [
+  { value: 'formulario', label: 'Formulário', Icon: ClipboardList },
+  { value: 'support',    label: 'Suporte',    Icon: Headphones },
+]}
+
+// Em tela larga, Conteúdo e Canais sobem para a barra — sobra espaço para eles.
+// Em tela estreita, descem para o "Mais", para nada estourar nem voltar a
+// aparecer barra de rolagem. O menu só lista o que NÃO está visível, então
+// nenhuma aba aparece em dois lugares ao mesmo tempo.
+const GRUPOS_PROMOVIVEIS: Grupo[] = [GRUPO_CONTEUDO, GRUPO_CANAIS]
+const GRUPOS_SEMPRE_NO_MENU: Grupo[] = [GRUPO_MARCA, GRUPO_CLIENTE]
+
+const TAB_VALUES: readonly string[] = [
+  ...TABS_PRINCIPAIS,
+  ...GRUPOS_PROMOVIVEIS.flatMap(g => g.itens),
+  ...GRUPOS_SEMPRE_NO_MENU.flatMap(g => g.itens),
+].map(t => t.value)
+
+/** true quando a janela tem largura suficiente para a barra estendida. */
+function useTelaLarga(): boolean {
+  const query = '(min-width: 1500px)'
+  const [larga, setLarga] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const onChange = (e: MediaQueryListEvent) => setLarga(e.matches)
+    mq.addEventListener('change', onChange)
+    setLarga(mq.matches)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return larga
+}
 
 // ─── Barra de abas ────────────────────────────────────────────────────────────
 // Uma linha, sem barra de rolagem. As quatro do dia a dia ficam à vista; as
@@ -950,7 +975,16 @@ function TabBar({
   pendencias: Record<string, number>
 }) {
   const [menuAberto, setMenuAberto] = useState(false)
-  const abaExtraAtiva = TABS_EXTRAS.find(t => t.value === activeTab)
+  const telaLarga = useTelaLarga()
+
+  // Grupos que cabem na barra agora, e os que sobram para o menu.
+  const gruposNaBarra = telaLarga ? GRUPOS_PROMOVIVEIS : []
+  const gruposNoMenu  = telaLarga ? GRUPOS_SEMPRE_NO_MENU : [...GRUPOS_PROMOVIVEIS, ...GRUPOS_SEMPRE_NO_MENU]
+  const abaExtraAtiva = gruposNoMenu.flatMap(g => g.itens).find(t => t.value === activeTab)
+
+  const Divisor = () => (
+    <span className="w-px h-5 mx-1 flex-shrink-0" style={{ background: 'var(--sm-border)' }} />
+  )
 
   return (
     <div
@@ -967,7 +1001,24 @@ function TabBar({
         />
       ))}
 
-      <span className="w-px h-5 mx-1 flex-shrink-0" style={{ background: 'var(--sm-border)' }} />
+      {/* Cada grupo promovido entra separado por um divisor, para o
+          agrupamento continuar legível também na barra. */}
+      {gruposNaBarra.map(grupo => (
+        <span key={grupo.titulo} className="flex items-center gap-1">
+          <Divisor />
+          {grupo.itens.map(t => (
+            <BotaoAba
+              key={t.value}
+              tab={t}
+              active={activeTab === t.value}
+              pending={pendencias[t.value]}
+              onClick={() => onChange(t.value)}
+            />
+          ))}
+        </span>
+      ))}
+
+      <Divisor />
 
       <div className="relative">
         <button
@@ -1001,7 +1052,7 @@ function TabBar({
               className="absolute left-0 top-full mt-1.5 z-20 w-56 rounded-xl shadow-lg p-1.5"
               style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
             >
-              {GRUPOS_EXTRAS.map((grupo, i) => (
+              {gruposNoMenu.map((grupo, i) => (
                 <div key={grupo.titulo} className={i > 0 ? 'mt-1.5 pt-1.5 border-t' : ''}
                   style={i > 0 ? { borderColor: 'var(--sm-border)' } : undefined}>
                   <p className="text-[10px] font-bold uppercase tracking-wide px-3 pb-1" style={{ color: 'var(--sm-text-3)' }}>
