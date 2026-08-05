@@ -999,7 +999,10 @@ function TabBar({
   return (
     <div
       ref={barraRef}
-      className="flex items-center gap-1 p-1.5 rounded-xl"
+      // flex-wrap: no celular as abas continuam na linha de baixo em vez de
+      // esticar a barra além da tela. Antes os botões eram flex-shrink-0 numa
+      // linha só, o que empurrava a página inteira para fora do viewport.
+      className="flex flex-wrap items-center gap-1 p-1.5 rounded-xl max-w-full"
       style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
     >
       {TABS_PRINCIPAIS.map(t => (
@@ -1013,7 +1016,8 @@ function TabBar({
       ))}
 
       {/* Cada grupo promovido entra separado por um divisor, para o
-          agrupamento continuar legível também na barra. */}
+          agrupamento continuar legível também na barra. O grupo inteiro quebra
+          junto, para não partir Instagram de Resultados em linhas diferentes. */}
       {gruposNaBarra.map(grupo => (
         <span key={grupo.titulo} className="flex items-center gap-1">
           <Divisor />
@@ -1060,7 +1064,7 @@ function TabBar({
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuAberto(false)} />
             <div
-              className="absolute left-0 top-full mt-1.5 z-20 w-56 rounded-xl shadow-lg p-1.5"
+              className="absolute left-0 top-full mt-1.5 z-20 w-56 max-w-[calc(100vw-2.5rem)] rounded-xl shadow-lg p-1.5"
               style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}
             >
               {gruposNoMenu.map((grupo, i) => (
