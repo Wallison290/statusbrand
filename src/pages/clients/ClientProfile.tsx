@@ -691,6 +691,27 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
   )
 }
 
+// ─── Abas ─────────────────────────────────────────────────────────────────────
+// Ordem por frequência de uso, não por ordem histórica: o que se abre todo dia
+// vem primeiro. Sem cor própria — cor aqui é reservada para status.
+
+const TABS = [
+  { value: 'overview',   label: 'Visão Geral',   Icon: Home },
+  { value: 'planner',    label: 'Planejamento',  Icon: CalendarDays },
+  { value: 'tasks',      label: 'Tarefas',       Icon: CheckSquare },
+  { value: 'requests',   label: 'Solicitações',  Icon: Lightbulb },
+  { value: 'contents',   label: 'Arsenal',       Icon: Briefcase },
+  { value: 'materials',  label: 'Materiais',     Icon: Folder },
+  { value: 'instagram',  label: 'Instagram',     Icon: Instagram },
+  { value: 'results',    label: 'Resultados',    Icon: TrendingUp },
+  { value: 'dna',        label: 'DNA da Marca',  Icon: Dna },
+  { value: 'onboarding', label: 'Onboarding',    Icon: UserCircle },
+  { value: 'formulario', label: 'Formulário',    Icon: ClipboardList },
+  { value: 'support',    label: 'Suporte',       Icon: Headphones },
+] as const
+
+const TAB_VALUES = TABS.map(t => t.value) as readonly string[]
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ClientProfile() {
@@ -734,7 +755,38 @@ export function ClientProfile() {
 
   const [selectedPlannerItem, setSelectedPlannerItem] = useState<PlannerItem | null>(null)
   const [plannerItemOpen, setPlannerItemOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+
+  // ── Aba ativa vive no endereço ────────────────────────────────────────────
+  // Antes era só useState: atualizar a página voltava para "Visão Geral", não
+  // dava para mandar a alguém o link de uma aba, e o botão voltar do navegador
+  // não desfazia a troca. Agora /clients/:id?aba=planner resolve os três.
+  const abaDaUrl = searchParams.get('aba')
+  const activeTab = abaDaUrl && TAB_VALUES.includes(abaDaUrl) ? abaDaUrl : 'overview'
+
+  const setActiveTab = (value: string) => {
+    setSearchParams(prev => {
+      if (value === 'overview') prev.delete('aba')
+      else prev.set('aba', value)
+      return prev
+    })
+  }
+
+  // ── Pendências por aba ────────────────────────────────────────────────────
+  // Conta o que ESPERA UMA AÇÃO, não o total de itens. "Tarefas 0" não dizia
+  // nada; "Tarefas 3" agora significa três tarefas em aberto.
+  const pendencias = useMemo<Record<string, number>>(() => {
+    const aguardandoAprovacao = (planner || []).filter(p =>
+      p.approval_status === 'pendente_aprovacao' ||
+      p.approval_status === 'ajuste_solicitado'
+    ).length
+
+    const tarefasAbertas = (tasks || []).filter(t => t.status !== 'concluido').length
+
+    return {
+      planner: aguardandoAprovacao,
+      tasks:   tarefasAbertas,
+    }
+  }, [planner, tasks])
 
   // ── Planner filter ────────────────────────────────────────────────────────
   const [plannerFilter, setPlannerFilter]       = useState<PlannerFilterType>('este_mes')
@@ -1009,44 +1061,50 @@ export function ClientProfile() {
         <FinancialCard client={client} />
 
         {/* ── Tabs ─────────────────────────────────────────────────────────── */}
+        {/* Antes eram 12 cartões de 90px numa grade, com uma cor diferente cada
+            um — a navegação empurrava o conteúdo para fora da primeira tela e o
+            arco-íris gastava as cores que o sistema usa para status. Agora é uma
+            barra de uma linha, ícones neutros, e cor só onde há ação pendente. */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="rounded-2xl p-2.5 sm:p-3" style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}>
-            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
-              {([
-                { value: 'overview',   label: 'Visão Geral',           Icon: Home,          color: '#60A5FA' },
-                { value: 'instagram',  label: 'Instagram',             Icon: Instagram,     color: '#E1306C' },
-                { value: 'tasks',      label: 'Tarefas',               Icon: CheckSquare,   color: '#60A5FA', count: tasks?.length || 0 },
-                { value: 'onboarding', label: 'Onboarding',            Icon: UserCircle,    color: '#a78bfa' },
-                { value: 'dna',        label: 'DNA da Marca',          Icon: Dna,           color: '#2dd4bf' },
-                { value: 'contents',   label: 'Arsenal',               Icon: Briefcase,     color: '#fb923c', count: assets?.length || 0 },
-                { value: 'planner',    label: 'Planejamento',          Icon: CalendarDays,  color: '#60A5FA', count: planner?.length || 0 },
-                { value: 'requests',   label: 'Solicitações e Ideias', Icon: Lightbulb,     color: '#c084fc' },
-                { value: 'materials',  label: 'Materiais',             Icon: Folder,        color: '#4ade80' },
-                { value: 'support',    label: 'Suporte',               Icon: Headphones,    color: '#22d3ee' },
-                { value: 'results',    label: 'Resultados',            Icon: TrendingUp,    color: '#fb923c' },
-                { value: 'formulario', label: 'Formulário',            Icon: ClipboardList, color: '#f472b6' },
-              ] as { value: string; label: string; Icon: React.ElementType; color: string; count?: number }[]).map(t => {
-                const active = activeTab === t.value
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+            <div className="flex items-stretch gap-0.5 overflow-x-auto p-1.5 sm-scroll-x">
+              {TABS.map(t => {
+                const active  = activeTab === t.value
+                const pending = pendencias[t.value] ?? 0
                 return (
                   <button
                     key={t.value}
                     onClick={() => setActiveTab(t.value)}
-                    className="relative flex flex-col items-center justify-start gap-1.5 pt-3 pb-2 px-1 rounded-2xl border transition-all"
+                    aria-current={active ? 'page' : undefined}
+                    title={t.label}
+                    className="group relative flex items-center gap-2 px-3 h-9 rounded-lg whitespace-nowrap flex-shrink-0 transition-colors"
                     style={active
-                      ? { borderColor: 'rgba(37,99,235,0.5)', background: 'rgba(37,99,235,0.10)', boxShadow: '0 4px 12px rgba(37,99,235,0.10)' }
-                      : { borderColor: 'var(--sm-border)', background: 'var(--sm-bg-card)' }
-                    }
+                      ? { background: 'rgba(37,99,235,0.10)' }
+                      : undefined}
                   >
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors"
-                      style={{ background: active ? 'rgba(37,99,235,0.12)' : 'var(--sm-bg-alt)' }}>
-                      <t.Icon className="w-5 h-5" style={{ color: t.color }} strokeWidth={1.8} />
-                    </div>
-                    <span className="text-[11px] font-medium text-center leading-tight"
-                      style={{ color: active ? 'var(--sm-text-1)' : 'var(--sm-text-3)' }}>{t.label}</span>
-                    {t.count != null
-                      ? <span className="min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center"
-                          style={{ background: 'var(--sm-bg-input)', border: '1px solid var(--sm-border)', color: 'var(--sm-text-2)' }}>{t.count}</span>
-                      : <span className="h-1 w-5 rounded-full" style={{ background: active ? '#2563EB' : 'transparent' }} />}
+                    <t.Icon
+                      className="w-4 h-4 flex-shrink-0"
+                      strokeWidth={1.8}
+                      style={{ color: active ? '#2563EB' : 'var(--sm-text-3)' }}
+                    />
+                    <span
+                      className="text-[12.5px] font-medium"
+                      style={{ color: active ? '#2563EB' : 'var(--sm-text-2)' }}
+                    >
+                      {t.label}
+                    </span>
+
+                    {/* Só aparece quando existe algo esperando por você.
+                        Sem número = nada a fazer nesta aba. */}
+                    {pending > 0 && (
+                      <span
+                        className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(245,166,35,0.15)', color: '#b45309' }}
+                        title={`${pending} ${pending === 1 ? 'item aguardando' : 'itens aguardando'}`}
+                      >
+                        {pending}
+                      </span>
+                    )}
                   </button>
                 )
               })}
