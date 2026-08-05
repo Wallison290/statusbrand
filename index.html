@@ -20,23 +20,57 @@
       name="description"
       content="Hub por cliente, calendário editorial, IA com contexto, aprovação, agendamento de Instagram, tarefas e financeiro. Tudo num só lugar. Teste grátis por 3 dias."
     />
-    <meta name="theme-color" content="#0B1020" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <link rel="canonical" href="https://statusmedia.com.br/" />
+
+    <!-- Fontes: Sora (display, usada só na landing) + Inter (corpo, todo o app).
+         Antes o index.css pedia 'Inter' mas nenhuma fonte era carregada de fato. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="StatusMedia" />
+    <meta property="og:url" content="https://statusmedia.com.br/" />
     <meta property="og:title" content="StatusMedia — Sua operação de social media em uma única plataforma" />
     <meta
       property="og:description"
       content="Briefing, calendário, IA com contexto e aprovação. Cada cliente no próprio espaço. Sem pular entre Trello, Drive, ChatGPT e WhatsApp."
     />
+    <!-- TODO: gerar uma arte 1200x630. /planer.png é 4:5 e será recortada nas prévias. -->
+    <meta property="og:image" content="https://statusmedia.com.br/planer.png" />
+    <meta property="og:image:alt" content="StatusMedia — Organize. Produza. Escale." />
 
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="StatusMedia — Sua operação de social media em uma única plataforma" />
     <meta
       name="twitter:description"
       content="A plataforma completa para social medias e agências: conteúdo, aprovação, Instagram, tarefas e financeiro com IA integrada."
     />
+    <meta name="twitter:image" content="https://statusmedia.com.br/planer.png" />
+
+    <!-- JSON-LD: é um SaaS, não um negócio local — por isso SoftwareApplication. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "StatusMedia",
+        "url": "https://statusmedia.com.br/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "pt-BR",
+        "description": "Plataforma que centraliza a operação de agências e profissionais de social media: clientes, planejamento editorial, IA com contexto, aprovação, agendamento de Instagram, tarefas e financeiro.",
+        "offers": [
+          { "@type": "Offer", "name": "Starter", "price": "57.00", "priceCurrency": "BRL" },
+          { "@type": "Offer", "name": "Pro",     "price": "97.00", "priceCurrency": "BRL" },
+          { "@type": "Offer", "name": "Agency",  "price": "197.00", "priceCurrency": "BRL" }
+        ]
+      }
+    </script>
 
     <!-- Meta Pixel Code -->
     <script>
