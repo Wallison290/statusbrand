@@ -1,39 +1,20 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, UserCircle2 } from 'lucide-react'
+import { Mail, Lock, ArrowRight, UserCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
-
-// Input claro local (tema de login não usa o Input dark global)
-function LightField({
-  label, icon, ...props
-}: { label: string; icon: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div className="w-full">
-      <label className="block text-[12px] font-medium text-[#6b7280] mb-1.5">{label}</label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none">{icon}</div>
-        <input
-          {...props}
-          className="flex h-11 w-full rounded-xl border border-[#e3e3e3] bg-[#f7f8fa] pl-10 pr-3 text-[13px] text-[#0f0f0f] placeholder:text-[#a0a0a0] focus:outline-none focus:ring-2 focus:ring-[#29457a]/20 focus:border-[#29457a]/60 transition-colors"
-        />
-      </div>
-    </div>
-  )
-}
+import { AuthField } from '@/components/auth/AuthField'
+import { traduzirErroAuth } from '@/lib/authErrors'
 
 // Conteúdo do card de login (logo, título e formulário).
 function LoginFormCard({
-  email, setEmail, password, setPassword,
-  showPassword, setShowPassword, loading, onSubmit,
+  email, setEmail, password, setPassword, loading, onSubmit,
 }: {
   email: string
   setEmail: (v: string) => void
   password: string
   setPassword: (v: string) => void
-  showPassword: boolean
-  setShowPassword: (v: boolean) => void
   loading: boolean
   onSubmit: (e: React.FormEvent) => void
 }) {
@@ -41,7 +22,11 @@ function LoginFormCard({
     <>
       {/* Ícone no topo do card */}
       <div className="flex justify-center mb-1">
-        <img src="/logo-icon.png" alt="StatusMedia" className="w-16 h-16 object-contain" />
+        <picture>
+          <source srcSet="/logo-icon.avif" type="image/avif" />
+          <source srcSet="/logo-icon.webp" type="image/webp" />
+          <img src="/logo-icon.png" alt="StatusMedia" width={64} height={64} className="w-16 h-16 object-contain" />
+        </picture>
       </div>
 
       <div className="mb-4">
@@ -50,10 +35,10 @@ function LoginFormCard({
       </div>
 
       <form onSubmit={onSubmit} className="space-y-3.5">
-        <LightField
+        <AuthField
           label="Email"
           type="email"
-          placeholder="voce@statusmedia.com.br"
+          placeholder="voce@suaagencia.com.br"
           value={email}
           onChange={e => setEmail(e.target.value)}
           icon={<Mail className="w-4 h-4" />}
@@ -61,25 +46,16 @@ function LoginFormCard({
           autoComplete="email"
         />
 
-        <div className="relative">
-          <LightField
-            label="Senha"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            icon={<Lock className="w-4 h-4" />}
-            required
-            autoComplete="current-password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-[36px] text-[#a0a0a0] hover:text-[#29457a] transition-colors"
-          >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
+        <AuthField
+          label="Senha"
+          placeholder="••••••••"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          icon={<Lock className="w-4 h-4" />}
+          togglePassword
+          required
+          autoComplete="current-password"
+        />
 
         <div className="flex justify-end">
           <Link
@@ -117,7 +93,6 @@ function LoginFormCard({
 export function Login() {
   const [email, setEmail]               = useState('')
   const [password, setPassword]         = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading]           = useState(false)
   const { signIn } = useAuth()
   const { toast }  = useToast()
@@ -126,33 +101,34 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await signIn(email, password)
+    const { error } = await signIn(email.trim().toLowerCase(), password)
     setLoading(false)
     if (error) {
-      toast(
-        error.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos.'
-          : error.message,
-        'error'
-      )
+      // Antes só "Invalid login credentials" era traduzido; o resto vazava
+      // em inglês para o usuário.
+      toast(traduzirErroAuth(error.message), 'error')
     } else {
       navigate('/')
     }
   }
 
-  const formCardProps = { email, setEmail, password, setPassword, showPassword, setShowPassword, loading, onSubmit: handleSubmit }
+  const formCardProps = { email, setEmail, password, setPassword, loading, onSubmit: handleSubmit }
 
   return (
     <div className="h-screen flex overflow-hidden">
 
       {/* ── Left panel — imagem ──────────────────────────────────────────────── */}
       <div className="hidden lg:block lg:w-[45%] relative overflow-hidden bg-[#0a1020]">
-        <img
-          src="/planer.png"
-          alt="StatusMedia"
-          className="absolute inset-0 w-full h-full object-cover object-center select-none"
-          draggable={false}
-        />
+        <picture>
+          <source srcSet="/planer.avif" type="image/avif" />
+          <source srcSet="/planer.webp" type="image/webp" />
+          <img
+            src="/planer.png"
+            alt="StatusMedia"
+            className="absolute inset-0 w-full h-full object-cover object-center select-none"
+            draggable={false}
+          />
+        </picture>
       </div>
 
       {/* ── Right panel — formulário (rola só se a tela for muito baixa) ──────── */}

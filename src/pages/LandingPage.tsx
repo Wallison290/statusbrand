@@ -74,7 +74,7 @@ function PrimaryButton({
   const pad = size === 'lg' ? 'px-9 py-[20px] text-[16px]' : 'px-8 py-[18px] text-[15px]'
   return (
     <Link
-      to="/login"
+      to="/register"
       onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold text-white bg-[#2563EB]
         shadow-[0_10px_30px_-8px_rgba(37,99,235,0.55)] transition-all duration-200
@@ -153,7 +153,7 @@ function Navbar() {
             Entrar
           </Link>
           <Link
-            to="/login"
+            to="/register"
             onClick={() => { trackPixel('Lead', { content_name: 'navbar_trial' }); trackAds() }}
             className="hidden sm:inline-flex items-center rounded-full bg-[#2563EB] px-5 py-2.5 text-[14px] font-semibold text-white
               shadow-[0_8px_20px_-8px_rgba(37,99,235,0.6)] hover:bg-[#1D4ED8] transition-colors"
@@ -185,7 +185,7 @@ function Navbar() {
           <div className="pt-3 flex flex-col gap-2.5">
             <Link to="/login" className="text-[16px] font-medium text-[#475569] py-1">Entrar</Link>
             <Link
-              to="/login"
+              to="/register"
               onClick={() => { trackPixel('Lead', { content_name: 'navbar_mobile_trial' }); trackAds() }}
               className="rounded-full bg-[#2563EB] px-6 py-3.5 text-[15px] font-semibold text-white text-center"
             >
@@ -720,7 +720,7 @@ function Pricing() {
                 </div>
 
                 <Link
-                  to="/login"
+                  to="/register"
                   onClick={() => {
                     trackPixel('InitiateCheckout', {
                       content_name: p.name,
@@ -843,7 +843,7 @@ function FaqAndClose() {
 
             {/* O maior botão da página. */}
             <Link
-              to="/login"
+              to="/register"
               onClick={() => { trackPixel('Lead', { content_name: 'final_cta' }); trackAds() }}
               className="mt-10 inline-flex items-center justify-center gap-2 rounded-full bg-white px-10 py-[22px]
                 text-[17px] font-bold text-[#16284d] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.5)]

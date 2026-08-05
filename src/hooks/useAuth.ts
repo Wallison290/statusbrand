@@ -46,12 +46,15 @@ export function useAuth() {
   }
 
   async function signUp(email: string, password: string, fullName: string) {
-    const { error } = await supabase.auth.signUp({
+    // Devolve `data` junto: quando a confirmação de email está ligada no
+    // Supabase, `data.session` volta null — é assim que a tela de cadastro
+    // sabe se deve mandar o usuário para a caixa de entrada ou direto para o app.
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     })
-    return { error }
+    return { data, error }
   }
 
   async function signOut() {
