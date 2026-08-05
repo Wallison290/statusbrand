@@ -283,6 +283,89 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
 
   if (!hasFinancialData) return null
 
+  const valorFmt = client.valor_mensal != null
+    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.valor_mensal)
+    : null
+
+  // ── Modo compacto ─────────────────────────────────────────────────────────
+  // Mensalidade muda uma vez por mês; conteúdo muda todo dia. Quando está tudo
+  // certo, o financeiro vira uma linha e devolve a faixa inteira que ocupava
+  // acima do conteúdo. Atrasado ou vencendo, volta a ser o cartão completo —
+  // aí ele merece o espaço.
+  const precisaAtencao = computedStatus === 'atrasado' || computedStatus === 'vence_em_breve'
+
+  if (!precisaAtencao) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.06 }}
+        className="flex items-center flex-wrap gap-x-3 gap-y-1.5 mb-4 px-3.5 py-2 rounded-lg"
+        style={{ background: 'var(--sm-bg-alt)', border: '1px solid var(--sm-border)' }}
+      >
+        <DollarSign className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--sm-text-3)' }} />
+        {valorFmt && (
+          <span className="text-[12.5px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>{valorFmt}</span>
+        )}
+        {client.dia_vencimento != null && (
+          <span className="text-[12px]" style={{ color: 'var(--sm-text-3)' }}>· vence dia {client.dia_vencimento}</span>
+        )}
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-medium ${styles.bg} ${styles.text}`}>
+          {styles.icon}
+          {financialStatusLabel(computedStatus)}
+        </span>
+
+        <div className="flex items-center gap-1 ml-auto">
+          {computedStatus !== 'cancelado' && (
+            <Button
+              size="sm" variant="ghost"
+              onClick={handleRegisterPayment}
+              disabled={registerPayment.isPending}
+              className="text-[11px] h-6 px-2"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              {registerPayment.isPending ? 'Salvando…' : 'Registrar pagamento'}
+            </Button>
+          )}
+          <div className="relative">
+            <Button
+              size="sm" variant="ghost"
+              onClick={() => setOverrideOpen(o => !o)}
+              className="text-[11px] h-6 px-1.5"
+              style={{ color: 'var(--sm-text-3)' }}
+              title="Alterar status financeiro"
+            >
+              <ChevronDown className="w-3 h-3" />
+            </Button>
+            {overrideOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setOverrideOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl shadow-lg overflow-hidden"
+                  style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+                  {(['ativo', 'vence_em_breve', 'atrasado', 'cancelado'] as FinancialStatus[]).map(s => {
+                    const st = financialBadgeStyles[s]
+                    return (
+                      <button
+                        key={s}
+                        disabled={saving}
+                        onClick={() => handleManualStatus(s)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors hover:bg-[#0B1020] ${st.text}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${st.dot}`} />
+                        {financialStatusLabel(s)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // ── Modo completo — só quando atrasado ou vencendo ────────────────────────
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -337,19 +420,19 @@ function FinancialCard({ client }: { client: import('@/types').Client }) {
       </div>
 
       {/* Actions */}
+      {/* Aqui o status só pode ser 'atrasado' ou 'vence_em_breve' — cancelado e
+          em dia caem no modo compacto acima. Por isso não há mais checagem. */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-shrink-0">
-        {computedStatus !== 'cancelado' && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleRegisterPayment}
-            disabled={registerPayment.isPending}
-            className="text-[11px] h-7 px-3 w-full sm:w-auto justify-center"
-          >
-            <CheckCircle2 className="w-3 h-3" />
-            {registerPayment.isPending ? 'Salvando...' : 'Registrar pagamento'}
-          </Button>
-        )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRegisterPayment}
+          disabled={registerPayment.isPending}
+          className="text-[11px] h-7 px-3 w-full sm:w-auto justify-center"
+        >
+          <CheckCircle2 className="w-3 h-3" />
+          {registerPayment.isPending ? 'Salvando...' : 'Registrar pagamento'}
+        </Button>
 
         <div className="relative w-full sm:w-auto">
           <Button
@@ -691,6 +774,86 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
   )
 }
 
+// ─── Painel de situação ───────────────────────────────────────────────────────
+// Responde "o que está pegando neste cliente agora?" antes de qualquer dado
+// estático. Cada item leva direto para a aba onde se resolve.
+
+type ResumoSituacao = {
+  aguardandoAprovacao: number
+  ajusteSolicitado: number
+  tarefasAtrasadas: number
+  tarefasAbertas: number
+  proximoPost: { titulo: string; data: string } | null
+}
+
+function SituacaoDoCliente({
+  resumo, onIr,
+}: { resumo: ResumoSituacao; onIr: (aba: string) => void }) {
+  const itens = [
+    {
+      n: resumo.aguardandoAprovacao,
+      label: resumo.aguardandoAprovacao === 1 ? 'conteúdo aguardando aprovação' : 'conteúdos aguardando aprovação',
+      aba: 'planner', tom: '#b45309', fundo: 'rgba(245,166,35,0.12)',
+    },
+    {
+      n: resumo.ajusteSolicitado,
+      label: resumo.ajusteSolicitado === 1 ? 'ajuste pedido pelo cliente' : 'ajustes pedidos pelo cliente',
+      aba: 'planner', tom: '#c2410c', fundo: 'rgba(194,65,12,0.12)',
+    },
+    {
+      n: resumo.tarefasAtrasadas,
+      label: resumo.tarefasAtrasadas === 1 ? 'tarefa atrasada' : 'tarefas atrasadas',
+      aba: 'tasks', tom: '#dc2626', fundo: 'rgba(220,38,38,0.12)',
+    },
+    {
+      n: resumo.tarefasAbertas,
+      label: resumo.tarefasAbertas === 1 ? 'tarefa em aberto' : 'tarefas em aberto',
+      aba: 'tasks', tom: '#2563EB', fundo: 'rgba(37,99,235,0.10)',
+    },
+  ].filter(i => i.n > 0)
+
+  const tudoEmDia = itens.length === 0
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: 'var(--sm-bg-card)', border: '1px solid var(--sm-border)' }}>
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--sm-text-3)' }}>
+          Precisa de você
+        </p>
+        {resumo.proximoPost && (
+          <p className="text-[11.5px] flex items-center gap-1.5" style={{ color: 'var(--sm-text-3)' }}>
+            <CalendarDays className="w-3.5 h-3.5" />
+            Próximo post: <span style={{ color: 'var(--sm-text-2)' }}>{resumo.proximoPost.data}</span>
+          </p>
+        )}
+      </div>
+
+      {tudoEmDia ? (
+        <div className="flex items-center gap-2.5 py-1">
+          <CheckCircle2 className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
+          <p className="text-[13px]" style={{ color: 'var(--sm-text-2)' }}>
+            Nada pendente neste cliente agora.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {itens.map(i => (
+            <button
+              key={i.label}
+              onClick={() => onIr(i.aba)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
+              style={{ background: i.fundo }}
+            >
+              <span className="text-[17px] font-bold leading-none" style={{ color: i.tom }}>{i.n}</span>
+              <span className="text-[12.5px] font-medium" style={{ color: i.tom }}>{i.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Abas ─────────────────────────────────────────────────────────────────────
 // Ordem por frequência de uso, não por ordem histórica: o que se abre todo dia
 // vem primeiro. Sem cor própria — cor aqui é reservada para status.
@@ -785,6 +948,35 @@ export function ClientProfile() {
     return {
       planner: aguardandoAprovacao,
       tasks:   tarefasAbertas,
+    }
+  }, [planner, tasks])
+
+  // ── Resumo da situação (painel da Visão Geral) ────────────────────────────
+  const resumoSituacao = useMemo<ResumoSituacao>(() => {
+    const hoje = format(new Date(), 'yyyy-MM-dd')
+
+    const aguardandoAprovacao = (planner || []).filter(p => p.approval_status === 'pendente_aprovacao').length
+    const ajusteSolicitado    = (planner || []).filter(p => p.approval_status === 'ajuste_solicitado').length
+
+    const abertas = (tasks || []).filter(t => t.status !== 'concluido')
+    const tarefasAtrasadas = abertas.filter(t => t.due_date && t.due_date < hoje).length
+    // Não soma as atrasadas duas vezes: elas já aparecem no próprio item.
+    const tarefasAbertas   = abertas.length - tarefasAtrasadas
+
+    const futuros = (planner || [])
+      .filter(p => p.scheduled_date >= hoje)
+      .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+
+    const proximo = futuros[0]
+
+    return {
+      aguardandoAprovacao,
+      ajusteSolicitado,
+      tarefasAtrasadas,
+      tarefasAbertas,
+      proximoPost: proximo
+        ? { titulo: proximo.title ?? '', data: format(parseISO(proximo.scheduled_date), "dd/MM") }
+        : null,
     }
   }, [planner, tasks])
 
@@ -1112,27 +1304,40 @@ export function ClientProfile() {
           </div>
 
           {/* ── Visão Geral ───────────────────────────────────────────────── */}
+          {/* Antes eram 8 caixas de texto fixo. Isso não responde à pergunta que
+              se faz ao abrir um cliente: "o que está pegando aqui agora?".
+              Agora a situação vem primeiro; os dados de marca ficam abaixo. */}
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { label: 'Objetivo Principal', value: client.main_objective },
-                { label: 'Público-alvo', value: client.target_audience },
-                { label: 'Tom de Voz', value: client.tone_of_voice },
-                { label: 'Estilo de Comunicação', value: client.communication_style },
-                { label: 'Diferenciais', value: client.differentials },
-                { label: 'Serviços Oferecidos', value: client.services_offered },
-                { label: 'Palavras Proibidas', value: client.forbidden_words },
-                { label: 'Observações', value: client.observations },
-              ].map(({ label, value }) => value && (
-                <Card key={label}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[11px] text-[#64748b] uppercase tracking-wide">{label}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-[13px] text-[#CBD5E1]">{value}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <SituacaoDoCliente
+              resumo={resumoSituacao}
+              onIr={setActiveTab}
+            />
+
+            <div className="mt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-2.5" style={{ color: 'var(--sm-text-3)' }}>
+                Sobre a marca
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { label: 'Objetivo Principal', value: client.main_objective },
+                  { label: 'Público-alvo', value: client.target_audience },
+                  { label: 'Tom de Voz', value: client.tone_of_voice },
+                  { label: 'Estilo de Comunicação', value: client.communication_style },
+                  { label: 'Diferenciais', value: client.differentials },
+                  { label: 'Serviços Oferecidos', value: client.services_offered },
+                  { label: 'Palavras Proibidas', value: client.forbidden_words },
+                  { label: 'Observações', value: client.observations },
+                ].map(({ label, value }) => value && (
+                  <Card key={label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-[11px] text-[#64748b] uppercase tracking-wide">{label}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-[13px] text-[#CBD5E1]">{value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
@@ -1154,7 +1359,13 @@ export function ClientProfile() {
                 <Textarea label="Posicionamento" value={dnaForm.positioning} onChange={e => setDnaForm(p => ({ ...p, positioning: e.target.value }))} placeholder="Ex: A academia mais personalizada..." rows={4} />
                 <Textarea label="Linguagem Ideal" value={dnaForm.ideal_language} onChange={e => setDnaForm(p => ({ ...p, ideal_language: e.target.value }))} placeholder="Ex: Informal, com emoji..." rows={4} />
                 <Textarea label="Gatilhos Mentais" value={dnaForm.mental_triggers} onChange={e => setDnaForm(p => ({ ...p, mental_triggers: e.target.value }))} placeholder="Ex: Urgência, prova social..." rows={4} />
-                <Textarea label="Estilo de Comunicação" value={dnaForm.communication_style} onChange={e => setDnaForm(p => ({ ...p, communication_style: e.target.value }))} placeholder="Ex: Storytelling + dicas + CTA" rows={4} />
+                {/* Antes este campo se chamava "Estilo de Comunicação", igual ao
+                    da Visão Geral — dois campos diferentes com o mesmo nome, e
+                    ninguém sabia qual a IA lia (lia o da Visão Geral; este era
+                    ignorado). Os conteúdos gravados aqui sempre foram ESTRUTURA
+                    ("Problema → Solução", "Storytelling + dicas + CTA"), não tom.
+                    Renomeado para o que sempre foi, e agora a IA usa. */}
+                <Textarea label="Estrutura do Conteúdo" value={dnaForm.communication_style} onChange={e => setDnaForm(p => ({ ...p, communication_style: e.target.value }))} placeholder="Ex: Problema → Reflexão → Solução → Resultado" rows={4} />
               </CardContent>
             </Card>
           </TabsContent>

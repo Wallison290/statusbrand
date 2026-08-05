@@ -217,6 +217,11 @@ export function buildClientContext(
     if (brandDna.positioning)          lines.push(`  • Posicionamento: ${brandDna.positioning}`)
     if (brandDna.ideal_language)       lines.push(`  • Linguagem ideal: ${brandDna.ideal_language}`)
     if (brandDna.mental_triggers)      lines.push(`  • Gatilhos mentais: ${brandDna.mental_triggers}`)
+    // Este campo era gravado mas nunca lido — a agência preenchia e a IA
+    // ignorava. Na tela ele se chamava "Estilo de Comunicação", colidindo com
+    // o campo de tom da Visão Geral; o conteúdo real sempre foi a estrutura
+    // narrativa do post.
+    if (brandDna.communication_style)  lines.push(`  • Estrutura do conteúdo: ${brandDna.communication_style}`)
     lines.push('')
   }
 
