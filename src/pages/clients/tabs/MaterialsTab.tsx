@@ -19,6 +19,7 @@ import {
   useDeleteMaterial,
 } from '@/hooks/useClientMaterials'
 import { supabase } from '@/integrations/supabase/client'
+import { uploadArquivo } from '@/lib/uploadArquivo'
 import { checkStorageLimit } from '@/utils/storageGate'
 import { formatDate } from '@/utils/formatters'
 import type { ClientMaterial, MaterialType } from '@/types'
@@ -459,10 +460,8 @@ function MaterialFormModal({
         if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); return }
         const ext  = selectedFile.name.split('.').pop() || 'bin'
         const path = `${userId}/${clientId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage.from('client-materials').upload(path, selectedFile)
-        if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage.from('client-materials').getPublicUrl(path)
-        file_url  = publicUrl
+        const { url } = await uploadArquivo('client-materials', path, selectedFile)
+        file_url  = url
         file_size = selectedFile.size
       }
 

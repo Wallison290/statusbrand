@@ -33,6 +33,7 @@ import { useToast } from '@/components/ui/toast'
 import { useWhatsappGroups } from '@/hooks/useWhatsappGroups'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
+import { uploadArquivo } from '@/lib/uploadArquivo'
 import { checkStorageLimit } from '@/utils/storageGate'
 import { isImageUrl, isImageMedia, isVideoMedia, mimeFromUrl } from '@/utils/media'
 import { useContentAssets } from '@/hooks/useContentAssets'
@@ -1972,9 +1973,12 @@ export function Planner() {
           const file = igFiles[fi]
           const ext  = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${editingItem.id}/ig_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
-          if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
-          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          let publicUrl = ''
+          try {
+            ;({ url: publicUrl } = await uploadArquivo('planner-attachments', path, file))
+          } catch (e) {
+            toast(`Erro ao enviar "${file.name}": ${(e as Error).message}`, 'error'); continue
+          }
           await (supabase as any).from('planner_attachments').insert({
             planner_id: editingItem.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),
@@ -2000,12 +2004,13 @@ export function Planner() {
           setUploadProgress({ current: fi + 1, total: pendingFiles.length })
           const ext = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${editingItem.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
-          if (upErr) {
-            toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error')
+          let publicUrl = ''
+          try {
+            ;({ url: publicUrl } = await uploadArquivo('planner-attachments', path, file))
+          } catch (e) {
+            toast(`Erro ao enviar "${file.name}": ${(e as Error).message}`, 'error')
             continue
           }
-          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
           await supabase.from('planner_attachments').insert({
             planner_id: editingItem.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),
@@ -2048,9 +2053,12 @@ export function Planner() {
           const file = igFiles[fi]
           const ext  = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${created.id}/ig_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
-          if (upErr) { toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error'); continue }
-          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
+          let publicUrl = ''
+          try {
+            ;({ url: publicUrl } = await uploadArquivo('planner-attachments', path, file))
+          } catch (e) {
+            toast(`Erro ao enviar "${file.name}": ${(e as Error).message}`, 'error'); continue
+          }
           await (supabase as any).from('planner_attachments').insert({
             planner_id: created.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),
@@ -2075,12 +2083,13 @@ export function Planner() {
           setUploadProgress({ current: fi + 1, total: pendingFiles.length })
           const ext = file.name.split('.').pop() || 'bin'
           const path = `${user.id}/${created.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: upErr } = await supabase.storage.from('planner-attachments').upload(path, file, { upsert: false })
-          if (upErr) {
-            toast(`Erro ao enviar "${file.name}": ${upErr.message}`, 'error')
+          let publicUrl = ''
+          try {
+            ;({ url: publicUrl } = await uploadArquivo('planner-attachments', path, file))
+          } catch (e) {
+            toast(`Erro ao enviar "${file.name}": ${(e as Error).message}`, 'error')
             continue
           }
-          const { data: { publicUrl } } = supabase.storage.from('planner-attachments').getPublicUrl(path)
           await supabase.from('planner_attachments').insert({
             planner_id: created.id, user_id: user.id,
             file_name: file.name, file_type: getMimeType(file),

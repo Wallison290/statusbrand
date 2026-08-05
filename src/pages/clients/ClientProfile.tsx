@@ -40,6 +40,7 @@ import { calcFinancialStatus, financialStatusLabel, getFinancialAuxText } from '
 import { isImageUrl } from '@/utils/media'
 import type { FinancialStatus } from '@/types'
 import { supabase } from '@/integrations/supabase/client'
+import { uploadArquivo } from '@/lib/uploadArquivo'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { ContentAsset, ContentType, PlannerItem } from '@/types'
 
@@ -1294,14 +1295,8 @@ export function ClientProfile() {
       if (assetFile) {
         const ext = assetFile.name.split('.').pop() || 'bin'
         const path = `${user.id}/${id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage
-          .from('content-assets')
-          .upload(path, assetFile)
-        if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage
-          .from('content-assets')
-          .getPublicUrl(path)
-        media_url = publicUrl
+        const { url } = await uploadArquivo('content-assets', path, assetFile)
+        media_url = url
       }
 
       const payload = {

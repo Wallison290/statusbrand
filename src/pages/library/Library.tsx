@@ -32,6 +32,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { copyToClipboard, contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
+import { uploadArquivo } from '@/lib/uploadArquivo'
 import { checkStorageLimit } from '@/utils/storageGate'
 import type { LibraryCategory, ContentType, ContentAsset, Client, ClientMaterialWithClient, MaterialType } from '@/types'
 
@@ -286,10 +287,8 @@ function AssetDetailModal({
       if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); e.target.value = ''; return }
       const ext  = file.name.split('.').pop() || 'bin'
       const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('content-assets').upload(path, file)
-      if (error) throw error
-      const { data } = supabase.storage.from('content-assets').getPublicUrl(path)
-      setForm(p => ({ ...p, media_url: data.publicUrl }))
+      const { url } = await uploadArquivo('content-assets', path, file)
+      setForm(p => ({ ...p, media_url: url }))
       toast('Arquivo enviado!', 'success')
     } catch (err: any) {
       toast(err.message, 'error')
@@ -678,10 +677,8 @@ function AddAssetModal({ open, onClose }: { open: boolean; onClose: () => void }
       if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setUploading(false); return }
       const ext  = file.name.split('.').pop()
       const path = `${user.id}/${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('content-assets').upload(path, file)
-      if (error) throw error
-      const { data } = supabase.storage.from('content-assets').getPublicUrl(path)
-      setForm(p => ({ ...p, media_url: data.publicUrl }))
+      const { url } = await uploadArquivo('content-assets', path, file)
+      setForm(p => ({ ...p, media_url: url }))
       toast('Arquivo enviado!', 'success')
     } catch (err: any) {
       toast(err.message, 'error')
@@ -1265,10 +1262,8 @@ function MatFormModal({
         const ext  = selectedFile.name.split('.').pop() || 'bin'
         const cid  = form.client_id || 'geral'
         const path = `${user.id}/${cid}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage.from('client-materials').upload(path, selectedFile)
-        if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage.from('client-materials').getPublicUrl(path)
-        file_url  = publicUrl
+        const { url } = await uploadArquivo('client-materials', path, selectedFile)
+        file_url  = url
         file_size = selectedFile.size
       }
 

@@ -16,6 +16,7 @@ import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
+import { jaPublicoNoR2 } from '@/lib/uploadArquivo'
 import type { PlannerItem, PlannerAttachment, PlannerStatus, ContentType, ApprovalStatus } from '@/types'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -213,6 +214,11 @@ const POST_TYPE_OPTS: { value: PostType; label: string }[] = [
 ]
 
 async function uploadMediaFromUrl(url: string, userId: string): Promise<string> {
+  // Já está numa URL pública do R2: a Meta baixa direto de lá. Copiar seria
+  // trazer o vídeo inteiro para o navegador só para reenviá-lo — lento e, acima
+  // de 50 MB, recusado pelo Supabase.
+  if (jaPublicoNoR2(url)) return url
+
   const res  = await fetch(url)
   const blob = await res.blob()
   const ext  = url.split('.').pop()?.split('?')[0] ?? 'jpg'

@@ -25,6 +25,28 @@ export function precisaDoR2(file: File): boolean {
   return file.type.startsWith('video/') || file.size > LIMITE_SUPABASE
 }
 
+/**
+ * O arquivo já está numa URL pública do R2?
+ *
+ * Serve para não copiar de novo o que a Meta já consegue baixar. Sem isto, a
+ * publicação no Instagram baixaria o vídeo inteiro no navegador só para
+ * reenviá-lo — o que, além de lento, estoura o limite do Supabase.
+ *
+ * Usa a variável quando existe e cai no domínio padrão do R2 quando não —
+ * assim funciona sem configuração e continua funcionando com domínio próprio.
+ */
+const R2_PUBLIC_BASE = import.meta.env.VITE_R2_PUBLIC_URL as string | undefined
+
+export function jaPublicoNoR2(url: string): boolean {
+  if (!url) return false
+  if (R2_PUBLIC_BASE && url.startsWith(R2_PUBLIC_BASE)) return true
+  try {
+    return new URL(url).hostname.endsWith('.r2.dev')
+  } catch {
+    return false
+  }
+}
+
 /** Envia direto ao R2 usando uma URL assinada gerada pela Edge Function. */
 async function enviarParaR2(file: File, onProgress?: (pct: number) => void): Promise<string> {
   const { data, error } = await supabase.functions.invoke('r2-upload-url', {

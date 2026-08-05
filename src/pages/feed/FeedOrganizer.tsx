@@ -22,6 +22,7 @@ import type { FeedPost, FeedVersion, FeedClientMeta } from '@/hooks/useFeeds'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { supabase } from '@/integrations/supabase/client'
+import { uploadArquivo } from '@/lib/uploadArquivo'
 import { checkStorageLimit } from '@/utils/storageGate'
 import { isImageUrl, isImageMedia } from '@/utils/media'
 import type { ContentAsset, Client } from '@/types'
@@ -649,10 +650,8 @@ export function FeedOrganizer() {
       if (!allowed) { toast(message ?? 'Limite de armazenamento atingido.', 'error'); setIsUploading(false); return }
       const ext  = file.name.split('.').pop() || 'jpg'
       const path = `${user.id}/feed/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('content-assets').upload(path, file)
-      if (error) throw error
-      const { data: { publicUrl } } = supabase.storage.from('content-assets').getPublicUrl(path)
-      updatePosts([...posts, { id: crypto.randomUUID(), image_url: publicUrl }])
+      const { url } = await uploadArquivo('content-assets', path, file)
+      updatePosts([...posts, { id: crypto.randomUUID(), image_url: url }])
       toast('Imagem adicionada!', 'success')
     } catch (err: unknown) {
       toast((err as Error).message || 'Erro no upload.', 'error')
