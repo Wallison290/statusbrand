@@ -30,6 +30,7 @@ import { usePlanner, useCreatePlannerItem, useUpdatePlannerItem, useDeletePlanne
 import { useClients } from '@/hooks/useClients'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
+import { VideoComSom } from '@/components/VideoComSom'
 import { useWhatsappGroups } from '@/hooks/useWhatsappGroups'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
@@ -226,9 +227,11 @@ function VideoPreview({ file, onRemove }: { file: File; onRemove: () => void }) 
               <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
             </div>
           )}
+          {/* Sem `muted`: este player não toca sozinho, então o navegador não
+              exige silêncio. Antes vinha mudo à toa e obrigava a pessoa a
+              caçar o botãozinho de som para ouvir o que acabou de anexar. */}
           <video
             src={src}
-            muted
             playsInline
             controls
             className="w-full max-h-[220px] object-contain bg-black"
@@ -820,10 +823,9 @@ function PlannerItemView({
                     className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain"
                   />
                 ) : currentMedia?.kind === 'video' ? (
-                  <video
+                  <VideoComSom
                     key={currentMedia.file_url}
                     src={currentMedia.file_url}
-                    autoPlay muted loop playsInline controls
                     className="block w-full h-auto lg:w-auto lg:h-full lg:max-w-[62vw] lg:object-contain"
                   />
                 ) : null}
