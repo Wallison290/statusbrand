@@ -17,6 +17,7 @@ export type NotificationType =
   | 'POST_FAILED'
   | 'NOTE_REQUEST'
   | 'NEW_REPORT'
+  | 'IG_TOKEN_EXPIRING'
 
 export interface Notification {
   id: string

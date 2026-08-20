@@ -31,6 +31,7 @@ const typeConfig: Record<NotificationType, { Icon: React.ElementType; color: str
   POST_FAILED:        { Icon: AlertTriangle, color: 'text-[#f87171]', bg: 'bg-[#ef4444]/15' },
   NOTE_REQUEST:       { Icon: Lightbulb,     color: 'text-[#60a5fa]', bg: 'bg-[#2563eb]/15' },
   NEW_REPORT:         { Icon: BarChart3,     color: 'text-[#4ade80]', bg: 'bg-[#22c55e]/15' },
+  IG_TOKEN_EXPIRING:  { Icon: AlertTriangle, color: 'text-[#fbbf24]', bg: 'bg-[#f59e0b]/15' },
 }
 
 // Variante de alto contraste para tema claro (cores sólidas)
@@ -48,6 +49,7 @@ const typeConfigLight: Record<NotificationType, { color: string; bg: string }> =
   POST_FAILED:        { color: 'text-red-600',    bg: 'bg-red-100'    },
   NOTE_REQUEST:       { color: 'text-blue-600',   bg: 'bg-blue-100'   },
   NEW_REPORT:         { color: 'text-green-600',  bg: 'bg-green-100'  },
+  IG_TOKEN_EXPIRING:  { color: 'text-amber-600',  bg: 'bg-amber-100'  },
 }
 
 // ─── Categorias (abas) ────────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ const CATEGORY_OF: Record<NotificationType, string> = {
   NEW_CONTENT:        'conteudo',
   POST_PUBLISHED:     'instagram',
   POST_FAILED:        'instagram',
+  IG_TOKEN_EXPIRING:  'instagram',
   TASK_DONE:          'tarefas',
   TASK_STATUS_UPDATE: 'tarefas',
   FORM_SUBMITTED:     'solicitacoes',

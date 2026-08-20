@@ -13,6 +13,24 @@ const IG_API           = 'https://graph.instagram.com/v21.0'
 // Cada tentativa acontece na próxima execução do cron (~1 min depois).
 const MAX_RETRIES = 3
 
+// Prefixo usado quando o token do Instagram já venceu. Nunca é retentável:
+// nenhuma tentativa adianta enquanto a conta não for reconectada.
+const TOKEN_EXPIRED_PREFIX = 'TOKEN_EXPIRED:'
+
+// Reconhece falhas de credencial vindas da Meta (OAuthException code 190),
+// que aparecem quando o token vence, a senha do Instagram muda ou o usuário
+// remove o app. Nesses casos só a reconexão manual resolve.
+function isTokenError(msg: string): boolean {
+  const m = (msg || '').toLowerCase()
+  return (
+    m.includes(TOKEN_EXPIRED_PREFIX.toLowerCase()) ||
+    m.includes('oauthexception') ||
+    m.includes('"code":190') ||
+    m.includes('session has expired') ||
+    m.includes('access token')
+  )
+}
+
 // Decide se vale a pena tentar de novo. Cobre os erros transitórios típicos:
 // o Instagram baixa a mídia a partir da URL e, se demora demais, retorna
 // "Timeout" / subcode 2207003. Esses erros costumam passar numa nova tentativa.
@@ -99,6 +117,18 @@ async function resolveIgUserId(storedId: string, token: string): Promise<string>
 
 async function publishPost(post: Record<string, any>, account: Record<string, any>): Promise<string> {
   const { access_token } = account
+
+  // Falha cedo se o token já venceu: evita queimar as tentativas automáticas
+  // publicando com credencial morta e devolve um erro legível em vez do
+  // OAuthException cru da Meta.
+  const expiresAt = account.token_expires_at ? new Date(account.token_expires_at).getTime() : null
+  if (expiresAt !== null && expiresAt <= Date.now()) {
+    throw new Error(
+      `${TOKEN_EXPIRED_PREFIX} a conexão de @${account.username} com o Instagram expirou em ` +
+      `${new Date(expiresAt).toLocaleDateString('pt-BR')}. Reconecte a conta para voltar a publicar.`
+    )
+  }
+
   const ig_user_id = await resolveIgUserId(account.ig_user_id, access_token)
   const caption = post.caption ?? ''
 
@@ -242,11 +272,12 @@ Deno.serve(async (req) => {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       const attempts = post.retry_count ?? 0
+      const tokenError = isTokenError(msg)
 
       // Erro transitório (ex.: timeout do Instagram baixando a mídia) e ainda
       // há tentativas → devolve para "scheduled" e tenta de novo no próximo
       // ciclo do cron (~1 min depois). Não notifica e não marca como falha.
-      if (isRetryableError(msg) && attempts < MAX_RETRIES) {
+      if (!tokenError && isRetryableError(msg) && attempts < MAX_RETRIES) {
         const nextAttempt = attempts + 1
         await supabase
           .from('scheduled_posts')
@@ -273,14 +304,21 @@ Deno.serve(async (req) => {
       if (post.user_id) {
         const exhausted = attempts >= MAX_RETRIES
         const prefix = clientName ? `[${clientName}] ` : ''
+
+        // Erro de credencial tem causa e solução próprias — dizer "tentamos 3
+        // vezes" aqui só confunde, porque nenhuma tentativa resolveria.
+        const message = tokenError
+          ? `${prefix}A conexão com o Instagram expirou. Reconecte a conta na aba Instagram e reagende o post.`
+          : exhausted
+            ? `${prefix}Não foi possível publicar mesmo após ${MAX_RETRIES} tentativas automáticas. Verifique a aba Instagram.`
+            : `${prefix}Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.`
+
         await (supabase as any).from('notifications').insert({
           user_id:   post.user_id,
           client_id: post.client_id ?? null,
-          type:      'POST_FAILED',
-          title:     'Falha ao publicar no Instagram ❌',
-          message:   exhausted
-            ? `${prefix}Não foi possível publicar mesmo após ${MAX_RETRIES} tentativas automáticas. Verifique a aba Instagram.`
-            : `${prefix}Não foi possível publicar o conteúdo agendado. Verifique a aba Instagram.`,
+          type:      tokenError ? 'IG_TOKEN_EXPIRING' : 'POST_FAILED',
+          title:     tokenError ? 'Reconecte o Instagram ⚠️' : 'Falha ao publicar no Instagram ❌',
+          message,
           link:      '/instagram',
           is_read:   false,
         })

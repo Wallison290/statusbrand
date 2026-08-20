@@ -37,6 +37,36 @@ type TabType = 'all' | 'scheduled' | 'published' | 'failed' | 'cancelled'
 // Mantém em sincronia com MAX_RETRIES da Edge Function instagram-publish-cron
 const MAX_RETRIES = 3
 
+// A renovação do token é automática (Edge Function instagram-token-refresh,
+// diária, renova quando faltam 10 dias). Este badge é a rede de segurança: só
+// aparece quando a renovação automática não deu conta — senha do Instagram
+// trocada, app removido pelo cliente, cron parado — e a reconexão manual virou
+// a única saída. Antes disso o usuário só descobria quando o post falhava.
+const TOKEN_WARN_DAYS = 7
+
+function tokenDaysLeft(expiresAt: string | null): number | null {
+  if (!expiresAt) return null
+  return Math.floor((new Date(expiresAt).getTime() - Date.now()) / 86_400_000)
+}
+
+function TokenBadge({ expiresAt }: { expiresAt: string | null }) {
+  const days = tokenDaysLeft(expiresAt)
+  if (days === null || days > TOKEN_WARN_DAYS) return null
+
+  const expired = days <= 0
+  return (
+    <span
+      className="inline-block mt-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+      style={{ background: expired ? '#dc2626' : '#d97706', color: '#ffffff' }}
+      title={expired
+        ? 'A conexão com o Instagram expirou. Reconecte a conta para voltar a publicar.'
+        : 'A renovação automática não conseguiu estender esta conexão. Reconecte a conta.'}
+    >
+      {expired ? 'Reconectar Instagram' : `Conexão expira em ${days}d`}
+    </span>
+  )
+}
+
 const POST_TYPE_CFG = {
   IMAGE:          { label: 'Imagem',    Icon: Image      },
   CAROUSEL_ALBUM: { label: 'Carrossel', Icon: LayoutGrid },
@@ -110,6 +140,8 @@ function AccountListCard({
         <p className="text-[12px] text-[#9CA3AF]">
           {account.followers_count.toLocaleString('pt-BR')} seguidores
         </p>
+        {/* Aviso de conexão vencendo/vencida */}
+        <TokenBadge expiresAt={account.token_expires_at} />
         {/* Mini-badges */}
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -378,6 +410,7 @@ function AccountDetailView({
           <p className="text-[12px] text-[#9CA3AF]">
             {account.followers_count.toLocaleString('pt-BR')} seguidores
           </p>
+          <TokenBadge expiresAt={account.token_expires_at} />
         </div>
 
         {/* Botão desconectar */}
