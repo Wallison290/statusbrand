@@ -38,11 +38,15 @@ type TabType = 'all' | 'scheduled' | 'published' | 'failed' | 'cancelled'
 const MAX_RETRIES = 3
 
 // A renovação do token é automática (Edge Function instagram-token-refresh,
-// diária, renova quando faltam 10 dias). Este badge é a rede de segurança: só
-// aparece quando a renovação automática não deu conta — senha do Instagram
-// trocada, app removido pelo cliente, cron parado — e a reconexão manual virou
-// a única saída. Antes disso o usuário só descobria quando o post falhava.
+// diária, renova quando faltam 10 dias). O badge fica sempre visível: em estado
+// normal serve de confirmação de que a renovação está em dia — sem ele, "nada
+// aparecendo" é indistinguível de "quebrado". Laranja e vermelho só surgem
+// quando a renovação automática não deu conta e a reconexão manual virou a
+// única saída (senha trocada, app removido pelo cliente, cron parado).
 const TOKEN_WARN_DAYS = 7
+
+const MESES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+                     'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
 function tokenDaysLeft(expiresAt: string | null): number | null {
   if (!expiresAt) return null
@@ -51,18 +55,33 @@ function tokenDaysLeft(expiresAt: string | null): number | null {
 
 function TokenBadge({ expiresAt }: { expiresAt: string | null }) {
   const days = tokenDaysLeft(expiresAt)
-  if (days === null || days > TOKEN_WARN_DAYS) return null
+  if (days === null) return null
 
   const expired = days <= 0
+  const warning = !expired && days <= TOKEN_WARN_DAYS
+
+  const d     = new Date(expiresAt!)
+  const data  = `${String(d.getDate()).padStart(2, '0')}/${MESES_ABREV[d.getMonth()]}`
+
+  const label = expired ? 'Reconectar Instagram'
+              : warning ? `Conexão expira em ${days}d`
+              : `Conexão até ${data}`
+
+  const bg    = expired ? '#dc2626' : warning ? '#d97706' : '#6B7280'
+
+  const title = expired
+    ? 'A conexão com o Instagram expirou. Reconecte a conta para voltar a publicar.'
+    : warning
+      ? 'A renovação automática não conseguiu estender esta conexão. Reconecte a conta.'
+      : `Renovação automática em dia. A conexão é estendida sozinha ${TOKEN_WARN_DAYS + 3} dias antes de vencer.`
+
   return (
     <span
       className="inline-block mt-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-      style={{ background: expired ? '#dc2626' : '#d97706', color: '#ffffff' }}
-      title={expired
-        ? 'A conexão com o Instagram expirou. Reconecte a conta para voltar a publicar.'
-        : 'A renovação automática não conseguiu estender esta conexão. Reconecte a conta.'}
+      style={{ background: bg, color: '#ffffff' }}
+      title={title}
     >
-      {expired ? 'Reconectar Instagram' : `Conexão expira em ${days}d`}
+      {label}
     </span>
   )
 }
