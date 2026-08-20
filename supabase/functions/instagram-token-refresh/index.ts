@@ -7,12 +7,30 @@
 // token vencido não tem renovação, só reconexão manual pelo usuário.
 // Sem esta função o sistema quebrava a cada 60 dias (erro OAuthException 190,
 // "Session has expired").
+//
+// DEPLOY — precisa de --no-verify-jwt:
+//   supabase functions deploy instagram-token-refresh --no-verify-jwt
+// O gatilho é o pg_cron, que não tem JWT de usuário para apresentar. O gateway
+// fica aberto, mas a autorização acontece aqui embaixo via TOKEN_REFRESH_SECRET
+// — sem o header correto a função responde 401.
+//
+// O valor de TOKEN_REFRESH_SECRET vive em dois lugares, que precisam bater:
+//   - secret da Edge Function (Dashboard → Edge Functions → Secrets)
+//   - Vault, em 'instagram_cron_secret', de onde o pg_cron lê para montar o
+//     header (ver migration 068)
+// Ele é separado do CRON_SECRET de propósito: a Management API só devolve
+// digest SHA-256 dos secrets, então o CRON_SECRET existente não é recuperável
+// para gravar no Vault.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET      = Deno.env.get('CRON_SECRET') ?? ''
+// Segredo próprio desta função, usado pelo cron no Postgres. Existe separado do
+// CRON_SECRET porque este precisa estar legível no Vault para o pg_cron montar
+// o header, e o CRON_SECRET é compartilhado com o gatilho de publicação.
+const REFRESH_SECRET   = Deno.env.get('TOKEN_REFRESH_SECRET') ?? ''
 
 // Renova quando faltar isto ou menos para vencer. A folga é proposital: se o
 // cron falhar alguns dias seguidos (deploy, instabilidade da Meta), ainda
@@ -65,11 +83,19 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Mesma autorização do instagram-publish-cron: service role OU cron secret.
+  // Aceita service role key OU um dos segredos de cron, via header dedicado ou
+  // Bearer. Segredos vazios são descartados de propósito: sem esse filtro, uma
+  // variável de ambiente ausente faria '' === '' e liberaria acesso a qualquer
+  // requisição sem header.
   const auth   = req.headers.get('Authorization') ?? ''
   const secret = req.headers.get('X-Cron-Secret')  ?? ''
   const token  = auth.startsWith('Bearer ') ? auth.slice(7) : ''
-  const authorized = token === SUPABASE_SERVICE || secret === CRON_SECRET || token === CRON_SECRET
+
+  const validSecrets = [CRON_SECRET, REFRESH_SECRET].filter(s => s.length > 0)
+  const authorized =
+    (SUPABASE_SERVICE.length > 0 && token === SUPABASE_SERVICE) ||
+    validSecrets.some(s => s === secret || s === token)
+
   if (!authorized) {
     return new Response('Unauthorized', { status: 401 })
   }
