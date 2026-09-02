@@ -1,4 +1,4 @@
--- ── 068: CRM (funil comercial) ───────────────────────────────────────────────
+-- ── 069: CRM (funil comercial) ───────────────────────────────────────────────
 -- Kanban de leads da agência: colunas personalizáveis pelo usuário e cards que
 -- se movem entre elas mudando o status.
 --
