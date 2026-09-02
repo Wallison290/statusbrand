@@ -701,8 +701,8 @@ export function CrmBoard() {
             Monte seu funil comercial
           </h2>
           <p className="text-[12.5px] max-w-md mb-5" style={{ color: 'var(--sm-text-3)' }}>
-            Escolha um processo pronto ou comece do zero. As colunas são suas: renomeie,
-            recolora e reordene quando quiser.
+            Escolha um processo pronto ou comece do zero. As colunas são suas: dá para
+            renomear, mudar a cor e reordenar quando quiser.
           </p>
           <Button onClick={() => setPickerOpen(true)}>
             <LayoutTemplate className="w-3.5 h-3.5" /> Escolher modelo de funil
