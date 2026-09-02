@@ -21,6 +21,7 @@ const Dashboard         = lazy(() => import('@/pages/Dashboard').then(m => ({ de
 const ClientList        = lazy(() => import('@/pages/clients/ClientList').then(m => ({ default: m.ClientList })))
 const ClientForm        = lazy(() => import('@/pages/clients/ClientForm').then(m => ({ default: m.ClientForm })))
 const ClientProfile     = lazy(() => import('@/pages/clients/ClientProfile').then(m => ({ default: m.ClientProfile })))
+const CrmBoard          = lazy(() => import('@/pages/crm/CrmBoard').then(m => ({ default: m.CrmBoard })))
 const FeedOrganizer     = lazy(() => import('@/pages/feed/FeedOrganizer').then(m => ({ default: m.FeedOrganizer })))
 const Planner           = lazy(() => import('@/pages/planner/Planner').then(m => ({ default: m.Planner })))
 const Tasks             = lazy(() => import('@/pages/tasks/Tasks').then(m => ({ default: m.Tasks })))
@@ -201,6 +202,7 @@ function AppRoutes() {
       {/* App da agência — auth + assinatura ativa obrigatórias */}
       <Route element={<AuthGuard><SubscriptionGuard><Layout /></SubscriptionGuard></AuthGuard>}>
         <Route path="/dashboard"     element={<Dashboard />} />
+        <Route path="/crm"           element={<CrmBoard />} />
         <Route path="/clients"       element={<ClientList />} />
         <Route path="/clients/new"   element={<ClientForm />} />
         <Route path="/clients/:id"   element={<ClientProfile />} />
