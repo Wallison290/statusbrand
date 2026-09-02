@@ -408,48 +408,51 @@ function Column({
         )}
       </div>
 
-      {/* Área dos cards */}
+      {/* Área dos cards — o botão fica fora da parte que rola, para continuar
+          alcançável quando a coluna enche. A zona de drop é o bloco inteiro. */}
       <div
         ref={setNodeRef}
-        className="flex-1 min-h-0 rounded-xl p-2 space-y-2 overflow-y-auto transition-colors border border-dashed"
+        className="flex-1 min-h-0 flex flex-col gap-2 rounded-xl p-2 transition-colors border border-dashed"
         style={{
           background:  isOver ? 'rgba(37,99,235,0.06)' : 'var(--sm-bg-alt)',
           borderColor: isOver ? 'rgba(37,99,235,0.5)'  : 'transparent',
         }}
       >
-        <AnimatePresence initial={false}>
-          {leads.map(lead => (
-            <motion.div
-              key={lead.id}
-              layout
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-            >
-              <LeadCard
-                lead={lead}
-                columns={columns}
-                memberName={memberOf(lead.responsible_user_id)}
-                onOpen={() => onOpenLead(lead)}
-                onMoveTo={colId => onMoveLead(lead, colId)}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {leads.length === 0 && (
-          <p className="text-[11px] text-center py-6" style={{ color: 'var(--sm-text-4)' }}>
-            Nenhum lead aqui
-          </p>
-        )}
-
         <button
           onClick={onAddLead}
-          className="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg text-[12px] border border-dashed transition-colors hover:border-[#2563EB]/50"
+          className="flex-shrink-0 w-full flex items-center justify-center gap-1.5 h-8 rounded-lg text-[12px] border border-dashed transition-colors hover:border-[#2563EB]/50"
           style={{ color: 'var(--sm-text-3)', borderColor: 'var(--sm-border)' }}
         >
           <Plus className="w-3 h-3" /> Lead
         </button>
+
+        <div className="flex-1 min-h-0 space-y-2 overflow-y-auto">
+          <AnimatePresence initial={false}>
+            {leads.map(lead => (
+              <motion.div
+                key={lead.id}
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+              >
+                <LeadCard
+                  lead={lead}
+                  columns={columns}
+                  memberName={memberOf(lead.responsible_user_id)}
+                  onOpen={() => onOpenLead(lead)}
+                  onMoveTo={colId => onMoveLead(lead, colId)}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {leads.length === 0 && (
+            <p className="text-[11px] text-center py-6" style={{ color: 'var(--sm-text-4)' }}>
+              Nenhum lead aqui
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )
