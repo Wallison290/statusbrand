@@ -492,3 +492,41 @@ export interface DashboardStats {
   contents_in_production: number
   active_clients: number
 }
+
+// ── CRM (funil comercial) ─────────────────────────────────────────────────────
+
+export type CrmStageType = 'normal' | 'ganho' | 'perdido'
+
+export type CrmTemperature = 'frio' | 'morno' | 'quente'
+
+export interface CrmColumn {
+  id:         string
+  user_id:    string
+  name:       string
+  color:      string
+  position:   number
+  stage_type: CrmStageType
+  created_at: string
+  updated_at: string
+}
+
+export interface CrmLead {
+  id:                  string
+  user_id:             string
+  column_id:           string
+  position:            number
+  name:                string
+  company:             string | null
+  whatsapp:            string | null
+  email:               string | null
+  instagram:           string | null
+  source:              string | null
+  estimated_value:     number | null
+  temperature:         CrmTemperature | null
+  responsible_user_id: string | null
+  next_contact_at:     string | null
+  notes:               string | null
+  converted_client_id: string | null
+  created_at:          string
+  updated_at:          string
+}

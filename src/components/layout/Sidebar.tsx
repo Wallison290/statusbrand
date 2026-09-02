@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Calendar, CheckSquare, BookOpen,
   LogOut, ChevronLeft, ChevronRight, Wallet, NotebookPen, LayoutGrid, Sparkles, Zap, UserCheck, Instagram, HardDrive, Info, MessageCircle, BarChart3,
-  ShieldCheck,
+  ShieldCheck, Target,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/utils/formatters'
@@ -45,6 +45,8 @@ const navGroups: NavGroup[] = [
   {
     title: 'Clientes',
     items: [
+      // O CRM vem antes da carteira: o lead é o passo anterior ao cliente
+      { href: '/crm',     icon: Target,     label: 'CRM'            },
       { href: '/clients', icon: Users,      label: 'Clientes'       },
       { href: '/feed',    icon: LayoutGrid, label: 'Feed do Perfil' },
       { href: '/reports', icon: BarChart3,  label: 'Relatórios'     },

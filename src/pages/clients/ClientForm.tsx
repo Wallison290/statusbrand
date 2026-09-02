@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Save, ArrowLeft, ImageIcon, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,10 +39,15 @@ const emptyForm = {
   manual_status_override: null as boolean | null,
 }
 
+// Campos que o CRM pode pré-preencher ao converter um lead em cliente
+const prefillableFields = ['company_name', 'responsible_name', 'whatsapp', 'email', 'instagram'] as const
+
 export function ClientForm() {
   const { id } = useParams()
   const isEdit = !!id
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const fromLeadId = searchParams.get('from_lead')
   const { user } = useAuth()
   const { toast } = useToast()
   const { data: existingClient } = useClient(id || '')
@@ -58,6 +63,19 @@ export function ClientForm() {
   useEffect(() => {
     if (existingClient) setForm(existingClient as any)
   }, [existingClient])
+
+  // Lead convertido no CRM chega com os dados na URL — roda uma vez, só no
+  // cadastro novo, para não sobrescrever o que já estava sendo digitado.
+  useEffect(() => {
+    if (isEdit) return
+    const seeded: Record<string, string> = {}
+    for (const field of prefillableFields) {
+      const value = searchParams.get(field)
+      if (value) seeded[field] = value
+    }
+    if (Object.keys(seeded).length > 0) setForm(prev => ({ ...prev, ...seeded }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit])
 
   const set = (field: string, value: string | null) =>
     setForm(prev => ({ ...prev, [field]: value }))
@@ -109,6 +127,17 @@ export function ClientForm() {
         toast('Cliente atualizado!', 'success')
       } else {
         const created = await createClient.mutateAsync({ ...form, user_id: user.id })
+
+        // Veio de um lead do CRM: fecha o ciclo marcando a conversão, para o
+        // card parar de oferecer "converter em cliente".
+        if (fromLeadId) {
+          try {
+            await (supabase as any)
+              .from('crm_leads')
+              .update({ converted_client_id: created.id })
+              .eq('id', fromLeadId)
+          } catch { /* a conversão do lead é secundária — o cliente já foi criado */ }
+        }
 
         // Envia convite de acesso ao portal se tiver email e plano com portal
         const hasPortal = subData?.plan.hasClientPortal ?? false
