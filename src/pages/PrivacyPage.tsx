@@ -16,7 +16,7 @@ export function PrivacyPage() {
       {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-[#0f0f0f] mb-2">Política de Privacidade</h1>
-        <p className="text-sm text-gray-400 mb-10">Última atualização: maio de 2025</p>
+        <p className="text-sm text-gray-400 mb-10">Última atualização: setembro de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-gray-700">
 
@@ -32,7 +32,7 @@ export function PrivacyPage() {
             <p>Ao usar o StatusMedia, podemos coletar os seguintes dados:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li><strong>Dados de conta:</strong> nome, endereço de e-mail e informações de perfil fornecidas no cadastro.</li>
-              <li><strong>Dados do Instagram:</strong> nome de usuário, foto de perfil, número de seguidores e dados necessários para publicação de conteúdo, obtidos por meio da autorização OAuth do Instagram.</li>
+              <li><strong>Dados do Instagram:</strong> nome de usuário, foto de perfil, número de seguidores, dados necessários para a publicação de conteúdo e métricas agregadas da conta e das publicações, obtidos por meio da autorização OAuth do Instagram.</li>
               <li><strong>Conteúdo agendado:</strong> imagens, vídeos, legendas e horários de publicação criados pelos usuários.</li>
               <li><strong>Dados de uso:</strong> logs de acesso, ações realizadas na plataforma e preferências de configuração.</li>
             </ul>
@@ -59,11 +59,12 @@ export function PrivacyPage() {
               Ao conectar sua conta do Instagram ao StatusMedia, você nos autoriza a acessar as informações necessárias para o funcionamento da plataforma, conforme as permissões concedidas durante o processo de autorização OAuth. Isso inclui:
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Leitura de informações básicas do perfil (<code>instagram_business_basic</code>).</li>
-              <li>Publicação de conteúdo em seu nome (<code>instagram_business_content_publish</code>).</li>
+              <li><strong>Informações básicas do perfil</strong> (<code>instagram_business_basic</code>): identificador da conta, nome de usuário, nome, foto de perfil e número de seguidores, usados para identificar qual conta está conectada e como destino de todas as demais chamadas.</li>
+              <li><strong>Publicação de conteúdo</strong> (<code>instagram_business_content_publish</code>): publicação, no horário que você agendar, dos conteúdos que você mesmo criou e aprovou na plataforma.</li>
+              <li><strong>Métricas da conta e das publicações</strong> (<code>instagram_business_manage_insights</code>): alcance, visitas ao perfil, contas engajadas, interações, desempenho das publicações do período e dados demográficos agregados do público, usados exclusivamente para montar os relatórios mensais do cliente.</li>
             </ul>
             <p className="mt-3">
-              Esses dados são utilizados somente para as funcionalidades descritas e nunca são compartilhados sem seu consentimento explícito. Você pode revogar o acesso a qualquer momento desconectando sua conta na seção Instagram do StatusMedia.
+              Esses dados são utilizados somente para as funcionalidades descritas e nunca são compartilhados sem seu consentimento explícito. Você pode revogar o acesso a qualquer momento desconectando sua conta na seção Instagram do StatusMedia, ou removendo o StatusMedia em <em>Instagram → Configurações → Aplicativos e sites</em>.
             </p>
             <p className="mt-3">
               O uso dos dados do Instagram está em conformidade com as <a href="https://developers.facebook.com/policy/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Políticas da Plataforma Meta</a>.
@@ -87,8 +88,21 @@ export function PrivacyPage() {
             </p>
           </section>
 
+          <section id="exclusao-de-dados">
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">7. Exclusão de Dados e Revogação de Acesso</h2>
+            <p>Você pode interromper o acesso e apagar os dados a qualquer momento:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li><strong>Desconectar o Instagram:</strong> na seção Instagram do StatusMedia, clique em desconectar. O token de acesso deixa de ser usado imediatamente.</li>
+              <li><strong>Remover pelo Instagram:</strong> em <em>Configurações → Aplicativos e sites</em>, remova o StatusMedia. Recebemos o aviso de remoção e desativamos a conexão automaticamente.</li>
+              <li><strong>Excluir os dados:</strong> siga as instruções da página <a href="/data-deletion" className="text-blue-600 underline">Exclusão de dados</a> ou escreva para o e-mail abaixo. Concluímos a exclusão em até 30 dias.</li>
+            </ul>
+            <p className="mt-3">
+              A exclusão remove o token de acesso, os dados de perfil e as métricas do Instagram que armazenamos, além dos conteúdos e agendamentos vinculados à conta — exceto o que precisarmos reter por obrigação legal.
+            </p>
+          </section>
+
           <section>
-            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">7. Seus Direitos</h2>
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">8. Seus Direitos</h2>
             <p>Você tem o direito de:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Acessar os dados que mantemos sobre você.</li>
@@ -101,21 +115,21 @@ export function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">8. Cookies</h2>
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">9. Cookies</h2>
             <p>
               Utilizamos cookies essenciais para manter sua sessão autenticada e preferências de configuração. Não utilizamos cookies de rastreamento para fins publicitários.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">9. Alterações nesta Política</h2>
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">10. Alterações nesta Política</h2>
             <p>
               Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos os usuários sobre mudanças significativas por e-mail ou por aviso na plataforma. O uso continuado dos serviços após as alterações constitui aceite da nova política.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">10. Contato</h2>
+            <h2 className="text-lg font-semibold text-[#0f0f0f] mb-3">11. Contato</h2>
             <p>
               Dúvidas sobre esta Política de Privacidade? Entre em contato:<br />
               <strong>StatusMedia</strong><br />

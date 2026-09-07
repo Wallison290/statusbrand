@@ -41,6 +41,7 @@ import { isImageUrl } from '@/utils/media'
 import type { FinancialStatus } from '@/types'
 import { supabase } from '@/integrations/supabase/client'
 import { uploadArquivo } from '@/lib/uploadArquivo'
+import { buildInstagramOAuthUrl, isInstagramConfigured } from '@/lib/instagramOAuth'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { ContentAsset, ContentType, PlannerItem } from '@/types'
 
@@ -597,25 +598,6 @@ function getWeekSummaryBadge(items: PlannerItem[]): { label: string; bg: string 
 
 // ─── Instagram Tab ────────────────────────────────────────────────────────────
 
-const META_APP_ID_CLIENT  = import.meta.env.VITE_META_APP_ID  as string | undefined
-const SUPABASE_URL_CLIENT = import.meta.env.VITE_SUPABASE_URL as string
-
-function buildClientOAuthUrl(userId: string, clientId: string) {
-  const redirectUri = `${SUPABASE_URL_CLIENT}/functions/v1/instagram-oauth`
-  const scope = ['instagram_business_basic', 'instagram_business_content_publish', 'instagram_business_manage_insights'].join(',')
-  const state = `${userId}|${clientId}`
-  return (
-    `https://www.instagram.com/oauth/authorize` +
-    `?enable_fb_login=0` +
-    `&force_authentication=1` +
-    `&client_id=${META_APP_ID_CLIENT}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-    `&scope=${scope}` +
-    `&state=${encodeURIComponent(state)}` +
-    `&response_type=code`
-  )
-}
-
 function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: string }) {
   const { data: igAccount, isLoading } = useClientInstagramAccount(clientId)
   const { data: allAccounts = [] }     = useAllInstagramAccounts()
@@ -630,7 +612,7 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
   const limitReached = maxProfiles !== -1 && !igAccount && activeCount >= maxProfiles
 
   const handleConnect = () => {
-    if (!META_APP_ID_CLIENT) {
+    if (!isInstagramConfigured) {
       toast('VITE_META_APP_ID não configurado.', 'error')
       return
     }
@@ -642,7 +624,7 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
       )
       return
     }
-    const url = buildClientOAuthUrl(userId, clientId)
+    const url = buildInstagramOAuthUrl(userId, clientId)
     window.location.href = url
   }
 
