@@ -784,13 +784,14 @@ export function InstagramPage() {
               disabled={isRefreshing}
               className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
               style={{ color: 'var(--sm-text-2)' }}
-              title="Atualizar"
+              title="Refresh — reloads the connected accounts and the status of scheduled posts"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Atualizar
             </button>
             <button
               onClick={() => setConnectOpen(true)}
+              title="Connect Instagram — starts Business Login for Instagram so the agency can publish and read insights for a client account"
               className="flex items-center gap-2 px-4 h-9 rounded-xl bg-[#2563EB] text-white text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
             >
               <Instagram className="w-4 h-4" />
@@ -852,6 +853,7 @@ export function InstagramPage() {
                   <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
                     <button
                       onClick={() => setConnectOpen(true)}
+                      title="Connect Instagram — starts Business Login for Instagram so the agency can publish and read insights for a client account"
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white rounded-xl text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
                     >
                       <Instagram className="w-4 h-4" />

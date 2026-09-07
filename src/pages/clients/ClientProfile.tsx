@@ -672,7 +672,9 @@ function ClientInstagramTab({ clientId, userId }: { clientId: string; userId: st
           onClick={handleConnect}
           disabled={limitReached}
           className="gap-2"
-          title={limitReached ? `Limite de ${maxProfiles} perfil${maxProfiles === 1 ? '' : 's'} atingido` : undefined}
+          title={limitReached
+            ? `Limite de ${maxProfiles} perfil${maxProfiles === 1 ? '' : 's'} atingido`
+            : "Connect Instagram — starts Business Login for Instagram to link this client's professional account, so the agency can publish and read insights for it"}
         >
           <Instagram className="w-3.5 h-3.5" />
           Conectar Instagram

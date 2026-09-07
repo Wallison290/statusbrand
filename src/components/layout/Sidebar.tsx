@@ -18,6 +18,9 @@ interface NavItem {
   href:       string
   icon:       LucideIcon
   label:      string
+  /** Tooltip em inglês. A interface é em português, e o App Review da Meta pede
+   *  que elementos não óbvios sejam explicados para quem não fala o idioma. */
+  hint?:      string
   comingSoon?: boolean
   adminOnly?: boolean
 }
@@ -47,15 +50,15 @@ const navGroups: NavGroup[] = [
     items: [
       // O CRM vem antes da carteira: o lead é o passo anterior ao cliente
       { href: '/crm',     icon: Target,     label: 'CRM'            },
-      { href: '/clients', icon: Users,      label: 'Clientes'       },
+      { href: '/clients', icon: Users,      label: 'Clientes', hint: 'Clients — the brands this agency manages. Each client can have one connected Instagram professional account.' },
       { href: '/feed',    icon: LayoutGrid, label: 'Feed do Perfil' },
-      { href: '/reports', icon: BarChart3,  label: 'Relatórios'     },
+      { href: '/reports', icon: BarChart3,  label: 'Relatórios', hint: 'Reports — monthly performance reports built from Instagram Insights.' },
     ],
   },
   {
     title: 'Produção',
     items: [
-      { href: '/planner', icon: Calendar,    label: 'Planejamento' },
+      { href: '/planner', icon: Calendar,    label: 'Planejamento', hint: 'Planner — plan, approve and schedule the content that gets published to Instagram.' },
       { href: '/tasks',   icon: CheckSquare, label: 'Tarefas'      },
       { href: '/library', icon: BookOpen,    label: 'Biblioteca'   },
       { href: '/notes',   icon: NotebookPen, label: 'Notas'        },
@@ -64,7 +67,11 @@ const navGroups: NavGroup[] = [
   {
     title: 'Canais',
     items: [
-      { href: '/instagram', icon: Instagram,     label: 'Instagram', comingSoon: true },
+      // Sem `comingSoon`: a integração está ativa e é o que a Meta avalia no App
+      // Review. Um selo "em breve" na tela que o revisor foi testar contradiz a
+      // submissão. A infraestrutura do selo continua aqui para o próximo recurso
+      // que precisar dela.
+      { href: '/instagram', icon: Instagram,     label: 'Instagram', hint: 'Instagram — connect client accounts and follow scheduled and published posts.' },
       { href: '/whatsapp',  icon: MessageCircle, label: 'WhatsApp'   },
     ],
   },
@@ -185,16 +192,19 @@ function NavEntry({ item, active, collapsed, onInfo }: {
   collapsed: boolean
   onInfo:    (pos: { x: number; y: number } | null) => void
 }) {
-  const collapsedTitle = item.comingSoon
-    ? `${item.label} — Em breve (aguardando liberação do Meta)`
-    : item.label
+  // Recolhido, só o ícone aparece: o tooltip precisa dizer que item é esse.
+  // Expandido, o rótulo já está visível: sobra espaço para a explicação em
+  // inglês, que existe para quem não lê português — inclusive o revisor da Meta.
+  const tooltip = collapsed
+    ? (item.comingSoon ? `${item.label} — Em breve (aguardando liberação do Meta)` : item.label)
+    : item.hint
 
   // Item ativo
   if (active) {
     return (
       <Link to={item.href}>
         <div
-          title={collapsed ? collapsedTitle : undefined}
+          title={tooltip}
           className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
           style={{ background: 'linear-gradient(135deg, #29457a 0%, #16284d 100%)' }}
         >
@@ -214,7 +224,7 @@ function NavEntry({ item, active, collapsed, onInfo }: {
   return (
     <Link to={item.href}>
       <div
-        title={collapsed ? collapsedTitle : undefined}
+        title={tooltip}
         className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 group"
         style={{ color: 'var(--sm-sidebar-text)' }}
         onMouseEnter={e => {
@@ -415,7 +425,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
           : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
-      {/* ── Tooltip Instagram (portal para escapar do overflow-hidden) ── */}
+      {/* ── Tooltip do selo "em breve" (portal para escapar do overflow-hidden) ──
+          Dorme enquanto nenhum item do menu tiver `comingSoon`. O texto é
+          genérico de propósito: já esteve preso ao Instagram e ficou errado
+          quando a integração foi liberada. */}
       {igTooltip && createPortal(
         <div
           className="pointer-events-none"
@@ -425,8 +438,8 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             className="w-52 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed shadow-2xl"
             style={{ background: 'var(--sm-sidebar-bg)', border: '1px solid var(--sm-sidebar-border)', color: 'var(--sm-sidebar-text)' }}
           >
-            <p className="font-semibold mb-1" style={{ color: 'var(--sm-text-1)' }}>Aguardando liberação do Meta</p>
-            <p>A integração com o Instagram está em análise pelo Meta e será liberada em breve.</p>
+            <p className="font-semibold mb-1" style={{ color: 'var(--sm-text-1)' }}>Em breve</p>
+            <p>Este recurso ainda está em desenvolvimento e será liberado em breve.</p>
           </div>
         </div>,
         document.body,
