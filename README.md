@@ -42,7 +42,7 @@ A aplicação possui áreas específicas para a agência, seus clientes, colabor
 - Relatórios mensais por cliente com métricas do Instagram, comparativos, análise, anexos e dados do planejamento.
 - Disponibilização dos relatórios diretamente no portal do cliente.
 
-> A tela de integração com Instagram está sinalizada na interface como recurso em evolução.
+> O uso das permissões do Instagram para contas de terceiros depende de aprovação no App Review da Meta. Ver [`APP-REVIEW.md`](APP-REVIEW.md).
 
 ### WhatsApp
 

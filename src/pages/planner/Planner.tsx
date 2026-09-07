@@ -710,6 +710,7 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
       </div>
 
       <Button size="sm" onClick={handleSchedule} disabled={publishing}
+        title="Schedule on Instagram — queues this approved content to be published to the client's connected Instagram account at the date and time above"
         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
         {publishing
           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Agendando...</>

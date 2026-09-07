@@ -645,7 +645,7 @@ function ReportDetail({
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={handleAutoGenerate} disabled={syncing}
-                title="Preencher alcance, seguidores, engajamento e posts do mês com os dados da conta de Instagram conectada">
+                title="Generate from Instagram — fills reach, followers, engagement, top posts and audience demographics for this month using Instagram Insights (Preencher os dados do mes com a conta de Instagram conectada)">
                 {syncing
                   ? <><RefreshCw className="w-3 h-3 animate-spin" /> Gerando...</>
                   : <><Instagram className="w-3 h-3" /> Gerar do Instagram</>}
