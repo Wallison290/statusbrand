@@ -41,6 +41,7 @@ const ReportsOverview    = lazy(() => import('@/pages/reports/ReportsOverview').
 const ReportsWorkspace   = lazy(() => import('@/pages/reports/ReportsWorkspace').then(m => ({ default: m.ReportsWorkspace })))
 const PrivacyPage        = lazy(() => import('@/pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
 const TermsPage          = lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
+const DataDeletionPage   = lazy(() => import('@/pages/DataDeletionPage').then(m => ({ default: m.DataDeletionPage })))
 const WeeklyFormPage     = lazy(() => import('@/pages/public/WeeklyFormPage').then(m => ({ default: m.WeeklyFormPage })))
 const LandingPage        = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })))
 const AdminPanel         = lazy(() => import('@/pages/admin/AdminPanel').then(m => ({ default: m.AdminPanel })))
@@ -174,6 +175,8 @@ function AppRoutes() {
       <Route path="/formulario/:token" element={<WeeklyFormPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms"   element={<TermsPage />} />
+      {/* Exigida pela Meta (Data Deletion Instructions URL) — precisa abrir deslogado */}
+      <Route path="/data-deletion" element={<DataDeletionPage />} />
 
       {/* Página de vendas pública — visitante vê a landing, logado vai para o app */}
       <Route path="/" element={<HomeGate />} />

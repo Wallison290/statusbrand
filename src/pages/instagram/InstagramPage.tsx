@@ -7,13 +7,18 @@ import {
   Instagram, Image, Film, LayoutGrid,
   CheckCircle2, XCircle, Clock, Loader2, X,
   ExternalLink, RefreshCw, AlertCircle, Calendar,
-  Users, ArrowLeft, ChevronRight, Trash2,
+  Users, ArrowLeft, ChevronRight, Trash2, Plus, Building2,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useToast } from '@/components/ui/toast'
 import { useTheme } from '@/contexts/ThemeContext'
 import { supabase } from '@/integrations/supabase/client'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useAuth } from '@/hooks/useAuth'
+import { useClients } from '@/hooks/useClients'
+import { useSubscription } from '@/hooks/useSubscription'
+import { buildInstagramOAuthUrl, isInstagramConfigured } from '@/lib/instagramOAuth'
 import {
   useAllInstagramAccounts,
   useScheduledPosts,
@@ -537,9 +542,149 @@ function AccountDetailView({
 
 // ── Página principal ──────────────────────────────────────────────────────────
 
+// ── Conectar Instagram ────────────────────────────────────────────────────────
+// O botão que inicia o Business Login precisa estar visível aqui, e não apenas
+// três níveis abaixo dentro do perfil de um cliente: a Meta exige, no App
+// Review, que o botão de login apareça no app e no screencast.
+//
+// A conta sempre fica vinculada a um cliente. É por client_id que o
+// agendamento (useClientInstagramAccount) e o relatório (a Edge Function
+// instagram-report) encontram o token — conta conectada solta ficaria órfã e
+// não publicaria nem geraria métricas. Por isso o cliente é escolhido antes.
+
+function ConnectInstagramModal({
+  open, onOpenChange, accounts,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  accounts: InstagramAccount[]
+}) {
+  const { user }                          = useAuth()
+  const { data: clients = [], isLoading } = useClients()
+  const { data: subData }                 = useSubscription()
+  const { toast }                         = useToast()
+
+  const connectedClientIds = new Set(
+    accounts.map(a => a.client_id).filter(Boolean) as string[]
+  )
+
+  const activeCount  = new Set(accounts.map(a => a.ig_user_id)).size
+  const maxProfiles  = subData?.plan.instagramProfiles ?? 1
+  const limitReached = maxProfiles !== -1 && activeCount >= maxProfiles
+
+  const handlePick = (clientId: string) => {
+    if (!user) return
+    if (!isInstagramConfigured) {
+      toast('VITE_META_APP_ID não configurado.', 'error')
+      return
+    }
+    // Reconectar um cliente que já tem conta não ocupa uma vaga nova — é a
+    // mesma regra aplicada pela Edge Function instagram-oauth.
+    if (limitReached && !connectedClientIds.has(clientId)) {
+      toast(
+        `Limite de ${maxProfiles} perfil${maxProfiles === 1 ? '' : 's'} do plano ` +
+        `${subData?.plan.name ?? 'atual'} atingido. Faça upgrade para conectar mais contas.`,
+        'error'
+      )
+      return
+    }
+    window.location.href = buildInstagramOAuthUrl(user.id, clientId)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#E1306C] to-[#833AB4] flex items-center justify-center">
+              <Instagram className="w-3.5 h-3.5 text-white" />
+            </div>
+            Conectar Instagram
+          </DialogTitle>
+          <DialogDescription>
+            Escolha de qual cliente é a conta profissional que você vai conectar.
+            Você será levado ao Instagram para autorizar o acesso.
+          </DialogDescription>
+        </DialogHeader>
+
+        {maxProfiles !== -1 && (
+          <p className={`text-[11.5px] font-medium -mt-1 ${limitReached ? 'text-red-400' : 'text-[#9CA3AF]'}`}>
+            {activeCount}/{maxProfiles} perfil{maxProfiles === 1 ? '' : 's'} usados
+            {subData?.plan.name ? ` do plano ${subData.plan.name}` : ''}
+          </p>
+        )}
+
+        {isLoading ? (
+          <div className="py-10 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-[#9CA3AF]" />
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-[13.5px]" style={{ color: 'var(--sm-text-2)' }}>
+              Você ainda não tem clientes cadastrados.
+            </p>
+            <p className="text-[12px] text-[#9CA3AF] mt-1">
+              Cadastre um cliente antes de conectar o Instagram dele.
+            </p>
+            <Link
+              to="/clients/new"
+              className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#2563EB] text-white rounded-xl text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Novo cliente
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5 max-h-[320px] overflow-y-auto -mx-1 px-1">
+            {clients.map(client => {
+              const already = connectedClientIds.has(client.id)
+              return (
+                <button
+                  key={client.id}
+                  onClick={() => handlePick(client.id)}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-colors hover:border-[#2563EB]/60"
+                  style={{ borderColor: 'var(--sm-border)', background: 'var(--sm-bg-card2)' }}
+                >
+                  {client.logo_url ? (
+                    <img
+                      src={client.logo_url}
+                      alt=""
+                      className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-[#1F2937] flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-4 h-4 text-[#9CA3AF]" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold truncate" style={{ color: 'var(--sm-text-1)' }}>
+                      {client.company_name}
+                    </p>
+                    <p className="text-[11.5px] text-[#9CA3AF] truncate">
+                      {already ? 'Já conectado — reconectar' : 'Conectar conta profissional'}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#6B7280] flex-shrink-0" />
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        <p className="text-[11px] text-[#6B7280] leading-relaxed">
+          É preciso que a conta seja Business ou Creator. Ao autorizar, o StatusMedia
+          passa a ler o perfil, publicar os conteúdos que você agendar e consultar
+          as métricas para os relatórios. Você pode desconectar quando quiser.
+        </p>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function InstagramPage() {
   const [searchParams] = useSearchParams()
   const [selectedAccount, setSelectedAccount] = useState<InstagramAccount | null>(null)
+  const [connectOpen, setConnectOpen] = useState(false)
   const { toast }       = useToast()
   const cancelPost      = useCancelScheduledPost()
   const retryPost       = useRetryScheduledPost()
@@ -580,7 +725,12 @@ export function InstagramPage() {
       refetchAccounts()
     }
     if (error) {
-      toast('Erro ao conectar Instagram. Tente novamente no perfil do cliente.', 'error')
+      toast(
+        error === 'profile_limit'
+          ? 'Limite de perfis do seu plano atingido. Faça upgrade para conectar mais contas.'
+          : 'Não foi possível conectar o Instagram. Tente novamente.',
+        'error'
+      )
       window.history.replaceState({}, '', '/instagram')
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -628,16 +778,25 @@ export function InstagramPage() {
                 : 'Selecione uma conta para ver os detalhes'}
             </p>
           </div>
-          <button
-            onClick={() => { refetchAccounts(); refetchPosts(); accounts.forEach(a => refreshProfile.mutate(a.id)) }}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
-            style={{ color: 'var(--sm-text-2)' }}
-            title="Atualizar"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Atualizar
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => { refetchAccounts(); refetchPosts(); accounts.forEach(a => refreshProfile.mutate(a.id)) }}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 h-9 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors disabled:opacity-50"
+              style={{ color: 'var(--sm-text-2)' }}
+              title="Atualizar"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+            <button
+              onClick={() => setConnectOpen(true)}
+              className="flex items-center gap-2 px-4 h-9 rounded-xl bg-[#2563EB] text-white text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
+            >
+              <Instagram className="w-4 h-4" />
+              Conectar Instagram
+            </button>
+          </div>
         </div>
 
         {/* ── Conteúdo: lista ou detalhe ───────────────────────────────────── */}
@@ -687,15 +846,26 @@ export function InstagramPage() {
                   </div>
                   <p className="text-[16px] font-semibold" style={{ color: 'var(--sm-text-1)' }}>Nenhuma conta conectada</p>
                   <p className="text-[13px] text-[#9CA3AF] mt-1.5 max-w-xs mx-auto">
-                    Conecte o Instagram de cada cliente no perfil do cliente.
+                    Conecte a conta Business ou Creator de um cliente para agendar
+                    publicações e gerar relatórios.
                   </p>
-                  <Link
-                    to="/clients"
-                    className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-[#2563EB] text-white rounded-xl text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
-                  >
-                    <Users className="w-4 h-4" />
-                    Ir para Clientes
-                  </Link>
+                  <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
+                    <button
+                      onClick={() => setConnectOpen(true)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2563EB] text-white rounded-xl text-[13px] font-semibold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/20"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      Conectar Instagram
+                    </button>
+                    <Link
+                      to="/clients"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#1F2937] bg-[#111827] text-[13px] font-medium hover:border-[#2563EB]/50 transition-colors"
+                      style={{ color: 'var(--sm-text-2)' }}
+                    >
+                      <Users className="w-4 h-4" />
+                      Ir para Clientes
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -714,6 +884,12 @@ export function InstagramPage() {
           )}
         </AnimatePresence>
       </div>
+
+      <ConnectInstagramModal
+        open={connectOpen}
+        onOpenChange={setConnectOpen}
+        accounts={accounts}
+      />
     </div>
   )
 }
