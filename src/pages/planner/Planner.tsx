@@ -35,6 +35,7 @@ import { useWhatsappGroups } from '@/hooks/useWhatsappGroups'
 import { contentTypeLabels } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { uploadArquivo } from '@/lib/uploadArquivo'
+import { edgeErrorMessage } from '@/lib/edgeErrors'
 import { checkStorageLimit } from '@/utils/storageGate'
 import { isImageUrl, isImageMedia, isVideoMedia, mimeFromUrl } from '@/utils/media'
 import { useContentAssets } from '@/hooks/useContentAssets'
@@ -1689,20 +1690,25 @@ export function Planner() {
         const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
           body: { mode: 'manual_client', client_id: clientId, type: waType },
         })
-        if (error || data?.error) throw new Error(data?.error ?? error?.message)
+        // Propaga o erro original: o motivo real vem no corpo da resposta, que
+        // o supabase-js guarda em error.context. Reembrulhar em new Error aqui
+        // descartaria esse corpo e sobraria só "non-2xx status code".
+        if (error) throw error
+        if (data?.error) throw new Error(data.error)
       }
       // Notifica os grupos selecionados uma única vez
       if (waGroupJids.length > 0) {
         const { data, error } = await supabase.functions.invoke('notify-whatsapp', {
           body: { mode: 'manual_groups', type: waType, group_jids: waGroupJids },
         })
-        if (error || data?.error) throw new Error(data?.error ?? error?.message)
+        if (error) throw error
+        if (data?.error) throw new Error(data.error)
       }
       toast('Mensagem enviada via WhatsApp!', 'success')
       setWaDropOpen(false)
       setWaClientIds([])
     } catch (err: any) {
-      toast(err?.message || 'Erro ao enviar.', 'error')
+      toast(await edgeErrorMessage(err, 'Erro ao enviar.'), 'error')
     } finally {
       setWaSending(false)
     }
