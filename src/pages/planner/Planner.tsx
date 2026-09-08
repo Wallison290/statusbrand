@@ -1514,6 +1514,7 @@ function DroppableDay({
 export function Planner() {
   const { user } = useAuth()
   const qc = useQueryClient()
+  const { isDark } = useTheme()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -3028,12 +3029,20 @@ export function Planner() {
                   aqui — senão anexa a mídia, o cliente aprova e nada publica,
                   sem nenhuma explicação em lugar nenhum. */}
               {isStoryContent(form.content_type) && (
-                <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-px" />
-                  <p className="text-[10.5px] leading-relaxed text-amber-200/90">
-                    <strong className="font-semibold">Stories não são agendados.</strong> A mídia abaixo
-                    serve para o cliente aprovar, mas nem a aprovação dele nem o botão de agendar
-                    publicam um story — isso é feito direto pelo aplicativo do Instagram.
+                <div className={`flex items-start gap-2 rounded-md border px-2.5 py-2 ${
+                  isDark ? 'bg-amber-500/10 border-amber-500/25' : 'bg-amber-50 border-amber-300'
+                }`}>
+                  <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${
+                    isDark ? 'text-amber-300' : 'text-amber-600'
+                  }`} />
+                  <p className={`text-[10.5px] leading-relaxed ${
+                    isDark ? 'text-amber-200/80' : 'text-amber-700'
+                  }`}>
+                    <strong className={`font-semibold ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
+                      Stories não são agendados.
+                    </strong>{' '}
+                    A mídia abaixo serve para o cliente aprovar, mas nem a aprovação dele nem o botão
+                    de agendar publicam um story — isso é feito direto pelo aplicativo do Instagram.
                   </p>
                 </div>
               )}
