@@ -126,6 +126,20 @@ export const contentTypeLabels: Record<string, string> = {
   engajamento: 'Engajamento',
 }
 
+/**
+ * Stories não entram no agendamento do Instagram — a plataforma não publica
+ * story, e um story enviado como post cairia no feed do cliente.
+ *
+ * Espelha a guarda da migration 072 no banco, que é quem de fato impede o
+ * agendamento automático na aprovação. Aqui a checagem serve para a interface
+ * não oferecer um botão que o servidor vai recusar. As duas precisam concordar,
+ * então a normalização é a mesma: content_type é text livre no banco, sem check
+ * constraint, então 'Story' ou 'stories' contam igual.
+ */
+export function isStoryContent(contentType?: string | null): boolean {
+  return ['story', 'stories'].includes((contentType ?? '').trim().toLowerCase())
+}
+
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'

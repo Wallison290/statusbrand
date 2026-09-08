@@ -12,7 +12,7 @@ import {
   Save, Send, Paperclip, Link2, X, FileText, ImageIcon, Video, Music, File,
   Building2, Upload, Trash2, Pencil, CalendarDays, ExternalLink, Check, Instagram, Loader2,
   LayoutGrid, Film, ChevronDown, MessageCircle,
-  Clock, CheckCircle2, ClipboardList, Folder,
+  Clock, CheckCircle2, ClipboardList, Folder, AlertTriangle,
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -32,7 +32,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/toast'
 import { VideoComSom } from '@/components/VideoComSom'
 import { useWhatsappGroups } from '@/hooks/useWhatsappGroups'
-import { contentTypeLabels } from '@/utils/formatters'
+import { contentTypeLabels, isStoryContent } from '@/utils/formatters'
 import { supabase } from '@/integrations/supabase/client'
 import { uploadArquivo } from '@/lib/uploadArquivo'
 import { edgeErrorMessage } from '@/lib/edgeErrors'
@@ -517,6 +517,25 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
     )
   }
 
+  // Story — a plataforma não agenda stories (migration 072 barra no banco).
+  // Vem depois do bloco acima de propósito: se algum item antigo já estiver
+  // agendado, o estado real continua sendo mostrado em vez desta regra.
+  if (isStoryContent(item.content_type)) {
+    return (
+      <div className="p-3 rounded-xl space-y-1.5"
+        style={{ background: 'var(--sm-bg-alt)', borderWidth: 1, borderStyle: 'solid', borderColor: 'var(--sm-border)' }}>
+        <div className="flex items-center gap-2">
+          <Instagram className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--sm-text-4)' }} />
+          <p className="text-xs font-medium" style={{ color: 'var(--sm-text-2)' }}>Stories não são agendados</p>
+        </div>
+        <p className="text-[11px] leading-relaxed" style={{ color: 'var(--sm-text-3)' }}>
+          A plataforma não publica stories no Instagram. Mesmo com a aprovação do cliente,
+          este item não entra no agendamento — publique o story direto pelo aplicativo.
+        </p>
+      </div>
+    )
+  }
+
   // Ajuste solicitado — cliente pediu correções
   if (item.approval_status === 'ajuste_solicitado') {
     return (
@@ -582,6 +601,9 @@ function InstagramScheduleSection({ item }: { item: PlannerItem; userId: string 
 
   const handleSchedule = async () => {
     if (!igAccount || !postType) return
+    // Rede de segurança: o bloco acima já impede o formulário de aparecer para
+    // story, mas a regra não pode depender só da ordem dos returns.
+    if (isStoryContent(item.content_type)) return
     setPublishing(true)
     try {
       await createPost.mutateAsync({
@@ -3001,6 +3023,20 @@ export function Planner() {
                 </div>
                 <p className="text-[11px] text-zinc-400 uppercase tracking-wide font-semibold">Publicação no Instagram</p>
               </div>
+
+              {/* Story: o agendamento não acontece, e o usuário precisa saber
+                  aqui — senão anexa a mídia, o cliente aprova e nada publica,
+                  sem nenhuma explicação em lugar nenhum. */}
+              {isStoryContent(form.content_type) && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-px" />
+                  <p className="text-[10.5px] leading-relaxed text-amber-200/90">
+                    <strong className="font-semibold">Stories não são agendados.</strong> A mídia abaixo
+                    serve para o cliente aprovar, mas nem a aprovação dele nem o botão de agendar
+                    publicam um story — isso é feito direto pelo aplicativo do Instagram.
+                  </p>
+                </div>
+              )}
 
               {/* Seletor de tipo */}
               <div className="grid grid-cols-4 gap-1.5">

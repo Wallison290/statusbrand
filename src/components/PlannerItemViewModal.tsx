@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUpdatePlannerItem, useDeletePlannerItem } from '@/hooks/usePlanner'
 import { useToast } from '@/components/ui/toast'
-import { contentTypeLabels } from '@/utils/formatters'
+import { contentTypeLabels, isStoryContent } from '@/utils/formatters'
 import { PlannerCommentsThread } from '@/components/PlannerCommentsThread'
 import { useClientInstagramAccount, useCreateScheduledPost } from '@/hooks/useInstagram'
 import { useAuth } from '@/hooks/useAuth'
@@ -249,6 +249,9 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
 
   const handleSchedule = async () => {
     if (!igAccount || !user) return
+    // Rede de segurança: o bloco de story acima já impede o formulário de
+    // aparecer, mas a regra não pode depender só da ordem dos returns.
+    if (isStoryContent(item.content_type)) return
     const date = scheduledAt || defaultDate
     if (!date || !scheduledTime) { toast('Preencha a data e horário.', 'error'); return }
     const attachments = postType === 'REELS' ? videoAttachments : imageAttachments
@@ -278,6 +281,22 @@ function InstagramScheduleSection({ item }: { item: PlannerItem }) {
       setPublishing(false)
     }
   }
+
+  // Story — a plataforma não agenda stories (migration 072 barra no banco).
+  // Antes do igLoading: não faz sentido esperar a conta do Instagram carregar
+  // para dizer que este item não vai ser agendado de jeito nenhum.
+  if (isStoryContent(item.content_type)) return (
+    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1.5">
+      <div className="flex items-center gap-2">
+        <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+        <p className="text-xs font-semibold text-amber-800">Stories não são agendados</p>
+      </div>
+      <p className="text-[11px] text-amber-700 leading-relaxed">
+        A plataforma não publica stories no Instagram. Mesmo aprovado pelo cliente, este
+        item não entra no agendamento — publique o story direto pelo aplicativo.
+      </p>
+    </div>
+  )
 
   if (igLoading) return (
     <div className="flex items-center gap-2 py-2">
